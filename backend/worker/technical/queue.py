@@ -5,10 +5,11 @@ from typing import Any, ClassVar
 from arq.connections import ArqRedis, RedisSettings, create_pool
 
 from config.redis import get_redis_config
+from worker.domain.pipeline.enrich_article import enrich_article
 
 
 class WorkerSettings:
-    functions: ClassVar[list[Callable[..., Awaitable[Any]]]] = []
+    functions: ClassVar[list[Callable[..., Awaitable[Any]]]] = [enrich_article]
     redis_settings = RedisSettings.from_dsn(get_redis_config().redis_url)
 
 

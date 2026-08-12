@@ -1,8 +1,8 @@
 """phase 1 schema
 
-Revision ID: c6b97850ea5f
+Revision ID: 6bd0dd8498a4
 Revises: 
-Create Date: 2026-08-12 14:09:22.944863
+Create Date: 2026-08-12 14:57:48.505940
 
 """
 from collections.abc import Sequence
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'c6b97850ea5f'
+revision: str = '6bd0dd8498a4'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -48,7 +48,8 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('term', sa.String(), nullable=False),
     sa.Column('lang', sa.Enum('FR', 'EN', name='lang'), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('term', 'lang', name='uq_keywords_term_lang')
     )
     op.create_table('users',
     sa.Column('id', sa.Uuid(), nullable=False),
@@ -146,7 +147,7 @@ def upgrade() -> None:
     sa.Column('url', sa.String(), nullable=False),
     sa.Column('content', sa.String(), nullable=False),
     sa.Column('summary', sa.String(), nullable=True),
-    sa.Column('published_at', sa.DateTime(), nullable=False),
+    sa.Column('published_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['author_id'], ['authors.id'], ),
     sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ),

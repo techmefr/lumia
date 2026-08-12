@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.technical.orm import Base, TimestampMixin
@@ -29,6 +29,7 @@ class Category(Base):
 
 class Keyword(Base):
     __tablename__ = "keywords"
+    __table_args__ = (UniqueConstraint("term", "lang", name="uq_keywords_term_lang"),)
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     term: Mapped[str]
@@ -47,7 +48,7 @@ class Article(Base, TimestampMixin):
     url: Mapped[str]
     content: Mapped[str]
     summary: Mapped[str | None] = mapped_column(default=None)
-    published_at: Mapped[datetime]
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class ArticleKeyword(Base):

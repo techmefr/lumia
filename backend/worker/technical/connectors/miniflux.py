@@ -13,6 +13,7 @@ class MinifluxConnector:
             category_name = category["title"] if category else None
             return [
                 RawArticle(
+                    source_type="miniflux",
                     feed_external_id=feed_external_id,
                     external_entry_id=str(entry["id"]),
                     title=entry["title"],

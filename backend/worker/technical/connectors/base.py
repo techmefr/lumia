@@ -9,6 +9,7 @@ class InvalidWebhookPayloadError(Exception):
 
 @dataclass(frozen=True)
 class RawArticle:
+    source_type: str
     feed_external_id: str
     external_entry_id: str
     title: str
