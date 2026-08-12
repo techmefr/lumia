@@ -34,6 +34,10 @@ class MagicLinkVerifyRequest(BaseModel):
     token: str
 
 
+class SsoCallbackRequest(BaseModel):
+    code: str
+
+
 class TokenPairResponse(BaseModel):
     access_token: str
     refresh_token: str

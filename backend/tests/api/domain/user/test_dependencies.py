@@ -6,9 +6,9 @@ from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from api.domain.user.dependencies import get_current_user, require_admin
 from api.domain.user.models import Instance, Role, User
 from api.technical.auth.jwt import create_access_token
-from api.technical.auth.middleware import get_current_user, require_admin
 from config.database import get_engine
 
 

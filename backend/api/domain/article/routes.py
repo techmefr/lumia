@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.domain.article.models import Article
 from api.domain.article.schemas import ArticleDetailResponse, ArticleSummaryResponse
 from api.domain.feed.models import Feed
+from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
-from api.technical.auth.middleware import get_current_user
 from api.technical.db import get_db_session
 
 router = APIRouter()

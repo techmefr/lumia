@@ -8,8 +8,8 @@ from api.domain.article.schemas import ArticleSummaryResponse
 from api.domain.recommendation.etincelle_service import list_etincelle
 from api.domain.recommendation.feedback_service import apply_feedback
 from api.domain.recommendation.schemas import FeedbackRequest
+from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
-from api.technical.auth.middleware import get_current_user
 from api.technical.db import get_db_session
 
 router = APIRouter()

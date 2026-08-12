@@ -1,10 +1,17 @@
 from uuid import UUID
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.domain.user.exceptions import InvalidMagicLinkTokenError, InvalidRefreshTokenError
+from api.domain.user.dependencies import get_current_user
+from api.domain.user.exceptions import (
+    InvalidMagicLinkTokenError,
+    InvalidRefreshTokenError,
+    SsoNotConfiguredError,
+)
 from api.domain.user.magic_link_service import request_magic_link, verify_magic_link_token
 from api.domain.user.models import Instance, Role, User
 from api.domain.user.refresh_token_service import (
@@ -22,12 +29,21 @@ from api.domain.user.schemas import (
     MeUpdateRequest,
     OnboardingAdminRequest,
     RefreshRequest,
+    SsoCallbackRequest,
     TokenPairResponse,
 )
+from api.domain.user.sso_service import ensure_sso_configured, get_or_create_sso_user
 from api.technical.auth.hashing import hash_password, verify_password
 from api.technical.auth.jwt import create_access_token
-from api.technical.auth.middleware import get_current_user
-from api.technical.crypto.secret_box import encrypt_secret
+from api.technical.auth.oidc_client import (
+    build_authorize_url,
+    discover,
+    exchange_code_for_tokens,
+    fetch_userinfo,
+    get_oidc_transport,
+)
+from api.technical.auth.tokens import generate_opaque_token
+from api.technical.crypto.secret_box import decrypt_secret, encrypt_secret
 from api.technical.db import get_db_session
 
 router = APIRouter()
@@ -123,6 +139,63 @@ async def verify_magic_link(
     except InvalidMagicLinkTokenError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
     return await _issue_token_pair(session, user_id)
+
+
+async def _get_sso_configured_instance(session: AsyncSession) -> Instance:
+    instance = await session.scalar(select(Instance))
+    if instance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    try:
+        ensure_sso_configured(instance)
+    except SsoNotConfiguredError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
+    return instance
+
+
+@router.get("/auth/sso/login")
+async def sso_login(
+    session: AsyncSession = Depends(get_db_session),
+    transport: httpx.AsyncBaseTransport | None = Depends(get_oidc_transport),
+) -> RedirectResponse:
+    instance = await _get_sso_configured_instance(session)
+    assert instance.oidc_issuer is not None
+    assert instance.oidc_client_id is not None
+    assert instance.oidc_redirect_uri is not None
+    document = await discover(instance.oidc_issuer, transport=transport)
+    authorize_url = build_authorize_url(
+        document,
+        client_id=instance.oidc_client_id,
+        redirect_uri=instance.oidc_redirect_uri,
+        state=generate_opaque_token(),
+    )
+    return RedirectResponse(authorize_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+
+
+@router.post("/auth/sso/callback", response_model=TokenPairResponse)
+async def sso_callback(
+    payload: SsoCallbackRequest,
+    session: AsyncSession = Depends(get_db_session),
+    transport: httpx.AsyncBaseTransport | None = Depends(get_oidc_transport),
+) -> TokenPairResponse:
+    instance = await _get_sso_configured_instance(session)
+    assert instance.oidc_issuer is not None
+    assert instance.oidc_client_id is not None
+    assert instance.oidc_client_secret_encrypted is not None
+    assert instance.oidc_redirect_uri is not None
+    document = await discover(instance.oidc_issuer, transport=transport)
+    tokens = await exchange_code_for_tokens(
+        document,
+        client_id=instance.oidc_client_id,
+        client_secret=decrypt_secret(instance.oidc_client_secret_encrypted),
+        redirect_uri=instance.oidc_redirect_uri,
+        code=payload.code,
+        transport=transport,
+    )
+    userinfo = await fetch_userinfo(document, access_token=tokens["access_token"], transport=transport)
+    user = await get_or_create_sso_user(
+        session, instance, sub=userinfo["sub"], email=userinfo["email"]
+    )
+    return await _issue_token_pair(session, user.id)
 
 
 def _to_me_response(user: User) -> MeResponse:

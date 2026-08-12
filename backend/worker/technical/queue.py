@@ -11,6 +11,7 @@ from worker.domain.pipeline.enrich_article import enrich_article
 class WorkerSettings:
     functions: ClassVar[list[Callable[..., Awaitable[Any]]]] = [enrich_article]
     redis_settings = RedisSettings.from_dsn(get_redis_config().redis_url)
+    max_tries: ClassVar[int] = 3
 
 
 _pool: ArqRedis | None = None

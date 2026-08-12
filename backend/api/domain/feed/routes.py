@@ -11,8 +11,8 @@ from api.domain.feed.schemas import (
     FolderCreateRequest,
     FolderResponse,
 )
+from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
-from api.technical.auth.middleware import get_current_user
 from api.technical.db import get_db_session
 
 router = APIRouter()

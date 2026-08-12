@@ -5,6 +5,10 @@ from urllib.parse import urlencode
 import httpx
 
 
+def get_oidc_transport() -> httpx.AsyncBaseTransport | None:
+    return None
+
+
 @dataclass(frozen=True)
 class OidcDiscoveryDocument:
     authorization_endpoint: str
