@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Nunito:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --font-base: 16px;
+  --phi: 1.618;
+  --font-xs: calc(var(--font-base) / var(--phi) / var(--phi));
+  --font-sm: calc(var(--font-base) / var(--phi));
+  --font-md: calc(var(--font-base) * var(--phi));
+  --font-lg: calc(var(--font-base) * var(--phi) * var(--phi));
+  --font-xl: calc(var(--font-base) * var(--phi) * var(--phi) * var(--phi));
+
+  --font-display: 'DM Serif Display', serif;
+  --font-body: 'Nunito', sans-serif;
+  --font-ui: 'DM Sans', sans-serif;
+
+  --space-xs: 5px;
+  --space-sm: 8px;
+  --space-md: 13px;
+  --space-lg: 21px;
+  --space-xl: 34px;
+  --space-2xl: 55px;
+  --space-3xl: 89px;
+
+  --color-bg: #EDEAE4;
+  --color-surface: #F2EFE9;
+  --color-text: #1A1A1A;
+  --color-skeleton: #D8D4CE;
+  --color-accent: #8B7355;
+  --color-like: rgba(76, 175, 125, 0.2);
+  --color-dislike: rgba(224, 92, 92, 0.2);
+  --shadow-soft: 0 4px 16px rgba(139, 115, 85, 0.12);
+}
+
+[data-theme="dark"] {
+  --color-bg: #121417;
+  --color-surface: #1A1D20;
+  --color-text: #F0EDE8;
+  --color-skeleton: #1E2124;
+  --color-accent: #C4A882;
+  --color-like: rgba(76, 175, 125, 0.3);
+  --color-dislike: rgba(224, 92, 92, 0.3);
+}
