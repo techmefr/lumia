@@ -26,6 +26,9 @@ services:
       DATABASE_URL: postgres://lumia:${POSTGRES_PASSWORD}@postgres/lumia?sslmode=disable
       RUN_MIGRATIONS: 1
       WEBHOOK_URL: http://lumia-backend-api:8000/webhooks/miniflux
+      ADMIN_USERNAME: ${MINIFLUX_USERNAME}
+      ADMIN_PASSWORD: ${MINIFLUX_PASSWORD}
+      CREATE_ADMIN: 1
     networks:
       - internal
 
@@ -38,6 +41,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - miniflux
     environment:
       DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
@@ -48,6 +52,10 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS}
+      MINIFLUX_BASE_URL: http://miniflux
+      MINIFLUX_USERNAME: ${MINIFLUX_USERNAME}
+      MINIFLUX_PASSWORD: ${MINIFLUX_PASSWORD}
+      DEEPL_API_KEY: ${DEEPL_API_KEY}
     ports:
       - "8000:8000"
     networks:
@@ -66,6 +74,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
+      DEEPL_API_KEY: ${DEEPL_API_KEY}
     networks:
       - internal
 

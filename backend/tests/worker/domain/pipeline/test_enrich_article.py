@@ -134,6 +134,71 @@ async def test_enrich_article_is_idempotent_for_the_same_entry(session: AsyncSes
     assert len(articles) == 1
 
 
+ENGLISH_CONTENT = (
+    "<p>The cat is in the garden with the mouse and it was eating some biscuits. "
+    "The garden is big and the cat likes to play with the mouse in the garden. "
+    "A third sentence describes the cat and the garden in more detail here.</p>"
+)
+
+
+class _FakeTranslator:
+    async def translate(self, text: str, *, target_lang: str) -> str:
+        return f"[{target_lang}] {text}"
+
+
+async def test_enrich_article_translates_foreign_content_to_the_users_preferred_language(
+    session: AsyncSession,
+) -> None:
+    await _create_feed(session)
+
+    await enrich_article(
+        {},
+        _raw_article(title="The cat", content=ENGLISH_CONTENT),
+        translator=_FakeTranslator(),
+    )
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    assert article.title.startswith("[fr]")
+    assert article.original_lang == Lang.EN
+
+
+async def test_enrich_article_does_not_translate_when_language_already_matches(
+    session: AsyncSession,
+) -> None:
+    await _create_feed(session)
+
+    await enrich_article({}, _raw_article(), translator=_FakeTranslator())
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    assert article.title == "Le chat et le jardin"
+    assert article.original_lang == Lang.FR
+
+
+async def test_enrich_article_extracts_english_keywords_from_the_original_text(
+    session: AsyncSession,
+) -> None:
+    await _create_feed(session)
+
+    await enrich_article(
+        {},
+        _raw_article(title="The cat", content=ENGLISH_CONTENT),
+        translator=_FakeTranslator(),
+    )
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    keyword_ids = [
+        row.keyword_id
+        for row in await session.scalars(
+            select(ArticleKeyword).where(ArticleKeyword.article_id == article.id)
+        )
+    ]
+    keywords = await session.scalars(select(Keyword).where(Keyword.id.in_(keyword_ids)))
+    assert all(keyword.lang == Lang.EN for keyword in keywords)
+
+
 async def test_enrich_article_creates_one_article_per_subscribing_user(
     session: AsyncSession,
 ) -> None:

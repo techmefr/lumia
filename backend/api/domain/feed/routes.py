@@ -1,10 +1,13 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.domain.feed.exceptions import InvalidOpmlError
 from api.domain.feed.models import Feed, Folder
+from api.domain.feed.opml_service import import_opml
 from api.domain.feed.schemas import (
     FeedCreateRequest,
     FeedResponse,
@@ -14,6 +17,7 @@ from api.domain.feed.schemas import (
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.technical.db import get_db_session
+from worker.technical.connectors.miniflux_client import get_miniflux_transport
 
 router = APIRouter()
 
@@ -82,6 +86,21 @@ async def create_feed(
     session.add(feed)
     await session.commit()
     return _to_feed_response(feed)
+
+
+@router.post("/feeds/import-opml", response_model=list[FeedResponse])
+async def import_opml_feeds(
+    file: UploadFile,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
+) -> list[FeedResponse]:
+    xml_bytes = await file.read()
+    try:
+        feeds = await import_opml(session, user, xml_bytes, miniflux_transport=transport)
+    except InvalidOpmlError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
+    return [_to_feed_response(feed) for feed in feeds]
 
 
 @router.delete("/feeds/{feed_id}", status_code=status.HTTP_204_NO_CONTENT)

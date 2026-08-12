@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
+from api.domain.article.models import Lang
 from api.technical.orm import Base, TimestampMixin
 
 
@@ -58,6 +59,7 @@ class User(Base, TimestampMixin):
     theme: Mapped[Theme] = mapped_column(default=Theme.SYSTEM)
     orbit_position: Mapped[OrbitPosition] = mapped_column(default=OrbitPosition.RIGHT)
     font_base_size: Mapped[int] = mapped_column(default=16)
+    preferred_language: Mapped[Lang] = mapped_column(default=Lang.FR)
 
 
 class RefreshToken(Base, TimestampMixin):

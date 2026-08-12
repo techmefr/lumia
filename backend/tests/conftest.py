@@ -13,6 +13,10 @@ os.environ.setdefault("SMTP_HOST", "localhost")
 os.environ.setdefault("SMTP_USERNAME", "test")
 os.environ.setdefault("SMTP_PASSWORD", "test")
 os.environ.setdefault("SMTP_FROM_ADDRESS", "lumia@example.com")
+os.environ.setdefault("MINIFLUX_BASE_URL", "http://miniflux.test")
+os.environ.setdefault("MINIFLUX_USERNAME", "admin")
+os.environ.setdefault("MINIFLUX_PASSWORD", "test-miniflux-password")
+os.environ.setdefault("DEEPL_API_KEY", "test-deepl-key")
 
 from api.domain.article import models as _article_models  # noqa: F401
 from api.domain.feed import models as _feed_models  # noqa: F401

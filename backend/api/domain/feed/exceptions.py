@@ -1,0 +1,2 @@
+class InvalidOpmlError(Exception):
+    pass
