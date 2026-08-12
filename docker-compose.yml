@@ -37,7 +37,7 @@ services:
       - postgres
       - redis
     environment:
-      DATABASE_URL: postgres://lumia:${POSTGRES_PASSWORD}@postgres/lumia
+      DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
       SESSION_SECRET: ${SESSION_SECRET}
     ports:
@@ -48,13 +48,13 @@ services:
 
   lumia-backend-worker:
     build: ./docker/lumia-backend
-    command: arq worker.queue.WorkerSettings
+    command: arq worker.technical.queue.WorkerSettings
     restart: unless-stopped
     depends_on:
       - postgres
       - redis
     environment:
-      DATABASE_URL: postgres://lumia:${POSTGRES_PASSWORD}@postgres/lumia
+      DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
     networks:
       - internal
