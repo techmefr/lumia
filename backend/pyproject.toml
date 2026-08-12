@@ -16,6 +16,8 @@ dependencies = [
     "aiosmtplib>=3.0",
     "cryptography>=43.0",
     "email-validator>=2.2",
+    "scikit-learn>=1.5",
+    "nltk>=3.9",
 ]
 
 [dependency-groups]
@@ -35,6 +37,10 @@ ignore = ["B008"]  # FastAPI's Depends() idiom is a function call in an argument
 [tool.mypy]
 strict = true
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["sklearn.*", "nltk.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
