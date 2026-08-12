@@ -25,7 +25,7 @@ services:
     environment:
       DATABASE_URL: postgres://lumia:${POSTGRES_PASSWORD}@postgres/lumia?sslmode=disable
       RUN_MIGRATIONS: 1
-      WEBHOOK_URL: http://lumia-backend-worker:8001/webhooks/miniflux
+      WEBHOOK_URL: http://lumia-backend-api:8000/webhooks/miniflux
     networks:
       - internal
 
@@ -37,9 +37,15 @@ services:
       - postgres
       - redis
     environment:
-      DATABASE_URL: postgres://lumia:${POSTGRES_PASSWORD}@postgres/lumia
+      DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
-      SESSION_SECRET: ${SESSION_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      SECRET_ENCRYPTION_KEY: ${SECRET_ENCRYPTION_KEY}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS}
     ports:
       - "8000:8000"
     networks:
@@ -48,13 +54,13 @@ services:
 
   lumia-backend-worker:
     build: ./docker/lumia-backend
-    command: arq worker.queue.WorkerSettings
+    command: arq worker.technical.queue.WorkerSettings
     restart: unless-stopped
     depends_on:
       - postgres
       - redis
     environment:
-      DATABASE_URL: postgres://lumia:${POSTGRES_PASSWORD}@postgres/lumia
+      DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
     networks:
       - internal
