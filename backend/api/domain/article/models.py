@@ -1,0 +1,58 @@
+from datetime import datetime
+from enum import StrEnum
+from uuid import UUID, uuid4
+
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column
+
+from api.technical.orm import Base, TimestampMixin
+
+
+class Lang(StrEnum):
+    FR = "fr"
+    EN = "en"
+
+
+class Author(Base):
+    __tablename__ = "authors"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    name: Mapped[str] = mapped_column(unique=True)
+
+
+class Category(Base):
+    __tablename__ = "categories"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    name: Mapped[str] = mapped_column(unique=True)
+
+
+class Keyword(Base):
+    __tablename__ = "keywords"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    term: Mapped[str]
+    lang: Mapped[Lang]
+
+
+class Article(Base, TimestampMixin):
+    __tablename__ = "articles"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    feed_id: Mapped[UUID] = mapped_column(ForeignKey("feeds.id"))
+    author_id: Mapped[UUID | None] = mapped_column(ForeignKey("authors.id"), default=None)
+    category_id: Mapped[UUID | None] = mapped_column(ForeignKey("categories.id"), default=None)
+    external_entry_id: Mapped[str]
+    title: Mapped[str]
+    url: Mapped[str]
+    content: Mapped[str]
+    summary: Mapped[str | None] = mapped_column(default=None)
+    published_at: Mapped[datetime]
+
+
+class ArticleKeyword(Base):
+    __tablename__ = "article_keywords"
+
+    article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"), primary_key=True)
+    keyword_id: Mapped[UUID] = mapped_column(ForeignKey("keywords.id"), primary_key=True)
+    weight: Mapped[float]
