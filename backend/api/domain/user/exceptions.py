@@ -4,3 +4,7 @@ class InvalidRefreshTokenError(Exception):
 
 class InvalidMagicLinkTokenError(Exception):
     pass
+
+
+class SsoNotConfiguredError(Exception):
+    pass
