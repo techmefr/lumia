@@ -1,8 +1,8 @@
 """phase 1 schema
 
-Revision ID: c66c712db830
+Revision ID: 8165423035c2
 Revises: 
-Create Date: 2026-08-12 13:27:01.774813
+Create Date: 2026-08-12 13:54:49.501685
 
 """
 from collections.abc import Sequence
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'c66c712db830'
+revision: str = '8165423035c2'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -37,6 +37,10 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('max_accounts', sa.Integer(), nullable=False),
     sa.Column('disk_quota_mb', sa.Integer(), nullable=False),
+    sa.Column('oidc_issuer', sa.String(), nullable=True),
+    sa.Column('oidc_client_id', sa.String(), nullable=True),
+    sa.Column('oidc_client_secret_encrypted', sa.String(), nullable=True),
+    sa.Column('oidc_redirect_uri', sa.String(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
@@ -51,7 +55,8 @@ def upgrade() -> None:
     sa.Column('instance_id', sa.Uuid(), nullable=False),
     sa.Column('email', sa.String(), nullable=False),
     sa.Column('username', sa.String(), nullable=False),
-    sa.Column('password_hash', sa.String(), nullable=False),
+    sa.Column('password_hash', sa.String(), nullable=True),
+    sa.Column('sso_subject', sa.String(), nullable=True),
     sa.Column('role', sa.Enum('ADMIN', 'MEMBER', name='role'), nullable=False),
     sa.Column('ai_provider', sa.Enum('MISTRAL', 'OPENAI', 'CUSTOM', name='aiprovider'), nullable=True),
     sa.Column('ai_api_key_encrypted', sa.String(), nullable=True),
@@ -62,7 +67,8 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['instance_id'], ['instances.id'], ),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email')
+    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('sso_subject')
     )
     op.create_table('folders',
     sa.Column('id', sa.Uuid(), nullable=False),
@@ -72,13 +78,26 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('sessions',
+    op.create_table('magic_link_tokens',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('user_id', sa.Uuid(), nullable=False),
+    sa.Column('token', sa.String(), nullable=False),
+    sa.Column('expires_at', sa.DateTime(), nullable=False),
+    sa.Column('used_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('token')
+    )
+    op.create_table('refresh_tokens',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('user_id', sa.Uuid(), nullable=False),
+    sa.Column('token', sa.String(), nullable=False),
     sa.Column('expires_at', sa.DateTime(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('token')
     )
     op.create_table('user_author_scores',
     sa.Column('user_id', sa.Uuid(), nullable=False),
@@ -173,7 +192,8 @@ def downgrade() -> None:
     op.drop_table('user_keyword_scores')
     op.drop_table('user_category_scores')
     op.drop_table('user_author_scores')
-    op.drop_table('sessions')
+    op.drop_table('refresh_tokens')
+    op.drop_table('magic_link_tokens')
     op.drop_table('folders')
     op.drop_table('users')
     op.drop_table('keywords')

@@ -36,6 +36,10 @@ class Instance(Base, TimestampMixin):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     max_accounts: Mapped[int]
     disk_quota_mb: Mapped[int]
+    oidc_issuer: Mapped[str | None] = mapped_column(default=None)
+    oidc_client_id: Mapped[str | None] = mapped_column(default=None)
+    oidc_client_secret_encrypted: Mapped[str | None] = mapped_column(default=None)
+    oidc_redirect_uri: Mapped[str | None] = mapped_column(default=None)
 
 
 class User(Base, TimestampMixin):
@@ -45,7 +49,8 @@ class User(Base, TimestampMixin):
     instance_id: Mapped[UUID] = mapped_column(ForeignKey("instances.id"))
     email: Mapped[str] = mapped_column(unique=True)
     username: Mapped[str]
-    password_hash: Mapped[str]
+    password_hash: Mapped[str | None] = mapped_column(default=None)
+    sso_subject: Mapped[str | None] = mapped_column(unique=True, default=None)
     role: Mapped[Role] = mapped_column(default=Role.MEMBER)
     ai_provider: Mapped[AIProvider | None] = mapped_column(default=None)
     ai_api_key_encrypted: Mapped[str | None] = mapped_column(default=None)
@@ -55,9 +60,20 @@ class User(Base, TimestampMixin):
     font_base_size: Mapped[int] = mapped_column(default=16)
 
 
-class UserSession(Base, TimestampMixin):
-    __tablename__ = "sessions"
+class RefreshToken(Base, TimestampMixin):
+    __tablename__ = "refresh_tokens"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    token: Mapped[str] = mapped_column(unique=True)
     expires_at: Mapped[datetime]
+
+
+class MagicLinkToken(Base, TimestampMixin):
+    __tablename__ = "magic_link_tokens"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    token: Mapped[str] = mapped_column(unique=True)
+    expires_at: Mapped[datetime]
+    used_at: Mapped[datetime | None] = mapped_column(default=None)

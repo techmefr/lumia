@@ -6,7 +6,8 @@ from config.database import get_engine
 EXPECTED_TABLES = {
     "instances",
     "users",
-    "sessions",
+    "refresh_tokens",
+    "magic_link_tokens",
     "folders",
     "feeds",
     "authors",
