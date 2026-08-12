@@ -18,12 +18,16 @@ from api.domain.user.schemas import (
     LogoutRequest,
     MagicLinkRequest,
     MagicLinkVerifyRequest,
+    MeResponse,
+    MeUpdateRequest,
     OnboardingAdminRequest,
     RefreshRequest,
     TokenPairResponse,
 )
 from api.technical.auth.hashing import hash_password, verify_password
 from api.technical.auth.jwt import create_access_token
+from api.technical.auth.middleware import get_current_user
+from api.technical.crypto.secret_box import encrypt_secret
 from api.technical.db import get_db_session
 
 router = APIRouter()
@@ -119,3 +123,42 @@ async def verify_magic_link(
     except InvalidMagicLinkTokenError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
     return await _issue_token_pair(session, user_id)
+
+
+def _to_me_response(user: User) -> MeResponse:
+    return MeResponse(
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        role=user.role,
+        theme=user.theme,
+        orbit_position=user.orbit_position,
+        font_base_size=user.font_base_size,
+        ai_provider=user.ai_provider,
+        ai_endpoint_url=user.ai_endpoint_url,
+        ai_api_key_set=user.ai_api_key_encrypted is not None,
+    )
+
+
+@router.get("/me", response_model=MeResponse)
+async def get_me(user: User = Depends(get_current_user)) -> MeResponse:
+    return _to_me_response(user)
+
+
+@router.patch("/me", response_model=MeResponse)
+async def update_me(
+    payload: MeUpdateRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> MeResponse:
+    updates = payload.model_dump(exclude_unset=True, exclude={"ai_api_key"})
+    for field, value in updates.items():
+        setattr(user, field, value)
+
+    if "ai_api_key" in payload.model_fields_set:
+        user.ai_api_key_encrypted = (
+            encrypt_secret(payload.ai_api_key) if payload.ai_api_key is not None else None
+        )
+
+    await session.commit()
+    return _to_me_response(user)
