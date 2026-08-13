@@ -1,4 +1,4 @@
-export type SourceType = 'miniflux';
+export type SourceType = 'miniflux' | 'manual';
 
 export interface Folder {
 	id: string;
@@ -12,4 +12,11 @@ export interface Feed {
 	external_feed_id: string;
 	title: string;
 	url: string;
+}
+
+/** Unread totals keyed by feed id and by folder id, as returned by /feeds/unread-counts. */
+export interface UnreadCounts {
+	total: number;
+	feeds: Record<string, number>;
+	folders: Record<string, number>;
 }

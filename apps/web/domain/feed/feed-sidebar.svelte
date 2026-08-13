@@ -1,31 +1,38 @@
 <script lang="ts">
-	import type { Feed, Folder } from '@lumia/core';
+	import type { Feed, Folder, UnreadCounts } from '@lumia/core';
 	import Newspaper from '@lucide/svelte/icons/newspaper';
 	import FolderIcon from '@lucide/svelte/icons/folder';
 	import Rss from '@lucide/svelte/icons/rss';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import Settings from '@lucide/svelte/icons/settings';
+	import CheckCheck from '@lucide/svelte/icons/check-check';
 	import Star from '@lucide/svelte/icons/star';
+	import ListMusic from '@lucide/svelte/icons/list-music';
 	import { AnimatedList } from '@lumia/ui';
 
 	interface Props {
 		folders: Folder[];
 		feeds: Feed[];
+		unread?: UnreadCounts;
 		selectedFolderId: string;
 		selectedFeedId: string;
 		onSelectAll: () => void;
 		onSelectFolder: (folderId: string) => void;
 		onSelectFeed: (feedId: string) => void;
+		onMarkFeedRead?: (feedId: string) => void;
+		onMarkFolderRead?: (folderId: string) => void;
 	}
 
 	let {
 		folders,
 		feeds,
+		unread = { total: 0, feeds: {}, folders: {} },
 		selectedFolderId,
 		selectedFeedId,
 		onSelectAll,
 		onSelectFolder,
-		onSelectFeed
+		onSelectFeed,
+		onMarkFeedRead,
+		onMarkFolderRead
 	}: Props = $props();
 
 	function feedsForFolder(folderId: string): Feed[] {
@@ -53,6 +60,11 @@
 	<span class="flex items-center gap-2">
 		<FolderIcon class="size-4 text-primary" />
 		Dossiers et flux
+		{#if unread.total > 0}
+			<span class="rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+				{unread.total}
+			</span>
+		{/if}
 	</span>
 	<ChevronDown class="size-4 transition-transform {mobileOpen ? '' : '-rotate-90'}" />
 </button>
@@ -71,14 +83,18 @@
 			: 'hover:bg-white/10 hover:text-white'}"
 	>
 		<Newspaper class="size-4" />
-		Tous les articles
+		<span class="flex-1 text-left">Tous les articles</span>
+		{#if unread.total > 0}
+			<span class="text-xs font-semibold">{unread.total}</span>
+		{/if}
 	</button>
 
 	<div class="mt-4 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
 		{#each folders as folder (folder.id)}
 			{@const isFolderActive = selectedFolderId === folder.id}
+			{@const folderUnread = unread.folders[folder.id] ?? 0}
 			<div>
-				<div class="flex items-center">
+				<div class="group/folder flex items-center">
 					<button
 						onclick={() => onSelectFolder(folder.id)}
 						aria-current={isFolderActive ? 'true' : undefined}
@@ -88,7 +104,20 @@
 					>
 						<FolderIcon class="size-4" />
 						<span class="flex-1 truncate text-left">{folder.name}</span>
+						{#if folderUnread > 0}
+							<span class="text-xs font-semibold">{folderUnread}</span>
+						{/if}
 					</button>
+					{#if onMarkFolderRead && folderUnread > 0}
+						<button
+							onclick={() => onMarkFolderRead(folder.id)}
+							aria-label="Tout marquer comme lu dans {folder.name}"
+							title="Tout marquer comme lu"
+							class="rounded-md p-1 text-zinc-400 opacity-0 transition-opacity hover:text-white focus-visible:opacity-100 group-hover/folder:opacity-100"
+						>
+							<CheckCheck class="size-3.5" />
+						</button>
+					{/if}
 					<button
 						onclick={() => toggle(folder.id)}
 						aria-expanded={!collapsed[folder.id]}
@@ -107,17 +136,33 @@
 						class="ml-4 border-l border-white/10 pl-2"
 					>
 						{#snippet children(feed)}
-							<button
-								onclick={() => onSelectFeed(feed.id)}
-								aria-current={selectedFeedId === feed.id ? 'true' : undefined}
-								class="flex items-center gap-2 truncate rounded-md px-2 py-1 text-left text-sm transition-colors {selectedFeedId ===
-								feed.id
-									? 'font-medium text-white'
-									: 'text-zinc-300 hover:text-white'}"
-							>
-								<Rss class="size-3.5 shrink-0" />
-								<span class="truncate">{feed.title}</span>
-							</button>
+							{@const feedUnread = unread.feeds[feed.id] ?? 0}
+							<div class="group/feed flex items-center">
+								<button
+									onclick={() => onSelectFeed(feed.id)}
+									aria-current={selectedFeedId === feed.id ? 'true' : undefined}
+									class="flex flex-1 items-center gap-2 truncate rounded-md px-2 py-1 text-left text-sm transition-colors {selectedFeedId ===
+									feed.id
+										? 'font-medium text-white'
+										: 'text-zinc-300 hover:text-white'}"
+								>
+									<Rss class="size-3.5 shrink-0" />
+									<span class="flex-1 truncate">{feed.title}</span>
+									{#if feedUnread > 0}
+										<span class="text-xs font-semibold">{feedUnread}</span>
+									{/if}
+								</button>
+								{#if onMarkFeedRead && feedUnread > 0}
+									<button
+										onclick={() => onMarkFeedRead(feed.id)}
+										aria-label="Tout marquer comme lu dans {feed.title}"
+										title="Tout marquer comme lu"
+										class="rounded-md p-1 text-zinc-400 opacity-0 transition-opacity hover:text-white focus-visible:opacity-100 group-hover/feed:opacity-100"
+									>
+										<CheckCheck class="size-3.5" />
+									</button>
+								{/if}
+							</div>
 						{/snippet}
 					</AnimatedList>
 				{/if}
@@ -130,16 +175,20 @@
 			</span>
 			<AnimatedList items={unfiledFeeds} getKey={(feed) => feed.id}>
 				{#snippet children(feed)}
+					{@const feedUnread = unread.feeds[feed.id] ?? 0}
 					<button
 						onclick={() => onSelectFeed(feed.id)}
 						aria-current={selectedFeedId === feed.id ? 'true' : undefined}
-						class="flex items-center gap-2 truncate rounded-md px-2.5 py-1 text-left text-sm transition-colors {selectedFeedId ===
+						class="flex w-full items-center gap-2 truncate rounded-md px-2.5 py-1 text-left text-sm transition-colors {selectedFeedId ===
 						feed.id
 							? 'font-medium text-white'
 							: 'text-zinc-400 hover:text-white'}"
 					>
 						<Rss class="size-3.5 shrink-0" />
-						<span class="truncate">{feed.title}</span>
+						<span class="flex-1 truncate">{feed.title}</span>
+						{#if feedUnread > 0}
+							<span class="text-xs font-semibold">{feedUnread}</span>
+						{/if}
 					</button>
 				{/snippet}
 			</AnimatedList>
@@ -147,17 +196,17 @@
 	</div>
 
 	<a
-		href="/favoris"
+		href="/playlists"
 		class="mt-auto flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+	>
+		<ListMusic class="size-4" />
+		Playlists
+	</a>
+	<a
+		href="/favoris"
+		class="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
 	>
 		<Star class="size-4" />
 		Favoris
-	</a>
-	<a
-		href="/settings"
-		class="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
-	>
-		<Settings class="size-4" />
-		Réglages
 	</a>
 </aside>

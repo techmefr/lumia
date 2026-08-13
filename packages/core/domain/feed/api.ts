@@ -1,5 +1,11 @@
 import type { HttpClient } from '../../technical/http-client';
-import type { Feed, Folder } from './types';
+import type { Feed, Folder, UnreadCounts } from './types';
+
+export interface FeedUpdate {
+	title?: string;
+	/** Explicit null unfiles the feed; omitting the key leaves it where it is. */
+	folder_id?: string | null;
+}
 
 export function createFeedApi(http: HttpClient) {
 	async function listFolders(): Promise<Folder[]> {
@@ -10,12 +16,29 @@ export function createFeedApi(http: HttpClient) {
 		return http.request<Folder>('/folders', { method: 'POST', body: { name } });
 	}
 
+	async function renameFolder(folderId: string, name: string): Promise<Folder> {
+		return http.request<Folder>(`/folders/${folderId}`, { method: 'PATCH', body: { name } });
+	}
+
+	/** Deleting a folder unfiles its feeds on the backend; it never deletes them. */
+	async function deleteFolder(folderId: string): Promise<void> {
+		await http.request(`/folders/${folderId}`, { method: 'DELETE' });
+	}
+
 	async function listFeeds(): Promise<Feed[]> {
 		return http.request<Feed[]>('/feeds');
 	}
 
+	async function updateFeed(feedId: string, update: FeedUpdate): Promise<Feed> {
+		return http.request<Feed>(`/feeds/${feedId}`, { method: 'PATCH', body: update });
+	}
+
 	async function deleteFeed(feedId: string): Promise<void> {
 		await http.request(`/feeds/${feedId}`, { method: 'DELETE' });
+	}
+
+	async function getUnreadCounts(): Promise<UnreadCounts> {
+		return http.request<UnreadCounts>('/feeds/unread-counts');
 	}
 
 	async function addFeedByUrl(url: string, folderId?: string | null): Promise<Feed> {
@@ -32,7 +55,18 @@ export function createFeedApi(http: HttpClient) {
 		return http.request<Feed[]>('/feeds/import-opml', { method: 'POST', formData });
 	}
 
-	return { listFolders, createFolder, listFeeds, deleteFeed, importOpml, addFeedByUrl };
+	return {
+		listFolders,
+		createFolder,
+		renameFolder,
+		deleteFolder,
+		listFeeds,
+		updateFeed,
+		deleteFeed,
+		getUnreadCounts,
+		importOpml,
+		addFeedByUrl
+	};
 }
 
 export type FeedApi = ReturnType<typeof createFeedApi>;

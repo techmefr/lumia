@@ -11,6 +11,11 @@ export interface ArticleSummary {
 	summary: string | null;
 	image_url: string | null;
 	published_at: string;
+	/** Estimated minutes to read, from the backend's word count. Always at least 1. */
+	reading_minutes: number;
+	read: boolean;
+	/** How far the user got, 0 to 1. */
+	scroll_progress: number;
 }
 
 export interface Keyword {

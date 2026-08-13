@@ -15,6 +15,14 @@
 		accentHue: number;
 		/** Larger tile for the lead story in a bento grid. */
 		featured?: boolean;
+		/** Estimated minutes to read, from the backend's word count. */
+		readingMinutes?: number | null;
+		/** Already-read articles are dimmed so the unread ones stand out at a glance. */
+		read?: boolean;
+		/** 0 to 1. Drawn as a thin bar at the bottom of the tile when reading started. */
+		scrollProgress?: number;
+		/** The feed's own icon, proxied by the API. Falls back to the source's initial. */
+		iconUrl?: string | null;
 		class?: string;
 	}
 
@@ -28,15 +36,21 @@
 		publishedAt,
 		accentHue,
 		featured = false,
+		readingMinutes = null,
+		read = false,
+		scrollProgress = 0,
+		iconUrl = null,
 		class: className
 	}: Props = $props();
 
 	let imageFailed = $state(false);
+	let iconFailed = $state(false);
 
 	const formattedDate = $derived(
 		new Date(publishedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 	);
 	const initial = $derived(sourceLabel.charAt(0).toUpperCase());
+	const progressPercent = $derived(Math.round(Math.min(Math.max(scrollProgress, 0), 1) * 100));
 </script>
 
 <a
@@ -44,6 +58,7 @@
 	class={cn(
 		'group relative flex animate-in flex-col overflow-hidden rounded-2xl border bg-card shadow-sm fade-in slide-in-from-bottom-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl',
 		featured ? 'sm:col-span-2 lg:col-span-2' : '',
+		read ? 'opacity-60 hover:opacity-100' : '',
 		className
 	)}
 >
@@ -72,22 +87,45 @@
 
 		<GlareHover class="absolute inset-0" glareColor="#ffffff" glareOpacity={0.35} glareSize={200} />
 
-		<span
-			class="absolute -bottom-3 left-3 flex size-9 items-center justify-center rounded-full text-xs font-bold text-white shadow-md ring-4 ring-card"
-			style={`background: hsl(${accentHue} 65% 45%);`}
-		>
-			{initial}
-		</span>
+		{#if readingMinutes}
+			<span
+				class="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur"
+			>
+				{readingMinutes} min
+			</span>
+		{/if}
 	</div>
 
-	<div class="flex flex-1 flex-col gap-1.5 p-4 pt-5">
-		<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+	<div class="flex flex-1 flex-col gap-1.5 p-4">
+		<!-- The avatar lives here, not inside the image box: that box is overflow-hidden, which used
+			 to clip the overlapping circle in half. A negative margin keeps the overlap look. -->
+		<span
+			class="-mt-8 mb-1 flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold text-white shadow-md ring-4 ring-card"
+			style={`background: hsl(${accentHue} 65% 45%);`}
+		>
+			{#if iconUrl && !iconFailed}
+				<img
+					src={iconUrl}
+					alt=""
+					class="size-full object-cover"
+					loading="lazy"
+					onerror={() => (iconFailed = true)}
+				/>
+			{:else}
+				{initial}
+			{/if}
+		</span>
+		<span class="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
 			{sourceLabel}
+			{#if read}
+				<span class="normal-case tracking-normal">· lu</span>
+			{/if}
 		</span>
 		<h3
 			class={cn(
 				'font-serif leading-snug transition-transform duration-200 group-hover:-translate-y-0.5',
-				featured ? 'line-clamp-3 text-xl font-bold sm:text-2xl' : 'line-clamp-2 text-base font-semibold'
+				featured ? 'line-clamp-3 text-xl sm:text-2xl' : 'line-clamp-2 text-base',
+				read ? 'font-normal' : featured ? 'font-bold' : 'font-semibold'
 			)}
 		>
 			{title}
@@ -97,4 +135,10 @@
 		{/if}
 		<span class="mt-auto pt-1 text-xs text-muted-foreground">{formattedDate}</span>
 	</div>
+
+	{#if progressPercent > 0 && progressPercent < 100}
+		<div aria-hidden="true" class="h-0.5 w-full bg-muted">
+			<div class="h-full bg-primary" style={`width: ${progressPercent}%;`}></div>
+		</div>
+	{/if}
 </a>
