@@ -2,8 +2,12 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { sanitizeArticleHtml, type ArticleDetail } from '@lumia/core';
-	import { lumia } from '$lib/client';
-	import { requireAuth } from '$lib/require-auth';
+	import { Button, Card, CardContent } from '@lumia/ui';
+	import ThumbsUp from '@lucide/svelte/icons/thumbs-up';
+	import ThumbsDown from '@lucide/svelte/icons/thumbs-down';
+	import Bookmark from '@lucide/svelte/icons/bookmark';
+	import { lumia } from '$technical/api/client';
+	import { requireAuth } from '$technical/auth/require-auth';
 
 	let article = $state<ArticleDetail | null>(null);
 	let loading = $state(true);
@@ -32,33 +36,45 @@
 	});
 </script>
 
-<p><a href="/articles">← Retour aux articles</a></p>
+<div class="mx-auto flex max-w-2xl flex-col gap-4">
+	<a href="/articles" class="text-sm text-muted-foreground hover:underline">← Retour aux articles</a>
 
-{#if loading}
-	<p>Chargement…</p>
-{:else if error}
-	<p class="error">{error}</p>
-{:else if article}
-	<article>
-		<h1>{article.title}</h1>
-		<p><a href={article.url} target="_blank" rel="noopener">Lire la source</a></p>
-		<div class="content">{@html sanitizeArticleHtml(article.content)}</div>
-	</article>
+	{#if loading}
+		<p class="text-sm text-muted-foreground">Chargement…</p>
+	{:else if error}
+		<p class="text-sm text-destructive">{error}</p>
+	{:else if article}
+		<Card>
+			<CardContent class="pt-6">
+				<h1 class="text-2xl font-semibold">{article.title}</h1>
+				<a href={article.url} target="_blank" rel="noopener" class="text-sm text-primary hover:underline">
+					Lire la source
+				</a>
+				<div class="prose prose-sm mt-4 max-w-none">
+					{@html sanitizeArticleHtml(article.content)}
+				</div>
+			</CardContent>
+		</Card>
 
-	<div class="feedback">
-		<button onclick={() => vote('like')} disabled={feedbackSent === 'like'}>J'aime</button>
-		<button onclick={() => vote('dislike')} disabled={feedbackSent === 'dislike'}>Je n'aime pas</button>
-		<button onclick={() => vote('save')} disabled={feedbackSent === 'save'}>Enregistrer</button>
-	</div>
-{/if}
-
-<style>
-	.error {
-		color: #c0392b;
-	}
-	.feedback {
-		display: flex;
-		gap: 0.5rem;
-		margin-top: 1.5rem;
-	}
-</style>
+		<div class="flex gap-2">
+			<Button
+				variant={feedbackSent === 'like' ? 'default' : 'outline'}
+				onclick={() => vote('like')}
+			>
+				<ThumbsUp class="size-4" /> J'aime
+			</Button>
+			<Button
+				variant={feedbackSent === 'dislike' ? 'default' : 'outline'}
+				onclick={() => vote('dislike')}
+			>
+				<ThumbsDown class="size-4" /> Je n'aime pas
+			</Button>
+			<Button
+				variant={feedbackSent === 'save' ? 'default' : 'outline'}
+				onclick={() => vote('save')}
+			>
+				<Bookmark class="size-4" /> Enregistrer
+			</Button>
+		</div>
+	{/if}
+</div>

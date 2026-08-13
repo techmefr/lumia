@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { ArticleSummary, Feed, Folder } from '@lumia/core';
-	import { lumia } from '$lib/client';
-	import { requireAuth } from '$lib/require-auth';
+	import { ArticleCard } from '@lumia/ui';
+	import { lumia } from '$technical/api/client';
+	import { requireAuth } from '$technical/auth/require-auth';
+	import { accentHueForFeed } from '$domain/article/accent-hue';
 
 	let articles = $state<ArticleSummary[]>([]);
 	let folders = $state<Folder[]>([]);
@@ -11,6 +13,10 @@
 	let selectedFeedId = $state('');
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+
+	function feedTitle(feedId: string): string {
+		return feeds.find((feed) => feed.id === feedId)?.title ?? 'Flux';
+	}
 
 	async function loadArticles() {
 		loading = true;
@@ -37,63 +43,55 @@
 	});
 </script>
 
-<h1>Articles</h1>
+<div class="flex flex-col gap-6">
+	<div class="flex flex-wrap items-end justify-between gap-4">
+		<h1 class="text-2xl font-semibold">Articles</h1>
+		<div class="flex gap-3">
+			<select
+				bind:value={selectedFolderId}
+				onchange={loadArticles}
+				class="h-9 rounded-md border border-input bg-background px-3 text-sm"
+			>
+				<option value="">Tous les dossiers</option>
+				{#each folders as folder (folder.id)}
+					<option value={folder.id}>{folder.name}</option>
+				{/each}
+			</select>
+			<select
+				bind:value={selectedFeedId}
+				onchange={loadArticles}
+				class="h-9 rounded-md border border-input bg-background px-3 text-sm"
+			>
+				<option value="">Tous les flux</option>
+				{#each feeds as feed (feed.id)}
+					<option value={feed.id}>{feed.title}</option>
+				{/each}
+			</select>
+		</div>
+	</div>
 
-<div class="filters">
-	<label>
-		Dossier
-		<select bind:value={selectedFolderId} onchange={loadArticles}>
-			<option value="">Tous</option>
-			{#each folders as folder (folder.id)}
-				<option value={folder.id}>{folder.name}</option>
+	{#if error}
+		<p class="text-sm text-destructive">{error}</p>
+	{/if}
+
+	{#if loading}
+		<p class="text-sm text-muted-foreground">Chargement…</p>
+	{:else if articles.length === 0}
+		<p class="text-sm text-muted-foreground">
+			Aucun article. Importe ou ajoute des flux depuis <a href="/feeds" class="underline">Mes flux</a>.
+		</p>
+	{:else}
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			{#each articles as article (article.id)}
+				<ArticleCard
+					href="/articles/{article.id}"
+					title={article.title}
+					summary={article.summary}
+					sourceLabel={feedTitle(article.feed_id)}
+					publishedAt={article.published_at}
+					accentHue={accentHueForFeed(article.feed_id)}
+				/>
 			{/each}
-		</select>
-	</label>
-	<label>
-		Flux
-		<select bind:value={selectedFeedId} onchange={loadArticles}>
-			<option value="">Tous</option>
-			{#each feeds as feed (feed.id)}
-				<option value={feed.id}>{feed.title}</option>
-			{/each}
-		</select>
-	</label>
+		</div>
+	{/if}
 </div>
-
-{#if error}
-	<p class="error">{error}</p>
-{/if}
-
-{#if loading}
-	<p>Chargement…</p>
-{:else if articles.length === 0}
-	<p>Aucun article. Importe ou ajoute des flux depuis <a href="/feeds">Mes flux</a>.</p>
-{:else}
-	<ul>
-		{#each articles as article (article.id)}
-			<li>
-				<a href="/articles/{article.id}">{article.title}</a>
-				{#if article.summary}<p>{article.summary}</p>{/if}
-			</li>
-		{/each}
-	</ul>
-{/if}
-
-<style>
-	.filters {
-		display: flex;
-		gap: 1rem;
-		margin-bottom: 1rem;
-	}
-	ul {
-		list-style: none;
-		padding: 0;
-	}
-	li {
-		padding: 0.75rem 0;
-		border-bottom: 1px solid #eee;
-	}
-	.error {
-		color: #c0392b;
-	}
-</style>

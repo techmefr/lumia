@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { ApiError } from '@lumia/core';
-	import { lumia } from '$lib/client';
+	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '@lumia/ui';
+	import { lumia } from '$technical/api/client';
 
 	let email = $state('');
 	let password = $state('');
@@ -23,33 +24,41 @@
 	}
 </script>
 
-<h1>Connexion</h1>
-
-<form onsubmit={submit}>
-	<label>
-		Email
-		<input type="email" bind:value={email} required autocomplete="email" />
-	</label>
-	<label>
-		Mot de passe
-		<input type="password" bind:value={password} required autocomplete="current-password" />
-	</label>
-	{#if error}
-		<p class="error">{error}</p>
-	{/if}
-	<button type="submit" disabled={loading}>{loading ? 'Connexion…' : 'Se connecter'}</button>
-</form>
-
-<p><a href="/onboarding">Premier lancement ? Créer le compte administrateur</a></p>
-
-<style>
-	form {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-		max-width: 320px;
-	}
-	.error {
-		color: #c0392b;
-	}
-</style>
+<div class="flex min-h-[80vh] items-center justify-center">
+	<Card class="w-full max-w-sm">
+		<CardHeader>
+			<CardTitle class="text-xl">Lumia</CardTitle>
+			<CardDescription>Connecte-toi pour retrouver tes flux.</CardDescription>
+		</CardHeader>
+		<CardContent>
+			<form class="flex flex-col gap-4" onsubmit={submit}>
+				<div class="flex flex-col gap-1.5">
+					<Label for="email">Email</Label>
+					<Input id="email" type="email" bind:value={email} required autocomplete="email" />
+				</div>
+				<div class="flex flex-col gap-1.5">
+					<Label for="password">Mot de passe</Label>
+					<Input
+						id="password"
+						type="password"
+						bind:value={password}
+						required
+						autocomplete="current-password"
+					/>
+				</div>
+				{#if error}
+					<p class="text-sm text-destructive">{error}</p>
+				{/if}
+				<Button type="submit" disabled={loading} class="mt-1">
+					{loading ? 'Connexion…' : 'Se connecter'}
+				</Button>
+			</form>
+			<p class="mt-4 text-center text-sm text-muted-foreground">
+				Premier lancement ?
+				<a href="/onboarding" class="text-primary underline-offset-4 hover:underline"
+					>Créer le compte administrateur</a
+				>
+			</p>
+		</CardContent>
+	</Card>
+</div>
