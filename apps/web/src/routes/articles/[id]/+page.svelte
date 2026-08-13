@@ -52,7 +52,10 @@
 	{:else if error}
 		<p class="text-sm text-destructive">{error}</p>
 	{:else if article}
-		<Card class="animate-in fade-in slide-in-from-bottom-2 duration-300">
+		<Card class="animate-in overflow-hidden fade-in slide-in-from-bottom-2 duration-300">
+			{#if article.image_url}
+				<img src={article.image_url} alt="" class="h-56 w-full object-cover" loading="lazy" />
+			{/if}
 			<CardContent class="pt-6">
 				<h1 class="font-serif text-2xl font-semibold">{article.title}</h1>
 				<a

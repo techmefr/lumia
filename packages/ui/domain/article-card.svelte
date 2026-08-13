@@ -6,6 +6,7 @@
 		href: string;
 		title: string;
 		summary?: string | null;
+		imageUrl?: string | null;
 		sourceLabel: string;
 		publishedAt: string;
 		/** Deterministic 0-360 hue so each source gets a stable cover color, Flipboard-style. */
@@ -13,8 +14,18 @@
 		class?: string;
 	}
 
-	let { href, title, summary, sourceLabel, publishedAt, accentHue, class: className }: Props =
-		$props();
+	let {
+		href,
+		title,
+		summary,
+		imageUrl,
+		sourceLabel,
+		publishedAt,
+		accentHue,
+		class: className
+	}: Props = $props();
+
+	let imageFailed = $state(false);
 
 	const formattedDate = $derived(
 		new Date(publishedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
@@ -32,10 +43,20 @@
 		class="h-28 w-full overflow-hidden"
 		style={`background: linear-gradient(135deg, hsl(${accentHue} 70% 55%), hsl(${accentHue + 40} 70% 45%));`}
 	>
-		<div
-			class="h-full w-full scale-100 opacity-90 transition-transform duration-500 group-hover:scale-110"
-			style={`background-image: radial-gradient(circle at 30% 30%, hsl(${accentHue + 60} 80% 75% / 50%), transparent 60%);`}
-		></div>
+		{#if imageUrl && !imageFailed}
+			<img
+				src={imageUrl}
+				alt=""
+				loading="lazy"
+				class="h-full w-full scale-100 object-cover transition-transform duration-500 group-hover:scale-110"
+				onerror={() => (imageFailed = true)}
+			/>
+		{:else}
+			<div
+				class="h-full w-full scale-100 opacity-90 transition-transform duration-500 group-hover:scale-110"
+				style={`background-image: radial-gradient(circle at 30% 30%, hsl(${accentHue + 60} 80% 75% / 50%), transparent 60%);`}
+			></div>
+		{/if}
 	</div>
 	<div class="flex flex-1 flex-col gap-2 p-4">
 		<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">

@@ -55,6 +55,7 @@
 					href="/articles/{article.id}"
 					title={article.title}
 					summary={article.summary}
+					imageUrl={article.image_url}
 					sourceLabel={feedTitle(article.feed_id)}
 					publishedAt={article.published_at}
 					accentHue={accentHueForFeed(article.feed_id)}
