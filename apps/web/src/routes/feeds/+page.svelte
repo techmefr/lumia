@@ -17,6 +17,7 @@
 	import Upload from '@lucide/svelte/icons/upload';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import FolderPlus from '@lucide/svelte/icons/folder-plus';
+	import Plus from '@lucide/svelte/icons/plus';
 	import Rss from '@lucide/svelte/icons/rss';
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import Newspaper from '@lucide/svelte/icons/newspaper';
@@ -34,6 +35,10 @@
 	let newFolderName = $state('');
 	let selectedFolderId = $state('');
 	let selectedFeedId = $state('');
+	let newFeedUrl = $state('');
+	let newFeedFolderId = $state('');
+	let addingFeed = $state(false);
+	let addFeedError = $state<string | null>(null);
 
 	const selectedFolder = $derived(folders.find((f) => f.id === selectedFolderId) ?? null);
 	const selectedFeed = $derived(feeds.find((f) => f.id === selectedFeedId) ?? null);
@@ -59,6 +64,24 @@
 		await lumia.feed.createFolder(newFolderName.trim());
 		newFolderName = '';
 		await load();
+	}
+
+	async function addFeed(event: SubmitEvent) {
+		event.preventDefault();
+		if (!newFeedUrl.trim()) return;
+
+		addingFeed = true;
+		addFeedError = null;
+		try {
+			await lumia.feed.addFeedByUrl(newFeedUrl.trim(), newFeedFolderId || null);
+			newFeedUrl = '';
+			newFeedFolderId = '';
+			await load();
+		} catch {
+			addFeedError = 'Impossible d’ajouter ce flux — vérifie l’URL.';
+		} finally {
+			addingFeed = false;
+		}
 	}
 
 	async function removeFeed(feedId: string) {
@@ -216,6 +239,41 @@
 			</Card>
 		{:else}
 			<MagicBento class="grid-cols-1 sm:grid-cols-2">
+				<Card class="magic-bento-cell sm:col-span-2">
+					<CardHeader>
+						<CardTitle>Ajouter un flux</CardTitle>
+						<CardDescription>Colle l’URL RSS/Atom d’un site pour t’y abonner.</CardDescription>
+					</CardHeader>
+					<CardContent>
+						{#if addFeedError}
+							<p class="mb-2 text-sm text-destructive">{addFeedError}</p>
+						{/if}
+						<form class="flex flex-wrap gap-2" onsubmit={addFeed}>
+							<Input
+								type="url"
+								bind:value={newFeedUrl}
+								placeholder="https://exemple.com/feed.xml"
+								class="max-w-sm flex-1"
+								disabled={addingFeed}
+							/>
+							<select
+								bind:value={newFeedFolderId}
+								disabled={addingFeed}
+								class="rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+							>
+								<option value="">Sans dossier</option>
+								{#each folders as folder (folder.id)}
+									<option value={folder.id}>{folder.name}</option>
+								{/each}
+							</select>
+							<Button type="submit" disabled={addingFeed}>
+								<Plus class="size-4" />
+								{addingFeed ? 'Ajout…' : 'Ajouter'}
+							</Button>
+						</form>
+					</CardContent>
+				</Card>
+
 				<Card class="magic-bento-cell">
 					<CardHeader>
 						<CardTitle>Importer depuis Feedly</CardTitle>

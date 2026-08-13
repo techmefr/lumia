@@ -18,6 +18,13 @@ export function createFeedApi(http: HttpClient) {
 		await http.request(`/feeds/${feedId}`, { method: 'DELETE' });
 	}
 
+	async function addFeedByUrl(url: string, folderId?: string | null): Promise<Feed> {
+		return http.request<Feed>('/feeds/add-by-url', {
+			method: 'POST',
+			body: { url, folder_id: folderId ?? null }
+		});
+	}
+
 	/** Uploads a Feedly OPML export; the backend creates one folder per category and registers each feed. */
 	async function importOpml(file: File): Promise<Feed[]> {
 		const formData = new FormData();
@@ -25,7 +32,7 @@ export function createFeedApi(http: HttpClient) {
 		return http.request<Feed[]>('/feeds/import-opml', { method: 'POST', formData });
 	}
 
-	return { listFolders, createFolder, listFeeds, deleteFeed, importOpml };
+	return { listFolders, createFolder, listFeeds, deleteFeed, importOpml, addFeedByUrl };
 }
 
 export type FeedApi = ReturnType<typeof createFeedApi>;
