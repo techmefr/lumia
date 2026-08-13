@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import type { ArticleSummary, Feed, Folder } from '@lumia/core';
 	import { ArticleCard } from '@lumia/ui';
 	import Newspaper from '@lucide/svelte/icons/newspaper';
 	import Inbox from '@lucide/svelte/icons/inbox';
+	import X from '@lucide/svelte/icons/x';
 	import { lumia } from '$technical/api/client';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { accentHueForFeed } from '$domain/article/accent-hue';
@@ -13,12 +15,12 @@
 	let feeds = $state<Feed[]>([]);
 	let selectedFolderId = $state('');
 	let selectedFeedId = $state('');
+	let authorId = $state<string | undefined>(undefined);
+	let categoryId = $state<string | undefined>(undefined);
+	let keywordId = $state<string | undefined>(undefined);
+	let filterLabel = $state<string | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
-
-	function feedTitle(feedId: string): string {
-		return feeds.find((feed) => feed.id === feedId)?.title ?? 'Flux';
-	}
 
 	async function loadArticles() {
 		loading = true;
@@ -26,7 +28,10 @@
 		try {
 			articles = await lumia.article.listArticles({
 				folderId: selectedFolderId || undefined,
-				feedId: selectedFeedId || undefined
+				feedId: selectedFeedId || undefined,
+				authorId,
+				categoryId,
+				keywordId
 			});
 		} catch {
 			error = 'Impossible de charger les articles.';
@@ -35,8 +40,26 @@
 		}
 	}
 
+	function clearTagFilter() {
+		authorId = undefined;
+		categoryId = undefined;
+		keywordId = undefined;
+		filterLabel = null;
+		void loadArticles();
+	}
+
 	onMount(() => {
 		if (!requireAuth()) return;
+		const params = page.url.searchParams;
+		selectedFolderId = params.get('folder_id') ?? '';
+		selectedFeedId = params.get('feed_id') ?? '';
+		authorId = params.get('author_id') ?? undefined;
+		categoryId = params.get('category_id') ?? undefined;
+		keywordId = params.get('keyword_id') ?? undefined;
+		if (authorId) filterLabel = `Auteur : ${params.get('author_name') ?? ''}`.trim();
+		else if (categoryId) filterLabel = `Catégorie : ${params.get('category_name') ?? ''}`.trim();
+		else if (keywordId) filterLabel = `Mot-clé : ${params.get('keyword_term') ?? ''}`.trim();
+
 		void Promise.all([lumia.feed.listFolders(), lumia.feed.listFeeds()]).then(([f, fe]) => {
 			folders = f;
 			feeds = fe;
@@ -75,6 +98,16 @@
 		</div>
 	</div>
 
+	{#if filterLabel}
+		<button
+			onclick={clearTagFilter}
+			class="flex w-fit items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm text-secondary-foreground transition-colors hover:bg-secondary/70"
+		>
+			{filterLabel}
+			<X class="size-3.5" />
+		</button>
+	{/if}
+
 	{#if error}
 		<p class="text-sm text-destructive">{error}</p>
 	{/if}
@@ -88,15 +121,16 @@
 		</p>
 	{:else}
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each articles as article (article.id)}
+			{#each articles as article, index (article.id)}
 				<ArticleCard
 					href="/articles/{article.id}"
 					title={article.title}
 					summary={article.summary}
 					imageUrl={article.image_url}
-					sourceLabel={feedTitle(article.feed_id)}
+					sourceLabel={article.source_label}
 					publishedAt={article.published_at}
 					accentHue={accentHueForFeed(article.feed_id)}
+					featured={index === 0}
 				/>
 			{/each}
 		</div>

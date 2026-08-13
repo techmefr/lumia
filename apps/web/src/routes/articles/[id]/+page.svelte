@@ -2,12 +2,13 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { sanitizeArticleHtml, type ArticleDetail } from '@lumia/core';
-	import { Button, Card, CardContent } from '@lumia/ui';
+	import { Button, Card, CardContent, Badge } from '@lumia/ui';
 	import ThumbsUp from '@lucide/svelte/icons/thumbs-up';
 	import ThumbsDown from '@lucide/svelte/icons/thumbs-down';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import Tag from '@lucide/svelte/icons/tag';
 	import { lumia } from '$technical/api/client';
 	import { requireAuth } from '$technical/auth/require-auth';
 
@@ -38,7 +39,7 @@
 	});
 </script>
 
-<div class="mx-auto flex max-w-2xl flex-col gap-4">
+<div class="mx-auto flex max-w-2xl flex-col gap-4 pb-24">
 	<a
 		href="/articles"
 		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline"
@@ -67,31 +68,84 @@
 					<ExternalLink class="size-3.5" />
 					Lire la source
 				</a>
+
+				<div class="mt-3 flex flex-wrap items-center gap-1.5">
+					<a href="/articles?feed_id={article.feed_id}">
+						<Badge variant="secondary" class="transition-transform hover:-translate-y-0.5">
+							{article.source_label}
+						</Badge>
+					</a>
+					{#if article.author_id && article.author_name}
+						<a
+							href="/articles?author_id={article.author_id}&author_name={encodeURIComponent(
+								article.author_name
+							)}"
+						>
+							<Badge variant="outline" class="transition-transform hover:-translate-y-0.5">
+								{article.author_name}
+							</Badge>
+						</a>
+					{/if}
+					{#if article.category_id && article.category_name}
+						<a
+							href="/articles?category_id={article.category_id}&category_name={encodeURIComponent(
+								article.category_name
+							)}"
+						>
+							<Badge variant="outline" class="transition-transform hover:-translate-y-0.5">
+								{article.category_name}
+							</Badge>
+						</a>
+					{/if}
+					{#each article.keywords as keyword (keyword.id)}
+						<a
+							href="/articles?keyword_id={keyword.id}&keyword_term={encodeURIComponent(
+								keyword.term
+							)}"
+						>
+							<Badge
+								variant="outline"
+								class="flex items-center gap-1 transition-transform hover:-translate-y-0.5"
+							>
+								<Tag class="size-3" />
+								{keyword.term}
+							</Badge>
+						</a>
+					{/each}
+				</div>
+
 				<div class="prose prose-sm mt-4 max-w-none">
 					{@html sanitizeArticleHtml(article.content)}
 				</div>
 			</CardContent>
 		</Card>
 
-		<div class="flex gap-2">
-			<Button
-				variant={feedbackSent === 'like' ? 'default' : 'outline'}
-				onclick={() => vote('like')}
-			>
-				<ThumbsUp class="size-4" /> J'aime
-			</Button>
-			<Button
-				variant={feedbackSent === 'dislike' ? 'default' : 'outline'}
-				onclick={() => vote('dislike')}
-			>
-				<ThumbsDown class="size-4" /> Je n'aime pas
-			</Button>
-			<Button
-				variant={feedbackSent === 'save' ? 'default' : 'outline'}
-				onclick={() => vote('save')}
-			>
-				<Bookmark class="size-4" /> Enregistrer
-			</Button>
+		<div
+			class="fixed inset-x-0 bottom-14 z-40 flex justify-center border-t bg-background/90 p-3 backdrop-blur sm:bottom-0"
+		>
+			<div class="flex w-full max-w-2xl gap-2">
+				<Button
+					class="flex-1"
+					variant={feedbackSent === 'like' ? 'default' : 'outline'}
+					onclick={() => vote('like')}
+				>
+					<ThumbsUp class="size-4" /> J'aime
+				</Button>
+				<Button
+					class="flex-1"
+					variant={feedbackSent === 'dislike' ? 'default' : 'outline'}
+					onclick={() => vote('dislike')}
+				>
+					<ThumbsDown class="size-4" /> Je n'aime pas
+				</Button>
+				<Button
+					class="flex-1"
+					variant={feedbackSent === 'save' ? 'default' : 'outline'}
+					onclick={() => vote('save')}
+				>
+					<Bookmark class="size-4" /> Enregistrer
+				</Button>
+			</div>
 		</div>
 	{/if}
 </div>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { ArticleSummary, Feed } from '@lumia/core';
+	import type { ArticleSummary } from '@lumia/core';
 	import { ArticleCard } from '@lumia/ui';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import Inbox from '@lucide/svelte/icons/inbox';
@@ -9,17 +9,11 @@
 	import { accentHueForFeed } from '$domain/article/accent-hue';
 
 	let articles = $state<ArticleSummary[]>([]);
-	let feeds = $state<Feed[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
-	function feedTitle(feedId: string): string {
-		return feeds.find((feed) => feed.id === feedId)?.title ?? 'Flux';
-	}
-
 	onMount(() => {
 		if (!requireAuth()) return;
-		void lumia.feed.listFeeds().then((loaded) => (feeds = loaded));
 		lumia.recommendation
 			.getSaved()
 			.then((loaded) => (articles = loaded))
@@ -52,15 +46,16 @@
 		</p>
 	{:else}
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each articles as article (article.id)}
+			{#each articles as article, index (article.id)}
 				<ArticleCard
 					href="/articles/{article.id}"
 					title={article.title}
 					summary={article.summary}
 					imageUrl={article.image_url}
-					sourceLabel={feedTitle(article.feed_id)}
+					sourceLabel={article.source_label}
 					publishedAt={article.published_at}
 					accentHue={accentHueForFeed(article.feed_id)}
+					featured={index === 0}
 				/>
 			{/each}
 		</div>

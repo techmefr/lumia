@@ -18,6 +18,21 @@
 
 	const authRoutes = ['/login', '/onboarding'];
 
+	const navLinks = [
+		{ href: '/articles', label: 'Articles', icon: Newspaper },
+		{ href: '/etincelle', label: "L'Étincelle", icon: Sparkles },
+		{ href: '/feeds', label: 'Mes flux', icon: Rss },
+		{ href: '/a-lire-plus-tard', label: 'À lire', icon: Bookmark }
+	];
+
+	function isActive(href: string): boolean {
+		return page.url.pathname === href || page.url.pathname.startsWith(`${href}/`);
+	}
+
+	const mainPadding = $derived(
+		authRoutes.includes(page.url.pathname) ? '' : 'pb-20 sm:pb-6'
+	);
+
 	async function logout() {
 		await lumia.user.logout();
 		await goto('/login');
@@ -29,42 +44,29 @@
 </svelte:head>
 
 {#if !authRoutes.includes(page.url.pathname)}
-	<header class="animate-in border-b bg-card fade-in slide-in-from-top-2 duration-300">
+	<header class="sticky top-0 z-30 animate-in border-b bg-card/95 backdrop-blur fade-in slide-in-from-top-2 duration-300">
 		<nav class="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-3">
 			<span class="mr-4 flex items-center gap-1.5 font-serif text-lg font-semibold">
 				<Sparkles class="size-5 text-primary transition-transform duration-300 hover:rotate-12" />
 				Lumia
 			</span>
-			<Button variant="ghost" size="sm" href="/articles">
-				<Newspaper class="size-4" />
-				Articles
-			</Button>
-			<Button variant="ghost" size="sm" href="/etincelle">
-				<Sparkles class="size-4" />
-				L'Étincelle
-			</Button>
-			<Button variant="ghost" size="sm" href="/feeds">
-				<Rss class="size-4" />
-				Mes flux
-			</Button>
-			<Button variant="ghost" size="sm" href="/a-lire-plus-tard">
-				<Bookmark class="size-4" />
-				À lire plus tard
-			</Button>
+			<div class="hidden items-center gap-1 sm:flex">
+				{#each navLinks as link (link.href)}
+					<Button variant={isActive(link.href) ? 'secondary' : 'ghost'} size="sm" href={link.href}>
+						<link.icon class="size-4" />
+						{link.label}
+					</Button>
+				{/each}
+			</div>
 			<div class="ml-auto flex items-center gap-1">
-				<Button
-					variant="ghost"
-					size="icon"
-					aria-label="Changer de thème"
-					onclick={toggleTheme}
-				>
+				<Button variant="ghost" size="icon" aria-label="Changer de thème" onclick={toggleTheme}>
 					{#if getTheme() === 'dark'}
 						<Sun class="size-4 animate-in spin-in-45 duration-300" />
 					{:else}
 						<Moon class="size-4 animate-in spin-in-45 duration-300" />
 					{/if}
 				</Button>
-				<Button variant="outline" size="sm" onclick={logout}>
+				<Button variant="outline" size="sm" onclick={logout} class="hidden sm:inline-flex">
 					<LogOut class="size-4" />
 					Déconnexion
 				</Button>
@@ -73,6 +75,37 @@
 	</header>
 {/if}
 
-<main class="mx-auto max-w-5xl animate-in px-4 py-6 fade-in duration-500 sm:px-6">
-	{@render children()}
-</main>
+{#key page.url.pathname}
+	<main
+		class="mx-auto max-w-5xl animate-in px-4 py-6 fade-in slide-in-from-bottom-3 duration-500 sm:px-6 {mainPadding}"
+	>
+		{@render children()}
+	</main>
+{/key}
+
+{#if !authRoutes.includes(page.url.pathname)}
+	<nav
+		class="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t bg-card/95 py-1.5 backdrop-blur sm:hidden"
+	>
+		{#each navLinks as link (link.href)}
+			<a
+				href={link.href}
+				class="flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] transition-colors {isActive(
+					link.href
+				)
+					? 'text-primary'
+					: 'text-muted-foreground'}"
+			>
+				<link.icon class="size-5 transition-transform {isActive(link.href) ? '-translate-y-0.5' : ''}" />
+				{link.label}
+			</a>
+		{/each}
+		<button
+			onclick={logout}
+			class="flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] text-muted-foreground"
+		>
+			<LogOut class="size-5" />
+			Sortir
+		</button>
+	</nav>
+{/if}

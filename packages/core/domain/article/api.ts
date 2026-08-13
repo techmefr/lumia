@@ -4,6 +4,9 @@ import type { ArticleDetail, ArticleSummary } from './types';
 export interface ListArticlesParams {
 	folderId?: string;
 	feedId?: string;
+	authorId?: string;
+	categoryId?: string;
+	keywordId?: string;
 	limit?: number;
 	offset?: number;
 }
@@ -22,6 +25,9 @@ export function createArticleApi(http: HttpClient) {
 		const suffix = toQueryString({
 			folder_id: params.folderId,
 			feed_id: params.feedId,
+			author_id: params.authorId,
+			category_id: params.categoryId,
+			keyword_id: params.keywordId,
 			limit: params.limit,
 			offset: params.offset
 		});
