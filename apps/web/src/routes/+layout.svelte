@@ -11,6 +11,7 @@
 	import Rss from '@lucide/svelte/icons/rss';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import LogOut from '@lucide/svelte/icons/log-out';
+	import Settings from '@lucide/svelte/icons/settings';
 	import { lumia } from '$technical/api/client';
 	import { getTheme, toggleTheme } from '$technical/theme/theme-store.svelte.js';
 
@@ -69,6 +70,9 @@
 				{/each}
 			</div>
 			<div class="ml-auto flex items-center gap-1">
+				<Button variant="ghost" size="icon" aria-label="Réglages" href="/settings">
+					<Settings class="size-4" />
+				</Button>
 				<Button variant="ghost" size="icon" aria-label="Changer de thème" onclick={toggleTheme}>
 					{#if getTheme() === 'dark'}
 						<Sun class="size-4 animate-in spin-in-45 duration-300" />

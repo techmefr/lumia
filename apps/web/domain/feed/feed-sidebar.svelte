@@ -4,6 +4,7 @@
 	import FolderIcon from '@lucide/svelte/icons/folder';
 	import Rss from '@lucide/svelte/icons/rss';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Settings from '@lucide/svelte/icons/settings';
 
 	interface Props {
 		folders: Folder[];
@@ -113,4 +114,12 @@
 			{/each}
 		{/if}
 	</div>
+
+	<a
+		href="/settings"
+		class="mt-auto flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+	>
+		<Settings class="size-4" />
+		Réglages
+	</a>
 </aside>
