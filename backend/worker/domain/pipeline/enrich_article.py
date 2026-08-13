@@ -1,3 +1,4 @@
+from dataclasses import replace
 from typing import Any
 
 from sqlalchemy import select
@@ -11,6 +12,7 @@ from worker.domain.extraction.stemming_fr import stem_fr
 from worker.domain.extraction.tfidf import extract_keywords
 from worker.domain.summarizer.extractive import summarize_extractive
 from worker.technical.connectors.base import RawArticle
+from worker.technical.content_extraction import ContentExtractor, TrafilaturaContentExtractor
 from worker.technical.db import worker_session
 from worker.technical.html import extract_first_image, strip_html
 from worker.technical.lang_detect import detect_lang
@@ -19,8 +21,15 @@ from worker.technical.translation.deepl_client import DeeplTranslator
 
 
 async def enrich_article(
-    _ctx: dict[str, Any], raw_article: RawArticle, *, translator: Translator | None = None
+    _ctx: dict[str, Any],
+    raw_article: RawArticle,
+    *,
+    translator: Translator | None = None,
+    content_extractor: ContentExtractor | None = None,
 ) -> None:
+    content_extractor = content_extractor or TrafilaturaContentExtractor()
+    clean_content = await content_extractor.extract(raw_article.url, raw_article.content)
+    raw_article = replace(raw_article, content=clean_content)
     plain_text = strip_html(raw_article.content)
     image_url = extract_first_image(raw_article.content)
     lang = Lang.FR if detect_lang(plain_text) == "fr" else Lang.EN

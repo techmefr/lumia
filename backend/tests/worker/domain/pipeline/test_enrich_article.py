@@ -19,6 +19,11 @@ FRENCH_CONTENT = (
 )
 
 
+class _FakeContentExtractor:
+    async def extract(self, url: str, fallback_html: str) -> str:
+        return fallback_html
+
+
 @pytest.fixture
 async def session(db_schema: None) -> AsyncIterator[AsyncSession]:
     session_factory = async_sessionmaker(get_engine(), expire_on_commit=False)
@@ -68,7 +73,7 @@ async def test_enrich_article_creates_the_article_with_summary_and_keywords(
 ) -> None:
     feed = await _create_feed(session)
 
-    await enrich_article({}, _raw_article())
+    await enrich_article({}, _raw_article(), content_extractor=_FakeContentExtractor())
 
     article = await session.scalar(select(Article).where(Article.feed_id == feed.id))
     assert article is not None
@@ -88,7 +93,7 @@ async def test_enrich_article_extracts_the_first_image_from_the_content(
     await _create_feed(session)
     content = FRENCH_CONTENT + '<img src="https://example.com/cover.jpg">'
 
-    await enrich_article({}, _raw_article(content=content))
+    await enrich_article({}, _raw_article(content=content), content_extractor=_FakeContentExtractor())
 
     article = await session.scalar(select(Article))
     assert article is not None
@@ -100,7 +105,7 @@ async def test_enrich_article_leaves_image_url_none_when_there_is_no_image(
 ) -> None:
     await _create_feed(session)
 
-    await enrich_article({}, _raw_article())
+    await enrich_article({}, _raw_article(), content_extractor=_FakeContentExtractor())
 
     article = await session.scalar(select(Article))
     assert article is not None
@@ -109,7 +114,7 @@ async def test_enrich_article_leaves_image_url_none_when_there_is_no_image(
 
 async def test_enrich_article_links_author_and_category(session: AsyncSession) -> None:
     await _create_feed(session)
-    await enrich_article({}, _raw_article())
+    await enrich_article({}, _raw_article(), content_extractor=_FakeContentExtractor())
 
     author = await session.scalar(select(Author).where(Author.name == "Jane Doe"))
     category = await session.scalar(select(Category).where(Category.name == "Animaux"))
@@ -125,7 +130,7 @@ async def test_enrich_article_detects_french_and_stems_keywords_accordingly(
     session: AsyncSession,
 ) -> None:
     await _create_feed(session)
-    await enrich_article({}, _raw_article())
+    await enrich_article({}, _raw_article(), content_extractor=_FakeContentExtractor())
 
     article = await session.scalar(select(Article))
     assert article is not None
@@ -143,8 +148,12 @@ async def test_enrich_article_reuses_an_existing_keyword_across_articles(
     session: AsyncSession,
 ) -> None:
     await _create_feed(session)
-    await enrich_article({}, _raw_article(external_entry_id="1"))
-    await enrich_article({}, _raw_article(external_entry_id="2"))
+    await enrich_article(
+        {}, _raw_article(external_entry_id="1"), content_extractor=_FakeContentExtractor()
+    )
+    await enrich_article(
+        {}, _raw_article(external_entry_id="2"), content_extractor=_FakeContentExtractor()
+    )
 
     chat_keywords = list(await session.scalars(select(Keyword).where(Keyword.term == "chat")))
     assert len(chat_keywords) == 1
@@ -152,8 +161,8 @@ async def test_enrich_article_reuses_an_existing_keyword_across_articles(
 
 async def test_enrich_article_is_idempotent_for_the_same_entry(session: AsyncSession) -> None:
     await _create_feed(session)
-    await enrich_article({}, _raw_article())
-    await enrich_article({}, _raw_article())
+    await enrich_article({}, _raw_article(), content_extractor=_FakeContentExtractor())
+    await enrich_article({}, _raw_article(), content_extractor=_FakeContentExtractor())
 
     articles = list(await session.scalars(select(Article)))
     assert len(articles) == 1
@@ -180,6 +189,7 @@ async def test_enrich_article_translates_foreign_content_to_the_users_preferred_
         {},
         _raw_article(title="The cat", content=ENGLISH_CONTENT),
         translator=_FakeTranslator(),
+        content_extractor=_FakeContentExtractor(),
     )
 
     article = await session.scalar(select(Article))
@@ -193,7 +203,12 @@ async def test_enrich_article_does_not_translate_when_language_already_matches(
 ) -> None:
     await _create_feed(session)
 
-    await enrich_article({}, _raw_article(), translator=_FakeTranslator())
+    await enrich_article(
+        {},
+        _raw_article(),
+        translator=_FakeTranslator(),
+        content_extractor=_FakeContentExtractor(),
+    )
 
     article = await session.scalar(select(Article))
     assert article is not None
@@ -210,6 +225,7 @@ async def test_enrich_article_extracts_english_keywords_from_the_original_text(
         {},
         _raw_article(title="The cat", content=ENGLISH_CONTENT),
         translator=_FakeTranslator(),
+        content_extractor=_FakeContentExtractor(),
     )
 
     article = await session.scalar(select(Article))
@@ -249,7 +265,9 @@ async def test_enrich_article_creates_one_article_per_subscribing_user(
     session.add(other_feed)
     await session.commit()
 
-    await enrich_article({}, _raw_article(feed_external_id="20"))
+    await enrich_article(
+        {}, _raw_article(feed_external_id="20"), content_extractor=_FakeContentExtractor()
+    )
 
     articles = list(await session.scalars(select(Article)))
     assert len(articles) == 2
@@ -287,6 +305,7 @@ async def test_enrich_article_translates_per_subscriber_preferred_language(
             feed_external_id="30", title="The cat", content=ENGLISH_CONTENT
         ),
         translator=_FakeTranslator(),
+        content_extractor=_FakeContentExtractor(),
     )
 
     fr_article = await session.scalar(select(Article).where(Article.feed_id == fr_feed.id))
