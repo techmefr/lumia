@@ -43,7 +43,7 @@
 </script>
 
 <aside
-	class="sticky top-[4.5rem] hidden max-h-[calc(100vh-6rem)] w-60 shrink-0 flex-col gap-0.5 rounded-2xl bg-zinc-900 p-3 text-zinc-300 sm:flex dark:bg-zinc-950"
+	class="sticky top-[4.5rem] hidden h-[calc(100vh-7.5rem)] w-60 shrink-0 flex-col gap-0.5 rounded-2xl bg-zinc-900 p-3 text-zinc-300 sm:flex dark:bg-zinc-950"
 >
 	<button
 		onclick={onSelectAll}
