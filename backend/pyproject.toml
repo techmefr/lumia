@@ -19,6 +19,7 @@ dependencies = [
     "scikit-learn>=1.5",
     "nltk>=3.9",
     "python-multipart>=0.0.32",
+    "trafilatura>=1.12",
 ]
 
 [dependency-groups]
@@ -40,7 +41,7 @@ strict = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["sklearn.*", "nltk.*"]
+module = ["sklearn.*", "nltk.*", "trafilatura.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
