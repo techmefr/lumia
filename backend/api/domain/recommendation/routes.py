@@ -7,12 +7,36 @@ from api.domain.article.models import Article
 from api.domain.article.schemas import ArticleSummaryResponse
 from api.domain.recommendation.etincelle_service import list_etincelle
 from api.domain.recommendation.feedback_service import apply_feedback
+from api.domain.recommendation.saved_service import list_saved
 from api.domain.recommendation.schemas import FeedbackRequest
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.technical.db import get_db_session
 
 router = APIRouter()
+
+
+@router.get("/articles/saved", response_model=list[ArticleSummaryResponse])
+async def get_saved_articles(
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[ArticleSummaryResponse]:
+    articles = await list_saved(session, user.id, limit=limit, offset=offset)
+    return [
+        ArticleSummaryResponse(
+            id=article.id,
+            feed_id=article.feed_id,
+            author_id=article.author_id,
+            category_id=article.category_id,
+            title=article.title,
+            url=article.url,
+            summary=article.summary,
+            published_at=article.published_at,
+        )
+        for article in articles
+    ]
 
 
 @router.get("/articles/etincelle", response_model=list[ArticleSummaryResponse])
