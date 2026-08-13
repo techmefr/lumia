@@ -69,6 +69,8 @@ function applyAccent(hue: number, currentTheme: Theme) {
 
 function applyFontScale(scale: number) {
 	document.documentElement.style.fontSize = `${16 * scale}px`;
+	// Layout-affecting change: let listeners (e.g. the fixed bottom nav height tracker) re-measure.
+	window.dispatchEvent(new Event('resize'));
 }
 
 export function getTheme(): Theme {

@@ -130,7 +130,8 @@
 		</Card>
 
 		<div
-			class="fixed inset-x-0 bottom-14 z-40 flex justify-center border-t bg-background/90 p-3 backdrop-blur sm:bottom-0"
+			class="fixed inset-x-0 z-40 flex justify-center border-t bg-background/90 p-3 backdrop-blur"
+			style="bottom: var(--bottom-nav-h, 0px)"
 		>
 			<div class="flex w-full max-w-3xl gap-2">
 				<Button

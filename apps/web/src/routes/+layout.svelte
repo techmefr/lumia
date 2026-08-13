@@ -1,11 +1,10 @@
 <script lang="ts">
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
+	import { onMount } from 'svelte';
 	import { goto, onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Button } from '@lumia/ui';
-	import Sun from '@lucide/svelte/icons/sun';
-	import Moon from '@lucide/svelte/icons/moon';
 	import Newspaper from '@lucide/svelte/icons/newspaper';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Rss from '@lucide/svelte/icons/rss';
@@ -13,9 +12,10 @@
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import Settings from '@lucide/svelte/icons/settings';
 	import { lumia } from '$technical/api/client';
-	import { getTheme, toggleTheme } from '$technical/theme/theme-store.svelte.js';
 
 	let { children } = $props();
+
+	let bottomNavEl = $state<HTMLElement | null>(null);
 
 	const authRoutes = ['/login', '/onboarding'];
 
@@ -38,6 +38,26 @@
 		await lumia.user.logout();
 		await goto('/login');
 	}
+
+	onMount(() => {
+		if (!bottomNavEl) return;
+		const measure = () => {
+			if (bottomNavEl) {
+				const height = bottomNavEl.getBoundingClientRect().height;
+				document.documentElement.style.setProperty('--bottom-nav-h', `${height}px`);
+			}
+		};
+		const observer = new ResizeObserver(measure);
+		observer.observe(bottomNavEl);
+		window.addEventListener('resize', measure);
+		window.addEventListener('orientationchange', measure);
+		measure();
+		return () => {
+			observer.disconnect();
+			window.removeEventListener('resize', measure);
+			window.removeEventListener('orientationchange', measure);
+		};
+	});
 
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
@@ -70,16 +90,6 @@
 				{/each}
 			</div>
 			<div class="ml-auto flex items-center gap-1">
-				<Button variant="ghost" size="icon" aria-label="Réglages" href="/settings">
-					<Settings class="size-4" />
-				</Button>
-				<Button variant="ghost" size="icon" aria-label="Changer de thème" onclick={toggleTheme}>
-					{#if getTheme() === 'dark'}
-						<Sun class="size-4 animate-in spin-in-45 duration-300" />
-					{:else}
-						<Moon class="size-4 animate-in spin-in-45 duration-300" />
-					{/if}
-				</Button>
 				<Button variant="outline" size="sm" onclick={logout} class="hidden sm:inline-flex">
 					<LogOut class="size-4" />
 					Déconnexion
@@ -99,6 +109,7 @@
 
 {#if !authRoutes.includes(page.url.pathname)}
 	<nav
+		bind:this={bottomNavEl}
 		class="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t bg-card/95 py-1.5 backdrop-blur sm:hidden"
 	>
 		{#each navLinks as link (link.href)}
@@ -114,12 +125,18 @@
 				{link.label}
 			</a>
 		{/each}
-		<button
-			onclick={logout}
-			class="flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] text-muted-foreground"
+		<a
+			href="/settings"
+			class="flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] transition-colors {isActive(
+				'/settings'
+			)
+				? 'text-primary'
+				: 'text-muted-foreground'}"
 		>
-			<LogOut class="size-5" />
-			Sortir
-		</button>
+			<Settings
+				class="size-5 transition-transform {isActive('/settings') ? '-translate-y-0.5' : ''}"
+			/>
+			Réglages
+		</a>
 	</nav>
 {/if}
