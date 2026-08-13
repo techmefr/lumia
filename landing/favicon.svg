@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lumia">
+	<title>Lumia</title>
+	<defs>
+		<linearGradient id="lumia-core" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#8b85f5" />
+			<stop offset="1" stop-color="#4f46e5" />
+		</linearGradient>
+	</defs>
+	<rect width="64" height="64" rx="14" fill="#0b0b0f" />
+	<g stroke="url(#lumia-core)" stroke-width="4" stroke-linecap="round">
+		<path d="M32 8v7" />
+		<path d="M32 49v7" />
+		<path d="M8 32h7" />
+		<path d="M49 32h7" />
+		<path d="M15 15l5 5" />
+		<path d="M44 44l5 5" />
+		<path d="M15 49l5-5" />
+		<path d="M44 20l5-5" />
+	</g>
+	<circle cx="32" cy="32" r="11" fill="url(#lumia-core)" />
+</svg>

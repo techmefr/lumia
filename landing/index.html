@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="fr">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Lumia — Éclaircis tes flux</title>
+		<meta
+			name="description"
+			content="Lumia est un lecteur RSS auto-hébergé qui nettoie les articles, les résume et apprend tes goûts."
+		/>
+		<link rel="icon" href="favicon.svg" />
+		<style>
+			:root {
+				--bg: #ffffff;
+				--fg: #18181b;
+				--muted: #52525b;
+				--card: #fafafa;
+				--border: #e4e4e7;
+				--primary: #4f46e5;
+				--primary-fg: #ffffff;
+				--accent: #eef2ff;
+			}
+			:root:not([data-theme='light']) {
+				color-scheme: light dark;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root:not([data-theme='light']) {
+					--bg: #0b0b0f;
+					--fg: #fafafa;
+					--muted: #a1a1aa;
+					--card: #17171c;
+					--border: #3f3f46;
+					--primary: #8b85f5;
+					--primary-fg: #0b0b0f;
+					--accent: #1b1b28;
+				}
+			}
+			:root[data-theme='dark'] {
+				--bg: #0b0b0f;
+				--fg: #fafafa;
+				--muted: #a1a1aa;
+				--card: #17171c;
+				--border: #3f3f46;
+				--primary: #8b85f5;
+				--primary-fg: #0b0b0f;
+				--accent: #1b1b28;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				background: var(--bg);
+				color: var(--fg);
+				font-family:
+					ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+					sans-serif;
+				line-height: 1.65;
+				-webkit-font-smoothing: antialiased;
+			}
+			.wrap {
+				max-width: 60rem;
+				margin: 0 auto;
+				padding: 2rem 1.25rem 5rem;
+			}
+			header {
+				display: flex;
+				align-items: center;
+				gap: 0.6rem;
+				font-weight: 600;
+				font-size: 1.15rem;
+			}
+			header svg {
+				width: 1.6rem;
+				height: 1.6rem;
+				color: var(--primary);
+			}
+			.hero {
+				margin: 3.5rem 0 0;
+			}
+			.hero h1 {
+				font-size: clamp(2.1rem, 6vw, 3.4rem);
+				line-height: 1.1;
+				margin: 0 0 1rem;
+				letter-spacing: -0.02em;
+			}
+			.hero p.lede {
+				font-size: clamp(1.05rem, 2.5vw, 1.3rem);
+				color: var(--muted);
+				max-width: 42rem;
+				margin: 0 0 2rem;
+			}
+			.actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.75rem;
+				align-items: center;
+			}
+			a.btn,
+			button.btn {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				min-height: 2.75rem;
+				padding: 0 1.15rem;
+				border-radius: 0.7rem;
+				border: 1px solid var(--border);
+				background: var(--card);
+				color: var(--fg);
+				font: inherit;
+				font-weight: 500;
+				text-decoration: none;
+				cursor: pointer;
+				transition:
+					transform 0.15s ease,
+					background 0.15s ease;
+			}
+			a.btn:hover,
+			button.btn:hover {
+				transform: translateY(-1px);
+			}
+			a.btn.primary {
+				background: var(--primary);
+				border-color: var(--primary);
+				color: var(--primary-fg);
+			}
+			a.btn[aria-disabled='true'] {
+				opacity: 0.55;
+				cursor: not-allowed;
+				transform: none;
+			}
+			:focus-visible {
+				outline: 2px solid var(--primary);
+				outline-offset: 2px;
+			}
+
+			section {
+				margin-top: 4rem;
+			}
+			h2 {
+				font-size: 1.5rem;
+				margin: 0 0 1rem;
+				letter-spacing: -0.01em;
+			}
+			.grid {
+				display: grid;
+				gap: 1rem;
+				grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+			}
+			.card {
+				border: 1px solid var(--border);
+				background: var(--card);
+				border-radius: 1rem;
+				padding: 1.25rem;
+			}
+			.card h3 {
+				margin: 0 0 0.4rem;
+				font-size: 1.05rem;
+			}
+			.card p {
+				margin: 0;
+				color: var(--muted);
+				font-size: 0.95rem;
+			}
+			ul.plain {
+				margin: 0;
+				padding-left: 1.15rem;
+				color: var(--muted);
+			}
+			ul.plain li {
+				margin-bottom: 0.4rem;
+			}
+			code,
+			pre {
+				font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+				font-size: 0.9em;
+			}
+			pre {
+				background: var(--accent);
+				border: 1px solid var(--border);
+				border-radius: 0.7rem;
+				padding: 0.9rem 1rem;
+				overflow-x: auto;
+			}
+			.field {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.6rem;
+				align-items: flex-end;
+				margin-top: 1rem;
+			}
+			.field label {
+				display: flex;
+				flex-direction: column;
+				gap: 0.35rem;
+				font-size: 0.9rem;
+				flex: 1 1 18rem;
+			}
+			.field input {
+				min-height: 2.75rem;
+				padding: 0 0.75rem;
+				border-radius: 0.6rem;
+				border: 1px solid var(--border);
+				background: var(--bg);
+				color: var(--fg);
+				font: inherit;
+			}
+			.hint {
+				color: var(--muted);
+				font-size: 0.88rem;
+				margin-top: 0.6rem;
+			}
+			footer {
+				margin-top: 4.5rem;
+				padding-top: 1.5rem;
+				border-top: 1px solid var(--border);
+				color: var(--muted);
+				font-size: 0.9rem;
+			}
+			footer a {
+				color: inherit;
+			}
+			@media (prefers-reduced-motion: reduce) {
+				* {
+					transition: none !important;
+					animation: none !important;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrap">
+			<header>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+					<path
+						d="M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4 7 17m10-10 1.4-1.4"
+						stroke-linecap="round"
+					/>
+					<circle cx="12" cy="12" r="3.5" />
+				</svg>
+				Lumia
+			</header>
+
+			<main class="hero">
+				<h1>Éclaircis tes flux.</h1>
+				<p class="lede">
+					Lumia est un lecteur RSS auto-hébergé. Il récupère tes flux, nettoie les articles de
+					tout ce qui n'est pas l'article, en extrait les mots-clés et un résumé, puis apprend
+					ce qui t'intéresse au fil de tes lectures. Tout tourne sur ta propre machine.
+				</p>
+
+				<div class="actions">
+					<a class="btn primary" id="open-app" href="#configurer" aria-disabled="true">
+						Ouvrir l'app
+					</a>
+					<a class="btn" href="https://github.com/techmefr/lumia">Le code sur GitHub</a>
+				</div>
+				<p class="hint" id="target-hint">
+					Aucune adresse enregistrée pour l'instant — indique-la dans
+					<a href="#configurer">Tester chez soi</a>.
+				</p>
+
+				<section>
+					<h2>Ce que ça fait</h2>
+					<div class="grid">
+						<div class="card">
+							<h3>Articles complets et lisibles</h3>
+							<p>
+								Chaque page est re-téléchargée et re-extraite pour retirer les menus, bandeaux
+								et listes d'articles connexes. Il ne reste que le texte, avec un temps de
+								lecture estimé.
+							</p>
+						</div>
+						<div class="card">
+							<h3>Lu / non-lu qui tient</h3>
+							<p>
+								Compteurs de non-lus par flux et par dossier, filtre « non lus seulement », et
+								« tout marquer comme lu » sur un flux ou un dossier entier.
+							</p>
+						</div>
+						<div class="card">
+							<h3>Reprise de lecture</h3>
+							<p>
+								La position dans l'article est enregistrée côté serveur : on rouvre sur un autre
+								appareil et on repart où on s'était arrêté.
+							</p>
+						</div>
+						<div class="card">
+							<h3>L'Étincelle</h3>
+							<p>
+								Un score de pertinence appris de tes votes, appliqué aux mots-clés, aux
+								sources, aux auteurs et aux catégories.
+							</p>
+						</div>
+						<div class="card">
+							<h3>Playlists et lecture audio</h3>
+							<p>
+								Des files d'articles ordonnées, avec durée totale estimée, lues à voix haute
+								par la synthèse vocale du navigateur.
+							</p>
+						</div>
+						<div class="card">
+							<h3>Import Feedly, traduction</h3>
+							<p>
+								Import OPML avec un dossier par catégorie, ajout d'un flux par URL, sauvegarde
+								d'une page quelconque, et traduction des articles étrangers.
+							</p>
+						</div>
+					</div>
+				</section>
+
+				<section id="configurer">
+					<h2>Tester chez soi</h2>
+					<p style="color: var(--muted); margin-top: 0">
+						Lumia tourne sur ta machine, pas sur cette page. Lance la stack, puis enregistre ici
+						l'adresse de l'app sur ton réseau local : le bouton « Ouvrir l'app » pointera dessus,
+						sur cet appareil.
+					</p>
+					<pre><code>git clone https://github.com/techmefr/lumia.git
+cd lumia
+cp .env.example .env
+docker compose up -d</code></pre>
+
+					<div class="field">
+						<label>
+							Adresse de l'app sur ton réseau
+							<input
+								id="app-url"
+								type="url"
+								inputmode="url"
+								placeholder="http://192.168.1.20:5173"
+								autocomplete="url"
+							/>
+						</label>
+						<button class="btn primary" id="save-url" type="button">Enregistrer</button>
+						<button class="btn" id="clear-url" type="button">Effacer</button>
+					</div>
+					<p class="hint" id="save-feedback" role="status"></p>
+					<p class="hint">
+						L'adresse reste dans le navigateur de cet appareil (<code>localStorage</code>), elle
+						n'est envoyée à personne. Sur un téléphone ou une tablette du même réseau, ouvre
+						cette page et enregistre l'IP locale de la machine qui fait tourner Lumia — pas
+						<code>localhost</code>, qui désignerait le téléphone lui-même.
+					</p>
+				</section>
+
+				<section>
+					<h2>Sous le capot</h2>
+					<ul class="plain">
+						<li>Backend FastAPI + worker Python, PostgreSQL, Redis, Miniflux pour l'ingestion.</li>
+						<li>Extraction TF-IDF avec racinisation FR/EN et résumé extractif, pas d'appel externe requis.</li>
+						<li>Front SvelteKit + Svelte 5, Tailwind 4.</li>
+						<li>Monorepo OSDD : <code>technical/</code> n'importe jamais <code>domain/</code>.</li>
+						<li>Auto-hébergement complet ; seuls l'API et le web sont exposés, le reste reste sur le réseau interne.</li>
+					</ul>
+				</section>
+			</main>
+
+			<footer>
+				<p>
+					Lumia — <a href="https://github.com/techmefr/lumia/blob/main/LICENSE">AGPL-3.0</a> ·
+					<a href="https://github.com/techmefr/lumia">techmefr/lumia</a>
+				</p>
+			</footer>
+		</div>
+
+		<script>
+			(function () {
+				var STORAGE_KEY = 'lumia:app-url';
+				var input = document.getElementById('app-url');
+				var openLink = document.getElementById('open-app');
+				var hint = document.getElementById('target-hint');
+				var feedback = document.getElementById('save-feedback');
+
+				function normalize(raw) {
+					var value = (raw || '').trim();
+					if (!value) return null;
+					if (!/^https?:\/\//i.test(value)) value = 'http://' + value;
+					try {
+						var url = new URL(value);
+						if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+						return url.toString().replace(/\/$/, '');
+					} catch (error) {
+						return null;
+					}
+				}
+
+				function apply(target) {
+					if (target) {
+						openLink.href = target;
+						openLink.removeAttribute('aria-disabled');
+						hint.textContent = 'Le bouton ouvre ' + target + ' depuis cet appareil.';
+					} else {
+						openLink.href = '#configurer';
+						openLink.setAttribute('aria-disabled', 'true');
+						hint.textContent =
+							'Aucune adresse enregistrée pour l’instant — indique-la dans « Tester chez soi ».';
+					}
+				}
+
+				function read() {
+					try {
+						return localStorage.getItem(STORAGE_KEY);
+					} catch (error) {
+						return null;
+					}
+				}
+
+				var stored = read();
+				if (stored) input.value = stored;
+				apply(stored);
+
+				document.getElementById('save-url').addEventListener('click', function () {
+					var target = normalize(input.value);
+					if (!target) {
+						feedback.textContent = 'Adresse invalide — attendu par exemple http://192.168.1.20:5173.';
+						return;
+					}
+					try {
+						localStorage.setItem(STORAGE_KEY, target);
+					} catch (error) {
+						feedback.textContent = 'Impossible d’enregistrer : stockage local indisponible.';
+						return;
+					}
+					input.value = target;
+					apply(target);
+					feedback.textContent = 'Adresse enregistrée.';
+				});
+
+				document.getElementById('clear-url').addEventListener('click', function () {
+					try {
+						localStorage.removeItem(STORAGE_KEY);
+					} catch (error) {
+						/* nothing to clear */
+					}
+					input.value = '';
+					apply(null);
+					feedback.textContent = 'Adresse effacée.';
+				});
+			})();
+		</script>
+	</body>
+</html>
