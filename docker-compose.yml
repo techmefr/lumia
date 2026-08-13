@@ -17,25 +17,47 @@ services:
     networks:
       - internal
 
+  miniflux-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: miniflux
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: miniflux
+    volumes:
+      - miniflux-postgres-data:/var/lib/postgresql/data
+    networks:
+      - internal
+
   miniflux:
     image: miniflux/miniflux:latest
     restart: unless-stopped
     depends_on:
-      - postgres
+      - miniflux-postgres
     environment:
-      DATABASE_URL: postgres://lumia:${POSTGRES_PASSWORD}@postgres/lumia?sslmode=disable
+      # Its own database — never the lumia-backend one: Miniflux's own schema
+      # (categories, feeds, users, ...) collides table-for-table with ours.
+      DATABASE_URL: postgres://miniflux:${POSTGRES_PASSWORD}@miniflux-postgres/miniflux?sslmode=disable
       RUN_MIGRATIONS: 1
       WEBHOOK_URL: http://lumia-backend-api:8000/webhooks/miniflux
+      ADMIN_USERNAME: ${MINIFLUX_USERNAME}
+      ADMIN_PASSWORD: ${MINIFLUX_PASSWORD}
+      CREATE_ADMIN: 1
+    ports:
+      - "8090:8080"
     networks:
       - internal
 
   lumia-backend-api:
-    build: ./docker/lumia-backend
+    build:
+      context: .
+      dockerfile: docker/lumia-backend/Dockerfile
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000
     restart: unless-stopped
     depends_on:
       - postgres
       - redis
+      - miniflux
     environment:
       DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
@@ -46,6 +68,11 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS}
+      MINIFLUX_BASE_URL: http://miniflux:8080
+      MINIFLUX_USERNAME: ${MINIFLUX_USERNAME}
+      MINIFLUX_PASSWORD: ${MINIFLUX_PASSWORD}
+      DEEPL_API_KEY: ${DEEPL_API_KEY}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://localhost:8080}
     ports:
       - "8000:8000"
     networks:
@@ -53,7 +80,9 @@ services:
       - public
 
   lumia-backend-worker:
-    build: ./docker/lumia-backend
+    build:
+      context: .
+      dockerfile: docker/lumia-backend/Dockerfile
     command: arq worker.technical.queue.WorkerSettings
     restart: unless-stopped
     depends_on:
@@ -62,6 +91,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
+      DEEPL_API_KEY: ${DEEPL_API_KEY}
     networks:
       - internal
 
@@ -81,3 +111,4 @@ networks:
 
 volumes:
   postgres-data:
+  miniflux-postgres-data:

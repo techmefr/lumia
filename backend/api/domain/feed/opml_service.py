@@ -1,0 +1,111 @@
+import httpx
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from api.domain.feed.models import Feed, Folder, SourceType
+from api.domain.feed.opml_parser import OpmlEntry, parse_opml
+from api.domain.user.models import User
+from worker.technical.connectors.miniflux_client import (
+    MinifluxApiError,
+    create_category,
+    create_feed,
+    list_categories,
+)
+
+
+async def import_opml(
+    session: AsyncSession,
+    user: User,
+    xml_bytes: bytes,
+    *,
+    miniflux_transport: httpx.AsyncBaseTransport | None = None,
+) -> list[Feed]:
+    entries = parse_opml(xml_bytes)
+
+    folder_cache: dict[str, Folder] = {}
+    category_id_by_folder_name = {
+        category.title: category.category_id
+        for category in await list_categories(transport=miniflux_transport)
+    }
+
+    created_feeds: list[Feed] = []
+    for entry in entries:
+        existing_feed = await session.scalar(
+            select(Feed).where(Feed.user_id == user.id, Feed.url == entry.url)
+        )
+        if existing_feed is not None:
+            continue
+
+        folder = await _get_or_create_folder(session, user, entry.folder_name, folder_cache)
+        try:
+            external_feed_id = await _register_with_miniflux(
+                session,
+                entry,
+                category_id_by_folder_name,
+                transport=miniflux_transport,
+            )
+        except (MinifluxApiError, httpx.HTTPError):
+            # An unreachable/invalid feed URL must not abort the rest of the batch —
+            # the user still gets every other feed from their Feedly export.
+            continue
+
+        feed = Feed(
+            user_id=user.id,
+            folder_id=folder.id if folder else None,
+            source_type=SourceType.MINIFLUX,
+            external_feed_id=external_feed_id,
+            title=entry.title,
+            url=entry.url,
+        )
+        session.add(feed)
+        created_feeds.append(feed)
+
+    await session.commit()
+    return created_feeds
+
+
+async def _get_or_create_folder(
+    session: AsyncSession,
+    user: User,
+    folder_name: str | None,
+    folder_cache: dict[str, Folder],
+) -> Folder | None:
+    if folder_name is None:
+        return None
+    if folder_name in folder_cache:
+        return folder_cache[folder_name]
+
+    folder = await session.scalar(
+        select(Folder).where(Folder.user_id == user.id, Folder.name == folder_name)
+    )
+    if folder is None:
+        folder = Folder(user_id=user.id, name=folder_name)
+        session.add(folder)
+        await session.flush()
+    folder_cache[folder_name] = folder
+    return folder
+
+
+async def _register_with_miniflux(
+    session: AsyncSession,
+    entry: OpmlEntry,
+    category_id_by_folder_name: dict[str, int],
+    *,
+    transport: httpx.AsyncBaseTransport | None,
+) -> str:
+    existing_feed = await session.scalar(select(Feed).where(Feed.url == entry.url))
+    if existing_feed is not None:
+        return existing_feed.external_feed_id
+
+    category_id: int | None = None
+    if entry.folder_name is not None:
+        category_id = category_id_by_folder_name.get(entry.folder_name)
+        if category_id is None:
+            category = await create_category(entry.folder_name, transport=transport)
+            category_id = category.category_id
+            category_id_by_folder_name[entry.folder_name] = category_id
+
+    miniflux_feed = await create_feed(
+        entry.url, category_id=category_id, transport=transport
+    )
+    return str(miniflux_feed.feed_id)
