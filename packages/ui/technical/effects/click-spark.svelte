@@ -47,6 +47,9 @@
 
 	$effect(() => {
 		if (!canvas) return;
+		// Canvas animation is driven by requestAnimationFrame, so the global
+		// prefers-reduced-motion CSS block can't reach it — skip it outright here.
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
 		const resizeCanvas = () => {
 			const width = window.innerWidth;
@@ -119,9 +122,12 @@
 	}
 </script>
 
-<div bind:this={wrapper} onclick={handleClick} role="presentation" class="contents {className}">
+<svelte:window onclick={handleClick} />
+
+<div bind:this={wrapper} class="contents {className}">
 	<canvas
 		bind:this={canvas}
+		aria-hidden="true"
 		class="pointer-events-none fixed inset-0 z-[999]"
 		style="width:100vw;height:100vh;"
 	></canvas>

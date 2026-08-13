@@ -119,11 +119,11 @@
 		{/if}
 
 		{#if error}
-			<p class="text-sm text-destructive">{error}</p>
+			<p role="alert" class="text-sm text-destructive">{error}</p>
 		{/if}
 
 		{#if loading}
-			<p class="text-sm text-muted-foreground">Chargement…</p>
+			<p role="status" class="text-sm text-muted-foreground">Chargement…</p>
 		{:else if articles.length === 0}
 			<p class="flex items-center gap-2 text-sm text-muted-foreground">
 				<Inbox class="size-4" />

@@ -85,6 +85,13 @@
 	* {
 		@apply border-border outline-ring/50;
 	}
+	html {
+		/* The fixed action bar and the mobile bottom nav both sit at the bottom of the
+		   viewport: without this, tabbing to an element near the end of the page scrolls it
+		   right underneath them and the focus ring becomes invisible (WCAG 2.4.11). */
+		scroll-padding-bottom: calc(var(--bottom-nav-h, 0px) + 5.5rem);
+		scroll-padding-top: 4.5rem;
+	}
 	body {
 		@apply bg-background text-foreground font-sans;
 		position: relative;
@@ -115,6 +122,45 @@
 ::view-transition-group(*) {
 	animation-duration: 320ms;
 	animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* The app leans heavily on motion (click sparks, rotating glow, staggered lists, page
+   transitions, hover zooms). Everything decorative is reduced to a near-instant state for
+   anyone who asked their OS for less movement — vestibular disorders make large sweeping
+   motion genuinely unpleasant, not merely noisy. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+
+	::view-transition-group(*),
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 0.01ms !important;
+	}
+}
+
+.skip-link {
+	position: absolute;
+	left: 0.75rem;
+	top: 0.5rem;
+	z-index: 60;
+	transform: translateY(-200%);
+	border-radius: var(--radius-md);
+	background: var(--primary);
+	color: var(--primary-foreground);
+	padding: 0.5rem 1rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+}
+
+.skip-link:focus-visible {
+	transform: translateY(0);
 }
 
 .prose {

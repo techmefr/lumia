@@ -78,15 +78,21 @@
 <ClickSpark sparkColor="var(--primary)" sparkCount={6} sparkRadius={14} sparkSize={7} duration={320}>
 
 {#if !authRoutes.includes(page.url.pathname)}
+	<a href="#main-content" class="skip-link">Aller au contenu</a>
 	<header class="sticky top-0 z-30 animate-in border-b bg-card/95 backdrop-blur fade-in slide-in-from-top-2 duration-300">
-		<nav class="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-3">
+		<nav aria-label="Navigation principale" class="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-3">
 			<span class="mr-4 flex items-center gap-1.5 font-serif text-lg font-semibold">
 				<Sparkles class="size-5 text-primary transition-transform duration-300 hover:rotate-12" />
 				Lumia
 			</span>
 			<div class="hidden items-center gap-1 sm:flex">
 				{#each navLinks as link (link.href)}
-					<Button variant={isActive(link.href) ? 'secondary' : 'ghost'} size="sm" href={link.href}>
+					<Button
+						variant={isActive(link.href) ? 'secondary' : 'ghost'}
+						size="sm"
+						href={link.href}
+						aria-current={isActive(link.href) ? 'page' : undefined}
+					>
 						<link.icon class="size-4" />
 						{link.label}
 					</Button>
@@ -104,6 +110,7 @@
 
 {#key page.url.pathname}
 	<main
+		id="main-content"
 		class="mx-auto max-w-5xl px-4 py-6 sm:px-6 {mainPadding}"
 		in:fly={{ y: 16, duration: 260, delay: 120 }}
 		out:fade={{ duration: 120 }}
@@ -115,15 +122,17 @@
 {#if !authRoutes.includes(page.url.pathname)}
 	<nav
 		bind:this={bottomNavEl}
+		aria-label="Navigation mobile"
 		class="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t bg-card/95 py-1.5 backdrop-blur sm:hidden"
 	>
 		{#each navLinks as link (link.href)}
 			<a
 				href={link.href}
-				class="flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] transition-colors {isActive(
+				aria-current={isActive(link.href) ? 'page' : undefined}
+				class="flex min-h-11 flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] transition-colors {isActive(
 					link.href
 				)
-					? 'text-primary'
+					? 'font-semibold text-primary'
 					: 'text-muted-foreground'}"
 			>
 				<link.icon class="size-5 transition-transform {isActive(link.href) ? '-translate-y-0.5' : ''}" />
@@ -132,10 +141,11 @@
 		{/each}
 		<a
 			href="/settings"
-			class="flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] transition-colors {isActive(
+			aria-current={isActive('/settings') ? 'page' : undefined}
+			class="flex min-h-11 flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] transition-colors {isActive(
 				'/settings'
 			)
-				? 'text-primary'
+				? 'font-semibold text-primary'
 				: 'text-muted-foreground'}"
 		>
 			<Settings
