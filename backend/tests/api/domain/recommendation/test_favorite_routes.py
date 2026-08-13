@@ -32,7 +32,7 @@ async def _headers(client: httpx.AsyncClient) -> dict[str, str]:
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
-async def test_saved_only_returns_articles_voted_save(client: httpx.AsyncClient) -> None:
+async def test_favorites_only_returns_articles_marked_favorite(client: httpx.AsyncClient) -> None:
     headers = await _headers(client)
 
     session_factory = async_sessionmaker(get_engine(), expire_on_commit=False)
@@ -47,10 +47,10 @@ async def test_saved_only_returns_articles_voted_save(client: httpx.AsyncClient)
         )
         session.add(feed)
         await session.flush()
-        saved = Article(
+        favorited = Article(
             feed_id=feed.id,
             external_entry_id="1",
-            title="Saved",
+            title="Favorited",
             url="https://example.com/1",
             content="Content",
             published_at=datetime(2026, 8, 12, tzinfo=UTC),
@@ -63,18 +63,18 @@ async def test_saved_only_returns_articles_voted_save(client: httpx.AsyncClient)
             content="Content",
             published_at=datetime(2026, 8, 12, tzinfo=UTC),
         )
-        session.add_all([saved, liked])
+        session.add_all([favorited, liked])
         await session.flush()
-        session.add(UserArticleFeedback(user_id=user.id, article_id=saved.id, saved=True))
+        session.add(UserArticleFeedback(user_id=user.id, article_id=favorited.id, favorite=True))
         session.add(UserArticleFeedback(user_id=user.id, article_id=liked.id, sentiment=Vote.LIKE))
         await session.commit()
 
-    response = await client.get("/articles/saved", headers=headers)
+    response = await client.get("/articles/favorites", headers=headers)
     assert response.status_code == 200
     titles = [article["title"] for article in response.json()]
-    assert titles == ["Saved"]
+    assert titles == ["Favorited"]
 
 
-async def test_saved_without_a_token_returns_401(client: httpx.AsyncClient) -> None:
-    response = await client.get("/articles/saved")
+async def test_favorites_without_a_token_returns_401(client: httpx.AsyncClient) -> None:
+    response = await client.get("/articles/favorites")
     assert response.status_code == 401

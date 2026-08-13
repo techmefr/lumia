@@ -58,7 +58,7 @@ async def test_list_etincelle_excludes_articles_already_voted(session: AsyncSess
     user, feed = await _create_user_and_feed(session)
     voted = await _create_article(session, feed, external_entry_id="1")
     unvoted = await _create_article(session, feed, external_entry_id="2")
-    session.add(UserArticleFeedback(user_id=user.id, article_id=voted.id, vote=Vote.LIKE))
+    session.add(UserArticleFeedback(user_id=user.id, article_id=voted.id, sentiment=Vote.LIKE))
     await session.commit()
 
     ranked = await list_etincelle(session, user.id)

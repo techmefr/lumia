@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from api.domain.article.models import Article
 from api.domain.feed.models import Feed, SourceType
+from api.domain.recommendation.favorite_service import list_favorites
 from api.domain.recommendation.models import UserArticleFeedback, Vote
-from api.domain.recommendation.saved_service import list_saved
 from api.domain.user.models import Instance, User
 from config.database import get_engine
 
@@ -55,30 +55,32 @@ async def _add_article(session: AsyncSession, feed: Feed, external_id: str, titl
     return article
 
 
-async def test_list_saved_excludes_other_users_saves(session: AsyncSession) -> None:
+async def test_list_favorites_excludes_other_users_favorites(session: AsyncSession) -> None:
     user, feed = await _seed_user_with_feed(session, email="user@example.com")
     other_user, other_feed = await _seed_user_with_feed(session, email="other@example.com")
 
     mine = await _add_article(session, feed, "1", "Mine")
     theirs = await _add_article(session, other_feed, "2", "Theirs")
-    session.add(UserArticleFeedback(user_id=user.id, article_id=mine.id, saved=True))
-    session.add(UserArticleFeedback(user_id=other_user.id, article_id=theirs.id, saved=True))
+    session.add(UserArticleFeedback(user_id=user.id, article_id=mine.id, favorite=True))
+    session.add(UserArticleFeedback(user_id=other_user.id, article_id=theirs.id, favorite=True))
     await session.commit()
 
-    saved = await list_saved(session, user.id)
+    favorites = await list_favorites(session, user.id)
 
-    assert [article.title for article in saved] == ["Mine"]
+    assert [article.title for article in favorites] == ["Mine"]
 
 
-async def test_list_saved_excludes_likes_and_dislikes(session: AsyncSession) -> None:
+async def test_list_favorites_excludes_plain_saves_and_likes(session: AsyncSession) -> None:
     user, feed = await _seed_user_with_feed(session, email="user@example.com")
 
-    saved = await _add_article(session, feed, "1", "Saved")
-    liked = await _add_article(session, feed, "2", "Liked")
+    favorite = await _add_article(session, feed, "1", "Favorite")
+    saved = await _add_article(session, feed, "2", "Saved")
+    liked = await _add_article(session, feed, "3", "Liked")
+    session.add(UserArticleFeedback(user_id=user.id, article_id=favorite.id, favorite=True))
     session.add(UserArticleFeedback(user_id=user.id, article_id=saved.id, saved=True))
     session.add(UserArticleFeedback(user_id=user.id, article_id=liked.id, sentiment=Vote.LIKE))
     await session.commit()
 
-    result = await list_saved(session, user.id)
+    result = await list_favorites(session, user.id)
 
-    assert [article.title for article in result] == ["Saved"]
+    assert [article.title for article in result] == ["Favorite"]

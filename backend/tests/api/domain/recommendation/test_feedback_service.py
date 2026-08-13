@@ -89,7 +89,7 @@ async def _scores(session: AsyncSession, user: User) -> tuple[float, float, floa
 async def test_like_adds_delta_to_every_criterion(session: AsyncSession) -> None:
     user, article = await _seed_article(session)
 
-    await apply_feedback(session, user_id=user.id, article_id=article.id, vote=Vote.LIKE)
+    await apply_feedback(session, user_id=user.id, article_id=article.id, sentiment=Vote.LIKE)
 
     assert await _scores(session, user) == (1.5, 1.5, 1.5, 1.5)
 
@@ -97,7 +97,7 @@ async def test_like_adds_delta_to_every_criterion(session: AsyncSession) -> None
 async def test_dislike_subtracts_from_every_criterion(session: AsyncSession) -> None:
     user, article = await _seed_article(session)
 
-    await apply_feedback(session, user_id=user.id, article_id=article.id, vote=Vote.DISLIKE)
+    await apply_feedback(session, user_id=user.id, article_id=article.id, sentiment=Vote.DISLIKE)
 
     assert await _scores(session, user) == (-0.5, -0.5, -0.5, -0.5)
 
@@ -107,8 +107,8 @@ async def test_revote_undoes_the_previous_delta_before_applying_the_new_one(
 ) -> None:
     user, article = await _seed_article(session)
 
-    await apply_feedback(session, user_id=user.id, article_id=article.id, vote=Vote.LIKE)
-    await apply_feedback(session, user_id=user.id, article_id=article.id, vote=Vote.DISLIKE)
+    await apply_feedback(session, user_id=user.id, article_id=article.id, sentiment=Vote.LIKE)
+    await apply_feedback(session, user_id=user.id, article_id=article.id, sentiment=Vote.DISLIKE)
 
     assert await _scores(session, user) == (-0.5, -0.5, -0.5, -0.5)
 
@@ -116,7 +116,7 @@ async def test_revote_undoes_the_previous_delta_before_applying_the_new_one(
 async def test_save_does_not_affect_any_score(session: AsyncSession) -> None:
     user, article = await _seed_article(session)
 
-    await apply_feedback(session, user_id=user.id, article_id=article.id, vote=Vote.SAVE)
+    await apply_feedback(session, user_id=user.id, article_id=article.id, saved=True)
 
     assert await _scores(session, user) == (0.0, 0.0, 0.0, 0.0)
 
@@ -126,4 +126,39 @@ async def test_save_does_not_affect_any_score(session: AsyncSession) -> None:
         )
     )
     assert feedback is not None
-    assert feedback.vote == Vote.SAVE
+    assert feedback.saved is True
+
+
+async def test_favorite_does_not_affect_any_score(session: AsyncSession) -> None:
+    user, article = await _seed_article(session)
+
+    await apply_feedback(session, user_id=user.id, article_id=article.id, favorite=True)
+
+    assert await _scores(session, user) == (0.0, 0.0, 0.0, 0.0)
+
+    feedback = await session.scalar(
+        select(UserArticleFeedback).where(
+            UserArticleFeedback.user_id == user.id, UserArticleFeedback.article_id == article.id
+        )
+    )
+    assert feedback is not None
+    assert feedback.favorite is True
+
+
+async def test_favorite_and_saved_can_coexist_with_a_like(session: AsyncSession) -> None:
+    user, article = await _seed_article(session)
+
+    await apply_feedback(session, user_id=user.id, article_id=article.id, sentiment=Vote.LIKE)
+    await apply_feedback(session, user_id=user.id, article_id=article.id, saved=True, favorite=True)
+
+    assert await _scores(session, user) == (1.5, 1.5, 1.5, 1.5)
+
+    feedback = await session.scalar(
+        select(UserArticleFeedback).where(
+            UserArticleFeedback.user_id == user.id, UserArticleFeedback.article_id == article.id
+        )
+    )
+    assert feedback is not None
+    assert feedback.sentiment == Vote.LIKE
+    assert feedback.saved is True
+    assert feedback.favorite is True

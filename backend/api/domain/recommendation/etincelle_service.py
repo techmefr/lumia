@@ -19,7 +19,8 @@ async def list_etincelle(
     session: AsyncSession, user_id: UUID, *, limit: int = 20, offset: int = 0
 ) -> list[tuple[Article, float]]:
     voted_article_ids = select(UserArticleFeedback.article_id).where(
-        UserArticleFeedback.user_id == user_id
+        UserArticleFeedback.user_id == user_id,
+        UserArticleFeedback.sentiment.is_not(None),
     )
     articles = list(
         await session.scalars(

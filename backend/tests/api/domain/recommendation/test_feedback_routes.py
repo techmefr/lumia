@@ -61,7 +61,7 @@ async def _headers_and_article_id(client: httpx.AsyncClient) -> tuple[dict[str, 
 async def test_feedback_on_a_known_article_returns_204(client: httpx.AsyncClient) -> None:
     headers, article_id = await _headers_and_article_id(client)
     response = await client.post(
-        f"/articles/{article_id}/feedback", headers=headers, json={"vote": "like"}
+        f"/articles/{article_id}/feedback", headers=headers, json={"sentiment": "like"}
     )
     assert response.status_code == 204
 
@@ -71,12 +71,12 @@ async def test_feedback_on_an_unknown_article_returns_404(client: httpx.AsyncCli
     response = await client.post(
         "/articles/00000000-0000-0000-0000-000000000000/feedback",
         headers=headers,
-        json={"vote": "like"},
+        json={"sentiment": "like"},
     )
     assert response.status_code == 404
 
 
 async def test_feedback_without_a_token_returns_401(client: httpx.AsyncClient) -> None:
     _, article_id = await _headers_and_article_id(client)
-    response = await client.post(f"/articles/{article_id}/feedback", json={"vote": "like"})
+    response = await client.post(f"/articles/{article_id}/feedback", json={"sentiment": "like"})
     assert response.status_code == 401

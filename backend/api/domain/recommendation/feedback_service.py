@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select
@@ -15,9 +16,17 @@ from api.domain.recommendation.models import (
 
 _VOTE_DELTA: dict[Vote, float] = {Vote.LIKE: 1.5, Vote.DISLIKE: -0.5}
 
+_UNSET: Any = object()
+
 
 async def apply_feedback(
-    session: AsyncSession, *, user_id: UUID, article_id: UUID, vote: Vote
+    session: AsyncSession,
+    *,
+    user_id: UUID,
+    article_id: UUID,
+    sentiment: Vote | None = _UNSET,
+    saved: bool = _UNSET,
+    favorite: bool = _UNSET,
 ) -> None:
     existing = await session.scalar(
         select(UserArticleFeedback).where(
@@ -25,17 +34,23 @@ async def apply_feedback(
             UserArticleFeedback.article_id == article_id,
         )
     )
-    if existing is not None:
-        previous_delta = _VOTE_DELTA.get(existing.vote, 0.0)
+    if existing is None:
+        existing = UserArticleFeedback(user_id=user_id, article_id=article_id)
+        session.add(existing)
+
+    if sentiment is not _UNSET:
+        previous_delta = _VOTE_DELTA.get(existing.sentiment, 0.0) if existing.sentiment else 0.0
         if previous_delta:
             await _apply_delta(session, user_id, article_id, -previous_delta)
-        existing.vote = vote
-    else:
-        session.add(UserArticleFeedback(user_id=user_id, article_id=article_id, vote=vote))
+        existing.sentiment = sentiment
+        new_delta = _VOTE_DELTA.get(sentiment, 0.0) if sentiment else 0.0
+        if new_delta:
+            await _apply_delta(session, user_id, article_id, new_delta)
 
-    new_delta = _VOTE_DELTA.get(vote, 0.0)
-    if new_delta:
-        await _apply_delta(session, user_id, article_id, new_delta)
+    if saved is not _UNSET:
+        existing.saved = saved
+    if favorite is not _UNSET:
+        existing.favorite = favorite
 
     await session.commit()
 

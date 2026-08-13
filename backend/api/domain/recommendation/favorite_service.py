@@ -8,7 +8,7 @@ from api.domain.feed.models import Feed
 from api.domain.recommendation.models import UserArticleFeedback
 
 
-async def list_saved(
+async def list_favorites(
     session: AsyncSession, user_id: UUID, *, limit: int = 20, offset: int = 0
 ) -> list[Article]:
     query = (
@@ -18,7 +18,7 @@ async def list_saved(
         .where(
             Feed.user_id == user_id,
             UserArticleFeedback.user_id == user_id,
-            UserArticleFeedback.saved.is_(True),
+            UserArticleFeedback.favorite.is_(True),
         )
         .order_by(UserArticleFeedback.created_at.desc())
         .limit(limit)

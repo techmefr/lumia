@@ -10,7 +10,6 @@ from api.technical.orm import Base, TimestampMixin
 class Vote(StrEnum):
     LIKE = "like"
     DISLIKE = "dislike"
-    SAVE = "save"
 
 
 class UserArticleFeedback(Base, TimestampMixin):
@@ -18,7 +17,9 @@ class UserArticleFeedback(Base, TimestampMixin):
 
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"), primary_key=True)
-    vote: Mapped[Vote]
+    sentiment: Mapped[Vote | None] = mapped_column(default=None)
+    saved: Mapped[bool] = mapped_column(default=False)
+    favorite: Mapped[bool] = mapped_column(default=False)
 
 
 class UserKeywordScore(Base):

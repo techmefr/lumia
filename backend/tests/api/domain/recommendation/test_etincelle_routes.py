@@ -65,7 +65,7 @@ async def test_etincelle_excludes_a_voted_article(client: httpx.AsyncClient) -> 
         )
         session.add_all([voted, unvoted])
         await session.flush()
-        session.add(UserArticleFeedback(user_id=user.id, article_id=voted.id, vote=Vote.LIKE))
+        session.add(UserArticleFeedback(user_id=user.id, article_id=voted.id, sentiment=Vote.LIKE))
         await session.commit()
 
     response = await client.get("/articles/etincelle", headers=headers)
