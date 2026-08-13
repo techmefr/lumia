@@ -30,6 +30,7 @@
 			<Button variant="ghost" size="sm" href="/articles">Articles</Button>
 			<Button variant="ghost" size="sm" href="/etincelle">L'Étincelle</Button>
 			<Button variant="ghost" size="sm" href="/feeds">Mes flux</Button>
+			<Button variant="ghost" size="sm" href="/a-lire-plus-tard">À lire plus tard</Button>
 			<div class="ml-auto flex items-center gap-1">
 				<Button
 					variant="ghost"

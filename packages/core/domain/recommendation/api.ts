@@ -7,11 +7,15 @@ export function createRecommendationApi(http: HttpClient) {
 		return http.request<ArticleSummary[]>(`/articles/etincelle?limit=${limit}&offset=${offset}`);
 	}
 
+	async function getSaved(limit = 20, offset = 0): Promise<ArticleSummary[]> {
+		return http.request<ArticleSummary[]>(`/articles/saved?limit=${limit}&offset=${offset}`);
+	}
+
 	async function sendFeedback(articleId: string, vote: Vote): Promise<void> {
 		await http.request(`/articles/${articleId}/feedback`, { method: 'POST', body: { vote } });
 	}
 
-	return { getEtincelle, sendFeedback };
+	return { getEtincelle, getSaved, sendFeedback };
 }
 
 export type RecommendationApi = ReturnType<typeof createRecommendationApi>;
