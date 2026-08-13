@@ -9,6 +9,8 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import Tag from '@lucide/svelte/icons/tag';
+	import Share2 from '@lucide/svelte/icons/share-2';
+	import Check from '@lucide/svelte/icons/check';
 	import { lumia } from '$technical/api/client';
 	import { requireAuth } from '$technical/auth/require-auth';
 
@@ -16,11 +18,27 @@
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let feedbackSent = $state<string | null>(null);
+	let linkCopied = $state(false);
 
 	async function vote(choice: 'like' | 'dislike' | 'save') {
 		if (!article) return;
 		await lumia.recommendation.sendFeedback(article.id, choice);
 		feedbackSent = choice;
+	}
+
+	async function share() {
+		if (!article) return;
+		if (navigator.share) {
+			try {
+				await navigator.share({ title: article.title, url: article.url });
+				return;
+			} catch {
+				return;
+			}
+		}
+		await navigator.clipboard.writeText(article.url);
+		linkCopied = true;
+		setTimeout(() => (linkCopied = false), 2000);
 	}
 
 	onMount(() => {
@@ -68,15 +86,29 @@
 				<h1 class="animate-in font-serif text-2xl font-semibold fade-in slide-in-from-bottom-1 duration-500 sm:text-3xl">
 					{article.title}
 				</h1>
-				<a
-					href={article.url}
-					target="_blank"
-					rel="noopener"
-					class="flex w-fit items-center gap-1 text-sm text-primary hover:underline"
-				>
-					<ExternalLink class="size-3.5" />
-					Lire la source
-				</a>
+				<div class="flex items-center justify-between">
+					<a
+						href={article.url}
+						target="_blank"
+						rel="noopener"
+						class="flex w-fit items-center gap-1 text-sm text-primary hover:underline"
+					>
+						<ExternalLink class="size-3.5" />
+						Lire la source
+					</a>
+					<button
+						onclick={share}
+						class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+					>
+						{#if linkCopied}
+							<Check class="size-4 text-primary" />
+							Lien copié
+						{:else}
+							<Share2 class="size-4" />
+							Partager
+						{/if}
+					</button>
+				</div>
 
 				<div class="mt-3 flex flex-wrap items-center gap-1.5">
 					<a href="/articles?feed_id={article.feed_id}">

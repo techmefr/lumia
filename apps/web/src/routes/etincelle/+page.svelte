@@ -1,22 +1,34 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import type { ArticleSummary } from '@lumia/core';
-	import { ArticleCard } from '@lumia/ui';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Inbox from '@lucide/svelte/icons/inbox';
+	import PartyPopper from '@lucide/svelte/icons/party-popper';
 	import { lumia } from '$technical/api/client';
 	import { requireAuth } from '$technical/auth/require-auth';
-	import { accentHueForFeed } from '$domain/article/accent-hue';
+	import SwipeStack from '$domain/article/swipe-stack.svelte';
 
 	let articles = $state<ArticleSummary[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+	let remaining = $state<ArticleSummary[]>([]);
+
+	function vote(article: ArticleSummary, choice: 'like' | 'dislike' | 'save') {
+		void lumia.recommendation.sendFeedback(article.id, choice);
+		if (choice !== 'save') {
+			remaining = remaining.filter((a) => a.id !== article.id);
+		}
+	}
 
 	onMount(() => {
 		if (!requireAuth()) return;
 		lumia.recommendation
 			.getEtincelle()
-			.then((loaded) => (articles = loaded))
+			.then((loaded) => {
+				articles = loaded;
+				remaining = loaded;
+			})
 			.catch(() => (error = "Impossible de charger l'Étincelle."))
 			.finally(() => (loading = false));
 	});
@@ -28,7 +40,9 @@
 			<Sparkles class="size-6 text-primary" />
 			L'Étincelle
 		</h1>
-		<p class="text-sm text-muted-foreground">Une sélection apprise à partir de tes retours.</p>
+		<p class="text-sm text-muted-foreground">
+			Glisse à droite pour aimer, à gauche pour passer — ou touche la carte pour l'ouvrir.
+		</p>
 	</div>
 
 	{#if error}
@@ -42,21 +56,19 @@
 			<Inbox class="size-4" />
 			Pas encore assez de retours pour te faire une sélection — like/dislike des articles pour l'entraîner.
 		</p>
-	{:else}
-		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each articles as article, index (article.id)}
-				<ArticleCard
-					id={article.id}
-					href="/articles/{article.id}"
-					title={article.title}
-					summary={article.summary}
-					imageUrl={article.image_url}
-					sourceLabel={article.source_label}
-					publishedAt={article.published_at}
-					accentHue={accentHueForFeed(article.feed_id)}
-					featured={index === 0}
-				/>
-			{/each}
+	{:else if remaining.length === 0}
+		<div class="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
+			<PartyPopper class="size-8 text-primary" />
+			<p class="font-medium">Tu as tout vu pour l'instant.</p>
+			<p class="text-sm">Reviens plus tard pour une nouvelle sélection.</p>
 		</div>
+	{:else}
+		<SwipeStack
+			articles={remaining}
+			onLike={(article) => vote(article, 'like')}
+			onDislike={(article) => vote(article, 'dislike')}
+			onSave={(article) => vote(article, 'save')}
+			onOpen={(article) => goto(`/articles/${article.id}`)}
+		/>
 	{/if}
 </div>
