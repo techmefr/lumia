@@ -6,6 +6,7 @@ from api.domain.feed.models import Feed, Folder, SourceType
 from api.domain.feed.opml_parser import OpmlEntry, parse_opml
 from api.domain.user.models import User
 from worker.technical.connectors.miniflux_client import (
+    MinifluxApiError,
     create_category,
     create_feed,
     list_categories,
@@ -36,12 +37,17 @@ async def import_opml(
             continue
 
         folder = await _get_or_create_folder(session, user, entry.folder_name, folder_cache)
-        external_feed_id = await _register_with_miniflux(
-            session,
-            entry,
-            category_id_by_folder_name,
-            transport=miniflux_transport,
-        )
+        try:
+            external_feed_id = await _register_with_miniflux(
+                session,
+                entry,
+                category_id_by_folder_name,
+                transport=miniflux_transport,
+            )
+        except (MinifluxApiError, httpx.HTTPError):
+            # An unreachable/invalid feed URL must not abort the rest of the batch —
+            # the user still gets every other feed from their Feedly export.
+            continue
 
         feed = Feed(
             user_id=user.id,

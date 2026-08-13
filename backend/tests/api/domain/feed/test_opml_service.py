@@ -105,6 +105,26 @@ async def test_import_opml_skips_a_url_the_user_already_has(session: AsyncSessio
     assert len(all_feeds) == 2
 
 
+async def test_import_opml_skips_a_feed_that_fails_to_register_with_miniflux(
+    session: AsyncSession,
+) -> None:
+    user = await _create_user(session)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST" and request.url.path == "/v1/feeds":
+            if b"hnrss" in request.content:
+                return httpx.Response(502, text="upstream feed unreachable")
+        return _miniflux_handler(request)
+
+    feeds = await import_opml(
+        session, user, FEEDLY_OPML, miniflux_transport=httpx.MockTransport(handler)
+    )
+
+    assert {feed.url for feed in feeds} == {"https://example.com/feed.xml"}
+    all_feeds = (await session.scalars(select(Feed).where(Feed.user_id == user.id))).all()
+    assert len(all_feeds) == 1
+
+
 async def test_import_opml_reuses_an_existing_feed_registered_by_another_user(
     session: AsyncSession,
 ) -> None:
