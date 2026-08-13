@@ -5,6 +5,7 @@
 	import Rss from '@lucide/svelte/icons/rss';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Settings from '@lucide/svelte/icons/settings';
+	import Star from '@lucide/svelte/icons/star';
 
 	interface Props {
 		folders: Folder[];
@@ -116,8 +117,15 @@
 	</div>
 
 	<a
-		href="/settings"
+		href="/favoris"
 		class="mt-auto flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+	>
+		<Star class="size-4" />
+		Favoris
+	</a>
+	<a
+		href="/settings"
+		class="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
 	>
 		<Settings class="size-4" />
 		Réglages

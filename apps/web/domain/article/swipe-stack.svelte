@@ -3,6 +3,7 @@
 	import ThumbsUp from '@lucide/svelte/icons/thumbs-up';
 	import ThumbsDown from '@lucide/svelte/icons/thumbs-down';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
+	import Star from '@lucide/svelte/icons/star';
 	import { accentHueForFeed } from './accent-hue.js';
 
 	interface Props {
@@ -10,10 +11,11 @@
 		onLike: (article: ArticleSummary) => void;
 		onDislike: (article: ArticleSummary) => void;
 		onSave: (article: ArticleSummary) => void;
+		onFavorite: (article: ArticleSummary) => void;
 		onOpen: (article: ArticleSummary) => void;
 	}
 
-	let { articles, onLike, onDislike, onSave, onOpen }: Props = $props();
+	let { articles, onLike, onDislike, onSave, onFavorite, onOpen }: Props = $props();
 
 	let currentIndex = $state(0);
 	let dragX = $state(0);
@@ -74,6 +76,10 @@
 
 	function saveCurrent() {
 		if (current) onSave(current);
+	}
+
+	function favoriteCurrent() {
+		if (current) onFavorite(current);
 	}
 
 	const rotation = $derived(dragX / 18);
@@ -153,6 +159,13 @@
 				class="flex size-11 items-center justify-center rounded-full border-2 border-primary text-primary shadow-sm transition-transform hover:scale-110 active:scale-95"
 			>
 				<Bookmark class="size-5" />
+			</button>
+			<button
+				onclick={favoriteCurrent}
+				aria-label="Mettre en favoris"
+				class="flex size-11 items-center justify-center rounded-full border-2 border-amber-500 text-amber-500 shadow-sm transition-transform hover:scale-110 active:scale-95"
+			>
+				<Star class="size-5" />
 			</button>
 			<button
 				onclick={() => commit('like')}

@@ -6,6 +6,7 @@
 	import ThumbsUp from '@lucide/svelte/icons/thumbs-up';
 	import ThumbsDown from '@lucide/svelte/icons/thumbs-down';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
+	import Star from '@lucide/svelte/icons/star';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import Tag from '@lucide/svelte/icons/tag';
@@ -17,13 +18,27 @@
 	let article = $state<ArticleDetail | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
-	let feedbackSent = $state<string | null>(null);
+	let sentiment = $state<'like' | 'dislike' | null>(null);
+	let saved = $state(false);
+	let favorite = $state(false);
 	let linkCopied = $state(false);
 
-	async function vote(choice: 'like' | 'dislike' | 'save') {
+	async function toggleSentiment(choice: 'like' | 'dislike') {
 		if (!article) return;
-		await lumia.recommendation.sendFeedback(article.id, choice);
-		feedbackSent = choice;
+		sentiment = sentiment === choice ? null : choice;
+		await lumia.recommendation.sendFeedback(article.id, { sentiment });
+	}
+
+	async function toggleSaved() {
+		if (!article) return;
+		saved = !saved;
+		await lumia.recommendation.sendFeedback(article.id, { saved });
+	}
+
+	async function toggleFavorite() {
+		if (!article) return;
+		favorite = !favorite;
+		await lumia.recommendation.sendFeedback(article.id, { favorite });
 	}
 
 	async function share() {
@@ -165,27 +180,34 @@
 			class="fixed inset-x-0 z-40 flex justify-center border-t bg-background/90 p-3 backdrop-blur"
 			style="bottom: var(--bottom-nav-h, 0px)"
 		>
-			<div class="flex w-full max-w-3xl gap-2">
+			<div class="flex w-full max-w-3xl gap-1.5 sm:gap-2">
 				<Button
-					class="flex-1"
-					variant={feedbackSent === 'like' ? 'default' : 'outline'}
-					onclick={() => vote('like')}
+					class="flex-1 gap-1.5 px-2 sm:px-4"
+					variant={sentiment === 'like' ? 'default' : 'outline'}
+					onclick={() => toggleSentiment('like')}
 				>
-					<ThumbsUp class="size-4" /> J'aime
+					<ThumbsUp class="size-4 shrink-0" /> <span class="hidden sm:inline">J'aime</span>
 				</Button>
 				<Button
-					class="flex-1"
-					variant={feedbackSent === 'dislike' ? 'default' : 'outline'}
-					onclick={() => vote('dislike')}
+					class="flex-1 gap-1.5 px-2 sm:px-4"
+					variant={sentiment === 'dislike' ? 'default' : 'outline'}
+					onclick={() => toggleSentiment('dislike')}
 				>
-					<ThumbsDown class="size-4" /> Je n'aime pas
+					<ThumbsDown class="size-4 shrink-0" /> <span class="hidden sm:inline">Je n'aime pas</span>
 				</Button>
 				<Button
-					class="flex-1"
-					variant={feedbackSent === 'save' ? 'default' : 'outline'}
-					onclick={() => vote('save')}
+					class="flex-1 gap-1.5 px-2 sm:px-4"
+					variant={saved ? 'default' : 'outline'}
+					onclick={toggleSaved}
 				>
-					<Bookmark class="size-4" /> Enregistrer
+					<Bookmark class="size-4 shrink-0" /> <span class="hidden sm:inline">Enregistrer</span>
+				</Button>
+				<Button
+					class="flex-1 gap-1.5 px-2 sm:px-4"
+					variant={favorite ? 'default' : 'outline'}
+					onclick={toggleFavorite}
+				>
+					<Star class="size-4 shrink-0" /> <span class="hidden sm:inline">Favoris</span>
 				</Button>
 			</div>
 		</div>
