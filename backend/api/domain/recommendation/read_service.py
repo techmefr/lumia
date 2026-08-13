@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from dataclasses import dataclass
 from uuid import UUID
 
 from sqlalchemy import select
@@ -9,19 +10,32 @@ from api.domain.feed.models import Feed
 from api.domain.recommendation.models import UserArticleFeedback
 
 
-async def fetch_read_article_ids(
+@dataclass(frozen=True)
+class ReadState:
+    read: bool = False
+    scroll_progress: float = 0.0
+
+
+async def fetch_read_state(
     session: AsyncSession, user_id: UUID, article_ids: Sequence[UUID]
-) -> set[UUID]:
+) -> dict[UUID, ReadState]:
+    """Per-article read flag and reading position. A missing row means unread, position zero."""
     if not article_ids:
-        return set()
-    rows = await session.scalars(
-        select(UserArticleFeedback.article_id).where(
+        return {}
+    rows = await session.execute(
+        select(
+            UserArticleFeedback.article_id,
+            UserArticleFeedback.read,
+            UserArticleFeedback.scroll_progress,
+        ).where(
             UserArticleFeedback.user_id == user_id,
             UserArticleFeedback.article_id.in_(article_ids),
-            UserArticleFeedback.read.is_(True),
         )
     )
-    return set(rows)
+    return {
+        article_id: ReadState(read=read, scroll_progress=scroll_progress)
+        for article_id, read, scroll_progress in rows
+    }
 
 
 async def resolve_scope_article_ids(

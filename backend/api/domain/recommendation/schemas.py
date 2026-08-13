@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from api.domain.recommendation.models import Vote
 
@@ -10,6 +10,7 @@ class FeedbackRequest(BaseModel):
     saved: bool | None = None
     favorite: bool | None = None
     read: bool | None = None
+    scroll_progress: float | None = Field(default=None, ge=0.0, le=1.0)
 
 
 class MarkReadRequest(BaseModel):

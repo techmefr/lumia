@@ -5,6 +5,7 @@ from sqlalchemy import Select, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword
+from api.domain.article.reading_time import estimate_reading_minutes
 from api.domain.article.save_url_service import save_url
 from api.domain.article.schemas import (
     ArticleDetailResponse,
@@ -14,7 +15,7 @@ from api.domain.article.schemas import (
 )
 from api.domain.feed.models import Feed
 from api.domain.recommendation.models import UserArticleFeedback
-from api.domain.recommendation.read_service import fetch_read_article_ids
+from api.domain.recommendation.read_service import ReadState, fetch_read_state
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.technical.db import get_db_session
@@ -27,7 +28,8 @@ from worker.technical.content_extraction import (
 router = APIRouter()
 
 
-def to_summary(article: Article, *, read: bool = False) -> ArticleSummaryResponse:
+def to_summary(article: Article, *, state: ReadState | None = None) -> ArticleSummaryResponse:
+    state = state or ReadState()
     return ArticleSummaryResponse(
         id=article.id,
         feed_id=article.feed_id,
@@ -41,15 +43,17 @@ def to_summary(article: Article, *, read: bool = False) -> ArticleSummaryRespons
         summary=article.summary,
         image_url=article.image_url,
         published_at=article.published_at,
-        read=read,
+        reading_minutes=estimate_reading_minutes(article.content),
+        read=state.read,
+        scroll_progress=state.scroll_progress,
     )
 
 
 async def to_summaries(
     session: AsyncSession, user_id: UUID, articles: list[Article]
 ) -> list[ArticleSummaryResponse]:
-    read_ids = await fetch_read_article_ids(session, user_id, [article.id for article in articles])
-    return [to_summary(article, read=article.id in read_ids) for article in articles]
+    states = await fetch_read_state(session, user_id, [article.id for article in articles])
+    return [to_summary(article, state=states.get(article.id)) for article in articles]
 
 
 def apply_unread_only(query: Select[tuple[Article]], user_id: UUID) -> Select[tuple[Article]]:
@@ -145,10 +149,10 @@ async def get_article(
         KeywordResponse(id=link.keyword.id, term=link.keyword.term)
         for link in article.keyword_links
     ]
-    read_ids = await fetch_read_article_ids(session, user.id, [article.id])
+    states = await fetch_read_state(session, user.id, [article.id])
 
     return ArticleDetailResponse(
-        **to_summary(article, read=article.id in read_ids).model_dump(),
+        **to_summary(article, state=states.get(article.id)).model_dump(),
         content=article.content,
         keywords=keywords,
     )
