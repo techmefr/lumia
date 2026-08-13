@@ -40,11 +40,29 @@
 	}
 
 	const isAllActive = $derived(!selectedFolderId && !selectedFeedId);
+
+	let mobileOpen = $state(false);
 </script>
 
+<button
+	onclick={() => (mobileOpen = !mobileOpen)}
+	aria-expanded={mobileOpen}
+	aria-controls="feed-nav"
+	class="flex min-h-11 items-center justify-between gap-2 rounded-xl border bg-card px-3 py-2 text-sm font-medium shadow-sm sm:hidden"
+>
+	<span class="flex items-center gap-2">
+		<FolderIcon class="size-4 text-primary" />
+		Dossiers et flux
+	</span>
+	<ChevronDown class="size-4 transition-transform {mobileOpen ? '' : '-rotate-90'}" />
+</button>
+
 <aside
+	id="feed-nav"
 	aria-label="Dossiers et flux"
-	class="sticky top-[4.5rem] hidden h-[calc(100vh-7.5rem)] w-60 shrink-0 flex-col gap-0.5 rounded-2xl bg-zinc-900 p-3 text-zinc-300 sm:flex dark:bg-zinc-950"
+	class="{mobileOpen
+		? 'flex'
+		: 'hidden'} w-full shrink-0 flex-col gap-0.5 rounded-2xl border border-zinc-700 bg-zinc-900 p-3 text-zinc-300 shadow-xl dark:border-zinc-500 dark:bg-zinc-800 sm:sticky sm:top-[4.5rem] sm:flex sm:h-[calc(100vh-7.5rem)] sm:w-60"
 >
 	<button
 		onclick={onSelectAll}
@@ -95,7 +113,7 @@
 								class="flex items-center gap-2 truncate rounded-md px-2 py-1 text-left text-sm transition-colors {selectedFeedId ===
 								feed.id
 									? 'font-medium text-white'
-									: 'text-zinc-400 hover:text-white'}"
+									: 'text-zinc-300 hover:text-white'}"
 							>
 								<Rss class="size-3.5 shrink-0" />
 								<span class="truncate">{feed.title}</span>
@@ -107,7 +125,7 @@
 		{/each}
 
 		{#if unfiledFeeds.length > 0}
-			<span class="mt-2 px-2.5 text-xs font-medium uppercase tracking-wide text-zinc-500">
+			<span class="mt-2 px-2.5 text-xs font-medium uppercase tracking-wide text-zinc-400">
 				Sans dossier
 			</span>
 			<AnimatedList items={unfiledFeeds} getKey={(feed) => feed.id}>
