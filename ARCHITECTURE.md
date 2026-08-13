@@ -71,7 +71,7 @@ Recommendation scores aren't written at ingestion time — they're learned per u
 
 ## Deployment
 
-`lumia-backend` is the one mandatory module (API + worker, one image, two containers). Engines (`miniflux`, …) and frontends (`lumia-web`, …) are optional bricks that feed or consume it. Only `lumia-backend`'s API container and `lumia-web` are exposed publicly; engines, the worker container, Redis, and PostgreSQL stay on the internal Docker network. Auth uses an httpOnly session cookie — no token ever reaches client-side JS.
+`lumia-backend` is the one mandatory module (API + worker, one image, two containers). Engines (`miniflux`, …) and frontends (`lumia-web`, …) are optional bricks that feed or consume it. Only `lumia-backend`'s API container and `lumia-web` are exposed publicly; engines, the worker container, Redis, and PostgreSQL stay on the internal Docker network. Auth uses a short-lived JWT access token plus a revocable opaque refresh token (see ADR-0006), sent as an `Authorization: Bearer` header — a bearer token, unlike an httpOnly cookie, works uniformly across the web SPA, the Capacitor mobile app, and the browser extension, which don't share a cookie jar with the API's origin.
 
 ## Multi-tenancy
 
