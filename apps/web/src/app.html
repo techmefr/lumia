@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="text-scale" content="scale" />
+		<script>
+			(function () {
+				try {
+					var storedTheme = localStorage.getItem('lumia-theme');
+					var theme =
+						storedTheme ??
+						(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+					if (theme === 'dark') document.documentElement.classList.add('dark');
+
+					var accents = { violet: 265, bleu: 220, sarcelle: 175, ambre: 50, rose: 340 };
+					var hue = accents[localStorage.getItem('lumia-accent')] ?? accents.violet;
+					var lightness = theme === 'dark' ? 0.65 : 0.55;
+					var accentLightness = theme === 'dark' ? 0.3 : 0.94;
+					var accentChroma = theme === 'dark' ? 0.05 : 0.03;
+					var root = document.documentElement.style;
+					root.setProperty('--primary', 'oklch(' + lightness + ' 0.2 ' + hue + ')');
+					root.setProperty('--ring', 'oklch(' + lightness + ' 0.2 ' + hue + ')');
+					root.setProperty(
+						'--accent',
+						'oklch(' + accentLightness + ' ' + accentChroma + ' ' + hue + ')'
+					);
+
+					var scales = { sm: 0.9, md: 1, lg: 1.15, xl: 1.3 };
+					var scale = scales[localStorage.getItem('lumia-font-scale')] ?? 1;
+					document.documentElement.style.fontSize = 16 * scale + 'px';
+				} catch (e) {}
+			})();
+		</script>
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>

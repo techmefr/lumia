@@ -1,0 +1,32 @@
+export type Role = 'admin' | 'member';
+export type Theme = 'light' | 'dark' | 'system';
+export type OrbitPosition = 'left' | 'right';
+export type AIProvider = 'mistral' | 'openai' | 'custom';
+
+export interface TokenPair {
+	access_token: string;
+	refresh_token: string;
+	token_type: string;
+}
+
+export interface Me {
+	id: string;
+	email: string;
+	username: string;
+	role: Role;
+	theme: Theme;
+	orbit_position: OrbitPosition;
+	font_base_size: number;
+	ai_provider: AIProvider | null;
+	ai_endpoint_url: string | null;
+	ai_api_key_set: boolean;
+}
+
+export interface MeUpdate {
+	theme?: Theme;
+	orbit_position?: OrbitPosition;
+	font_base_size?: number;
+	ai_provider?: AIProvider | null;
+	ai_api_key?: string | null;
+	ai_endpoint_url?: string | null;
+}
