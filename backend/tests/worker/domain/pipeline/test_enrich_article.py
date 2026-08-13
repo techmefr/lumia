@@ -228,3 +228,45 @@ async def test_enrich_article_creates_one_article_per_subscribing_user(
 
     articles = list(await session.scalars(select(Article)))
     assert len(articles) == 2
+
+
+async def test_enrich_article_translates_per_subscriber_preferred_language(
+    session: AsyncSession,
+) -> None:
+    fr_feed = await _create_feed(session, external_feed_id="30")
+
+    instance = await session.scalar(select(Instance))
+    assert instance is not None
+    en_user = User(
+        instance_id=instance.id,
+        email="en-reader@example.com",
+        username="en-reader",
+        password_hash=None,
+        preferred_language=Lang.EN,
+    )
+    session.add(en_user)
+    await session.flush()
+    en_feed = Feed(
+        user_id=en_user.id,
+        source_type=SourceType.MINIFLUX,
+        external_feed_id="30",
+        title="Feed",
+        url="https://example.com/feed",
+    )
+    session.add(en_feed)
+    await session.commit()
+
+    await enrich_article(
+        {},
+        _raw_article(
+            feed_external_id="30", title="The cat", content=ENGLISH_CONTENT
+        ),
+        translator=_FakeTranslator(),
+    )
+
+    fr_article = await session.scalar(select(Article).where(Article.feed_id == fr_feed.id))
+    en_article = await session.scalar(select(Article).where(Article.feed_id == en_feed.id))
+    assert fr_article is not None
+    assert en_article is not None
+    assert fr_article.title == "[fr] The cat"
+    assert en_article.title == "The cat"
