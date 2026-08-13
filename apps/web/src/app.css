@@ -116,3 +116,133 @@
 	animation-duration: 320ms;
 	animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
+
+.prose {
+	font-size: 1.0625rem;
+	line-height: 1.8;
+	color: var(--foreground);
+}
+
+.prose > * + * {
+	margin-top: 1.4em;
+}
+
+.prose p {
+	margin: 0;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+	@apply font-serif;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	line-height: 1.3;
+	margin-top: 1.8em;
+	margin-bottom: 0.6em;
+}
+
+.prose h1 {
+	font-size: 1.5em;
+}
+
+.prose h2 {
+	font-size: 1.3em;
+}
+
+.prose h3 {
+	font-size: 1.15em;
+}
+
+.prose ul,
+.prose ol {
+	margin: 0;
+	padding-left: 1.4em;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+}
+
+.prose li {
+	line-height: 1.7;
+}
+
+.prose li > p {
+	margin: 0;
+}
+
+.prose a {
+	color: var(--primary);
+	text-decoration: underline;
+	text-decoration-color: color-mix(in oklch, var(--primary) 40%, transparent);
+	text-underline-offset: 2px;
+}
+
+.prose a:hover {
+	text-decoration-color: var(--primary);
+}
+
+.prose strong {
+	font-weight: 600;
+}
+
+.prose blockquote {
+	border-left: 3px solid var(--border);
+	padding-left: 1em;
+	color: var(--muted-foreground);
+	font-style: italic;
+}
+
+.prose img,
+.prose figure,
+.prose iframe,
+.prose video {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	border-radius: var(--radius-md);
+}
+
+.prose figcaption {
+	margin-top: 0.5em;
+	font-size: 0.85em;
+	color: var(--muted-foreground);
+	text-align: center;
+}
+
+.prose pre {
+	overflow-x: auto;
+	padding: 1em;
+	border-radius: var(--radius-md);
+	background: var(--secondary);
+	font-size: 0.9em;
+}
+
+.prose code {
+	background: var(--secondary);
+	padding: 0.15em 0.4em;
+	border-radius: 0.25em;
+	font-size: 0.9em;
+}
+
+.prose pre code {
+	background: none;
+	padding: 0;
+}
+
+.prose hr {
+	border-color: var(--border);
+}
+
+.prose table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.prose th,
+.prose td {
+	border: 1px solid var(--border);
+	padding: 0.5em 0.75em;
+	text-align: left;
+}
