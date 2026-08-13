@@ -43,7 +43,7 @@
 </script>
 
 <aside
-	class="hidden w-60 shrink-0 flex-col gap-0.5 rounded-2xl bg-zinc-900 p-3 text-zinc-300 sm:flex dark:bg-zinc-950"
+	class="sticky top-[4.5rem] hidden max-h-[calc(100vh-6rem)] w-60 shrink-0 flex-col gap-0.5 rounded-2xl bg-zinc-900 p-3 text-zinc-300 sm:flex dark:bg-zinc-950"
 >
 	<button
 		onclick={onSelectAll}
@@ -55,7 +55,7 @@
 		Tous les articles
 	</button>
 
-	<div class="mt-4 flex flex-col gap-0.5">
+	<div class="mt-4 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
 		{#each folders as folder (folder.id)}
 			{@const isFolderActive = selectedFolderId === folder.id}
 			<div>
