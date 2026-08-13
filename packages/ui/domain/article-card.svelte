@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { cn } from '../technical/utils.js';
+	import GlareHover from '../technical/effects/glare-hover.svelte';
 
 	interface Props {
 		id: string;
@@ -63,6 +64,8 @@
 				style={`background-image: radial-gradient(circle at 30% 30%, hsl(${accentHue + 60} 80% 75% / 60%), transparent 65%);`}
 			></div>
 		{/if}
+
+		<GlareHover class="absolute inset-0" glareColor="#ffffff" glareOpacity={0.35} glareSize={200} />
 
 		<span
 			class="absolute -bottom-3 left-3 flex size-9 items-center justify-center rounded-full text-xs font-bold text-white shadow-md ring-4 ring-card"

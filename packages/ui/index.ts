@@ -13,3 +13,6 @@ export { default as Badge } from './technical/ui/badge.svelte';
 export * from './technical/ui/badge.svelte.js';
 export { default as Separator } from './technical/ui/separator.svelte';
 export { default as ArticleCard } from './domain/article-card.svelte';
+export { default as GlareHover } from './technical/effects/glare-hover.svelte';
+export { default as GradualBlur } from './technical/effects/gradual-blur.svelte';
+export { default as ClickSpark } from './technical/effects/click-spark.svelte';

@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import type { ArticleSummary, Feed, Folder } from '@lumia/core';
-	import { ArticleCard } from '@lumia/ui';
+	import { ArticleCard, GradualBlur } from '@lumia/ui';
 	import Newspaper from '@lucide/svelte/icons/newspaper';
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import X from '@lucide/svelte/icons/x';
@@ -130,20 +130,23 @@
 				Aucun article. Importe ou ajoute des flux depuis <a href="/feeds" class="underline">Mes flux</a>.
 			</p>
 		{:else}
-			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{#each articles as article, index (article.id)}
-					<ArticleCard
-						id={article.id}
-						href="/articles/{article.id}"
-						title={article.title}
-						summary={article.summary}
-						imageUrl={article.image_url}
-						sourceLabel={article.source_label}
-						publishedAt={article.published_at}
-						accentHue={accentHueForFeed(article.feed_id)}
-						featured={index === 0}
-					/>
-				{/each}
+			<div class="relative">
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					{#each articles as article, index (article.id)}
+						<ArticleCard
+							id={article.id}
+							href="/articles/{article.id}"
+							title={article.title}
+							summary={article.summary}
+							imageUrl={article.image_url}
+							sourceLabel={article.source_label}
+							publishedAt={article.published_at}
+							accentHue={accentHueForFeed(article.feed_id)}
+							featured={index === 0}
+						/>
+					{/each}
+				</div>
+				<GradualBlur position="bottom" height="3rem" strength={1.5} target="parent" />
 			</div>
 		{/if}
 	</div>

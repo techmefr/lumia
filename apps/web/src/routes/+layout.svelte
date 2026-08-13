@@ -4,7 +4,7 @@
 	import { onMount } from 'svelte';
 	import { goto, onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
-	import { Button } from '@lumia/ui';
+	import { Button, ClickSpark } from '@lumia/ui';
 	import Newspaper from '@lucide/svelte/icons/newspaper';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Rss from '@lucide/svelte/icons/rss';
@@ -74,6 +74,8 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
+<ClickSpark sparkColor="var(--primary)" sparkCount={6} sparkRadius={14} sparkSize={7} duration={320}>
+
 {#if !authRoutes.includes(page.url.pathname)}
 	<header class="sticky top-0 z-30 animate-in border-b bg-card/95 backdrop-blur fade-in slide-in-from-top-2 duration-300">
 		<nav class="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-3">
@@ -140,3 +142,5 @@
 		</a>
 	</nav>
 {/if}
+
+</ClickSpark>

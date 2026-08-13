@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { sanitizeArticleHtml, type ArticleDetail } from '@lumia/core';
-	import { Button, Card, CardContent, Badge } from '@lumia/ui';
+	import { Button, Card, CardContent, Badge, GlareHover } from '@lumia/ui';
 	import ThumbsUp from '@lucide/svelte/icons/thumbs-up';
 	import ThumbsDown from '@lucide/svelte/icons/thumbs-down';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
@@ -88,13 +88,17 @@
 	{:else if article}
 		<Card class="animate-in overflow-hidden fade-in zoom-in-95 slide-in-from-bottom-3 duration-500 ease-out">
 			{#if article.image_url}
-				<div class="overflow-hidden" style={`view-transition-name: article-image-${article.id};`}>
+				<div
+					class="relative overflow-hidden"
+					style={`view-transition-name: article-image-${article.id};`}
+				>
 					<img
 						src={article.image_url}
 						alt=""
 						class="h-72 w-full animate-in scale-100 object-cover fade-in zoom-in-110 duration-700 ease-out sm:h-96"
 						loading="lazy"
 					/>
+					<GlareHover class="absolute inset-0" glareColor="#ffffff" glareOpacity={0.3} glareSize={220} />
 				</div>
 			{/if}
 			<CardContent class="pt-6">
