@@ -2,6 +2,7 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
+	import { fade, fly } from 'svelte/transition';
 	import { goto, onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Button, ClickSpark } from '@lumia/ui';
@@ -103,7 +104,9 @@
 
 {#key page.url.pathname}
 	<main
-		class="mx-auto max-w-5xl animate-in px-4 py-6 fade-in slide-in-from-bottom-3 duration-500 sm:px-6 {mainPadding}"
+		class="mx-auto max-w-5xl px-4 py-6 sm:px-6 {mainPadding}"
+		in:fly={{ y: 16, duration: 260, delay: 120 }}
+		out:fade={{ duration: 120 }}
 	>
 		{@render children()}
 	</main>
