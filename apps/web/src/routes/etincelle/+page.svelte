@@ -46,6 +46,7 @@
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{#each articles as article, index (article.id)}
 				<ArticleCard
+					id={article.id}
 					href="/articles/{article.id}"
 					title={article.title}
 					summary={article.summary}

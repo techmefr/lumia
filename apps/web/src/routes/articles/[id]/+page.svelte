@@ -55,7 +55,7 @@
 	{:else if article}
 		<Card class="animate-in overflow-hidden fade-in zoom-in-95 slide-in-from-bottom-3 duration-500 ease-out">
 			{#if article.image_url}
-				<div class="overflow-hidden">
+				<div class="overflow-hidden" style={`view-transition-name: article-image-${article.id};`}>
 					<img
 						src={article.image_url}
 						alt=""

@@ -2,20 +2,22 @@
 	import { cn } from '../technical/utils.js';
 
 	interface Props {
+		id: string;
 		href: string;
 		title: string;
 		summary?: string | null;
 		imageUrl?: string | null;
 		sourceLabel: string;
 		publishedAt: string;
-		/** Deterministic 0-360 hue so each source gets a stable cover color, Flipboard-style. */
+		/** Deterministic 0-360 hue so each source gets a stable avatar color, bento-style. */
 		accentHue: number;
-		/** Large magazine-cover treatment for the lead story in a grid. */
+		/** Larger tile for the lead story in a bento grid. */
 		featured?: boolean;
 		class?: string;
 	}
 
 	let {
+		id,
 		href,
 		title,
 		summary,
@@ -32,60 +34,59 @@
 	const formattedDate = $derived(
 		new Date(publishedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 	);
+	const initial = $derived(sourceLabel.charAt(0).toUpperCase());
 </script>
 
 <a
 	{href}
 	class={cn(
-		'group relative flex animate-in overflow-hidden rounded-2xl shadow-md fade-in slide-in-from-bottom-4 transition-all duration-500 ease-out hover:shadow-2xl',
+		'group flex animate-in flex-col overflow-hidden rounded-2xl border bg-card shadow-sm fade-in slide-in-from-bottom-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl',
 		featured ? 'sm:col-span-2 lg:col-span-2' : '',
 		className
 	)}
 >
 	<div
-		class={cn(
-			'relative w-full overflow-hidden',
-			featured ? 'h-72 sm:h-96' : 'h-52'
-		)}
-		style={`background: linear-gradient(135deg, hsl(${accentHue} 70% 55%), hsl(${accentHue + 40} 70% 45%));`}
+		class={cn('relative w-full overflow-hidden', featured ? 'h-64 sm:h-80' : 'h-36')}
+		style={`background: linear-gradient(135deg, hsl(${accentHue} 70% 55%), hsl(${accentHue + 40} 70% 45%)); view-transition-name: article-image-${id};`}
 	>
 		{#if imageUrl && !imageFailed}
 			<img
 				src={imageUrl}
 				alt=""
 				loading="lazy"
-				class="absolute inset-0 h-full w-full scale-105 object-cover transition-transform duration-700 ease-out group-hover:scale-125"
+				class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
 				onerror={() => (imageFailed = true)}
 			/>
 		{:else}
 			<div
-				class="absolute inset-0 scale-105 opacity-90 transition-transform duration-700 ease-out group-hover:scale-125"
+				class="absolute inset-0 opacity-90 transition-transform duration-500 ease-out group-hover:scale-110"
 				style={`background-image: radial-gradient(circle at 30% 30%, hsl(${accentHue + 60} 80% 75% / 60%), transparent 65%);`}
 			></div>
 		{/if}
 
-		<div
-			class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent transition-opacity duration-300 group-hover:from-black/95"
-		></div>
+		<span
+			class="absolute -bottom-3 left-3 flex size-9 items-center justify-center rounded-full text-xs font-bold text-white shadow-md ring-4 ring-card"
+			style={`background: hsl(${accentHue} 65% 45%);`}
+		>
+			{initial}
+		</span>
+	</div>
 
-		<div class="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-4 text-white sm:p-5">
-			<span
-				class="w-fit rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide backdrop-blur-sm"
-			>
-				{sourceLabel}
-			</span>
-			<h3
-				class={cn(
-					'font-serif leading-tight drop-shadow-sm transition-transform duration-300 group-hover:-translate-y-0.5',
-					featured ? 'line-clamp-3 text-2xl font-bold sm:text-3xl' : 'line-clamp-2 text-base font-semibold'
-				)}
-			>
-				{title}
-			</h3>
-			{#if featured && summary}
-				<p class="line-clamp-2 max-w-2xl text-sm text-white/85">{summary}</p>
-			{/if}
-			<span class="pt-0.5 text-xs text-white/70">{formattedDate}</span>
-		</div>
+	<div class="flex flex-1 flex-col gap-1.5 p-4 pt-5">
+		<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+			{sourceLabel}
+		</span>
+		<h3
+			class={cn(
+				'font-serif leading-snug transition-transform duration-200 group-hover:-translate-y-0.5',
+				featured ? 'line-clamp-3 text-xl font-bold sm:text-2xl' : 'line-clamp-2 text-base font-semibold'
+			)}
+		>
+			{title}
+		</h3>
+		{#if featured && summary}
+			<p class="line-clamp-2 text-sm text-muted-foreground">{summary}</p>
+		{/if}
+		<span class="mt-auto pt-1 text-xs text-muted-foreground">{formattedDate}</span>
 	</div>
 </a>
