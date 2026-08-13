@@ -70,3 +70,78 @@ async def test_patch_me_sets_and_clears_the_ai_api_key(client: httpx.AsyncClient
 
     clear_response = await client.patch("/me", headers=headers, json={"ai_api_key": None})
     assert clear_response.json()["ai_api_key_set"] is False
+
+
+async def test_patch_me_treats_an_empty_ai_api_key_as_a_removal(
+    client: httpx.AsyncClient,
+) -> None:
+    headers = await _onboarded_headers(client)
+    await client.patch("/me", headers=headers, json={"ai_api_key": "sk-secret"})
+
+    response = await client.patch("/me", headers=headers, json={"ai_api_key": ""})
+    assert response.json()["ai_api_key_set"] is False
+
+
+async def test_patch_me_sets_and_clears_the_translation_api_key(
+    client: httpx.AsyncClient,
+) -> None:
+    headers = await _onboarded_headers(client)
+
+    set_response = await client.patch(
+        "/me",
+        headers=headers,
+        json={"translation_provider": "deepl", "translation_api_key": "deepl-secret"},
+    )
+    assert set_response.status_code == 200
+    assert set_response.json()["translation_provider"] == "deepl"
+    assert set_response.json()["translation_api_key_set"] is True
+
+    clear_response = await client.patch(
+        "/me", headers=headers, json={"translation_api_key": None}
+    )
+    assert clear_response.json()["translation_api_key_set"] is False
+
+
+async def test_me_never_returns_the_stored_keys(client: httpx.AsyncClient) -> None:
+    headers = await _onboarded_headers(client)
+    await client.patch(
+        "/me",
+        headers=headers,
+        json={"ai_api_key": "sk-secret", "translation_api_key": "deepl-secret"},
+    )
+
+    body = await client.get("/me", headers=headers)
+    assert "sk-secret" not in body.text
+    assert "deepl-secret" not in body.text
+    assert "ai_api_key" not in body.json()
+    assert "translation_api_key" not in body.json()
+
+
+async def test_patch_me_stores_the_ai_model_and_endpoint(client: httpx.AsyncClient) -> None:
+    headers = await _onboarded_headers(client)
+
+    response = await client.patch(
+        "/me",
+        headers=headers,
+        json={
+            "ai_provider": "custom",
+            "ai_endpoint_url": "http://voxtral.local/v1",
+            "ai_model": "voxtral-small",
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ai_provider"] == "custom"
+    assert body["ai_endpoint_url"] == "http://voxtral.local/v1"
+    assert body["ai_model"] == "voxtral-small"
+
+
+async def test_patch_me_updates_the_preferred_language(client: httpx.AsyncClient) -> None:
+    headers = await _onboarded_headers(client)
+
+    response = await client.patch("/me", headers=headers, json={"preferred_language": "en"})
+    assert response.status_code == 200
+    assert response.json()["preferred_language"] == "en"
+
+    reread = await client.get("/me", headers=headers)
+    assert reread.json()["preferred_language"] == "en"

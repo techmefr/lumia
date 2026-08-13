@@ -20,6 +20,10 @@ class AIProvider(StrEnum):
     CUSTOM = "custom"
 
 
+class TranslationProvider(StrEnum):
+    DEEPL = "deepl"
+
+
 class Theme(StrEnum):
     LIGHT = "light"
     DARK = "dark"
@@ -56,6 +60,10 @@ class User(Base, TimestampMixin):
     ai_provider: Mapped[AIProvider | None] = mapped_column(default=None)
     ai_api_key_encrypted: Mapped[str | None] = mapped_column(default=None)
     ai_endpoint_url: Mapped[str | None] = mapped_column(default=None)
+    ai_model: Mapped[str | None] = mapped_column(default=None)
+    # Per account rather than per instance: the key is the user's, and so is the bill.
+    translation_provider: Mapped[TranslationProvider | None] = mapped_column(default=None)
+    translation_api_key_encrypted: Mapped[str | None] = mapped_column(default=None)
     theme: Mapped[Theme] = mapped_column(default=Theme.SYSTEM)
     orbit_position: Mapped[OrbitPosition] = mapped_column(default=OrbitPosition.RIGHT)
     font_base_size: Mapped[int] = mapped_column(default=16)

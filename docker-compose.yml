@@ -96,7 +96,9 @@ services:
       - internal
 
   lumia-web:
-    build: ./docker/lumia-web
+    build:
+      context: .
+      dockerfile: docker/lumia-web/Dockerfile
     restart: unless-stopped
     depends_on:
       - lumia-backend-api

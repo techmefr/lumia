@@ -102,8 +102,10 @@ cp .env.example .env    # puis renseigne les secrets
 docker compose up -d
 ```
 
-Seuls l'API et l'app web sont exposés ; Miniflux, le worker, PostgreSQL et Redis restent sur le
-réseau interne. Au premier lancement, l'app déroule l'onboarding admin : compte administrateur,
+L'app répond sur `http://localhost:8080`, l'API sur `http://localhost:8000`. Seuls ces deux-là sont
+exposés ; Miniflux, le worker, PostgreSQL et Redis restent sur le réseau interne. Le conteneur web
+sert le build statique derrière nginx et relaie `/api` vers l'API, donc l'app fonctionne depuis
+n'importe quelle adresse sans configuration ni CORS. Au premier lancement, l'app déroule l'onboarding admin : compte administrateur,
 limites de l'instance (nombre de comptes, quota disque par utilisateur), puis tu peux importer un
 OPML ou ajouter des flux.
 
@@ -137,11 +139,20 @@ uv run mypy .
 
 La suite de tests a besoin de PostgreSQL et Redis accessibles ; la stack compose fournit les deux.
 
-## Providers IA
+## Clés d'IA et de traduction
 
-Le résumé et le scoring de recommandation sont par utilisateur : chaque compte configure son propre
-provider (Mistral, OpenAI, ou un endpoint auto-hébergé comme Voxtral) et sa clé API. Il n'y a pas de
-clé au niveau de l'instance.
+Tout se règle par compte, dans **Réglages → IA et traduction** ; il n'y a pas de clé au niveau de
+l'instance.
+
+- **Résumé.** Sans clé, le résumé est extractif et calculé localement. Avec une clé, il passe par un
+  modèle : Mistral, OpenAI, ou n'importe quel endpoint compatible OpenAI (vLLM, Ollama, Voxtral) —
+  ces derniers demandent l'URL et le nom du modèle, qu'on ne peut pas deviner. Un provider
+  injoignable ou une clé refusée ne coûte pas son résumé à l'article : on retombe sur l'extractif.
+- **Traduction.** Une clé DeepL par compte, sinon le `DEEPL_API_KEY` de l'instance en secours. La
+  langue cible est la « langue de lecture » du compte.
+
+Les clés sont chiffrées en base (Fernet, `SECRET_ENCRYPTION_KEY`) et l'API ne les renvoie jamais :
+elle expose seulement `ai_api_key_set` / `translation_api_key_set`.
 
 ## Licence
 

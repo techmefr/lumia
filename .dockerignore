@@ -1,7 +1,9 @@
-**/.venv
-**/__pycache__
-**/*.pyc
-.git
-.pytest_cache
-.mypy_cache
 .ruff_cache
+.mypy_cache
+.pytest_cache
+__pycache__
+.venv
+node_modules
+.svelte-kit
+apps/web/build
+.git

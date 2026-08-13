@@ -207,9 +207,13 @@ def _to_me_response(user: User) -> MeResponse:
         theme=user.theme,
         orbit_position=user.orbit_position,
         font_base_size=user.font_base_size,
+        preferred_language=user.preferred_language,
         ai_provider=user.ai_provider,
         ai_endpoint_url=user.ai_endpoint_url,
+        ai_model=user.ai_model,
         ai_api_key_set=user.ai_api_key_encrypted is not None,
+        translation_provider=user.translation_provider,
+        translation_api_key_set=user.translation_api_key_encrypted is not None,
     )
 
 
@@ -224,13 +228,20 @@ async def update_me(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> MeResponse:
-    updates = payload.model_dump(exclude_unset=True, exclude={"ai_api_key"})
+    secret_fields = {"ai_api_key", "translation_api_key"}
+    updates = payload.model_dump(exclude_unset=True, exclude=secret_fields)
     for field, value in updates.items():
         setattr(user, field, value)
 
+    # An empty string is what a cleared form field sends; treat it as "remove the key" rather
+    # than storing the encryption of nothing.
     if "ai_api_key" in payload.model_fields_set:
         user.ai_api_key_encrypted = (
-            encrypt_secret(payload.ai_api_key) if payload.ai_api_key is not None else None
+            encrypt_secret(payload.ai_api_key) if payload.ai_api_key else None
+        )
+    if "translation_api_key" in payload.model_fields_set:
+        user.translation_api_key_encrypted = (
+            encrypt_secret(payload.translation_api_key) if payload.translation_api_key else None
         )
 
     await session.commit()

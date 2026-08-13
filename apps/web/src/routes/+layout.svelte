@@ -70,10 +70,14 @@
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
 		return new Promise((resolve) => {
-			document.startViewTransition(async () => {
+			const transition = document.startViewTransition(async () => {
 				resolve();
 				await navigation.complete;
 			});
+			// A guard that redirects starts a second navigation, which aborts this transition.
+			// That rejection is expected; unhandled it surfaces as an uncaught InvalidStateError.
+			void transition.ready.catch(() => {});
+			void transition.finished.catch(() => {});
 		});
 	});
 </script>

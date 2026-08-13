@@ -95,8 +95,10 @@ cp .env.example .env    # then fill in the secrets
 docker compose up -d
 ```
 
-Only the API and the web app are exposed; Miniflux, the worker, PostgreSQL and Redis stay on the
-internal network. On first launch the app walks you through admin onboarding: admin account, instance
+The app answers on `http://localhost:8080` and the API on `http://localhost:8000`. Only those two are
+exposed; Miniflux, the worker, PostgreSQL and Redis stay on the internal network. The web container
+serves the static build behind nginx and proxies `/api` to the API, so the app works from any address
+with no configuration and no CORS. On first launch the app walks you through admin onboarding: admin account, instance
 limits (max accounts, per-user disk quota), then you're ready to import an OPML file or add feeds.
 
 To reach it from a phone or tablet on the same network, use the machine's LAN address rather than
@@ -129,11 +131,19 @@ uv run mypy .
 
 The test suite needs PostgreSQL and Redis reachable; the compose stack provides both.
 
-## AI providers
+## AI and translation keys
 
-Summarization and recommendation scoring are per-user: each account configures its own provider
-(Mistral, OpenAI, or a custom self-hosted endpoint such as Voxtral) and API key. There is no
-instance-wide key.
+Everything is per account, under **Réglages → IA et traduction**; there is no instance-wide key.
+
+- **Summarization.** With no key, the summary is extractive and computed locally. With a key it goes
+  through a model: Mistral, OpenAI, or any OpenAI-compatible endpoint (vLLM, Ollama, Voxtral) — those
+  need the URL and the model name, which can't be guessed. An unreachable provider or a rejected key
+  doesn't cost the article its summary: it falls back to the extractive one.
+- **Translation.** A per-account DeepL key, falling back to the instance `DEEPL_API_KEY`. The target
+  language is the account's reading language.
+
+Keys are encrypted at rest (Fernet, `SECRET_ENCRYPTION_KEY`) and the API never returns them: it only
+exposes `ai_api_key_set` / `translation_api_key_set`.
 
 ## License
 

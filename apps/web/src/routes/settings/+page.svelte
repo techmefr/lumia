@@ -6,6 +6,7 @@
 	import Moon from '@lucide/svelte/icons/moon';
 	import Check from '@lucide/svelte/icons/check';
 	import { requireAuth } from '$technical/auth/require-auth';
+	import AiSettings from '$domain/settings/ai-settings.svelte';
 	import {
 		getTheme,
 		setTheme,
@@ -48,7 +49,7 @@
 <div class="mx-auto flex max-w-2xl flex-col gap-6">
 	<h1 class="flex items-center gap-2 text-2xl font-semibold">
 		<Settings class="size-6 text-primary" />
-		Réglages d'apparence
+		Réglages
 	</h1>
 
 	<Card>
@@ -169,4 +170,6 @@
 			</div>
 		</CardContent>
 	</Card>
+
+	<AiSettings />
 </div>

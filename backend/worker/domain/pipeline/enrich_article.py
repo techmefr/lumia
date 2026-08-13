@@ -1,16 +1,26 @@
+import logging
 from dataclasses import replace
 from typing import Any
 
+import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword, Author, Category, Keyword, Lang
 from api.domain.feed.models import Feed, SourceType
 from api.domain.user.models import User
+from api.technical.crypto.secret_box import decrypt_secret
 from worker.domain.extraction.stemming_en import stem_en
 from worker.domain.extraction.stemming_fr import stem_fr
 from worker.domain.extraction.tfidf import extract_keywords
 from worker.domain.summarizer.extractive import summarize_extractive
+from worker.technical.ai.base import Summarizer
+from worker.technical.ai.llm_client import (
+    LlmApiError,
+    OpenAiCompatibleSummarizer,
+    resolve_base_url,
+    resolve_model,
+)
 from worker.technical.connectors.base import RawArticle
 from worker.technical.content_extraction import ContentExtractor, TrafilaturaContentExtractor
 from worker.technical.db import worker_session
@@ -18,6 +28,8 @@ from worker.technical.html import extract_first_image, strip_html
 from worker.technical.lang_detect import detect_lang
 from worker.technical.translation.base import Translator
 from worker.technical.translation.deepl_client import DeeplTranslator
+
+logger = logging.getLogger(__name__)
 
 
 async def enrich_article(
@@ -35,7 +47,6 @@ async def enrich_article(
     lang = Lang.FR if detect_lang(plain_text) == "fr" else Lang.EN
     stems = stem_fr(plain_text) if lang == Lang.FR else stem_en(plain_text)
     keywords = extract_keywords(stems)
-    translator = translator or DeeplTranslator()
     translated_cache: dict[Lang, tuple[str, str]] = {}
 
     async with worker_session() as session:
@@ -52,7 +63,12 @@ async def enrich_article(
             user = await session.get(User, feed.user_id)
             target_lang = user.preferred_language if user is not None else lang
             title, content, summary_source = await _localize(
-                raw_article, plain_text, lang, target_lang, translator, translated_cache
+                raw_article,
+                plain_text,
+                lang,
+                target_lang,
+                translator or _translator_for(user),
+                translated_cache,
             )
             await _create_article_if_new(
                 session,
@@ -62,7 +78,7 @@ async def enrich_article(
                 category=category,
                 title=title,
                 content=content,
-                summary=summarize_extractive(summary_source),
+                summary=await _summarize(summary_source, _summarizer_for(user)),
                 image_url=image_url,
                 keywords=keywords,
                 original_lang=lang,
@@ -70,6 +86,41 @@ async def enrich_article(
             )
 
         await session.commit()
+
+
+def _translator_for(user: User | None) -> DeeplTranslator:
+    if user is None or user.translation_api_key_encrypted is None:
+        return DeeplTranslator()
+    return DeeplTranslator(api_key=decrypt_secret(user.translation_api_key_encrypted))
+
+
+def _summarizer_for(user: User | None) -> OpenAiCompatibleSummarizer | None:
+    """The account's own LLM summarizer, or None to keep the local extractive summary.
+
+    A provider without a key, or a self-hosted endpoint with no url or model, is an incomplete
+    configuration: it falls back rather than failing the article.
+    """
+    if user is None or user.ai_provider is None or user.ai_api_key_encrypted is None:
+        return None
+    base_url = resolve_base_url(user.ai_provider.value, user.ai_endpoint_url)
+    model = resolve_model(user.ai_provider.value, user.ai_model)
+    if base_url is None or model is None:
+        return None
+    return OpenAiCompatibleSummarizer(
+        api_key=decrypt_secret(user.ai_api_key_encrypted), base_url=base_url, model=model
+    )
+
+
+async def _summarize(text: str, summarizer: Summarizer | None) -> str:
+    if summarizer is None:
+        return summarize_extractive(text)
+    try:
+        summary = await summarizer.summarize(text)
+    except (LlmApiError, httpx.HTTPError) as exc:
+        # A dead provider or a rejected key must not cost the article its summary.
+        logger.warning("llm summary failed, falling back to the extractive one: %s", exc)
+        return summarize_extractive(text)
+    return summary.strip() or summarize_extractive(text)
 
 
 async def _localize(
