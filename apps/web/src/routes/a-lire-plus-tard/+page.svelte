@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 	import type { ArticleSummary, Feed } from '@lumia/core';
 	import { ArticleCard } from '@lumia/ui';
+	import Bookmark from '@lucide/svelte/icons/bookmark';
+	import Inbox from '@lucide/svelte/icons/inbox';
 	import { lumia } from '$technical/api/client';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { accentHueForFeed } from '$domain/article/accent-hue';
@@ -28,7 +30,10 @@
 
 <div class="flex flex-col gap-6">
 	<div>
-		<h1 class="text-2xl font-semibold">À lire plus tard</h1>
+		<h1 class="flex items-center gap-2 text-2xl font-semibold">
+			<Bookmark class="size-6 text-primary" />
+			À lire plus tard
+		</h1>
 		<p class="text-sm text-muted-foreground">
 			Les articles que tu as enregistrés depuis le bouton « Enregistrer ».
 		</p>
@@ -41,7 +46,8 @@
 	{#if loading}
 		<p class="text-sm text-muted-foreground">Chargement…</p>
 	{:else if articles.length === 0}
-		<p class="text-sm text-muted-foreground">
+		<p class="flex items-center gap-2 text-sm text-muted-foreground">
+			<Inbox class="size-4" />
 			Rien pour le moment — enregistre un article depuis sa page pour le retrouver ici.
 		</p>
 	{:else}

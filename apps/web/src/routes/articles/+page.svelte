@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 	import type { ArticleSummary, Feed, Folder } from '@lumia/core';
 	import { ArticleCard } from '@lumia/ui';
+	import Newspaper from '@lucide/svelte/icons/newspaper';
+	import Inbox from '@lucide/svelte/icons/inbox';
 	import { lumia } from '$technical/api/client';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { accentHueForFeed } from '$domain/article/accent-hue';
@@ -45,7 +47,10 @@
 
 <div class="flex flex-col gap-6">
 	<div class="flex flex-wrap items-end justify-between gap-4">
-		<h1 class="text-2xl font-semibold">Articles</h1>
+		<h1 class="flex items-center gap-2 text-2xl font-semibold">
+			<Newspaper class="size-6 text-primary" />
+			Articles
+		</h1>
 		<div class="flex gap-3">
 			<select
 				bind:value={selectedFolderId}
@@ -77,7 +82,8 @@
 	{#if loading}
 		<p class="text-sm text-muted-foreground">Chargement…</p>
 	{:else if articles.length === 0}
-		<p class="text-sm text-muted-foreground">
+		<p class="flex items-center gap-2 text-sm text-muted-foreground">
+			<Inbox class="size-4" />
 			Aucun article. Importe ou ajoute des flux depuis <a href="/feeds" class="underline">Mes flux</a>.
 		</p>
 	{:else}

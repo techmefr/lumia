@@ -14,6 +14,9 @@
 	} from '@lumia/ui';
 	import Upload from '@lucide/svelte/icons/upload';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import FolderPlus from '@lucide/svelte/icons/folder-plus';
+	import Rss from '@lucide/svelte/icons/rss';
+	import Inbox from '@lucide/svelte/icons/inbox';
 	import { lumia } from '$technical/api/client';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { resolveFolderName } from '$domain/feed/resolve-folder-name';
@@ -105,7 +108,10 @@
 		<CardContent>
 			<form class="flex gap-2" onsubmit={createFolder}>
 				<Input type="text" bind:value={newFolderName} placeholder="Nom du dossier" class="max-w-xs" />
-				<Button type="submit" variant="secondary">Créer</Button>
+				<Button type="submit" variant="secondary">
+					<FolderPlus class="size-4" />
+					Créer
+				</Button>
 			</form>
 		</CardContent>
 	</Card>
@@ -122,17 +128,26 @@
 			{#if loading}
 				<p class="text-sm text-muted-foreground">Chargement…</p>
 			{:else if feeds.length === 0}
-				<p class="text-sm text-muted-foreground">Aucun flux pour le moment.</p>
+				<p class="flex items-center gap-2 text-sm text-muted-foreground">
+					<Inbox class="size-4" />
+					Aucun flux pour le moment.
+				</p>
 			{:else}
 				<div class="flex flex-col">
 					{#each feeds as feed, index (feed.id)}
 						{#if index > 0}<Separator />{/if}
-						<div class="flex items-center justify-between gap-4 py-3">
-							<div class="flex flex-col gap-1">
-								<span class="font-medium">{feed.title}</span>
-								<a href={feed.url} target="_blank" rel="noopener" class="text-xs text-muted-foreground hover:underline">
-									{feed.url}
-								</a>
+						<div
+							class="flex animate-in items-center justify-between gap-4 py-3 fade-in slide-in-from-left-1 duration-300"
+							style={`animation-delay: ${index * 40}ms`}
+						>
+							<div class="flex items-center gap-3">
+								<Rss class="size-4 shrink-0 text-primary" />
+								<div class="flex flex-col gap-1">
+									<span class="font-medium">{feed.title}</span>
+									<a href={feed.url} target="_blank" rel="noopener" class="text-xs text-muted-foreground hover:underline">
+										{feed.url}
+									</a>
+								</div>
 							</div>
 							<div class="flex items-center gap-3">
 								<Badge variant="secondary">{resolveFolderName(folders, feed.folder_id)}</Badge>

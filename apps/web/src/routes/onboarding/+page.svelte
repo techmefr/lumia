@@ -2,6 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { ApiError } from '@lumia/core';
 	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '@lumia/ui';
+	import PartyPopper from '@lucide/svelte/icons/party-popper';
+	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import { lumia } from '$technical/api/client';
 
 	let email = $state('');
@@ -29,9 +31,12 @@
 </script>
 
 <div class="flex min-h-[80vh] items-center justify-center">
-	<Card class="w-full max-w-sm">
+	<Card class="w-full max-w-sm animate-in fade-in zoom-in-95 duration-300">
 		<CardHeader>
-			<CardTitle class="text-xl">Bienvenue sur Lumia</CardTitle>
+			<div class="mb-1 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+				<PartyPopper class="size-5" />
+			</div>
+			<CardTitle class="font-serif text-xl">Bienvenue sur Lumia</CardTitle>
 			<CardDescription>Premier lancement : crée le compte administrateur de cette instance.</CardDescription>
 		</CardHeader>
 		<CardContent>
@@ -58,6 +63,7 @@
 					<p class="text-sm text-destructive">{error}</p>
 				{/if}
 				<Button type="submit" disabled={loading} class="mt-1">
+					<UserPlus class="size-4" />
 					{loading ? 'Création…' : 'Créer le compte'}
 				</Button>
 			</form>

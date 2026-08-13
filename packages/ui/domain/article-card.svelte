@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { cn } from '../technical/utils.js';
 
 	interface Props {
@@ -23,14 +24,19 @@
 <a
 	{href}
 	class={cn(
-		'group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md',
+		'group flex animate-in flex-col overflow-hidden rounded-xl border bg-card shadow-sm fade-in slide-in-from-bottom-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg',
 		className
 	)}
 >
 	<div
-		class="h-28 w-full"
+		class="h-28 w-full overflow-hidden"
 		style={`background: linear-gradient(135deg, hsl(${accentHue} 70% 55%), hsl(${accentHue + 40} 70% 45%));`}
-	></div>
+	>
+		<div
+			class="h-full w-full scale-100 opacity-90 transition-transform duration-500 group-hover:scale-110"
+			style={`background-image: radial-gradient(circle at 30% 30%, hsl(${accentHue + 60} 80% 75% / 50%), transparent 60%);`}
+		></div>
+	</div>
 	<div class="flex flex-1 flex-col gap-2 p-4">
 		<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
 			{sourceLabel}
@@ -41,6 +47,9 @@
 		{#if summary}
 			<p class="line-clamp-3 text-sm text-muted-foreground">{summary}</p>
 		{/if}
-		<span class="mt-auto pt-1 text-xs text-muted-foreground">{formattedDate}</span>
+		<span class="mt-auto flex items-center justify-between pt-1 text-xs text-muted-foreground">
+			{formattedDate}
+			<ArrowRight class="size-3.5 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" />
+		</span>
 	</div>
 </a>

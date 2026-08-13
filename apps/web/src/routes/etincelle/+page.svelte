@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 	import type { ArticleSummary, Feed } from '@lumia/core';
 	import { ArticleCard } from '@lumia/ui';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import Inbox from '@lucide/svelte/icons/inbox';
 	import { lumia } from '$technical/api/client';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { accentHueForFeed } from '$domain/article/accent-hue';
@@ -28,7 +30,10 @@
 
 <div class="flex flex-col gap-6">
 	<div>
-		<h1 class="text-2xl font-semibold">L'Étincelle</h1>
+		<h1 class="flex items-center gap-2 text-2xl font-semibold">
+			<Sparkles class="size-6 text-primary" />
+			L'Étincelle
+		</h1>
 		<p class="text-sm text-muted-foreground">Une sélection apprise à partir de tes retours.</p>
 	</div>
 
@@ -39,7 +44,8 @@
 	{#if loading}
 		<p class="text-sm text-muted-foreground">Chargement…</p>
 	{:else if articles.length === 0}
-		<p class="text-sm text-muted-foreground">
+		<p class="flex items-center gap-2 text-sm text-muted-foreground">
+			<Inbox class="size-4" />
 			Pas encore assez de retours pour te faire une sélection — like/dislike des articles pour l'entraîner.
 		</p>
 	{:else}

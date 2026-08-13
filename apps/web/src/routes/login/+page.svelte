@@ -2,6 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { ApiError } from '@lumia/core';
 	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '@lumia/ui';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import LogIn from '@lucide/svelte/icons/log-in';
 	import { lumia } from '$technical/api/client';
 
 	let email = $state('');
@@ -25,9 +27,12 @@
 </script>
 
 <div class="flex min-h-[80vh] items-center justify-center">
-	<Card class="w-full max-w-sm">
+	<Card class="w-full max-w-sm animate-in fade-in zoom-in-95 duration-300">
 		<CardHeader>
-			<CardTitle class="text-xl">Lumia</CardTitle>
+			<div class="mb-1 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+				<Sparkles class="size-5" />
+			</div>
+			<CardTitle class="font-serif text-xl">Lumia</CardTitle>
 			<CardDescription>Connecte-toi pour retrouver tes flux.</CardDescription>
 		</CardHeader>
 		<CardContent>
@@ -50,6 +55,7 @@
 					<p class="text-sm text-destructive">{error}</p>
 				{/if}
 				<Button type="submit" disabled={loading} class="mt-1">
+					<LogIn class="size-4" />
 					{loading ? 'Connexion…' : 'Se connecter'}
 				</Button>
 			</form>
