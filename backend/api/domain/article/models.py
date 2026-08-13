@@ -48,6 +48,7 @@ class Article(Base, TimestampMixin):
     url: Mapped[str]
     content: Mapped[str]
     summary: Mapped[str | None] = mapped_column(default=None)
+    image_url: Mapped[str | None] = mapped_column(default=None)
     original_lang: Mapped[Lang] = mapped_column(default=Lang.FR)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

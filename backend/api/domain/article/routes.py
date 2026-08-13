@@ -14,7 +14,7 @@ from api.technical.db import get_db_session
 router = APIRouter()
 
 
-def _to_summary(article: Article) -> ArticleSummaryResponse:
+def to_summary(article: Article) -> ArticleSummaryResponse:
     return ArticleSummaryResponse(
         id=article.id,
         feed_id=article.feed_id,
@@ -23,6 +23,7 @@ def _to_summary(article: Article) -> ArticleSummaryResponse:
         title=article.title,
         url=article.url,
         summary=article.summary,
+        image_url=article.image_url,
         published_at=article.published_at,
     )
 
@@ -44,7 +45,7 @@ async def list_articles(
     query = query.order_by(Article.published_at.desc()).limit(limit).offset(offset)
 
     articles = await session.scalars(query)
-    return [_to_summary(article) for article in articles]
+    return [to_summary(article) for article in articles]
 
 
 @router.get("/articles/{article_id}", response_model=ArticleDetailResponse)
@@ -62,6 +63,6 @@ async def get_article(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     return ArticleDetailResponse(
-        **_to_summary(article).model_dump(),
+        **to_summary(article).model_dump(),
         content=article.content,
     )

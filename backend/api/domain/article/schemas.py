@@ -12,6 +12,7 @@ class ArticleSummaryResponse(BaseModel):
     title: str
     url: str
     summary: str | None
+    image_url: str | None
     published_at: datetime
 
 

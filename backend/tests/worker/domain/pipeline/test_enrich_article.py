@@ -82,6 +82,31 @@ async def test_enrich_article_creates_the_article_with_summary_and_keywords(
     assert len(list(keywords)) > 0
 
 
+async def test_enrich_article_extracts_the_first_image_from_the_content(
+    session: AsyncSession,
+) -> None:
+    await _create_feed(session)
+    content = FRENCH_CONTENT + '<img src="https://example.com/cover.jpg">'
+
+    await enrich_article({}, _raw_article(content=content))
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    assert article.image_url == "https://example.com/cover.jpg"
+
+
+async def test_enrich_article_leaves_image_url_none_when_there_is_no_image(
+    session: AsyncSession,
+) -> None:
+    await _create_feed(session)
+
+    await enrich_article({}, _raw_article())
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    assert article.image_url is None
+
+
 async def test_enrich_article_links_author_and_category(session: AsyncSession) -> None:
     await _create_feed(session)
     await enrich_article({}, _raw_article())

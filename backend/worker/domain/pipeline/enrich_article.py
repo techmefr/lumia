@@ -12,7 +12,7 @@ from worker.domain.extraction.tfidf import extract_keywords
 from worker.domain.summarizer.extractive import summarize_extractive
 from worker.technical.connectors.base import RawArticle
 from worker.technical.db import worker_session
-from worker.technical.html import strip_html
+from worker.technical.html import extract_first_image, strip_html
 from worker.technical.lang_detect import detect_lang
 from worker.technical.translation.base import Translator
 from worker.technical.translation.deepl_client import DeeplTranslator
@@ -22,6 +22,7 @@ async def enrich_article(
     _ctx: dict[str, Any], raw_article: RawArticle, *, translator: Translator | None = None
 ) -> None:
     plain_text = strip_html(raw_article.content)
+    image_url = extract_first_image(raw_article.content)
     lang = Lang.FR if detect_lang(plain_text) == "fr" else Lang.EN
     stems = stem_fr(plain_text) if lang == Lang.FR else stem_en(plain_text)
     keywords = extract_keywords(stems)
@@ -53,6 +54,7 @@ async def enrich_article(
                 title=title,
                 content=content,
                 summary=summarize_extractive(summary_source),
+                image_url=image_url,
                 keywords=keywords,
                 original_lang=lang,
                 keyword_lang=lang,
@@ -91,6 +93,7 @@ async def _create_article_if_new(
     title: str,
     content: str,
     summary: str,
+    image_url: str | None,
     keywords: list[tuple[str, float]],
     original_lang: Lang,
     keyword_lang: Lang,
@@ -113,6 +116,7 @@ async def _create_article_if_new(
         url=raw_article.url,
         content=content,
         summary=summary,
+        image_url=image_url,
         original_lang=original_lang,
         published_at=raw_article.published_at,
     )

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article
+from api.domain.article.routes import to_summary
 from api.domain.article.schemas import ArticleSummaryResponse
 from api.domain.recommendation.etincelle_service import list_etincelle
 from api.domain.recommendation.feedback_service import apply_feedback
@@ -24,19 +25,7 @@ async def get_saved_articles(
     session: AsyncSession = Depends(get_db_session),
 ) -> list[ArticleSummaryResponse]:
     articles = await list_saved(session, user.id, limit=limit, offset=offset)
-    return [
-        ArticleSummaryResponse(
-            id=article.id,
-            feed_id=article.feed_id,
-            author_id=article.author_id,
-            category_id=article.category_id,
-            title=article.title,
-            url=article.url,
-            summary=article.summary,
-            published_at=article.published_at,
-        )
-        for article in articles
-    ]
+    return [to_summary(article) for article in articles]
 
 
 @router.get("/articles/etincelle", response_model=list[ArticleSummaryResponse])
@@ -47,19 +36,7 @@ async def get_etincelle(
     session: AsyncSession = Depends(get_db_session),
 ) -> list[ArticleSummaryResponse]:
     ranked = await list_etincelle(session, user.id, limit=limit, offset=offset)
-    return [
-        ArticleSummaryResponse(
-            id=article.id,
-            feed_id=article.feed_id,
-            author_id=article.author_id,
-            category_id=article.category_id,
-            title=article.title,
-            url=article.url,
-            summary=article.summary,
-            published_at=article.published_at,
-        )
-        for article, _score in ranked
-    ]
+    return [to_summary(article) for article, _score in ranked]
 
 
 @router.post("/articles/{article_id}/feedback", status_code=status.HTTP_204_NO_CONTENT)

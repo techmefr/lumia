@@ -19,12 +19,12 @@ async def session(db_schema: None) -> AsyncIterator[AsyncSession]:
         yield db_session
 
 
-async def _seed_user_with_feed(session: AsyncSession) -> tuple[User, Feed]:
+async def _seed_user_with_feed(session: AsyncSession, *, email: str) -> tuple[User, Feed]:
     instance = Instance(max_accounts=10, disk_quota_mb=1000)
     session.add(instance)
     await session.flush()
     user = User(
-        instance_id=instance.id, email=f"{id(instance)}@example.com", username="user",
+        instance_id=instance.id, email=email, username="user",
         password_hash=None,
     )
     session.add(user)
@@ -56,8 +56,8 @@ async def _add_article(session: AsyncSession, feed: Feed, external_id: str, titl
 
 
 async def test_list_saved_excludes_other_users_saves(session: AsyncSession) -> None:
-    user, feed = await _seed_user_with_feed(session)
-    other_user, other_feed = await _seed_user_with_feed(session)
+    user, feed = await _seed_user_with_feed(session, email="user@example.com")
+    other_user, other_feed = await _seed_user_with_feed(session, email="other@example.com")
 
     mine = await _add_article(session, feed, "1", "Mine")
     theirs = await _add_article(session, other_feed, "2", "Theirs")
@@ -71,7 +71,7 @@ async def test_list_saved_excludes_other_users_saves(session: AsyncSession) -> N
 
 
 async def test_list_saved_excludes_likes_and_dislikes(session: AsyncSession) -> None:
-    user, feed = await _seed_user_with_feed(session)
+    user, feed = await _seed_user_with_feed(session, email="user@example.com")
 
     saved = await _add_article(session, feed, "1", "Saved")
     liked = await _add_article(session, feed, "2", "Liked")
