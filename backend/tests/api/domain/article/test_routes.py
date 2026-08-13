@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from api.domain.article.models import Article
+from api.domain.article.models import Article, ArticleKeyword, Author, Category, Keyword, Lang
 from api.domain.feed.models import Feed, SourceType
 from api.domain.user.models import User
 from api.main import app
@@ -103,6 +103,101 @@ async def test_get_article_returns_its_detail(client: httpx.AsyncClient) -> None
     response = await client.get(f"/articles/{article_id}", headers=headers)
     assert response.status_code == 200
     assert response.json()["content"] == "Content"
+
+
+async def test_get_article_includes_source_author_category_and_keywords(
+    client: httpx.AsyncClient,
+) -> None:
+    headers = await _headers(client)
+    session_factory = async_sessionmaker(get_engine(), expire_on_commit=False)
+    async with session_factory() as session:
+        user = (await session.scalars(select(User))).first()
+        assert user is not None
+        feed = Feed(
+            user_id=user.id,
+            source_type=SourceType.MINIFLUX,
+            external_feed_id="10",
+            title="Korben",
+            url="https://example.com/feed",
+        )
+        author = Author(name="Jane Doe")
+        category = Category(name="Tech")
+        keyword = Keyword(term="ia", lang=Lang.FR)
+        session.add_all([feed, author, category, keyword])
+        await session.flush()
+        article = Article(
+            feed_id=feed.id,
+            author_id=author.id,
+            category_id=category.id,
+            external_entry_id="1",
+            title="Title",
+            url="https://example.com/a",
+            content="Content",
+            published_at=datetime(2026, 8, 12, tzinfo=UTC),
+        )
+        session.add(article)
+        await session.flush()
+        session.add(ArticleKeyword(article_id=article.id, keyword_id=keyword.id, weight=1.0))
+        await session.commit()
+        article_id = str(article.id)
+
+    response = await client.get(f"/articles/{article_id}", headers=headers)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["source_label"] == "Korben"
+    assert body["author_name"] == "Jane Doe"
+    assert body["category_name"] == "Tech"
+    assert body["keywords"] == [{"id": str(keyword.id), "term": "ia"}]
+
+
+async def test_list_articles_filters_by_author_category_and_keyword(
+    client: httpx.AsyncClient,
+) -> None:
+    headers = await _headers(client)
+    session_factory = async_sessionmaker(get_engine(), expire_on_commit=False)
+    async with session_factory() as session:
+        user = (await session.scalars(select(User))).first()
+        assert user is not None
+        feed = Feed(
+            user_id=user.id,
+            source_type=SourceType.MINIFLUX,
+            external_feed_id="10",
+            title="Feed",
+            url="https://example.com/feed",
+        )
+        author = Author(name="Jane Doe")
+        keyword = Keyword(term="ia", lang=Lang.FR)
+        session.add_all([feed, author, keyword])
+        await session.flush()
+        matching = Article(
+            feed_id=feed.id,
+            author_id=author.id,
+            external_entry_id="1",
+            title="Matching",
+            url="https://example.com/a",
+            content="Content",
+            published_at=datetime(2026, 8, 12, tzinfo=UTC),
+        )
+        other = Article(
+            feed_id=feed.id,
+            external_entry_id="2",
+            title="Other",
+            url="https://example.com/b",
+            content="Content",
+            published_at=datetime(2026, 8, 12, tzinfo=UTC),
+        )
+        session.add_all([matching, other])
+        await session.flush()
+        session.add(ArticleKeyword(article_id=matching.id, keyword_id=keyword.id, weight=1.0))
+        await session.commit()
+        author_id = str(author.id)
+        keyword_id = str(keyword.id)
+
+    by_author = await client.get(f"/articles?author_id={author_id}", headers=headers)
+    assert [a["title"] for a in by_author.json()] == ["Matching"]
+
+    by_keyword = await client.get(f"/articles?keyword_id={keyword_id}", headers=headers)
+    assert [a["title"] for a in by_keyword.json()] == ["Matching"]
 
 
 async def test_get_article_of_another_user_returns_404(client: httpx.AsyncClient) -> None:

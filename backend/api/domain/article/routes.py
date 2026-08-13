@@ -4,8 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.domain.article.models import Article
-from api.domain.article.schemas import ArticleDetailResponse, ArticleSummaryResponse
+from api.domain.article.models import Article, ArticleKeyword
+from api.domain.article.schemas import (
+    ArticleDetailResponse,
+    ArticleSummaryResponse,
+    KeywordResponse,
+)
 from api.domain.feed.models import Feed
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
@@ -19,7 +23,10 @@ def to_summary(article: Article) -> ArticleSummaryResponse:
         id=article.id,
         feed_id=article.feed_id,
         author_id=article.author_id,
+        author_name=article.author.name if article.author else None,
         category_id=article.category_id,
+        category_name=article.category.name if article.category else None,
+        source_label=article.feed.title,
         title=article.title,
         url=article.url,
         summary=article.summary,
@@ -32,6 +39,9 @@ def to_summary(article: Article) -> ArticleSummaryResponse:
 async def list_articles(
     folder_id: UUID | None = Query(default=None),
     feed_id: UUID | None = Query(default=None),
+    author_id: UUID | None = Query(default=None),
+    category_id: UUID | None = Query(default=None),
+    keyword_id: UUID | None = Query(default=None),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     user: User = Depends(get_current_user),
@@ -42,6 +52,14 @@ async def list_articles(
         query = query.where(Feed.folder_id == folder_id)
     if feed_id is not None:
         query = query.where(Article.feed_id == feed_id)
+    if author_id is not None:
+        query = query.where(Article.author_id == author_id)
+    if category_id is not None:
+        query = query.where(Article.category_id == category_id)
+    if keyword_id is not None:
+        query = query.join(ArticleKeyword, ArticleKeyword.article_id == Article.id).where(
+            ArticleKeyword.keyword_id == keyword_id
+        )
     query = query.order_by(Article.published_at.desc()).limit(limit).offset(offset)
 
     articles = await session.scalars(query)
@@ -62,7 +80,13 @@ async def get_article(
     if article is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
+    keywords = [
+        KeywordResponse(id=link.keyword.id, term=link.keyword.term)
+        for link in article.keyword_links
+    ]
+
     return ArticleDetailResponse(
         **to_summary(article).model_dump(),
         content=article.content,
+        keywords=keywords,
     )

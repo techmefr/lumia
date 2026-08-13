@@ -3,9 +3,11 @@ from enum import StrEnum
 from uuid import UUID, uuid4
 
 from sqlalchemy import DateTime, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from api.technical.orm import Base, TimestampMixin
+
+from api.domain.feed.models import Feed
 
 
 class Lang(StrEnum):
@@ -52,6 +54,13 @@ class Article(Base, TimestampMixin):
     original_lang: Mapped[Lang] = mapped_column(default=Lang.FR)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
+    author: Mapped[Author | None] = relationship(lazy="selectin")
+    category: Mapped[Category | None] = relationship(lazy="selectin")
+    feed: Mapped["Feed"] = relationship(lazy="selectin")
+    keyword_links: Mapped[list["ArticleKeyword"]] = relationship(
+        lazy="selectin", viewonly=True
+    )
+
 
 class ArticleKeyword(Base):
     __tablename__ = "article_keywords"
@@ -59,3 +68,5 @@ class ArticleKeyword(Base):
     article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"), primary_key=True)
     keyword_id: Mapped[UUID] = mapped_column(ForeignKey("keywords.id"), primary_key=True)
     weight: Mapped[float]
+
+    keyword: Mapped[Keyword] = relationship(lazy="selectin")
