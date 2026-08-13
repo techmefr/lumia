@@ -21,9 +21,13 @@
 		children,
 		...restProps
 	}: ButtonProps = $props();
+
+	// `disabled` does nothing on an anchor: the link stays clickable and focusable. Render a
+	// real disabled <button> instead, so a "disabled" link can't be followed by keyboard.
+	const asLink = $derived(Boolean(href) && !restProps.disabled);
 </script>
 
-{#if href}
+{#if asLink}
 	<a
 		{href}
 		class={cn(buttonVariants({ variant, size }), className)}

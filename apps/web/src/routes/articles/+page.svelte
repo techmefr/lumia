@@ -91,7 +91,7 @@
 	});
 </script>
 
-<div class="flex gap-6">
+<div class="flex flex-col gap-4 sm:flex-row sm:gap-6">
 	<FeedSidebar
 		{folders}
 		{feeds}
