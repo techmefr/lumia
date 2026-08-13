@@ -20,6 +20,7 @@ class UserArticleFeedback(Base, TimestampMixin):
     sentiment: Mapped[Vote | None] = mapped_column(default=None)
     saved: Mapped[bool] = mapped_column(default=False)
     favorite: Mapped[bool] = mapped_column(default=False)
+    read: Mapped[bool] = mapped_column(default=False)
 
 
 class UserKeywordScore(Base):

@@ -22,8 +22,13 @@ class ArticleSummaryResponse(BaseModel):
     summary: str | None
     image_url: str | None
     published_at: datetime
+    read: bool = False
 
 
 class ArticleDetailResponse(ArticleSummaryResponse):
     content: str
     keywords: list[KeywordResponse]
+
+
+class SaveUrlRequest(BaseModel):
+    url: str

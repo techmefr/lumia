@@ -9,6 +9,9 @@ from api.technical.orm import Base, TimestampMixin
 
 class SourceType(StrEnum):
     MINIFLUX = "miniflux"
+    # A page the user saved by URL, not something Miniflux polls: it has no real feed behind it,
+    # so every user gets one synthetic MANUAL feed holding all of them.
+    MANUAL = "manual"
 
 
 class Folder(Base, TimestampMixin):

@@ -2,7 +2,7 @@ from uuid import UUID
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError, InvalidOpmlError
@@ -12,9 +12,13 @@ from api.domain.feed.schemas import (
     FeedAddByUrlRequest,
     FeedCreateRequest,
     FeedResponse,
+    FeedUpdateRequest,
     FolderCreateRequest,
     FolderResponse,
+    FolderUpdateRequest,
+    UnreadCountsResponse,
 )
+from api.domain.feed.unread_service import count_unread
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.technical.db import get_db_session
@@ -50,6 +54,43 @@ async def create_folder(
     return _to_folder_response(folder)
 
 
+@router.patch("/folders/{folder_id}", response_model=FolderResponse)
+async def rename_folder(
+    folder_id: UUID,
+    payload: FolderUpdateRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> FolderResponse:
+    folder = await session.scalar(
+        select(Folder).where(Folder.id == folder_id, Folder.user_id == user.id)
+    )
+    if folder is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    folder.name = payload.name
+    await session.commit()
+    return _to_folder_response(folder)
+
+
+@router.delete("/folders/{folder_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_folder(
+    folder_id: UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    folder = await session.scalar(
+        select(Folder).where(Folder.id == folder_id, Folder.user_id == user.id)
+    )
+    if folder is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    # Deleting a folder must not take its feeds (and their articles) with it — unfile them.
+    await session.execute(
+        update(Feed).where(Feed.folder_id == folder.id).values(folder_id=None)
+    )
+    await session.delete(folder)
+    await session.commit()
+
+
 def _to_feed_response(feed: Feed) -> FeedResponse:
     return FeedResponse(
         id=feed.id,
@@ -68,6 +109,15 @@ async def list_feeds(
 ) -> list[FeedResponse]:
     feeds = await session.scalars(select(Feed).where(Feed.user_id == user.id))
     return [_to_feed_response(feed) for feed in feeds]
+
+
+@router.get("/feeds/unread-counts", response_model=UnreadCountsResponse)
+async def get_unread_counts(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> UnreadCountsResponse:
+    counts = await count_unread(session, user.id)
+    return UnreadCountsResponse(total=counts.total, feeds=counts.feeds, folders=counts.folders)
 
 
 @router.post("/feeds", response_model=FeedResponse, status_code=status.HTTP_201_CREATED)
@@ -120,6 +170,34 @@ async def import_opml_feeds(
     except InvalidOpmlError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
     return [_to_feed_response(feed) for feed in feeds]
+
+
+@router.patch("/feeds/{feed_id}", response_model=FeedResponse)
+async def update_feed(
+    feed_id: UUID,
+    payload: FeedUpdateRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> FeedResponse:
+    feed = await session.scalar(select(Feed).where(Feed.id == feed_id, Feed.user_id == user.id))
+    if feed is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if payload.title is not None:
+        feed.title = payload.title
+    if "folder_id" in payload.model_fields_set:
+        if payload.folder_id is not None:
+            folder = await session.scalar(
+                select(Folder).where(Folder.id == payload.folder_id, Folder.user_id == user.id)
+            )
+            if folder is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        # The move stays local: Miniflux keeps the category it was registered under, which only
+        # matters for a future re-import, never for what Lumia displays.
+        feed.folder_id = payload.folder_id
+
+    await session.commit()
+    return _to_feed_response(feed)
 
 
 @router.delete("/feeds/{feed_id}", status_code=status.HTTP_204_NO_CONTENT)

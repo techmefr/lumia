@@ -27,6 +27,7 @@ async def apply_feedback(
     sentiment: Vote | None = _UNSET,
     saved: bool = _UNSET,
     favorite: bool = _UNSET,
+    read: bool = _UNSET,
 ) -> None:
     existing = await session.scalar(
         select(UserArticleFeedback).where(
@@ -51,6 +52,8 @@ async def apply_feedback(
         existing.saved = saved
     if favorite is not _UNSET:
         existing.favorite = favorite
+    if read is not _UNSET:
+        existing.read = read
 
     await session.commit()
 
