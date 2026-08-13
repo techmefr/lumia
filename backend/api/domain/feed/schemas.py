@@ -22,6 +22,11 @@ class FeedCreateRequest(BaseModel):
     folder_id: UUID | None = None
 
 
+class FeedAddByUrlRequest(BaseModel):
+    url: str
+    folder_id: UUID | None = None
+
+
 class FeedResponse(BaseModel):
     id: UUID
     folder_id: UUID | None

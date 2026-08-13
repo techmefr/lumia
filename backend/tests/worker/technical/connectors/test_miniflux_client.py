@@ -1,13 +1,14 @@
 import httpx
 import pytest
 
+from worker.technical.connectors import miniflux_client
 from worker.technical.connectors.miniflux_client import (
     MinifluxApiError,
     create_category,
     create_feed,
+    get_feed,
     list_categories,
 )
-from worker.technical.connectors import miniflux_client
 
 
 def test_miniflux_client_allows_time_for_the_synchronous_feed_fetch() -> None:
@@ -73,3 +74,21 @@ async def test_create_feed_raises_on_an_error_response() -> None:
             category_id=42,
             transport=httpx.MockTransport(handler),
         )
+
+
+async def test_get_feed_returns_the_id_and_title() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/v1/feeds/7"
+        return httpx.Response(200, json={"id": 7, "title": "Hacker News"})
+
+    feed = await get_feed(7, transport=httpx.MockTransport(handler))
+    assert feed.feed_id == 7
+    assert feed.title == "Hacker News"
+
+
+async def test_get_feed_raises_on_an_error_response() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404, text="not found")
+
+    with pytest.raises(MinifluxApiError):
+        await get_feed(7, transport=httpx.MockTransport(handler))
