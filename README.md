@@ -1,55 +1,139 @@
 # Lumia
 
-> Clarify your feeds and learn your tastes.
+> Clarify your feeds. Learn your tastes.
 
-Lumia is a self-hosted, multi-tenant, community-driven RSS reader that learns what you like.
+Lumia is a self-hosted RSS reader that pulls your feeds, strips the articles down to the actual
+article, extracts keywords and a summary, and learns what interests you as you read. Everything runs
+on your own machine.
 
-Version française : [README.fr.md](README.fr.md)
+**[Landing page](https://techmefr.github.io/lumia/)** · Version française : [README.fr.md](README.fr.md)
 
 ## What it does
 
-Lumia ingests RSS feeds through [Miniflux](https://miniflux.app), enriches every article with keyword extraction and extractive summarization, then learns your preferences from the way you swipe through them. Everything runs on your own infrastructure.
+### Reading
 
-- **Kiosque** — feeds organized by folders/themes
-- **Archive** — saved articles, chronological or thematic view
-- **L'Étincelle** — recommendations ranked by a learned relevance score
-- **Audio** — text-to-speech reading queue sorted by score and available time (Phase 2)
-- **Profil** — account, theme, text size, AI provider configuration
+- **Full, readable articles.** Every page is re-fetched and re-extracted with
+  [trafilatura](https://trafilatura.readthedocs.io) to drop navigation, banners and related-article
+  lists. Feed-crawler extraction alone routinely leaks site chrome into the body.
+- **Estimated reading time** on every card, from the article's word count.
+- **Reading position saved server-side.** Reopen an article on another device and it resumes where
+  you stopped. The stored position never rewinds, so a quick revisit that lands at the top can't
+  erase your progress.
+- **Progress bar** at the top of the article, and an article past 90 % read marks itself read.
+- **Text-to-speech**, per article or across a whole playlist.
+
+### Organising
+
+- **Read/unread** with unread counts per feed and per folder, an unread-only filter, and
+  "mark everything read" scoped to a feed, a folder, or an explicit list of articles — the API
+  requires exactly one scope, so a forgotten filter can't mark your whole library read.
+- **Folders** you can rename and delete; deleting one unfiles its feeds instead of taking them with
+  it. Feeds can be retitled and moved between folders.
+- **Search** across title, summary and content, combinable with the folder/feed/author/keyword
+  filters.
+- **Playlists** — ordered queues of articles with a total duration, reorderable, readable aloud
+  end to end.
+- **Paging** on every list, 24 articles at a time.
+
+### Getting articles in
+
+- **OPML import** (a Feedly export works as-is): one folder per category, each feed registered with
+  Miniflux.
+- **Add a feed by URL**, with the real feed title resolved from the source.
+- **Save any page by URL**, Pocket-style: the page is extracted and filed on a per-user
+  "Enregistrés" feed. Re-saving the same URL returns the existing article rather than duplicating it.
+- **Translation** of foreign-language articles (DeepL).
+
+### Learning
+
+- **L'Étincelle** — a relevance score learned from your votes and applied to keywords, sources,
+  authors and categories. Swipe right to like, left to skip.
+- Feedback is split into independent axes: sentiment (like/dislike), saved, favorite, read.
+
+### Interface
+
+- Keyboard shortcuts: `j`/`k` to move, `o` to open, `m` read/unread, `s` save, `u` unread-only,
+  `/` search.
+- Skeleton loaders, actionable empty states, and toasts with undo on destructive actions.
+- Light/dark, adjustable text size, page transitions, `prefers-reduced-motion` honoured throughout.
+- WCAG 2.2 AA: skip link, `aria-current` on navigation, live regions on async state, native radio
+  groups rather than ARIA imitations, and a palette checked by measured contrast rather than by eye.
 
 ## Architecture
 
-Monorepo, OSDD (`technical/` / `domain/` split in every app and service).
+Monorepo, OSDD (`technical/` / `domain/` split in every app and service; `technical/` never imports
+`domain/`).
 
 ```
 lumia/
 ├── packages/
-│   ├── ui/       Shared Svelte components
-│   └── core/     Shared logic (feed, article, user, recommendation, audio)
+│   ├── ui/       Shared Svelte 5 components (primitives, effects, article card)
+│   └── core/     Shared logic (feed, article, user, recommendation, playlist)
 ├── apps/
-│   ├── web/          Svelte SPA
-│   ├── mobile/        Svelte + Capacitor (iOS/Android)
-│   ├── extension/     WebExtension (Chrome/Firefox): popup + sidepanel
-│   └── auto/          Android Auto (Kotlin, audio only)
-└── backend/
-    ├── api/       FastAPI
-    └── worker/    Python TF-IDF enrichment pipeline
+│   ├── web/          SvelteKit SPA
+│   ├── mobile/       Svelte + Capacitor (iOS/Android) — planned
+│   ├── extension/    WebExtension (Chrome/Firefox) — planned
+│   └── auto/         Android Auto (Kotlin, audio only) — planned
+├── backend/
+│   ├── api/       FastAPI
+│   └── worker/    Python enrichment pipeline (TF-IDF, FR/EN stemming, extractive summary)
+└── landing/       Static landing page, deployed to GitHub Pages
 ```
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the full breakdown and [CONTRIBUTING.md](CONTRIBUTING.md) to contribute.
+Stack: FastAPI, PostgreSQL, Redis, arq, Miniflux for ingestion, SvelteKit + Svelte 5 + Tailwind 4 on
+the front. Keyword extraction and summarization are local — no external AI call is required to read.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full breakdown and [CONTRIBUTING.md](CONTRIBUTING.md)
+to contribute.
 
 ## Self-hosting
 
-A reference `docker-compose.yml` is provided at the repo root. Only `lumia-api` and `lumia-web` are exposed publicly; Miniflux, the worker, and PostgreSQL stay on the internal network. Authentication uses an httpOnly cookie — no token is ever exposed to client-side JS.
-
 ```bash
+git clone https://github.com/techmefr/lumia.git
+cd lumia
+cp .env.example .env    # then fill in the secrets
 docker compose up -d
 ```
 
-On first launch, the app walks you through admin onboarding: admin account, instance limits (max accounts, per-user disk quota), then you're ready to add feeds.
+Only the API and the web app are exposed; Miniflux, the worker, PostgreSQL and Redis stay on the
+internal network. On first launch the app walks you through admin onboarding: admin account, instance
+limits (max accounts, per-user disk quota), then you're ready to import an OPML file or add feeds.
+
+To reach it from a phone or tablet on the same network, use the machine's LAN address rather than
+`localhost`. The [landing page](https://techmefr.github.io/lumia/) can store that address per device
+and give you a direct button.
+
+### Database migrations
+
+```bash
+docker compose exec lumia-backend-api uv run alembic upgrade head
+```
+
+## Development
+
+```bash
+pnpm install
+pnpm --filter web dev      # front on :5173
+pnpm --filter web check    # svelte-check
+pnpm --filter web build
+```
+
+Backend, from `backend/`:
+
+```bash
+uv sync
+uv run pytest
+uv run ruff check .
+uv run mypy .
+```
+
+The test suite needs PostgreSQL and Redis reachable; the compose stack provides both.
 
 ## AI providers
 
-Summarization and recommendation scoring are per-user: each account configures its own provider (Mistral, OpenAI, or a custom self-hosted endpoint such as Voxtral) and API key. There is no instance-wide key.
+Summarization and recommendation scoring are per-user: each account configures its own provider
+(Mistral, OpenAI, or a custom self-hosted endpoint such as Voxtral) and API key. There is no
+instance-wide key.
 
 ## License
 
