@@ -1,12 +1,12 @@
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError, InvalidOpmlError
-from api.domain.feed.models import Feed, Folder
+from api.domain.feed.models import Feed, Folder, SourceType
 from api.domain.feed.opml_service import add_feed, import_opml
 from api.domain.feed.schemas import (
     FeedAddByUrlRequest,
@@ -22,7 +22,11 @@ from api.domain.feed.unread_service import count_unread
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.technical.db import get_db_session
-from worker.technical.connectors.miniflux_client import get_miniflux_transport
+from worker.technical.connectors.miniflux_client import (
+    MinifluxApiError,
+    get_feed_icon,
+    get_miniflux_transport,
+)
 
 router = APIRouter()
 
@@ -170,6 +174,33 @@ async def import_opml_feeds(
     except InvalidOpmlError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
     return [_to_feed_response(feed) for feed in feeds]
+
+
+@router.get("/feeds/{feed_id}/icon")
+async def get_feed_icon_image(
+    feed_id: UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
+) -> Response:
+    """Proxies the feed's icon: Miniflux sits on the internal network and needs its own
+    credentials, so the browser can't fetch it directly."""
+    feed = await session.scalar(select(Feed).where(Feed.id == feed_id, Feed.user_id == user.id))
+    if feed is None or feed.source_type is not SourceType.MINIFLUX:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    try:
+        icon = await get_feed_icon(int(feed.external_feed_id), transport=transport)
+    except (MinifluxApiError, httpx.HTTPError, ValueError) as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
+    if icon is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    return Response(
+        content=icon.data,
+        media_type=icon.mime_type,
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @router.patch("/feeds/{feed_id}", response_model=FeedResponse)

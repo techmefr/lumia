@@ -1,3 +1,5 @@
+import base64
+import binascii
 from dataclasses import dataclass
 
 import httpx
@@ -90,6 +92,39 @@ async def create_feed(
         if response.status_code >= 400:
             raise MinifluxApiError(response.text)
         return MinifluxFeed(feed_id=response.json()["feed_id"])
+
+
+@dataclass(frozen=True)
+class MinifluxFeedIcon:
+    mime_type: str
+    data: bytes
+
+
+async def get_feed_icon(
+    feed_id: int, *, transport: httpx.AsyncBaseTransport | None = None
+) -> MinifluxFeedIcon | None:
+    """Returns the feed's own icon, or None when Miniflux has none for it.
+
+    Miniflux answers with `data` as "<mime>;base64,<payload>" rather than a raw body, so the
+    payload has to be split off and decoded before it can be served as an image.
+    """
+    async with _client(transport) as client:
+        response = await client.get(f"/v1/feeds/{feed_id}/icon")
+        if response.status_code == 404:
+            return None
+        if response.status_code >= 400:
+            raise MinifluxApiError(response.text)
+
+        payload = response.json()
+        raw = str(payload.get("data", ""))
+        _, _, encoded = raw.partition("base64,")
+        if not encoded:
+            return None
+        try:
+            data = base64.b64decode(encoded)
+        except (ValueError, binascii.Error):
+            return None
+        return MinifluxFeedIcon(mime_type=str(payload.get("mime_type", "image/png")), data=data)
 
 
 async def get_feed(
