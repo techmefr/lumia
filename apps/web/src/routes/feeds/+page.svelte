@@ -11,6 +11,7 @@
 		CardHeader,
 		CardTitle,
 		Input,
+		MagicBento,
 		Separator
 	} from '@lumia/ui';
 	import Upload from '@lucide/svelte/icons/upload';
@@ -214,84 +215,86 @@
 				</CardContent>
 			</Card>
 		{:else}
-			<Card>
-				<CardHeader>
-					<CardTitle>Importer depuis Feedly</CardTitle>
-					<CardDescription>Exporte tes flux en OPML depuis Feedly, puis importe le fichier ici.</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<label
-						class="flex w-fit cursor-pointer items-center gap-2 rounded-md border border-dashed border-input px-4 py-2 text-sm hover:bg-accent"
-					>
-						<Upload class="size-4" />
-						{importing ? 'Import en cours…' : 'Choisir un fichier .opml'}
-						<input
-							type="file"
-							accept=".opml,.xml,text/xml"
-							disabled={importing}
-							onchange={importOpml}
-							class="hidden"
-						/>
-					</label>
-				</CardContent>
-			</Card>
+			<MagicBento class="grid-cols-1 sm:grid-cols-2">
+				<Card class="magic-bento-cell">
+					<CardHeader>
+						<CardTitle>Importer depuis Feedly</CardTitle>
+						<CardDescription>Exporte tes flux en OPML depuis Feedly, puis importe le fichier ici.</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<label
+							class="flex w-fit cursor-pointer items-center gap-2 rounded-md border border-dashed border-input px-4 py-2 text-sm hover:bg-accent"
+						>
+							<Upload class="size-4" />
+							{importing ? 'Import en cours…' : 'Choisir un fichier .opml'}
+							<input
+								type="file"
+								accept=".opml,.xml,text/xml"
+								disabled={importing}
+								onchange={importOpml}
+								class="hidden"
+							/>
+						</label>
+					</CardContent>
+				</Card>
 
-			<Card>
-				<CardHeader>
-					<CardTitle>Nouveau dossier</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<form class="flex gap-2" onsubmit={createFolder}>
-						<Input type="text" bind:value={newFolderName} placeholder="Nom du dossier" class="max-w-xs" />
-						<Button type="submit" variant="secondary">
-							<FolderPlus class="size-4" />
-							Créer
-						</Button>
-					</form>
-				</CardContent>
-			</Card>
+				<Card class="magic-bento-cell">
+					<CardHeader>
+						<CardTitle>Nouveau dossier</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<form class="flex gap-2" onsubmit={createFolder}>
+							<Input type="text" bind:value={newFolderName} placeholder="Nom du dossier" class="max-w-xs" />
+							<Button type="submit" variant="secondary">
+								<FolderPlus class="size-4" />
+								Créer
+							</Button>
+						</form>
+					</CardContent>
+				</Card>
 
-			<Card>
-				<CardHeader>
-					<CardTitle>Flux abonnés</CardTitle>
-				</CardHeader>
-				<CardContent>
-					{#if loading}
-						<p class="text-sm text-muted-foreground">Chargement…</p>
-					{:else if feeds.length === 0}
-						<p class="flex items-center gap-2 text-sm text-muted-foreground">
-							<Inbox class="size-4" />
-							Aucun flux pour le moment.
-						</p>
-					{:else}
-						<div class="flex flex-col">
-							{#each feeds as feed, index (feed.id)}
-								{#if index > 0}<Separator />{/if}
-								<div
-									class="flex animate-in items-center justify-between gap-4 py-3 fade-in slide-in-from-left-1 duration-300"
-									style={`animation-delay: ${index * 40}ms`}
-								>
-									<div class="flex items-center gap-3">
-										<Rss class="size-4 shrink-0 text-primary" />
-										<div class="flex flex-col gap-1">
-											<span class="font-medium">{feed.title}</span>
-											<a href={feed.url} target="_blank" rel="noopener" class="text-xs text-muted-foreground hover:underline">
-												{feed.url}
-											</a>
+				<Card class="magic-bento-cell sm:col-span-2">
+					<CardHeader>
+						<CardTitle>Flux abonnés</CardTitle>
+					</CardHeader>
+					<CardContent>
+						{#if loading}
+							<p class="text-sm text-muted-foreground">Chargement…</p>
+						{:else if feeds.length === 0}
+							<p class="flex items-center gap-2 text-sm text-muted-foreground">
+								<Inbox class="size-4" />
+								Aucun flux pour le moment.
+							</p>
+						{:else}
+							<div class="flex flex-col">
+								{#each feeds as feed, index (feed.id)}
+									{#if index > 0}<Separator />{/if}
+									<div
+										class="flex animate-in items-center justify-between gap-4 py-3 fade-in slide-in-from-left-1 duration-300"
+										style={`animation-delay: ${index * 40}ms`}
+									>
+										<div class="flex items-center gap-3">
+											<Rss class="size-4 shrink-0 text-primary" />
+											<div class="flex flex-col gap-1">
+												<span class="font-medium">{feed.title}</span>
+												<a href={feed.url} target="_blank" rel="noopener" class="text-xs text-muted-foreground hover:underline">
+													{feed.url}
+												</a>
+											</div>
+										</div>
+										<div class="flex items-center gap-3">
+											<Badge variant="secondary">{resolveFolderName(folders, feed.folder_id)}</Badge>
+											<Button variant="ghost" size="icon" onclick={() => removeFeed(feed.id)}>
+												<Trash2 class="size-4" />
+											</Button>
 										</div>
 									</div>
-									<div class="flex items-center gap-3">
-										<Badge variant="secondary">{resolveFolderName(folders, feed.folder_id)}</Badge>
-										<Button variant="ghost" size="icon" onclick={() => removeFeed(feed.id)}>
-											<Trash2 class="size-4" />
-										</Button>
-									</div>
-								</div>
-							{/each}
-						</div>
-					{/if}
-				</CardContent>
-			</Card>
+								{/each}
+							</div>
+						{/if}
+					</CardContent>
+				</Card>
+			</MagicBento>
 		{/if}
 	</div>
 </div>

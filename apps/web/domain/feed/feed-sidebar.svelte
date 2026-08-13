@@ -6,6 +6,7 @@
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Settings from '@lucide/svelte/icons/settings';
 	import Star from '@lucide/svelte/icons/star';
+	import { AnimatedList } from '@lumia/ui';
 
 	interface Props {
 		folders: Folder[];
@@ -79,8 +80,12 @@
 					</button>
 				</div>
 				{#if !collapsed[folder.id]}
-					<div class="ml-4 flex flex-col gap-0.5 border-l border-white/10 pl-2">
-						{#each feedsForFolder(folder.id) as feed (feed.id)}
+					<AnimatedList
+						items={feedsForFolder(folder.id)}
+						getKey={(feed) => feed.id}
+						class="ml-4 border-l border-white/10 pl-2"
+					>
+						{#snippet children(feed)}
 							<button
 								onclick={() => onSelectFeed(feed.id)}
 								class="flex items-center gap-2 truncate rounded-md px-2 py-1 text-left text-sm transition-colors {selectedFeedId ===
@@ -91,8 +96,8 @@
 								<Rss class="size-3.5 shrink-0" />
 								<span class="truncate">{feed.title}</span>
 							</button>
-						{/each}
-					</div>
+						{/snippet}
+					</AnimatedList>
 				{/if}
 			</div>
 		{/each}
@@ -101,18 +106,20 @@
 			<span class="mt-2 px-2.5 text-xs font-medium uppercase tracking-wide text-zinc-500">
 				Sans dossier
 			</span>
-			{#each unfiledFeeds as feed (feed.id)}
-				<button
-					onclick={() => onSelectFeed(feed.id)}
-					class="flex items-center gap-2 truncate rounded-md px-2.5 py-1 text-left text-sm transition-colors {selectedFeedId ===
-					feed.id
-						? 'font-medium text-white'
-						: 'text-zinc-500 hover:text-white'}"
-				>
-					<Rss class="size-3.5 shrink-0" />
-					<span class="truncate">{feed.title}</span>
-				</button>
-			{/each}
+			<AnimatedList items={unfiledFeeds} getKey={(feed) => feed.id}>
+				{#snippet children(feed)}
+					<button
+						onclick={() => onSelectFeed(feed.id)}
+						class="flex items-center gap-2 truncate rounded-md px-2.5 py-1 text-left text-sm transition-colors {selectedFeedId ===
+						feed.id
+							? 'font-medium text-white'
+							: 'text-zinc-500 hover:text-white'}"
+					>
+						<Rss class="size-3.5 shrink-0" />
+						<span class="truncate">{feed.title}</span>
+					</button>
+				{/snippet}
+			</AnimatedList>
 		{/if}
 	</div>
 

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { cn } from '../technical/utils.js';
 	import GlareHover from '../technical/effects/glare-hover.svelte';
+	import BorderGlow from '../technical/effects/border-glow.svelte';
 
 	interface Props {
 		id: string;
@@ -41,11 +42,15 @@
 <a
 	{href}
 	class={cn(
-		'group flex animate-in flex-col overflow-hidden rounded-2xl border bg-card shadow-sm fade-in slide-in-from-bottom-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl',
+		'group relative flex animate-in flex-col overflow-hidden rounded-2xl border bg-card shadow-sm fade-in slide-in-from-bottom-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl',
 		featured ? 'sm:col-span-2 lg:col-span-2' : '',
 		className
 	)}
 >
+	{#if featured}
+		<BorderGlow />
+	{/if}
+
 	<div
 		class={cn('relative w-full overflow-hidden', featured ? 'h-64 sm:h-80' : 'h-36')}
 		style={`background: linear-gradient(135deg, hsl(${accentHue} 70% 55%), hsl(${accentHue + 40} 70% 45%)); view-transition-name: article-image-${id};`}
