@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { ArticleSummary } from '@lumia/core';
+	import { Button, Skeleton } from '@lumia/ui';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import PartyPopper from '@lucide/svelte/icons/party-popper';
@@ -56,12 +57,18 @@
 	{/if}
 
 	{#if loading}
-		<p role="status" class="text-sm text-muted-foreground">Chargement…</p>
+		<div role="status" aria-label="Chargement de la sélection" class="flex justify-center">
+			<Skeleton class="h-96 w-full max-w-md rounded-2xl" />
+		</div>
 	{:else if articles.length === 0}
-		<p class="flex items-center gap-2 text-sm text-muted-foreground">
-			<Inbox class="size-4" />
-			Pas encore assez de retours pour te faire une sélection — like/dislike des articles pour l'entraîner.
-		</p>
+		<div class="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-6">
+			<p class="flex items-center gap-2 text-sm text-muted-foreground">
+				<Inbox class="size-4" />
+				Pas encore assez de retours pour te faire une sélection — aime ou passe des articles pour
+				l'entraîner.
+			</p>
+			<Button size="sm" href="/articles">Parcourir les articles</Button>
+		</div>
 	{:else if remaining.length === 0}
 		<div class="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
 			<PartyPopper class="size-8 text-primary" />

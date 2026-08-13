@@ -23,6 +23,8 @@
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import Newspaper from '@lucide/svelte/icons/newspaper';
 	import Shuffle from '@lucide/svelte/icons/shuffle';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import { toast } from '@lumia/ui';
 	import { lumia } from '$technical/api/client';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { resolveFolderName } from '$domain/feed/resolve-folder-name';
@@ -40,6 +42,10 @@
 	let newFeedFolderId = $state('');
 	let addingFeed = $state(false);
 	let addFeedError = $state<string | null>(null);
+	let renamingFolderId = $state<string | null>(null);
+	let folderRenameValue = $state('');
+	let renamingFeedId = $state<string | null>(null);
+	let feedRenameValue = $state('');
 
 	const selectedFolder = $derived(folders.find((f) => f.id === selectedFolderId) ?? null);
 	const selectedFeed = $derived(feeds.find((f) => f.id === selectedFeedId) ?? null);
@@ -86,9 +92,85 @@
 	}
 
 	async function removeFeed(feedId: string) {
+		const feed = feeds.find((candidate) => candidate.id === feedId);
 		await lumia.feed.deleteFeed(feedId);
 		if (selectedFeedId === feedId) selectedFeedId = '';
 		await load();
+		toast(`« ${feed?.title ?? 'Flux'} » retiré.`, {
+			action:
+				feed && feed.source_type === 'miniflux'
+					? {
+							label: 'Rétablir',
+							run: async () => {
+								await lumia.feed.addFeedByUrl(feed.url, feed.folder_id);
+								await load();
+							}
+						}
+					: undefined
+		});
+	}
+
+	async function renameFolder(event: SubmitEvent) {
+		event.preventDefault();
+		const name = folderRenameValue.trim();
+		if (!renamingFolderId || !name) return;
+		try {
+			await lumia.feed.renameFolder(renamingFolderId, name);
+			renamingFolderId = null;
+			await load();
+		} catch {
+			toast('Impossible de renommer ce dossier.', { tone: 'destructive' });
+		}
+	}
+
+	async function removeFolder(folder: Folder) {
+		try {
+			await lumia.feed.deleteFolder(folder.id);
+			if (selectedFolderId === folder.id) selectedFolderId = '';
+			await load();
+			// Deleting a folder never deletes its feeds, so the undo only has to recreate the folder
+			// and refile what used to be in it.
+			const previousFeedIds = feeds
+				.filter((feed) => feed.folder_id === folder.id)
+				.map((feed) => feed.id);
+			toast(`Dossier « ${folder.name} » supprimé, ses flux sont conservés.`, {
+				action: {
+					label: 'Annuler',
+					run: async () => {
+						const recreated = await lumia.feed.createFolder(folder.name);
+						for (const feedId of previousFeedIds) {
+							await lumia.feed.updateFeed(feedId, { folder_id: recreated.id });
+						}
+						await load();
+					}
+				}
+			});
+		} catch {
+			toast('Impossible de supprimer ce dossier.', { tone: 'destructive' });
+		}
+	}
+
+	async function moveFeed(feedId: string, folderId: string) {
+		try {
+			await lumia.feed.updateFeed(feedId, { folder_id: folderId || null });
+			await load();
+			toast('Flux déplacé.');
+		} catch {
+			toast('Impossible de déplacer ce flux.', { tone: 'destructive' });
+		}
+	}
+
+	async function retitleFeed(event: SubmitEvent) {
+		event.preventDefault();
+		const title = feedRenameValue.trim();
+		if (!renamingFeedId || !title) return;
+		try {
+			await lumia.feed.updateFeed(renamingFeedId, { title });
+			renamingFeedId = null;
+			await load();
+		} catch {
+			toast('Impossible de renommer ce flux.', { tone: 'destructive' });
+		}
 	}
 
 	async function importOpml(event: Event) {
@@ -175,19 +257,70 @@
 						</a>
 					</CardDescription>
 				</CardHeader>
-				<CardContent class="flex flex-wrap items-center gap-2">
-					<Button onclick={viewArticles}>
-						<Newspaper class="size-4" />
-						Voir les articles
-					</Button>
-					<Button variant="secondary" onclick={readInSwipeMode}>
-						<Shuffle class="size-4" />
-						Mode lecture (swipe)
-					</Button>
-					<Button variant="ghost" onclick={() => removeFeed(selectedFeed!.id)}>
-						<Trash2 class="size-4" />
-						Retirer ce flux
-					</Button>
+				<CardContent class="flex flex-col gap-4">
+					<div class="flex flex-wrap items-center gap-2">
+						<Button onclick={viewArticles}>
+							<Newspaper class="size-4" />
+							Voir les articles
+						</Button>
+						<Button variant="secondary" onclick={readInSwipeMode}>
+							<Shuffle class="size-4" />
+							Mode lecture (swipe)
+						</Button>
+						<Button variant="ghost" onclick={() => removeFeed(selectedFeed!.id)}>
+							<Trash2 class="size-4" />
+							Retirer ce flux
+						</Button>
+					</div>
+
+					<Separator />
+
+					<div class="flex flex-wrap items-end gap-4">
+						{#if renamingFeedId === selectedFeed.id}
+							<form class="flex items-end gap-2" onsubmit={retitleFeed}>
+								<div class="flex flex-col gap-1.5">
+									<Label for="feed-title">Nom du flux</Label>
+									<Input id="feed-title" bind:value={feedRenameValue} required />
+								</div>
+								<Button type="submit" size="sm">Renommer</Button>
+								<Button
+									type="button"
+									size="sm"
+									variant="ghost"
+									onclick={() => (renamingFeedId = null)}
+								>
+									Annuler
+								</Button>
+							</form>
+						{:else}
+							<Button
+								size="sm"
+								variant="outline"
+								onclick={() => {
+									renamingFeedId = selectedFeed!.id;
+									feedRenameValue = selectedFeed!.title;
+								}}
+							>
+								<Pencil class="size-4" />
+								Renommer
+							</Button>
+						{/if}
+
+						<div class="flex flex-col gap-1.5">
+							<Label for="feed-folder">Dossier</Label>
+							<select
+								id="feed-folder"
+								value={selectedFeed.folder_id ?? ''}
+								onchange={(event) => moveFeed(selectedFeed!.id, event.currentTarget.value)}
+								class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+							>
+								<option value="">Sans dossier</option>
+								{#each folders as folder (folder.id)}
+									<option value={folder.id}>{folder.name}</option>
+								{/each}
+							</select>
+						</div>
+					</div>
 				</CardContent>
 			</Card>
 		{:else if selectedFolder}
@@ -198,15 +331,58 @@
 						{feedsInSelectedFolder.length} flux dans ce dossier.
 					</CardDescription>
 				</CardHeader>
-				<CardContent class="flex flex-wrap items-center gap-2">
-					<Button onclick={viewArticles}>
-						<Newspaper class="size-4" />
-						Voir tous les articles du dossier
-					</Button>
-					<Button variant="secondary" onclick={readInSwipeMode}>
-						<Shuffle class="size-4" />
-						Mode lecture (swipe)
-					</Button>
+				<CardContent class="flex flex-col gap-4">
+					<div class="flex flex-wrap items-center gap-2">
+						<Button onclick={viewArticles}>
+							<Newspaper class="size-4" />
+							Voir tous les articles du dossier
+						</Button>
+						<Button variant="secondary" onclick={readInSwipeMode}>
+							<Shuffle class="size-4" />
+							Mode lecture (swipe)
+						</Button>
+					</div>
+
+					<Separator />
+
+					{#if renamingFolderId === selectedFolder.id}
+						<form class="flex items-end gap-2" onsubmit={renameFolder}>
+							<div class="flex max-w-xs flex-1 flex-col gap-1.5">
+								<Label for="folder-name">Nom du dossier</Label>
+								<Input id="folder-name" bind:value={folderRenameValue} required />
+							</div>
+							<Button type="submit" size="sm">Renommer</Button>
+							<Button
+								type="button"
+								size="sm"
+								variant="ghost"
+								onclick={() => (renamingFolderId = null)}
+							>
+								Annuler
+							</Button>
+						</form>
+					{:else}
+						<div class="flex flex-wrap items-center gap-2">
+							<Button
+								size="sm"
+								variant="outline"
+								onclick={() => {
+									renamingFolderId = selectedFolder!.id;
+									folderRenameValue = selectedFolder!.name;
+								}}
+							>
+								<Pencil class="size-4" />
+								Renommer le dossier
+							</Button>
+							<Button size="sm" variant="ghost" onclick={() => removeFolder(selectedFolder!)}>
+								<Trash2 class="size-4" />
+								Supprimer le dossier
+							</Button>
+							<span class="text-xs text-muted-foreground">
+								Les flux du dossier sont conservés, ils passent simplement « sans dossier ».
+							</span>
+						</div>
+					{/if}
 				</CardContent>
 			</Card>
 

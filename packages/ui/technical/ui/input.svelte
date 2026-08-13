@@ -2,10 +2,22 @@
 	import type { HTMLInputAttributes } from 'svelte/elements';
 	import { cn } from '../utils.js';
 
-	let { class: className, value = $bindable(), type, ...restProps }: HTMLInputAttributes = $props();
+	interface Props extends HTMLInputAttributes {
+		/** Bindable handle on the underlying element, for callers that need to focus it. */
+		ref?: HTMLInputElement | null;
+	}
+
+	let {
+		class: className,
+		value = $bindable(),
+		ref = $bindable(null),
+		type,
+		...restProps
+	}: Props = $props();
 </script>
 
 <input
+	bind:this={ref}
 	{type}
 	bind:value
 	class={cn(

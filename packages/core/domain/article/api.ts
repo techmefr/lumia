@@ -7,11 +7,14 @@ export interface ListArticlesParams {
 	authorId?: string;
 	categoryId?: string;
 	keywordId?: string;
+	/** Free-text search over title, summary and content. Two characters minimum server-side. */
+	query?: string;
+	unreadOnly?: boolean;
 	limit?: number;
 	offset?: number;
 }
 
-function toQueryString(params: Record<string, string | number | undefined>): string {
+function toQueryString(params: Record<string, string | number | boolean | undefined>): string {
 	const query = new URLSearchParams();
 	for (const [key, value] of Object.entries(params)) {
 		if (value !== undefined) query.set(key, String(value));
@@ -28,6 +31,8 @@ export function createArticleApi(http: HttpClient) {
 			author_id: params.authorId,
 			category_id: params.categoryId,
 			keyword_id: params.keywordId,
+			q: params.query,
+			unread_only: params.unreadOnly ? true : undefined,
 			limit: params.limit,
 			offset: params.offset
 		});
@@ -38,7 +43,12 @@ export function createArticleApi(http: HttpClient) {
 		return http.request<ArticleDetail>(`/articles/${articleId}`);
 	}
 
-	return { listArticles, getArticle };
+	/** Saves an arbitrary web page as a readable article on the user's "Enregistrés" feed. */
+	async function saveUrl(url: string): Promise<ArticleSummary> {
+		return http.request<ArticleSummary>('/articles/save-url', { method: 'POST', body: { url } });
+	}
+
+	return { listArticles, getArticle, saveUrl };
 }
 
 export type ArticleApi = ReturnType<typeof createArticleApi>;
