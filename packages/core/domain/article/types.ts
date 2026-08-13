@@ -1,0 +1,14 @@
+export interface ArticleSummary {
+	id: string;
+	feed_id: string;
+	author_id: string | null;
+	category_id: string | null;
+	title: string;
+	url: string;
+	summary: string | null;
+	published_at: string;
+}
+
+export interface ArticleDetail extends ArticleSummary {
+	content: string;
+}
