@@ -39,7 +39,7 @@
 	});
 </script>
 
-<div class="mx-auto flex max-w-2xl flex-col gap-4 pb-24">
+<div class="mx-auto flex w-full flex-col gap-4 pb-24">
 	<a
 		href="/articles"
 		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline"
@@ -53,12 +53,21 @@
 	{:else if error}
 		<p class="text-sm text-destructive">{error}</p>
 	{:else if article}
-		<Card class="animate-in overflow-hidden fade-in slide-in-from-bottom-2 duration-300">
+		<Card class="animate-in overflow-hidden fade-in zoom-in-95 slide-in-from-bottom-3 duration-500 ease-out">
 			{#if article.image_url}
-				<img src={article.image_url} alt="" class="h-56 w-full object-cover" loading="lazy" />
+				<div class="overflow-hidden">
+					<img
+						src={article.image_url}
+						alt=""
+						class="h-72 w-full animate-in scale-100 object-cover fade-in zoom-in-110 duration-700 ease-out sm:h-96"
+						loading="lazy"
+					/>
+				</div>
 			{/if}
 			<CardContent class="pt-6">
-				<h1 class="font-serif text-2xl font-semibold">{article.title}</h1>
+				<h1 class="animate-in font-serif text-2xl font-semibold fade-in slide-in-from-bottom-1 duration-500 sm:text-3xl">
+					{article.title}
+				</h1>
 				<a
 					href={article.url}
 					target="_blank"
@@ -114,7 +123,7 @@
 					{/each}
 				</div>
 
-				<div class="prose prose-sm mt-4 max-w-none">
+				<div class="prose prose-base mt-4 max-w-none">
 					{@html sanitizeArticleHtml(article.content)}
 				</div>
 			</CardContent>
@@ -123,7 +132,7 @@
 		<div
 			class="fixed inset-x-0 bottom-14 z-40 flex justify-center border-t bg-background/90 p-3 backdrop-blur sm:bottom-0"
 		>
-			<div class="flex w-full max-w-2xl gap-2">
+			<div class="flex w-full max-w-3xl gap-2">
 				<Button
 					class="flex-1"
 					variant={feedbackSent === 'like' ? 'default' : 'outline'}
