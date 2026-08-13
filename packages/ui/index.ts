@@ -16,3 +16,6 @@ export { default as ArticleCard } from './domain/article-card.svelte';
 export { default as GlareHover } from './technical/effects/glare-hover.svelte';
 export { default as GradualBlur } from './technical/effects/gradual-blur.svelte';
 export { default as ClickSpark } from './technical/effects/click-spark.svelte';
+export { default as AnimatedList } from './technical/effects/animated-list.svelte';
+export { default as BorderGlow } from './technical/effects/border-glow.svelte';
+export { default as MagicBento } from './technical/effects/magic-bento.svelte';
