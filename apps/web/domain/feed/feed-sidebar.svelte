@@ -43,6 +43,7 @@
 </script>
 
 <aside
+	aria-label="Dossiers et flux"
 	class="sticky top-[4.5rem] hidden h-[calc(100vh-7.5rem)] w-60 shrink-0 flex-col gap-0.5 rounded-2xl bg-zinc-900 p-3 text-zinc-300 sm:flex dark:bg-zinc-950"
 >
 	<button
@@ -62,17 +63,19 @@
 				<div class="flex items-center">
 					<button
 						onclick={() => onSelectFolder(folder.id)}
+						aria-current={isFolderActive ? 'true' : undefined}
 						class="flex flex-1 items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors {isFolderActive
 							? 'bg-primary text-primary-foreground'
-							: 'text-zinc-400 hover:bg-white/10 hover:text-white'}"
+							: 'text-zinc-300 hover:bg-white/10 hover:text-white'}"
 					>
 						<FolderIcon class="size-4" />
 						<span class="flex-1 truncate text-left">{folder.name}</span>
 					</button>
 					<button
 						onclick={() => toggle(folder.id)}
-						aria-label="Déplier {folder.name}"
-						class="rounded-md p-1 text-zinc-500 hover:text-white"
+						aria-expanded={!collapsed[folder.id]}
+						aria-label="{collapsed[folder.id] ? 'Déplier' : 'Replier'} {folder.name}"
+						class="rounded-md p-1 text-zinc-400 hover:text-white"
 					>
 						<ChevronDown
 							class="size-3.5 transition-transform {collapsed[folder.id] ? '-rotate-90' : ''}"
@@ -88,10 +91,11 @@
 						{#snippet children(feed)}
 							<button
 								onclick={() => onSelectFeed(feed.id)}
+								aria-current={selectedFeedId === feed.id ? 'true' : undefined}
 								class="flex items-center gap-2 truncate rounded-md px-2 py-1 text-left text-sm transition-colors {selectedFeedId ===
 								feed.id
 									? 'font-medium text-white'
-									: 'text-zinc-500 hover:text-white'}"
+									: 'text-zinc-400 hover:text-white'}"
 							>
 								<Rss class="size-3.5 shrink-0" />
 								<span class="truncate">{feed.title}</span>
@@ -110,10 +114,11 @@
 				{#snippet children(feed)}
 					<button
 						onclick={() => onSelectFeed(feed.id)}
+						aria-current={selectedFeedId === feed.id ? 'true' : undefined}
 						class="flex items-center gap-2 truncate rounded-md px-2.5 py-1 text-left text-sm transition-colors {selectedFeedId ===
 						feed.id
 							? 'font-medium text-white'
-							: 'text-zinc-500 hover:text-white'}"
+							: 'text-zinc-400 hover:text-white'}"
 					>
 						<Rss class="size-3.5 shrink-0" />
 						<span class="truncate">{feed.title}</span>

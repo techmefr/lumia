@@ -82,9 +82,9 @@
 	</a>
 
 	{#if loading}
-		<p class="text-sm text-muted-foreground">Chargement…</p>
+		<p role="status" class="text-sm text-muted-foreground">Chargement…</p>
 	{:else if error}
-		<p class="text-sm text-destructive">{error}</p>
+		<p role="alert" class="text-sm text-destructive">{error}</p>
 	{:else if article}
 		<Card class="animate-in overflow-hidden fade-in zoom-in-95 slide-in-from-bottom-3 duration-500 ease-out">
 			{#if article.image_url}

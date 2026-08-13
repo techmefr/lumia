@@ -11,6 +11,7 @@
 </script>
 
 <div
+	aria-hidden="true"
 	class="pointer-events-none absolute -inset-1 -z-10 rounded-[inherit] transition-opacity duration-500 {alwaysOn
 		? 'opacity-70'
 		: 'opacity-0 group-hover:opacity-70'} {className}"

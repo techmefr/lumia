@@ -52,7 +52,7 @@
 					/>
 				</div>
 				{#if error}
-					<p class="text-sm text-destructive">{error}</p>
+					<p role="alert" class="text-sm text-destructive">{error}</p>
 				{/if}
 				<Button type="submit" disabled={loading} class="mt-1">
 					<LogIn class="size-4" />

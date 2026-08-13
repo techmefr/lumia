@@ -101,8 +101,7 @@
 					onpointermove={isTop ? onPointerMove : undefined}
 					onpointerup={isTop ? onPointerUp : undefined}
 					onpointercancel={isTop ? onPointerUp : undefined}
-					role="button"
-					tabindex={isTop ? 0 : -1}
+					aria-hidden={isTop ? undefined : 'true'}
 				>
 					<div
 						class="relative h-64 w-full shrink-0 overflow-hidden"
@@ -129,12 +128,14 @@
 
 					{#if isTop}
 						<div
+							aria-hidden="true"
 							class="pointer-events-none absolute left-6 top-6 rounded-lg border-4 border-emerald-500 px-3 py-1 text-lg font-bold uppercase text-emerald-500"
 							style={`opacity: ${likeOpacity}; transform: rotate(-15deg);`}
 						>
 							J'aime
 						</div>
 						<div
+							aria-hidden="true"
 							class="pointer-events-none absolute right-6 top-6 rounded-lg border-4 border-rose-500 px-3 py-1 text-lg font-bold uppercase text-rose-500"
 							style={`opacity: ${dislikeOpacity}; transform: rotate(15deg);`}
 						>
@@ -144,6 +145,19 @@
 				</div>
 			{/each}
 		</div>
+
+		<p aria-live="polite" class="sr-only">
+			{current.title} — {articles.length - currentIndex} article{articles.length - currentIndex > 1
+				? 's'
+				: ''} restant{articles.length - currentIndex > 1 ? 's' : ''}
+		</p>
+
+		<button
+			onclick={() => onOpen(current)}
+			class="rounded-md px-3 py-2 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+		>
+			Ouvrir l'article
+		</button>
 
 		<div class="flex items-center gap-4">
 			<button

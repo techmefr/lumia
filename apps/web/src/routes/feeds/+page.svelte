@@ -11,6 +11,7 @@
 		CardHeader,
 		CardTitle,
 		Input,
+		Label,
 		MagicBento,
 		Separator
 	} from '@lumia/ui';
@@ -158,7 +159,7 @@
 		<h1 class="text-2xl font-semibold">Mes flux</h1>
 
 		{#if error}
-			<p class="text-sm text-destructive">{error}</p>
+			<p role="alert" class="text-sm text-destructive">{error}</p>
 		{/if}
 
 		{#if selectedFeed}
@@ -246,26 +247,34 @@
 					</CardHeader>
 					<CardContent>
 						{#if addFeedError}
-							<p class="mb-2 text-sm text-destructive">{addFeedError}</p>
+							<p role="alert" class="mb-2 text-sm text-destructive">{addFeedError}</p>
 						{/if}
-						<form class="flex flex-wrap gap-2" onsubmit={addFeed}>
-							<Input
-								type="url"
-								bind:value={newFeedUrl}
-								placeholder="https://exemple.com/feed.xml"
-								class="max-w-sm flex-1"
-								disabled={addingFeed}
-							/>
-							<select
-								bind:value={newFeedFolderId}
-								disabled={addingFeed}
-								class="rounded-md border border-input bg-transparent px-3 py-2 text-sm"
-							>
-								<option value="">Sans dossier</option>
-								{#each folders as folder (folder.id)}
-									<option value={folder.id}>{folder.name}</option>
-								{/each}
-							</select>
+						<form class="flex flex-wrap items-end gap-2" onsubmit={addFeed}>
+							<div class="flex max-w-sm flex-1 flex-col gap-1.5">
+								<Label for="new-feed-url">URL du flux</Label>
+								<Input
+									id="new-feed-url"
+									type="url"
+									bind:value={newFeedUrl}
+									placeholder="https://exemple.com/feed.xml"
+									required
+									disabled={addingFeed}
+								/>
+							</div>
+							<div class="flex flex-col gap-1.5">
+								<Label for="new-feed-folder">Dossier</Label>
+								<select
+									id="new-feed-folder"
+									bind:value={newFeedFolderId}
+									disabled={addingFeed}
+									class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+								>
+									<option value="">Sans dossier</option>
+									{#each folders as folder (folder.id)}
+										<option value={folder.id}>{folder.name}</option>
+									{/each}
+								</select>
+							</div>
 							<Button type="submit" disabled={addingFeed}>
 								<Plus class="size-4" />
 								{addingFeed ? 'Ajout…' : 'Ajouter'}
@@ -301,8 +310,11 @@
 						<CardTitle>Nouveau dossier</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<form class="flex gap-2" onsubmit={createFolder}>
-							<Input type="text" bind:value={newFolderName} placeholder="Nom du dossier" class="max-w-xs" />
+						<form class="flex items-end gap-2" onsubmit={createFolder}>
+							<div class="flex max-w-xs flex-1 flex-col gap-1.5">
+								<Label for="new-folder-name">Nom du dossier</Label>
+								<Input id="new-folder-name" type="text" bind:value={newFolderName} required />
+							</div>
 							<Button type="submit" variant="secondary">
 								<FolderPlus class="size-4" />
 								Créer
@@ -317,7 +329,7 @@
 					</CardHeader>
 					<CardContent>
 						{#if loading}
-							<p class="text-sm text-muted-foreground">Chargement…</p>
+							<p role="status" class="text-sm text-muted-foreground">Chargement…</p>
 						{:else if feeds.length === 0}
 							<p class="flex items-center gap-2 text-sm text-muted-foreground">
 								<Inbox class="size-4" />
