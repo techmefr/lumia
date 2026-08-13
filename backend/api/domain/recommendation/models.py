@@ -20,6 +20,10 @@ class UserArticleFeedback(Base, TimestampMixin):
     sentiment: Mapped[Vote | None] = mapped_column(default=None)
     saved: Mapped[bool] = mapped_column(default=False)
     favorite: Mapped[bool] = mapped_column(default=False)
+    read: Mapped[bool] = mapped_column(default=False)
+    # How far down the article the user got, 0.0 to 1.0. Persisted so reopening an article on
+    # another device resumes where the reading stopped.
+    scroll_progress: Mapped[float] = mapped_column(default=0.0)
 
 
 class UserKeywordScore(Base):

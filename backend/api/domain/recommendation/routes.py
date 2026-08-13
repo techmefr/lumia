@@ -4,13 +4,18 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article
-from api.domain.article.routes import to_summary
+from api.domain.article.routes import to_summaries
 from api.domain.article.schemas import ArticleSummaryResponse
 from api.domain.recommendation.etincelle_service import list_etincelle
 from api.domain.recommendation.favorite_service import list_favorites
 from api.domain.recommendation.feedback_service import apply_feedback
+from api.domain.recommendation.read_service import mark_articles_read, resolve_scope_article_ids
 from api.domain.recommendation.saved_service import list_saved
-from api.domain.recommendation.schemas import FeedbackRequest
+from api.domain.recommendation.schemas import (
+    FeedbackRequest,
+    MarkReadRequest,
+    MarkReadResponse,
+)
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.technical.db import get_db_session
@@ -26,7 +31,7 @@ async def get_saved_articles(
     session: AsyncSession = Depends(get_db_session),
 ) -> list[ArticleSummaryResponse]:
     articles = await list_saved(session, user.id, limit=limit, offset=offset)
-    return [to_summary(article) for article in articles]
+    return await to_summaries(session, user.id, articles)
 
 
 @router.get("/articles/favorites", response_model=list[ArticleSummaryResponse])
@@ -37,7 +42,7 @@ async def get_favorite_articles(
     session: AsyncSession = Depends(get_db_session),
 ) -> list[ArticleSummaryResponse]:
     articles = await list_favorites(session, user.id, limit=limit, offset=offset)
-    return [to_summary(article) for article in articles]
+    return await to_summaries(session, user.id, articles)
 
 
 @router.get("/articles/etincelle", response_model=list[ArticleSummaryResponse])
@@ -48,7 +53,24 @@ async def get_etincelle(
     session: AsyncSession = Depends(get_db_session),
 ) -> list[ArticleSummaryResponse]:
     ranked = await list_etincelle(session, user.id, limit=limit, offset=offset)
-    return [to_summary(article) for article, _score in ranked]
+    return await to_summaries(session, user.id, [article for article, _score in ranked])
+
+
+@router.post("/articles/mark-read", response_model=MarkReadResponse)
+async def mark_read(
+    payload: MarkReadRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> MarkReadResponse:
+    article_ids = await resolve_scope_article_ids(
+        session,
+        user.id,
+        article_ids=payload.article_ids,
+        feed_id=payload.feed_id,
+        folder_id=payload.folder_id,
+    )
+    updated = await mark_articles_read(session, user.id, article_ids, read=payload.read)
+    return MarkReadResponse(updated=updated)
 
 
 @router.post("/articles/{article_id}/feedback", status_code=status.HTTP_204_NO_CONTENT)

@@ -22,8 +22,15 @@ class ArticleSummaryResponse(BaseModel):
     summary: str | None
     image_url: str | None
     published_at: datetime
+    reading_minutes: int
+    read: bool = False
+    scroll_progress: float = 0.0
 
 
 class ArticleDetailResponse(ArticleSummaryResponse):
     content: str
     keywords: list[KeywordResponse]
+
+
+class SaveUrlRequest(BaseModel):
+    url: str

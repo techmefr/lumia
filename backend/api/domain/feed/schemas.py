@@ -27,6 +27,24 @@ class FeedAddByUrlRequest(BaseModel):
     folder_id: UUID | None = None
 
 
+class FolderUpdateRequest(BaseModel):
+    name: str
+
+
+class FeedUpdateRequest(BaseModel):
+    """Both fields are optional; folder_id=None explicitly unfiles the feed, so the route has to
+    distinguish 'not sent' from 'sent as null' via model_fields_set."""
+
+    title: str | None = None
+    folder_id: UUID | None = None
+
+
+class UnreadCountsResponse(BaseModel):
+    total: int
+    feeds: dict[UUID, int]
+    folders: dict[UUID, int]
+
+
 class FeedResponse(BaseModel):
     id: UUID
     folder_id: UUID | None

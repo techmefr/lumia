@@ -27,6 +27,8 @@ async def apply_feedback(
     sentiment: Vote | None = _UNSET,
     saved: bool = _UNSET,
     favorite: bool = _UNSET,
+    read: bool = _UNSET,
+    scroll_progress: float = _UNSET,
 ) -> None:
     existing = await session.scalar(
         select(UserArticleFeedback).where(
@@ -51,6 +53,12 @@ async def apply_feedback(
         existing.saved = saved
     if favorite is not _UNSET:
         existing.favorite = favorite
+    if read is not _UNSET:
+        existing.read = read
+    if scroll_progress is not _UNSET:
+        # Never rewind: a quick revisit that lands at the top must not erase how far the user got.
+        # The column default only applies at INSERT, so a not-yet-flushed row still reads None.
+        existing.scroll_progress = max(existing.scroll_progress or 0.0, scroll_progress)
 
     await session.commit()
 

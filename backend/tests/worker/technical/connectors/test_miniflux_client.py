@@ -15,7 +15,9 @@ def test_miniflux_client_allows_time_for_the_synchronous_feed_fetch() -> None:
     client = miniflux_client._client(None)
     # Registering a feed makes Miniflux fetch and parse it live before responding;
     # httpx's 5s default routinely isn't enough for that first fetch.
-    assert client.timeout.read >= 15.0
+    read_timeout = client.timeout.read
+    assert read_timeout is not None
+    assert read_timeout >= 15.0
 
 
 async def test_create_category_returns_the_category_id() -> None:

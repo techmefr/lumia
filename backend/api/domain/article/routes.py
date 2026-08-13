@@ -1,24 +1,35 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import Select, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword
+from api.domain.article.reading_time import estimate_reading_minutes
+from api.domain.article.save_url_service import save_url
 from api.domain.article.schemas import (
     ArticleDetailResponse,
     ArticleSummaryResponse,
     KeywordResponse,
+    SaveUrlRequest,
 )
 from api.domain.feed.models import Feed
+from api.domain.recommendation.models import UserArticleFeedback
+from api.domain.recommendation.read_service import ReadState, fetch_read_state
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.technical.db import get_db_session
+from worker.technical.content_extraction import (
+    PageExtractor,
+    PageFetchError,
+    get_page_extractor,
+)
 
 router = APIRouter()
 
 
-def to_summary(article: Article) -> ArticleSummaryResponse:
+def to_summary(article: Article, *, state: ReadState | None = None) -> ArticleSummaryResponse:
+    state = state or ReadState()
     return ArticleSummaryResponse(
         id=article.id,
         feed_id=article.feed_id,
@@ -32,7 +43,27 @@ def to_summary(article: Article) -> ArticleSummaryResponse:
         summary=article.summary,
         image_url=article.image_url,
         published_at=article.published_at,
+        reading_minutes=estimate_reading_minutes(article.content),
+        read=state.read,
+        scroll_progress=state.scroll_progress,
     )
+
+
+async def to_summaries(
+    session: AsyncSession, user_id: UUID, articles: list[Article]
+) -> list[ArticleSummaryResponse]:
+    states = await fetch_read_state(session, user_id, [article.id for article in articles])
+    return [to_summary(article, state=states.get(article.id)) for article in articles]
+
+
+def apply_unread_only(query: Select[tuple[Article]], user_id: UUID) -> Select[tuple[Article]]:
+    """Keeps articles with no read feedback row for this user — absence of a row means unread."""
+    read_rows = select(UserArticleFeedback.article_id).where(
+        UserArticleFeedback.user_id == user_id,
+        UserArticleFeedback.article_id == Article.id,
+        UserArticleFeedback.read.is_(True),
+    )
+    return query.where(~read_rows.exists())
 
 
 @router.get("/articles", response_model=list[ArticleSummaryResponse])
@@ -42,6 +73,8 @@ async def list_articles(
     author_id: UUID | None = Query(default=None),
     category_id: UUID | None = Query(default=None),
     keyword_id: UUID | None = Query(default=None),
+    q: str | None = Query(default=None, min_length=2, max_length=200),
+    unread_only: bool = Query(default=False),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     user: User = Depends(get_current_user),
@@ -60,10 +93,42 @@ async def list_articles(
         query = query.join(ArticleKeyword, ArticleKeyword.article_id == Article.id).where(
             ArticleKeyword.keyword_id == keyword_id
         )
+    if q is not None:
+        # ILIKE over content matches the stored HTML too, so a search term that happens to be a
+        # tag or attribute name can hit. Accepted: the alternative is a tsvector column and a
+        # migration to keep it in sync, which this corpus size doesn't justify yet.
+        pattern = f"%{q}%"
+        query = query.where(
+            or_(
+                Article.title.ilike(pattern),
+                Article.summary.ilike(pattern),
+                Article.content.ilike(pattern),
+            )
+        )
+    if unread_only:
+        query = apply_unread_only(query, user.id)
     query = query.order_by(Article.published_at.desc()).limit(limit).offset(offset)
 
-    articles = await session.scalars(query)
-    return [to_summary(article) for article in articles]
+    articles = list(await session.scalars(query))
+    return await to_summaries(session, user.id, articles)
+
+
+@router.post(
+    "/articles/save-url",
+    response_model=ArticleSummaryResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def save_article_url(
+    payload: SaveUrlRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    page_extractor: PageExtractor = Depends(get_page_extractor),
+) -> ArticleSummaryResponse:
+    try:
+        article = await save_url(session, user, payload.url, page_extractor=page_extractor)
+    except PageFetchError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
+    return to_summary(article)
 
 
 @router.get("/articles/{article_id}", response_model=ArticleDetailResponse)
@@ -84,9 +149,10 @@ async def get_article(
         KeywordResponse(id=link.keyword.id, term=link.keyword.term)
         for link in article.keyword_links
     ]
+    states = await fetch_read_state(session, user.id, [article.id])
 
     return ArticleDetailResponse(
-        **to_summary(article).model_dump(),
+        **to_summary(article, state=states.get(article.id)).model_dump(),
         content=article.content,
         keywords=keywords,
     )

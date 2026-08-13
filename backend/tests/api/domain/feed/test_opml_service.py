@@ -111,9 +111,13 @@ async def test_import_opml_skips_a_feed_that_fails_to_register_with_miniflux(
     user = await _create_user(session)
 
     def handler(request: httpx.Request) -> httpx.Response:
-        if request.method == "POST" and request.url.path == "/v1/feeds":
-            if b"hnrss" in request.content:
-                return httpx.Response(502, text="upstream feed unreachable")
+        is_failing_feed_registration = (
+            request.method == "POST"
+            and request.url.path == "/v1/feeds"
+            and b"hnrss" in request.content
+        )
+        if is_failing_feed_registration:
+            return httpx.Response(502, text="upstream feed unreachable")
         return _miniflux_handler(request)
 
     feeds = await import_opml(

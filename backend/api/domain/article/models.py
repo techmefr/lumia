@@ -5,9 +5,8 @@ from uuid import UUID, uuid4
 from sqlalchemy import DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from api.technical.orm import Base, TimestampMixin
-
 from api.domain.feed.models import Feed
+from api.technical.orm import Base, TimestampMixin
 
 
 class Lang(StrEnum):
