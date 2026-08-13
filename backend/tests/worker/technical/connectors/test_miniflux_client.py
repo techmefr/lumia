@@ -7,6 +7,14 @@ from worker.technical.connectors.miniflux_client import (
     create_feed,
     list_categories,
 )
+from worker.technical.connectors import miniflux_client
+
+
+def test_miniflux_client_allows_time_for_the_synchronous_feed_fetch() -> None:
+    client = miniflux_client._client(None)
+    # Registering a feed makes Miniflux fetch and parse it live before responding;
+    # httpx's 5s default routinely isn't enough for that first fetch.
+    assert client.timeout.read >= 15.0
 
 
 async def test_create_category_returns_the_category_id() -> None:

@@ -13,12 +13,19 @@ def get_miniflux_transport() -> httpx.AsyncBaseTransport | None:
     return None
 
 
+# Registering a feed makes Miniflux synchronously fetch and parse the target URL before
+# responding — httpx's 5s default is routinely too short for that first live fetch and would
+# make create_feed() falsely look like it failed (feed created in Miniflux, invisible to us).
+MINIFLUX_TIMEOUT = httpx.Timeout(30.0)
+
+
 def _client(transport: httpx.AsyncBaseTransport | None) -> httpx.AsyncClient:
     config = get_miniflux_config()
     return httpx.AsyncClient(
         base_url=config.miniflux_base_url,
         auth=httpx.BasicAuth(config.miniflux_username, config.miniflux_password),
         transport=transport,
+        timeout=MINIFLUX_TIMEOUT,
     )
 
 
