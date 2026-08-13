@@ -1,7 +1,10 @@
+from uuid import UUID
+
 import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError
 from api.domain.feed.models import Feed, Folder, SourceType
 from api.domain.feed.opml_parser import OpmlEntry, parse_opml
 from api.domain.user.models import User
@@ -9,6 +12,7 @@ from worker.technical.connectors.miniflux_client import (
     MinifluxApiError,
     create_category,
     create_feed,
+    get_feed,
     list_categories,
 )
 
@@ -62,6 +66,51 @@ async def import_opml(
 
     await session.commit()
     return created_feeds
+
+
+async def add_feed(
+    session: AsyncSession,
+    user: User,
+    url: str,
+    folder_id: UUID | None,
+    *,
+    miniflux_transport: httpx.AsyncBaseTransport | None = None,
+) -> Feed:
+    folder: Folder | None = None
+    if folder_id is not None:
+        folder = await session.scalar(
+            select(Folder).where(Folder.id == folder_id, Folder.user_id == user.id)
+        )
+        if folder is None:
+            raise FolderNotFoundError
+
+    category_id: int | None = None
+    if folder is not None:
+        categories = await list_categories(transport=miniflux_transport)
+        matching = next((c for c in categories if c.title == folder.name), None)
+        category_id = (
+            matching.category_id
+            if matching is not None
+            else (await create_category(folder.name, transport=miniflux_transport)).category_id
+        )
+
+    try:
+        miniflux_feed = await create_feed(url, category_id=category_id, transport=miniflux_transport)
+        detail = await get_feed(miniflux_feed.feed_id, transport=miniflux_transport)
+    except (MinifluxApiError, httpx.HTTPError) as exc:
+        raise FeedUnreachableError from exc
+
+    feed = Feed(
+        user_id=user.id,
+        folder_id=folder.id if folder else None,
+        source_type=SourceType.MINIFLUX,
+        external_feed_id=str(detail.feed_id),
+        title=detail.title,
+        url=url,
+    )
+    session.add(feed)
+    await session.commit()
+    return feed
 
 
 async def _get_or_create_folder(

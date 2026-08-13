@@ -5,10 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.domain.feed.exceptions import InvalidOpmlError
+from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError, InvalidOpmlError
 from api.domain.feed.models import Feed, Folder
-from api.domain.feed.opml_service import import_opml
+from api.domain.feed.opml_service import add_feed, import_opml
 from api.domain.feed.schemas import (
+    FeedAddByUrlRequest,
     FeedCreateRequest,
     FeedResponse,
     FolderCreateRequest,
@@ -85,6 +86,24 @@ async def create_feed(
     )
     session.add(feed)
     await session.commit()
+    return _to_feed_response(feed)
+
+
+@router.post("/feeds/add-by-url", response_model=FeedResponse, status_code=status.HTTP_201_CREATED)
+async def add_feed_by_url(
+    payload: FeedAddByUrlRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
+) -> FeedResponse:
+    try:
+        feed = await add_feed(
+            session, user, payload.url, payload.folder_id, miniflux_transport=transport
+        )
+    except FolderNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
+    except FeedUnreachableError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
     return _to_feed_response(feed)
 
 

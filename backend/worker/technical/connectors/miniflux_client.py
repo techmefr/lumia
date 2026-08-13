@@ -35,6 +35,12 @@ class MinifluxFeed:
 
 
 @dataclass(frozen=True)
+class MinifluxFeedDetail:
+    feed_id: int
+    title: str
+
+
+@dataclass(frozen=True)
 class MinifluxCategory:
     category_id: int
 
@@ -84,3 +90,14 @@ async def create_feed(
         if response.status_code >= 400:
             raise MinifluxApiError(response.text)
         return MinifluxFeed(feed_id=response.json()["feed_id"])
+
+
+async def get_feed(
+    feed_id: int, *, transport: httpx.AsyncBaseTransport | None = None
+) -> MinifluxFeedDetail:
+    async with _client(transport) as client:
+        response = await client.get(f"/v1/feeds/{feed_id}")
+        if response.status_code >= 400:
+            raise MinifluxApiError(response.text)
+        data = response.json()
+        return MinifluxFeedDetail(feed_id=data["id"], title=data["title"])
