@@ -24,7 +24,17 @@
 						(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 					if (theme === 'dark') document.documentElement.classList.add('dark');
 
-					var accents = { violet: 265, bleu: 220, sarcelle: 175, ambre: 50, rose: 340 };
+					var accents = {
+						violet: 265,
+						indigo: 290,
+						bleu: 220,
+						cyan: 200,
+						sarcelle: 175,
+						vert: 145,
+						ambre: 50,
+						terracotta: 25,
+						rose: 340
+					};
 					var hue = accents[localStorage.getItem('lumia-accent')] ?? accents.violet;
 					var lightness = theme === 'dark' ? 0.65 : 0.55;
 					var accentLightness = theme === 'dark' ? 0.3 : 0.94;
@@ -37,7 +47,7 @@
 						'oklch(' + accentLightness + ' ' + accentChroma + ' ' + hue + ')'
 					);
 
-					var scales = { sm: 0.9, md: 1, lg: 1.15, xl: 1.3 };
+					var scales = { sm: 0.9, md: 1, lg: 1.15, xl: 1.3, xxl: 1.5 };
 					var scale = scales[localStorage.getItem('lumia-font-scale')] ?? 1;
 					document.documentElement.style.fontSize = 16 * scale + 'px';
 
@@ -45,6 +55,10 @@
 					var pair = localStorage.getItem('lumia-font-pair');
 					document.documentElement.dataset.fontPair =
 						pairs.indexOf(pair) === -1 ? pairs[0] : pair;
+
+					if (localStorage.getItem('lumia-reading-comfort') === 'on') {
+						document.documentElement.dataset.readingComfort = 'on';
+					}
 				} catch (e) {}
 			})();
 		</script>

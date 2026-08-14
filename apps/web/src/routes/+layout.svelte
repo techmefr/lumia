@@ -16,6 +16,8 @@
 	import { isDemo, lumia } from '$technical/api/client';
 	import SettingsMenu from '$domain/navigation/settings-menu.svelte';
 	import DemoBanner from '$domain/navigation/demo-banner.svelte';
+	import { watchUnread } from '$technical/notifications/notification-store.svelte.js';
+	import { initLocale, t } from '$technical/i18n/i18n.svelte.js';
 
 	let { children } = $props();
 
@@ -27,13 +29,14 @@
 		return authRoutes.some((route) => pathname === base + route);
 	}
 
-	const navLinks = [
-		{ href: '/articles', label: 'Articles', icon: Newspaper },
-		{ href: '/etincelle', label: "L'Étincelle", icon: Sparkles },
-		{ href: '/feeds', label: 'Mes flux', icon: Rss },
-		{ href: '/a-lire-plus-tard', label: 'À lire', icon: Bookmark },
-		{ href: '/playlists', label: 'Playlists', icon: ListMusic }
-	];
+	// Derived rather than a constant: the labels have to follow a language change.
+	const navLinks = $derived([
+		{ href: '/articles', label: t('nav.articles'), icon: Newspaper },
+		{ href: '/etincelle', label: t('nav.etincelle'), icon: Sparkles },
+		{ href: '/feeds', label: t('nav.feeds'), icon: Rss },
+		{ href: '/a-lire-plus-tard', label: t('nav.readLater'), icon: Bookmark },
+		{ href: '/playlists', label: t('nav.playlists'), icon: ListMusic }
+	]);
 
 	// `page.url.pathname` carries the base path, so the comparison has to carry it too.
 	function isActive(href: string): boolean {
@@ -48,12 +51,18 @@
 		await goto(base + '/login');
 	}
 
-	const settingsEntries = [
-		{ label: 'Réglages', href: `${base}/settings` },
-		{ label: 'Favoris', href: `${base}/favoris` },
-		{ label: 'Playlists', href: `${base}/playlists` },
-		{ label: 'Déconnexion', run: logout }
-	];
+	const settingsEntries = $derived([
+		{ label: t('nav.settings'), href: `${base}/settings` },
+		{ label: t('nav.favorites'), href: `${base}/favoris` },
+		{ label: t('nav.playlists'), href: `${base}/playlists` },
+		{ label: t('nav.logout'), run: logout }
+	]);
+
+	onMount(() => {
+		initLocale();
+		// Owned by the layout so a single poll covers every screen, and it stops with the app.
+		return watchUnread(async () => (await lumia.feed.getUnreadCounts()).total);
+	});
 
 	onMount(() => {
 		if (!bottomNavEl) return;
@@ -101,9 +110,9 @@
 {/if}
 
 {#if !isAuthRoute(page.url.pathname)}
-	<a href="#main-content" class="skip-link">Aller au contenu</a>
+	<a href="#main-content" class="skip-link">{t('nav.skipToContent')}</a>
 	<header class="sticky top-0 z-30 animate-in border-b bg-card/95 backdrop-blur fade-in slide-in-from-top-2 duration-300">
-		<nav aria-label="Navigation principale" class="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-3">
+		<nav aria-label={t('nav.main')} class="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-3">
 			<a href="{base}/articles" class="mr-4 flex items-center gap-1.5 font-serif text-lg font-semibold">
 				<Sparkles class="size-5 text-primary transition-transform duration-300 hover:rotate-12" />
 				Lumia
@@ -124,7 +133,7 @@
 			<div class="ml-auto flex items-center">
 				<SettingsMenu
 					href="{base}/settings"
-					label="Réglages"
+					label={t('nav.settings')}
 					icon={Settings}
 					entries={settingsEntries}
 				/>
@@ -147,7 +156,7 @@
 {#if !isAuthRoute(page.url.pathname)}
 	<nav
 		bind:this={bottomNavEl}
-		aria-label="Navigation mobile"
+		aria-label={t('nav.mobile')}
 		class="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t bg-card/95 py-1.5 backdrop-blur sm:hidden"
 	>
 		{#each navLinks as link (link.href)}

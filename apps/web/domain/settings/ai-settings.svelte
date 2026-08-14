@@ -11,13 +11,16 @@
 		TranslationProvider
 	} from '@lumia/core';
 	import { lumia } from '$technical/api/client';
+	import { t } from '$technical/i18n/i18n.svelte.js';
 
-	const AI_PROVIDERS: { value: AIProvider | ''; label: string }[] = [
-		{ value: '', label: 'Aucun — résumé local' },
+	// Derived, so the two translated entries follow a language change like the rest of the screen.
+	const AI_PROVIDERS = $derived<{ value: AIProvider | ''; label: string }[]>([
+		{ value: '', label: t('ai.providerNone') },
 		{ value: 'mistral', label: 'Mistral' },
 		{ value: 'openai', label: 'OpenAI' },
-		{ value: 'custom', label: 'Endpoint compatible OpenAI (auto-hébergé)' }
-	];
+		{ value: 'anthropic', label: 'Anthropic (Claude)' },
+		{ value: 'custom', label: t('ai.providerCustom') }
+	]);
 	const LANGUAGES: { value: PreferredLanguage; label: string }[] = [
 		{ value: 'fr', label: 'Français' },
 		{ value: 'en', label: 'English' }
@@ -55,7 +58,7 @@
 		try {
 			hydrate(await lumia.user.getMe());
 		} catch {
-			error = 'Impossible de charger tes réglages.';
+			error = t('ai.loadFailed');
 		} finally {
 			loading = false;
 		}
@@ -68,7 +71,7 @@
 			hydrate(await lumia.user.updateMe(payload));
 			toast(message);
 		} catch {
-			error = 'Enregistrement impossible. Vérifie la clé et réessaie.';
+			error = t('ai.saveFailed');
 		} finally {
 			saving = false;
 		}
@@ -85,7 +88,7 @@
 		// Omitted rather than sent empty: an empty string means "remove the key" server-side.
 		if (aiApiKey.trim()) payload.ai_api_key = aiApiKey.trim();
 		if (translationApiKey.trim()) payload.translation_api_key = translationApiKey.trim();
-		await patch(payload, 'Réglages enregistrés.');
+		await patch(payload, t('ai.saved'));
 	}
 
 	onMount(() => {
@@ -98,7 +101,7 @@
 		<div>
 			<h2 class="flex items-center gap-2 text-lg font-semibold">
 				<KeyRound class="size-5 text-primary" />
-				IA et traduction
+				{t('ai.title')}
 			</h2>
 			<p class="mt-1 text-sm text-muted-foreground">
 				Optionnel : les mots-clés et le résumé sont calculés localement. Une clé sert au résumé
@@ -108,16 +111,16 @@
 		</div>
 
 		{#if loading}
-			<p class="text-sm text-muted-foreground" aria-live="polite">Chargement des réglages…</p>
+			<p class="text-sm text-muted-foreground" aria-live="polite">{t('ai.loading')}</p>
 		{:else if me === null}
 			<p class="text-sm text-destructive" aria-live="polite">
-				{error ?? 'Réglages indisponibles.'}
+				{error ?? t('ai.unavailable')}
 			</p>
 		{:else}
 			<fieldset class="flex flex-col gap-2">
 				<legend class="mb-1 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
 					<Languages class="size-4" />
-					Langue de lecture
+					{t('ai.readingLanguage')}
 				</legend>
 				<p class="text-xs text-muted-foreground">
 					Les articles publiés dans une autre langue sont traduits vers celle-ci.
@@ -142,7 +145,7 @@
 			</fieldset>
 
 			<div class="flex flex-col gap-2">
-				<Label for="ai-provider">Fournisseur de résumé</Label>
+				<Label for="ai-provider">{t('ai.provider')}</Label>
 				<select
 					id="ai-provider"
 					bind:value={aiProvider}
@@ -156,10 +159,10 @@
 				{#if aiProvider !== ''}
 					<div class="flex flex-col gap-2">
 						<Label for="ai-key">
-							Clé d'API
+							{t('ai.apiKey')}
 							{#if me.ai_api_key_set}
 								<span class="ml-1 text-xs font-normal text-muted-foreground">
-									— une clé est enregistrée
+									{t('ai.keyOnFile')}
 								</span>
 							{/if}
 						</Label>
@@ -177,7 +180,7 @@
 					</div>
 
 					<div class="flex flex-col gap-2">
-						<Label for="ai-model">Modèle</Label>
+						<Label for="ai-model">{t('ai.model')}</Label>
 						<Input
 							id="ai-model"
 							bind:value={aiModel}
@@ -187,7 +190,7 @@
 
 					{#if aiProvider === 'custom'}
 						<div class="flex flex-col gap-2">
-							<Label for="ai-endpoint">URL de l'endpoint</Label>
+							<Label for="ai-endpoint">{t('ai.endpoint')}</Label>
 							<Input
 								id="ai-endpoint"
 								type="url"
@@ -203,32 +206,32 @@
 							size="sm"
 							class="self-start"
 							disabled={saving}
-							onclick={() => patch({ ai_api_key: null }, 'Clé de résumé supprimée.')}
+							onclick={() => patch({ ai_api_key: null }, t('ai.summaryKeyDeleted'))}
 						>
-							Supprimer la clé
+							{t('ai.deleteKey')}
 						</Button>
 					{/if}
 				{/if}
 			</div>
 
 			<div class="flex flex-col gap-2">
-				<Label for="translation-provider">Fournisseur de traduction</Label>
+				<Label for="translation-provider">{t('ai.translationProvider')}</Label>
 				<select
 					id="translation-provider"
 					bind:value={translationProvider}
 					class="h-10 rounded-md border border-input bg-background px-3 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 				>
-					<option value="">Aucun — pas de traduction</option>
+					<option value="">{t('ai.translationNone')}</option>
 					<option value="deepl">DeepL</option>
 				</select>
 
 				{#if translationProvider !== ''}
 					<div class="flex flex-col gap-2">
 						<Label for="translation-key">
-							Clé DeepL
+							{t('ai.deeplKey')}
 							{#if me.translation_api_key_set}
 								<span class="ml-1 text-xs font-normal text-muted-foreground">
-									— une clé est enregistrée
+									{t('ai.keyOnFile')}
 								</span>
 							{/if}
 						</Label>
@@ -249,9 +252,9 @@
 							size="sm"
 							class="self-start"
 							disabled={saving}
-							onclick={() => patch({ translation_api_key: null }, 'Clé DeepL supprimée.')}
+							onclick={() => patch({ translation_api_key: null }, t('ai.deeplKeyDeleted'))}
 						>
-							Supprimer la clé
+							{t('ai.deleteKey')}
 						</Button>
 					{/if}
 				{/if}
@@ -262,7 +265,7 @@
 			{/if}
 
 			<Button class="self-start" disabled={saving} onclick={save}>
-				{saving ? 'Enregistrement…' : 'Enregistrer'}
+				{saving ? t('common.saving') : t('common.save')}
 			</Button>
 		{/if}
 	</CardContent>

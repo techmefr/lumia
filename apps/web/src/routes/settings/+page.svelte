@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Card, CardContent } from '@lumia/ui';
+	import { Button, Card, CardContent, Label } from '@lumia/ui';
 	import Settings from '@lucide/svelte/icons/settings';
 	import Sun from '@lucide/svelte/icons/sun';
 	import Moon from '@lucide/svelte/icons/moon';
 	import Check from '@lucide/svelte/icons/check';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import AiSettings from '$domain/settings/ai-settings.svelte';
+	import FilterRules from '$domain/settings/filter-rules.svelte';
+	import NotificationSettings from '$domain/settings/notification-settings.svelte';
 	import {
 		getTheme,
 		setTheme,
@@ -19,13 +21,38 @@
 		getFontPair,
 		setFontPair,
 		FONT_PAIR_PRESETS,
+		isReadingComfort,
+		setReadingComfort,
 		type Theme
 	} from '$technical/theme/theme-store.svelte.js';
+	import { getLocale, setLocale, t } from '$technical/i18n/i18n.svelte.js';
+	import { LOCALES } from '$technical/i18n/locales';
+
+	let locale = $state(getLocale());
+
+	/** The scale ids are stored values, so their labels live in the catalogues, not in the preset. */
+	const SCALE_KEYS = {
+		sm: 'settings.scale.sm',
+		md: 'settings.scale.md',
+		lg: 'settings.scale.lg',
+		xl: 'settings.scale.xl',
+		xxl: 'settings.scale.xxl'
+	} as const;
+
+	function scaleLabel(id: string): string {
+		return id in SCALE_KEYS ? t(SCALE_KEYS[id as keyof typeof SCALE_KEYS]) : id;
+	}
+
+	function pickLocale(code: string) {
+		setLocale(code);
+		locale = getLocale();
+	}
 
 	let theme = $state<Theme>('light');
 	let accentHue = $state(0);
 	let fontScale = $state(1);
 	let fontPair = $state(FONT_PAIR_PRESETS[0].id);
+	let comfort = $state(false);
 
 	function pickTheme(next: Theme) {
 		setTheme(next);
@@ -47,25 +74,50 @@
 		fontPair = getFontPair();
 	}
 
+	function toggleComfort() {
+		comfort = !comfort;
+		setReadingComfort(comfort);
+	}
+
 	onMount(() => {
 		if (!requireAuth()) return;
 		theme = getTheme();
 		accentHue = getAccentHue();
 		fontScale = getFontScale();
 		fontPair = getFontPair();
+		comfort = isReadingComfort();
 	});
 </script>
 
 <div class="mx-auto flex max-w-2xl flex-col gap-6">
 	<h1 class="flex items-center gap-2 text-2xl font-semibold">
 		<Settings class="size-6 text-primary" />
-		Réglages
+		{t('settings.title')}
 	</h1>
+
+	<Card>
+		<CardContent class="flex flex-col gap-2 pt-6">
+			<Label for="ui-locale">{t('settings.language')}</Label>
+			<select
+				id="ui-locale"
+				value={locale}
+				onchange={(event) => pickLocale(event.currentTarget.value)}
+				class="h-10 max-w-xs rounded-md border border-input bg-background px-3 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+			>
+				{#each LOCALES as option (option.code)}
+					<option value={option.code}>{option.nativeLabel}</option>
+				{/each}
+			</select>
+			<p class="text-xs text-muted-foreground">{t('settings.languageHint')}</p>
+		</CardContent>
+	</Card>
 
 	<Card>
 		<CardContent class="pt-6">
 			<fieldset class="flex flex-col gap-3">
-				<legend class="mb-3 text-sm font-semibold text-muted-foreground">Thème</legend>
+				<legend class="mb-3 text-sm font-semibold text-muted-foreground">
+					{t('settings.theme')}
+				</legend>
 				<div class="flex gap-3">
 					<label
 						class="flex flex-1 cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-border p-4 transition-colors hover:border-muted-foreground has-[:checked]:border-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2"
@@ -83,7 +135,7 @@
 						>
 							<Sun class="size-5" />
 						</span>
-						<span class="text-sm font-medium">Clair</span>
+						<span class="text-sm font-medium">{t('settings.themeLight')}</span>
 					</label>
 					<label
 						class="flex flex-1 cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-border p-4 transition-colors hover:border-muted-foreground has-[:checked]:border-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2"
@@ -101,7 +153,7 @@
 						>
 							<Moon class="size-5" />
 						</span>
-						<span class="text-sm font-medium">Sombre</span>
+						<span class="text-sm font-medium">{t('settings.themeDark')}</span>
 					</label>
 				</div>
 			</fieldset>
@@ -111,7 +163,9 @@
 	<Card>
 		<CardContent class="pt-6">
 			<fieldset class="flex flex-col gap-3">
-				<legend class="mb-3 text-sm font-semibold text-muted-foreground">Couleur principale</legend>
+				<legend class="mb-3 text-sm font-semibold text-muted-foreground">
+					{t('settings.accent')}
+				</legend>
 				<div class="flex flex-wrap gap-3">
 					{#each ACCENT_PRESETS as preset (preset.id)}
 						<label
@@ -140,11 +194,8 @@
 	<Card>
 		<CardContent class="pt-6">
 			<fieldset class="flex flex-col gap-3">
-				<legend class="text-sm font-semibold text-muted-foreground">Paire de polices</legend>
-				<p class="text-xs text-muted-foreground">
-					Un serif pour les titres, un sans pour le texte courant. Les quatre paires sont servies par
-					ton instance : rien n'est chargé depuis un tiers.
-				</p>
+				<legend class="text-sm font-semibold text-muted-foreground">{t('settings.fontPair')}</legend>
+				<p class="text-xs text-muted-foreground">{t('settings.fontPairHint')}</p>
 				<div class="grid gap-3 sm:grid-cols-2">
 					{#each FONT_PAIR_PRESETS as preset (preset.id)}
 						<label
@@ -180,11 +231,8 @@
 	<Card>
 		<CardContent class="flex flex-col gap-3 pt-6">
 			<fieldset class="flex flex-col gap-3">
-				<legend class="text-sm font-semibold text-muted-foreground">Taille du texte</legend>
-				<p class="text-xs text-muted-foreground">
-					La hiérarchie visuelle (titres, texte, légendes) garde toujours les mêmes proportions —
-					seule la taille globale change.
-				</p>
+				<legend class="text-sm font-semibold text-muted-foreground">{t('settings.textSize')}</legend>
+				<p class="text-xs text-muted-foreground">{t('settings.textSizeHint')}</p>
 				<div class="flex gap-2">
 					{#each FONT_SCALE_PRESETS as preset (preset.id)}
 						<label
@@ -200,26 +248,44 @@
 								class="sr-only"
 							/>
 							<span aria-hidden="true">Aa</span>
-							<span class="sr-only">{preset.label}</span>
+							<span class="sr-only">{scaleLabel(preset.id)}</span>
 						</label>
 					{/each}
 				</div>
 				<div aria-hidden="true" class="flex justify-between text-xs text-muted-foreground">
 					{#each FONT_SCALE_PRESETS as preset (preset.id)}
-						<span class="flex-1 text-center">{preset.label}</span>
+						<span class="flex-1 text-center">{scaleLabel(preset.id)}</span>
 					{/each}
 				</div>
 			</fieldset>
 
+			<div class="flex flex-col gap-2 border-t pt-4">
+				<span class="text-sm font-semibold text-muted-foreground">{t('settings.comfort')}</span>
+				<p class="text-xs text-muted-foreground">{t('settings.comfortHint')}</p>
+				<Button
+					variant={comfort ? 'secondary' : 'outline'}
+					size="sm"
+					class="self-start"
+					aria-pressed={comfort}
+					onclick={toggleComfort}
+				>
+					{comfort ? t('settings.comfortOn') : t('settings.comfortOff')}
+				</Button>
+			</div>
+
 			<div class="mt-2 rounded-lg border bg-muted/30 p-4">
-				<h3 class="font-serif text-xl font-semibold">Aperçu du titre</h3>
-				<p class="mt-1 text-sm text-muted-foreground">
-					Un texte de résumé, pour vérifier que la hiérarchie reste lisible à toutes les tailles.
-				</p>
-				<span class="mt-2 block text-xs text-muted-foreground">Légende discrète</span>
+				<h3 class="font-serif text-xl font-semibold">{t('settings.previewTitle')}</h3>
+				<p class="prose mt-1 text-sm text-muted-foreground">{t('settings.previewBody')}</p>
+				<span class="mt-2 block text-xs text-muted-foreground">
+					{t('settings.previewCaption')}
+				</span>
 			</div>
 		</CardContent>
 	</Card>
+
+	<NotificationSettings />
+
+	<FilterRules />
 
 	<AiSettings />
 </div>

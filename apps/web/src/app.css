@@ -134,6 +134,17 @@
 	}
 }
 
+/* The sentence being spoken. Painted by the Custom Highlight API, so it must stay to a text
+   decoration: a highlight pseudo-element cannot change layout. */
+::highlight(lumia-tts) {
+	background-color: color-mix(in oklab, var(--primary) 22%, transparent);
+	color: var(--foreground);
+	text-decoration: underline;
+	text-decoration-color: var(--primary);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 3px;
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
 	animation-duration: 220ms;
@@ -187,6 +198,27 @@
 	font-size: 1.0625rem;
 	line-height: 1.8;
 	color: var(--foreground);
+}
+
+/* Reading comfort: looser leading and a touch more letter and word spacing. Separate from the text
+   size because they fix different problems — a bigger glyph helps failing acuity, more air between
+   lines helps anyone who loses their place at the end of a line (dyslexia, low vision, fatigue). */
+[data-reading-comfort='on'] body {
+	line-height: 1.7;
+	letter-spacing: 0.01em;
+	word-spacing: 0.05em;
+}
+
+[data-reading-comfort='on'] .prose {
+	line-height: 2.05;
+}
+
+[data-reading-comfort='on'] .prose > * + * {
+	margin-top: 1.7em;
+}
+
+[data-reading-comfort='on'] .prose li {
+	line-height: 1.95;
 }
 
 .prose > * + * {

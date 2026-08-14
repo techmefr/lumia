@@ -2,6 +2,7 @@ const THEME_KEY = 'lumia-theme';
 const ACCENT_KEY = 'lumia-accent';
 const FONT_SCALE_KEY = 'lumia-font-scale';
 const FONT_PAIR_KEY = 'lumia-font-pair';
+const COMFORT_KEY = 'lumia-reading-comfort';
 
 export type Theme = 'light' | 'dark';
 
@@ -11,12 +12,17 @@ export interface AccentPreset {
 	hue: number;
 }
 
-// Colorblind-safe hues, distinct from the per-source avatar palette.
+// Colorblind-safe hues, distinct from the per-source avatar palette. The ids are the stored value,
+// so renaming one would reset everybody's choice: add rather than rename.
 export const ACCENT_PRESETS: AccentPreset[] = [
 	{ id: 'violet', label: 'Violet', hue: 265 },
+	{ id: 'indigo', label: 'Indigo', hue: 290 },
 	{ id: 'bleu', label: 'Bleu', hue: 220 },
+	{ id: 'cyan', label: 'Cyan', hue: 200 },
 	{ id: 'sarcelle', label: 'Sarcelle', hue: 175 },
+	{ id: 'vert', label: 'Vert', hue: 145 },
 	{ id: 'ambre', label: 'Ambre', hue: 50 },
+	{ id: 'terracotta', label: 'Terracotta', hue: 25 },
 	{ id: 'rose', label: 'Rose', hue: 340 }
 ];
 
@@ -28,11 +34,16 @@ export interface FontScalePreset {
 	scale: number;
 }
 
+/**
+ * The two largest steps exist for readers who need them rather than as decoration: at 1.5 the
+ * running text sits at 24px, which is what a comfortable large-print book uses.
+ */
 export const FONT_SCALE_PRESETS: FontScalePreset[] = [
 	{ id: 'sm', label: 'Petit', scale: 0.9 },
 	{ id: 'md', label: 'Normal', scale: 1 },
 	{ id: 'lg', label: 'Grand', scale: 1.15 },
-	{ id: 'xl', label: 'Très grand', scale: 1.3 }
+	{ id: 'xl', label: 'Très grand', scale: 1.3 },
+	{ id: 'xxl', label: 'Maximum', scale: 1.5 }
 ];
 
 export interface FontPairPreset {
@@ -105,10 +116,16 @@ function readInitialFontPair(): string {
 	return FONT_PAIR_PRESETS.some((p) => p.id === stored) ? stored! : FONT_PAIR_PRESETS[0].id;
 }
 
+function readInitialComfort(): boolean {
+	if (typeof localStorage === 'undefined') return false;
+	return localStorage.getItem(COMFORT_KEY) === 'on';
+}
+
 let theme = $state<Theme>(readInitialTheme());
 let accentHue = $state<number>(readInitialAccentHue());
 let fontScale = $state<number>(readInitialFontScale());
 let fontPair = $state<string>(readInitialFontPair());
+let readingComfort = $state<boolean>(readInitialComfort());
 
 function applyAccent(hue: number, currentTheme: Theme) {
 	const root = document.documentElement.style;
@@ -182,8 +199,27 @@ export function setFontScale(presetId: string): void {
 	applyFontScale(fontScale);
 }
 
+function applyReadingComfort(on: boolean) {
+	// An attribute rather than a class: app.css keys the looser leading and wider word spacing on it,
+	// and the early inline script can set it before the first paint.
+	if (on) document.documentElement.dataset.readingComfort = 'on';
+	else delete document.documentElement.dataset.readingComfort;
+	window.dispatchEvent(new Event('resize'));
+}
+
+export function isReadingComfort(): boolean {
+	return readingComfort;
+}
+
+export function setReadingComfort(on: boolean): void {
+	readingComfort = on;
+	localStorage.setItem(COMFORT_KEY, on ? 'on' : 'off');
+	applyReadingComfort(on);
+}
+
 export function initPreferences(): void {
 	applyAccent(accentHue, theme);
 	applyFontScale(fontScale);
 	applyFontPair(fontPair);
+	applyReadingComfort(readingComfort);
 }
