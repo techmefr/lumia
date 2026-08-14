@@ -9,6 +9,7 @@
 	import Star from '@lucide/svelte/icons/star';
 	import ListMusic from '@lucide/svelte/icons/list-music';
 	import { AnimatedList } from '@lumia/ui';
+	import { t } from '$technical/i18n/i18n.svelte';
 
 	interface Props {
 		folders: Folder[];
@@ -60,7 +61,7 @@
 >
 	<span class="flex items-center gap-2">
 		<FolderIcon class="size-4 text-primary" />
-		Dossiers et flux
+		{t('feeds.sidebarLabel')}
 		{#if unread.total > 0}
 			<span class="rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
 				{unread.total}
@@ -72,7 +73,7 @@
 
 <aside
 	id="feed-nav"
-	aria-label="Dossiers et flux"
+	aria-label={t('feeds.sidebarLabel')}
 	class="{mobileOpen
 		? 'flex'
 		: 'hidden'} w-full shrink-0 flex-col gap-0.5 rounded-2xl border border-zinc-700 bg-zinc-900 p-3 text-zinc-300 shadow-xl dark:border-zinc-500 dark:bg-zinc-800 sm:sticky sm:top-[4.5rem] sm:flex sm:h-[calc(100vh-7.5rem)] sm:w-60"
@@ -84,7 +85,7 @@
 			: 'hover:bg-white/10 hover:text-white'}"
 	>
 		<Newspaper class="size-4" />
-		<span class="flex-1 text-left">Tous les articles</span>
+		<span class="flex-1 text-left">{t('feeds.allArticles')}</span>
 		{#if unread.total > 0}
 			<span class="text-xs font-semibold">{unread.total}</span>
 		{/if}
@@ -112,8 +113,8 @@
 					{#if onMarkFolderRead && folderUnread > 0}
 						<button
 							onclick={() => onMarkFolderRead(folder.id)}
-							aria-label="Tout marquer comme lu dans {folder.name}"
-							title="Tout marquer comme lu"
+							aria-label={t('feeds.markAllReadIn', { name: folder.name })}
+							title={t('feeds.markAllRead')}
 							class="rounded-md p-1 text-zinc-400 opacity-0 transition-opacity hover:text-white focus-visible:opacity-100 group-hover/folder:opacity-100"
 						>
 							<CheckCheck class="size-3.5" />
@@ -122,7 +123,9 @@
 					<button
 						onclick={() => toggle(folder.id)}
 						aria-expanded={!collapsed[folder.id]}
-						aria-label="{collapsed[folder.id] ? 'Déplier' : 'Replier'} {folder.name}"
+						aria-label={collapsed[folder.id]
+							? t('feeds.expand', { name: folder.name })
+							: t('feeds.collapse', { name: folder.name })}
 						class="rounded-md p-1 text-zinc-400 hover:text-white"
 					>
 						<ChevronDown
@@ -156,8 +159,8 @@
 								{#if onMarkFeedRead && feedUnread > 0}
 									<button
 										onclick={() => onMarkFeedRead(feed.id)}
-										aria-label="Tout marquer comme lu dans {feed.title}"
-										title="Tout marquer comme lu"
+										aria-label={t('feeds.markAllReadIn', { name: feed.title })}
+										title={t('feeds.markAllRead')}
 										class="rounded-md p-1 text-zinc-400 opacity-0 transition-opacity hover:text-white focus-visible:opacity-100 group-hover/feed:opacity-100"
 									>
 										<CheckCheck class="size-3.5" />
@@ -172,7 +175,7 @@
 
 		{#if unfiledFeeds.length > 0}
 			<span class="mt-2 px-2.5 text-xs font-medium uppercase tracking-wide text-zinc-400">
-				Sans dossier
+				{t('feeds.noFolder')}
 			</span>
 			<AnimatedList items={unfiledFeeds} getKey={(feed) => feed.id}>
 				{#snippet children(feed)}
@@ -201,13 +204,13 @@
 		class="mt-auto flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
 	>
 		<ListMusic class="size-4" />
-		Playlists
+		{t('nav.playlists')}
 	</a>
 	<a
 		href="{base}/favoris"
 		class="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
 	>
 		<Star class="size-4" />
-		Favoris
+		{t('nav.favorites')}
 	</a>
 </aside>

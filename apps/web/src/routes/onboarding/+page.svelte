@@ -6,11 +6,13 @@
 	import PartyPopper from '@lucide/svelte/icons/party-popper';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import { lumia } from '$technical/api/client';
+	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 
 	let email = $state('');
 	let username = $state('');
 	let password = $state('');
-	let error = $state<string | null>(null);
+	// The key rather than the sentence: an error left on screen has to follow a language change too.
+	let error = $state<MessageKey | null>(null);
 	let loading = $state(false);
 
 	async function submit(event: SubmitEvent) {
@@ -23,8 +25,8 @@
 		} catch (err) {
 			error =
 				err instanceof ApiError && err.status === 409
-					? 'Une instance existe déjà — connecte-toi normalement.'
-					: 'Création du compte impossible.';
+					? 'onboarding.exists'
+					: 'onboarding.failed';
 		} finally {
 			loading = false;
 		}
@@ -37,21 +39,21 @@
 			<div class="mb-1 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
 				<PartyPopper class="size-5" />
 			</div>
-			<CardTitle class="font-serif text-xl">Bienvenue sur Lumia</CardTitle>
-			<CardDescription>Premier lancement : crée le compte administrateur de cette instance.</CardDescription>
+			<CardTitle class="font-serif text-xl">{t('onboarding.title')}</CardTitle>
+			<CardDescription>{t('onboarding.description')}</CardDescription>
 		</CardHeader>
 		<CardContent>
 			<form class="flex flex-col gap-4" onsubmit={submit}>
 				<div class="flex flex-col gap-1.5">
-					<Label for="email">Email</Label>
+					<Label for="email">{t('login.email')}</Label>
 					<Input id="email" type="email" bind:value={email} required autocomplete="email" />
 				</div>
 				<div class="flex flex-col gap-1.5">
-					<Label for="username">Nom d'utilisateur</Label>
+					<Label for="username">{t('onboarding.username')}</Label>
 					<Input id="username" type="text" bind:value={username} required autocomplete="username" />
 				</div>
 				<div class="flex flex-col gap-1.5">
-					<Label for="password">Mot de passe</Label>
+					<Label for="password">{t('login.password')}</Label>
 					<Input
 						id="password"
 						type="password"
@@ -61,11 +63,11 @@
 					/>
 				</div>
 				{#if error}
-					<p role="alert" class="text-sm text-destructive">{error}</p>
+					<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 				{/if}
 				<Button type="submit" disabled={loading} class="mt-1">
 					<UserPlus class="size-4" />
-					{loading ? 'Création…' : 'Créer le compte'}
+					{loading ? t('onboarding.submitting') : t('onboarding.submit')}
 				</Button>
 			</form>
 		</CardContent>

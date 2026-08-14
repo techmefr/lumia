@@ -8,13 +8,15 @@
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import PartyPopper from '@lucide/svelte/icons/party-popper';
 	import { lumia } from '$technical/api/client';
+	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import SwipeStack from '$domain/article/swipe-stack.svelte';
 
 	let articles = $state<ArticleSummary[]>([]);
 	let remaining = $state<ArticleSummary[]>([]);
 	let loading = $state(true);
-	let error = $state<string | null>(null);
+	// The key rather than the sentence: an error left on screen has to follow a language change too.
+	let error = $state<MessageKey | null>(null);
 	let label = $state<string | null>(null);
 
 	function vote(article: ArticleSummary, choice: 'like' | 'dislike') {
@@ -43,7 +45,7 @@
 				articles = loaded;
 				remaining = loaded;
 			})
-			.catch(() => (error = 'Impossible de charger les articles.'))
+			.catch(() => (error = 'read.loadFailed'))
 			.finally(() => (loading = false));
 	});
 </script>
@@ -52,28 +54,26 @@
 	<div>
 		<h1 class="flex items-center gap-2 text-2xl font-semibold">
 			<Shuffle class="size-6 text-primary" />
-			Lecture{label ? ` — ${label}` : ''}
+			{label ? t('read.titleWithLabel', { label }) : t('read.title')}
 		</h1>
-		<p class="text-sm text-muted-foreground">
-			Glisse à droite pour aimer, à gauche pour passer — enregistre ou mets en favoris sans quitter la carte.
-		</p>
+		<p class="text-sm text-muted-foreground">{t('read.help')}</p>
 	</div>
 
 	{#if error}
-		<p role="alert" class="text-sm text-destructive">{error}</p>
+		<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{/if}
 
 	{#if loading}
-		<p role="status" class="text-sm text-muted-foreground">Chargement…</p>
+		<p role="status" class="text-sm text-muted-foreground">{t('common.loading')}</p>
 	{:else if articles.length === 0}
 		<p class="flex items-center gap-2 text-sm text-muted-foreground">
 			<Inbox class="size-4" />
-			Aucun article ici pour le moment.
+			{t('read.empty')}
 		</p>
 	{:else if remaining.length === 0}
 		<div class="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
 			<PartyPopper class="size-8 text-primary" />
-			<p class="font-medium">Tu as tout lu pour l'instant.</p>
+			<p class="font-medium">{t('read.allRead')}</p>
 		</div>
 	{:else}
 		<SwipeStack

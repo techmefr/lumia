@@ -1,6 +1,11 @@
 import type { Folder } from '@lumia/core';
 
-export function resolveFolderName(folders: Folder[], folderId: string | null): string {
-	if (!folderId) return 'Sans dossier';
-	return folders.find((folder) => folder.id === folderId)?.name ?? 'Sans dossier';
+/** `fallback` is passed in rather than translated here, so this stays a pure lookup. */
+export function resolveFolderName(
+	folders: Folder[],
+	folderId: string | null,
+	fallback: string
+): string {
+	if (!folderId) return fallback;
+	return folders.find((folder) => folder.id === folderId)?.name ?? fallback;
 }

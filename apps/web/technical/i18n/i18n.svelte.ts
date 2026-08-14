@@ -18,6 +18,8 @@ import { ar } from './messages/ar';
 import { zh } from './messages/zh';
 import { mg } from './messages/mg';
 
+export type { MessageKey };
+
 const LOCALE_KEY = 'lumia-locale';
 
 const CATALOGUES: Record<string, Catalogue> = { fr, en, es, de, it, pt, ru, ar, zh, mg };

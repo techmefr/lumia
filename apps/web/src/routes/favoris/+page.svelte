@@ -5,6 +5,7 @@
 	import { Button } from '@lumia/ui';
 	import Star from '@lucide/svelte/icons/star';
 	import { lumia } from '$technical/api/client';
+	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import ArticleGrid from '$domain/article/article-grid.svelte';
 
@@ -14,7 +15,8 @@
 	let loading = $state(true);
 	let loadingMore = $state(false);
 	let hasMore = $state(false);
-	let error = $state<string | null>(null);
+	// The key rather than the sentence: an error left on screen has to follow a language change too.
+	let error = $state<MessageKey | null>(null);
 
 	async function load() {
 		loading = true;
@@ -24,7 +26,7 @@
 			articles = loaded;
 			hasMore = loaded.length === PAGE_SIZE;
 		} catch {
-			error = 'Impossible de charger tes favoris.';
+			error = 'favorites.loadFailed';
 		} finally {
 			loading = false;
 		}
@@ -38,7 +40,7 @@
 			articles = [...articles, ...next];
 			hasMore = next.length === PAGE_SIZE;
 		} catch {
-			error = 'Impossible de charger la suite.';
+			error = 'common.loadMoreFailed';
 		} finally {
 			loadingMore = false;
 		}
@@ -53,24 +55,20 @@
 	<div>
 		<h1 class="flex items-center gap-2 text-2xl font-semibold">
 			<Star class="size-6 text-primary" />
-			Favoris
+			{t('favorites.title')}
 		</h1>
-		<p class="text-sm text-muted-foreground">
-			Tes articles marqués en favoris, à retrouver ici pour une veille par thème.
-		</p>
+		<p class="text-sm text-muted-foreground">{t('favorites.intro')}</p>
 	</div>
 
 	{#if error}
-		<p role="alert" class="text-sm text-destructive">{error}</p>
+		<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{/if}
 
 	<ArticleGrid {articles} {loading}>
 		{#snippet empty()}
 			<div class="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-6">
-				<p class="text-sm text-muted-foreground">
-					Rien pour le moment — marque un article en favori depuis sa page ou en le swipant.
-				</p>
-				<Button size="sm" href="{base}/articles">Parcourir les articles</Button>
+				<p class="text-sm text-muted-foreground">{t('favorites.empty')}</p>
+				<Button size="sm" href="{base}/articles">{t('common.browseArticles')}</Button>
 			</div>
 		{/snippet}
 
@@ -78,7 +76,7 @@
 			{#if hasMore}
 				<div class="mt-6 flex justify-center">
 					<Button variant="outline" onclick={loadMore} disabled={loadingMore}>
-						{loadingMore ? 'Chargement…' : 'Charger plus'}
+						{loadingMore ? t('common.loading') : t('common.loadMore')}
 					</Button>
 				</div>
 			{/if}

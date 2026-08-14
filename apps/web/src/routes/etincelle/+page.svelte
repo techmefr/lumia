@@ -8,12 +8,14 @@
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import PartyPopper from '@lucide/svelte/icons/party-popper';
 	import { lumia } from '$technical/api/client';
+	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import SwipeStack from '$domain/article/swipe-stack.svelte';
 
 	let articles = $state<ArticleSummary[]>([]);
 	let loading = $state(true);
-	let error = $state<string | null>(null);
+	// The key rather than the sentence: an error left on screen has to follow a language change too.
+	let error = $state<MessageKey | null>(null);
 	let remaining = $state<ArticleSummary[]>([]);
 
 	function vote(article: ArticleSummary, choice: 'like' | 'dislike') {
@@ -23,12 +25,12 @@
 
 	function save(article: ArticleSummary) {
 		void lumia.recommendation.sendFeedback(article.id, { saved: true });
-		toast('Ajouté à « À lire ».');
+		toast(t('etincelle.savedToast'));
 	}
 
 	function favorite(article: ArticleSummary) {
 		void lumia.recommendation.sendFeedback(article.id, { favorite: true });
-		toast('Ajouté aux favoris.');
+		toast(t('etincelle.favoriteToast'));
 	}
 
 	onMount(() => {
@@ -39,7 +41,7 @@
 				articles = loaded;
 				remaining = loaded;
 			})
-			.catch(() => (error = "Impossible de charger l'Étincelle."))
+			.catch(() => (error = 'etincelle.loadFailed'))
 			.finally(() => (loading = false));
 	});
 </script>
@@ -48,36 +50,32 @@
 	<div>
 		<h1 class="flex items-center gap-2 text-2xl font-semibold">
 			<Sparkles class="size-6 text-primary" />
-			L'Étincelle
+			{t('etincelle.title')}
 		</h1>
-		<p class="text-sm text-muted-foreground">
-			Glisse à droite pour aimer, à gauche pour passer, vers le haut pour mettre en favori, vers le
-			bas pour garder à lire — ou touche la carte pour l'ouvrir.
-		</p>
+		<p class="text-sm text-muted-foreground">{t('etincelle.help')}</p>
 	</div>
 
 	{#if error}
-		<p role="alert" class="text-sm text-destructive">{error}</p>
+		<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{/if}
 
 	{#if loading}
-		<div role="status" aria-label="Chargement de la sélection" class="flex justify-center">
+		<div role="status" aria-label={t('etincelle.loading')} class="flex justify-center">
 			<Skeleton class="h-96 w-full max-w-md rounded-2xl" />
 		</div>
 	{:else if articles.length === 0}
 		<div class="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-6">
 			<p class="flex items-center gap-2 text-sm text-muted-foreground">
 				<Inbox class="size-4" />
-				Pas encore assez de retours pour te faire une sélection — aime ou passe des articles pour
-				l'entraîner.
+				{t('etincelle.notEnough')}
 			</p>
-			<Button size="sm" href="{base}/articles">Parcourir les articles</Button>
+			<Button size="sm" href="{base}/articles">{t('common.browseArticles')}</Button>
 		</div>
 	{:else if remaining.length === 0}
 		<div class="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
 			<PartyPopper class="size-8 text-primary" />
-			<p class="font-medium">Tu as tout vu pour l'instant.</p>
-			<p class="text-sm">Reviens plus tard pour une nouvelle sélection.</p>
+			<p class="font-medium">{t('etincelle.allSeen')}</p>
+			<p class="text-sm">{t('etincelle.comeBack')}</p>
 		</div>
 	{:else}
 		<SwipeStack

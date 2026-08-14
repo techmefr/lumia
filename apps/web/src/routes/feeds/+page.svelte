@@ -27,6 +27,7 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import { toast } from '@lumia/ui';
 	import { lumia } from '$technical/api/client';
+	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { resolveFolderName } from '$domain/feed/resolve-folder-name';
 	import FeedSidebar from '$domain/feed/feed-sidebar.svelte';
@@ -36,14 +37,15 @@
 	let feeds = $state<Feed[]>([]);
 	let loading = $state(true);
 	let importing = $state(false);
-	let error = $state<string | null>(null);
+	// The key rather than the sentence: an error left on screen has to follow a language change too.
+	let error = $state<MessageKey | null>(null);
 	let newFolderName = $state('');
 	let selectedFolderId = $state('');
 	let selectedFeedId = $state('');
 	let newFeedUrl = $state('');
 	let newFeedFolderId = $state('');
 	let addingFeed = $state(false);
-	let addFeedError = $state<string | null>(null);
+	let addFeedError = $state<MessageKey | null>(null);
 	let renamingFolderId = $state<string | null>(null);
 	let folderRenameValue = $state('');
 	let renamingFeedId = $state<string | null>(null);
@@ -61,7 +63,7 @@
 		try {
 			[folders, feeds] = await Promise.all([lumia.feed.listFolders(), lumia.feed.listFeeds()]);
 		} catch {
-			error = 'Impossible de charger tes flux.';
+			error = 'feeds.loadFailed';
 		} finally {
 			loading = false;
 		}
@@ -87,7 +89,7 @@
 			newFeedFolderId = '';
 			await load();
 		} catch {
-			addFeedError = 'Impossible d’ajouter ce flux — vérifie l’URL.';
+			addFeedError = 'feeds.addFailed';
 		} finally {
 			addingFeed = false;
 		}
@@ -98,11 +100,11 @@
 		await lumia.feed.deleteFeed(feedId);
 		if (selectedFeedId === feedId) selectedFeedId = '';
 		await load();
-		toast(`« ${feed?.title ?? 'Flux'} » retiré.`, {
+		toast(t('feeds.removedToast', { title: feed?.title ?? t('feeds.fallbackTitle') }), {
 			action:
 				feed && feed.source_type === 'miniflux'
 					? {
-							label: 'Rétablir',
+							label: t('feeds.restore'),
 							run: async () => {
 								await lumia.feed.addFeedByUrl(feed.url, feed.folder_id);
 								await load();
@@ -121,7 +123,7 @@
 			renamingFolderId = null;
 			await load();
 		} catch {
-			toast('Impossible de renommer ce dossier.', { tone: 'destructive' });
+			toast(t('feeds.renameFolderFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -135,9 +137,9 @@
 			const previousFeedIds = feeds
 				.filter((feed) => feed.folder_id === folder.id)
 				.map((feed) => feed.id);
-			toast(`Dossier « ${folder.name} » supprimé, ses flux sont conservés.`, {
+			toast(t('feeds.folderDeletedToast', { name: folder.name }), {
 				action: {
-					label: 'Annuler',
+					label: t('common.undo'),
 					run: async () => {
 						const recreated = await lumia.feed.createFolder(folder.name);
 						for (const feedId of previousFeedIds) {
@@ -148,7 +150,7 @@
 				}
 			});
 		} catch {
-			toast('Impossible de supprimer ce dossier.', { tone: 'destructive' });
+			toast(t('feeds.deleteFolderFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -156,9 +158,9 @@
 		try {
 			await lumia.feed.updateFeed(feedId, { folder_id: folderId || null });
 			await load();
-			toast('Flux déplacé.');
+			toast(t('feeds.movedToast'));
 		} catch {
-			toast('Impossible de déplacer ce flux.', { tone: 'destructive' });
+			toast(t('feeds.moveFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -171,7 +173,7 @@
 			renamingFeedId = null;
 			await load();
 		} catch {
-			toast('Impossible de renommer ce flux.', { tone: 'destructive' });
+			toast(t('feeds.renameFeedFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -186,7 +188,7 @@
 			await lumia.feed.importOpml(file);
 			await load();
 		} catch {
-			error = "Import OPML impossible — vérifie que le fichier est bien un export Feedly.";
+			error = 'feeds.importFailed';
 		} finally {
 			importing = false;
 			input.value = '';
@@ -240,10 +242,10 @@
 	/>
 
 	<div class="flex min-w-0 flex-1 flex-col gap-6">
-		<h1 class="text-2xl font-semibold">Mes flux</h1>
+		<h1 class="text-2xl font-semibold">{t('feeds.title')}</h1>
 
 		{#if error}
-			<p role="alert" class="text-sm text-destructive">{error}</p>
+			<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 		{/if}
 
 		<DiscoverFeeds {folders} onSubscribed={load} />
@@ -265,15 +267,15 @@
 					<div class="flex flex-wrap items-center gap-2">
 						<Button onclick={viewArticles}>
 							<Newspaper class="size-4" />
-							Voir les articles
+							{t('feeds.viewArticles')}
 						</Button>
 						<Button variant="secondary" onclick={readInSwipeMode}>
 							<Shuffle class="size-4" />
-							Mode lecture (swipe)
+							{t('feeds.swipeMode')}
 						</Button>
 						<Button variant="ghost" onclick={() => removeFeed(selectedFeed!.id)}>
 							<Trash2 class="size-4" />
-							Retirer ce flux
+							{t('feeds.removeFeed')}
 						</Button>
 					</div>
 
@@ -283,17 +285,17 @@
 						{#if renamingFeedId === selectedFeed.id}
 							<form class="flex items-end gap-2" onsubmit={retitleFeed}>
 								<div class="flex flex-col gap-1.5">
-									<Label for="feed-title">Nom du flux</Label>
+									<Label for="feed-title">{t('feeds.feedName')}</Label>
 									<Input id="feed-title" bind:value={feedRenameValue} required />
 								</div>
-								<Button type="submit" size="sm">Renommer</Button>
+								<Button type="submit" size="sm">{t('common.rename')}</Button>
 								<Button
 									type="button"
 									size="sm"
 									variant="ghost"
 									onclick={() => (renamingFeedId = null)}
 								>
-									Annuler
+									{t('common.cancel')}
 								</Button>
 							</form>
 						{:else}
@@ -306,19 +308,19 @@
 								}}
 							>
 								<Pencil class="size-4" />
-								Renommer
+								{t('common.rename')}
 							</Button>
 						{/if}
 
 						<div class="flex flex-col gap-1.5">
-							<Label for="feed-folder">Dossier</Label>
+							<Label for="feed-folder">{t('feeds.folder')}</Label>
 							<select
 								id="feed-folder"
 								value={selectedFeed.folder_id ?? ''}
 								onchange={(event) => moveFeed(selectedFeed!.id, event.currentTarget.value)}
 								class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 							>
-								<option value="">Sans dossier</option>
+								<option value="">{t('feeds.noFolder')}</option>
 								{#each folders as folder (folder.id)}
 									<option value={folder.id}>{folder.name}</option>
 								{/each}
@@ -332,18 +334,18 @@
 				<CardHeader>
 					<CardTitle>{selectedFolder.name}</CardTitle>
 					<CardDescription>
-						{feedsInSelectedFolder.length} flux dans ce dossier.
+						{t('feeds.countInFolder', { count: feedsInSelectedFolder.length })}
 					</CardDescription>
 				</CardHeader>
 				<CardContent class="flex flex-col gap-4">
 					<div class="flex flex-wrap items-center gap-2">
 						<Button onclick={viewArticles}>
 							<Newspaper class="size-4" />
-							Voir tous les articles du dossier
+							{t('feeds.viewFolderArticles')}
 						</Button>
 						<Button variant="secondary" onclick={readInSwipeMode}>
 							<Shuffle class="size-4" />
-							Mode lecture (swipe)
+							{t('feeds.swipeMode')}
 						</Button>
 					</div>
 
@@ -352,17 +354,17 @@
 					{#if renamingFolderId === selectedFolder.id}
 						<form class="flex items-end gap-2" onsubmit={renameFolder}>
 							<div class="flex max-w-xs flex-1 flex-col gap-1.5">
-								<Label for="folder-name">Nom du dossier</Label>
+								<Label for="folder-name">{t('feeds.folderName')}</Label>
 								<Input id="folder-name" bind:value={folderRenameValue} required />
 							</div>
-							<Button type="submit" size="sm">Renommer</Button>
+							<Button type="submit" size="sm">{t('common.rename')}</Button>
 							<Button
 								type="button"
 								size="sm"
 								variant="ghost"
 								onclick={() => (renamingFolderId = null)}
 							>
-								Annuler
+								{t('common.cancel')}
 							</Button>
 						</form>
 					{:else}
@@ -376,15 +378,13 @@
 								}}
 							>
 								<Pencil class="size-4" />
-								Renommer le dossier
+								{t('feeds.renameFolder')}
 							</Button>
 							<Button size="sm" variant="ghost" onclick={() => removeFolder(selectedFolder!)}>
 								<Trash2 class="size-4" />
-								Supprimer le dossier
+								{t('feeds.deleteFolder')}
 							</Button>
-							<span class="text-xs text-muted-foreground">
-								Les flux du dossier sont conservés, ils passent simplement « sans dossier ».
-							</span>
+							<span class="text-xs text-muted-foreground">{t('feeds.folderFeedsKept')}</span>
 						</div>
 					{/if}
 				</CardContent>
@@ -392,13 +392,13 @@
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Flux du dossier</CardTitle>
+					<CardTitle>{t('feeds.folderFeeds')}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					{#if feedsInSelectedFolder.length === 0}
 						<p class="flex items-center gap-2 text-sm text-muted-foreground">
 							<Inbox class="size-4" />
-							Aucun flux dans ce dossier.
+							{t('feeds.folderEmpty')}
 						</p>
 					{:else}
 						<div class="flex flex-col">
@@ -422,34 +422,34 @@
 			<MagicBento class="grid-cols-1 sm:grid-cols-2">
 				<Card class="magic-bento-cell sm:col-span-2">
 					<CardHeader>
-						<CardTitle>Ajouter un flux</CardTitle>
-						<CardDescription>Colle l’URL RSS/Atom d’un site pour t’y abonner.</CardDescription>
+						<CardTitle>{t('feeds.addTitle')}</CardTitle>
+						<CardDescription>{t('feeds.addDescription')}</CardDescription>
 					</CardHeader>
 					<CardContent>
 						{#if addFeedError}
-							<p role="alert" class="mb-2 text-sm text-destructive">{addFeedError}</p>
+							<p role="alert" class="mb-2 text-sm text-destructive">{t(addFeedError)}</p>
 						{/if}
 						<form class="flex flex-wrap items-end gap-2" onsubmit={addFeed}>
 							<div class="flex max-w-sm flex-1 flex-col gap-1.5">
-								<Label for="new-feed-url">URL du flux</Label>
+								<Label for="new-feed-url">{t('feeds.urlLabel')}</Label>
 								<Input
 									id="new-feed-url"
 									type="url"
 									bind:value={newFeedUrl}
-									placeholder="https://exemple.com/feed.xml"
+									placeholder={t('feeds.urlPlaceholder')}
 									required
 									disabled={addingFeed}
 								/>
 							</div>
 							<div class="flex flex-col gap-1.5">
-								<Label for="new-feed-folder">Dossier</Label>
+								<Label for="new-feed-folder">{t('feeds.folder')}</Label>
 								<select
 									id="new-feed-folder"
 									bind:value={newFeedFolderId}
 									disabled={addingFeed}
 									class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 								>
-									<option value="">Sans dossier</option>
+									<option value="">{t('feeds.noFolder')}</option>
 									{#each folders as folder (folder.id)}
 										<option value={folder.id}>{folder.name}</option>
 									{/each}
@@ -457,7 +457,7 @@
 							</div>
 							<Button type="submit" disabled={addingFeed}>
 								<Plus class="size-4" />
-								{addingFeed ? 'Ajout…' : 'Ajouter'}
+								{addingFeed ? t('common.adding') : t('common.add')}
 							</Button>
 						</form>
 					</CardContent>
@@ -465,15 +465,15 @@
 
 				<Card class="magic-bento-cell">
 					<CardHeader>
-						<CardTitle>Importer depuis Feedly</CardTitle>
-						<CardDescription>Exporte tes flux en OPML depuis Feedly, puis importe le fichier ici.</CardDescription>
+						<CardTitle>{t('feeds.importTitle')}</CardTitle>
+						<CardDescription>{t('feeds.importDescription')}</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<label
 							class="flex w-fit cursor-pointer items-center gap-2 rounded-md border border-dashed border-input px-4 py-2 text-sm hover:bg-accent"
 						>
 							<Upload class="size-4" />
-							{importing ? 'Import en cours…' : 'Choisir un fichier .opml'}
+							{importing ? t('feeds.importing') : t('feeds.importChoose')}
 							<input
 								type="file"
 								accept=".opml,.xml,text/xml"
@@ -487,17 +487,17 @@
 
 				<Card class="magic-bento-cell">
 					<CardHeader>
-						<CardTitle>Nouveau dossier</CardTitle>
+						<CardTitle>{t('feeds.newFolder')}</CardTitle>
 					</CardHeader>
 					<CardContent>
 						<form class="flex items-end gap-2" onsubmit={createFolder}>
 							<div class="flex max-w-xs flex-1 flex-col gap-1.5">
-								<Label for="new-folder-name">Nom du dossier</Label>
+								<Label for="new-folder-name">{t('feeds.folderName')}</Label>
 								<Input id="new-folder-name" type="text" bind:value={newFolderName} required />
 							</div>
 							<Button type="submit" variant="secondary">
 								<FolderPlus class="size-4" />
-								Créer
+								{t('feeds.create')}
 							</Button>
 						</form>
 					</CardContent>
@@ -505,15 +505,15 @@
 
 				<Card class="magic-bento-cell sm:col-span-2">
 					<CardHeader>
-						<CardTitle>Flux abonnés</CardTitle>
+						<CardTitle>{t('feeds.subscribed')}</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{#if loading}
-							<p role="status" class="text-sm text-muted-foreground">Chargement…</p>
+							<p role="status" class="text-sm text-muted-foreground">{t('common.loading')}</p>
 						{:else if feeds.length === 0}
 							<p class="flex items-center gap-2 text-sm text-muted-foreground">
 								<Inbox class="size-4" />
-								Aucun flux pour le moment.
+								{t('feeds.empty')}
 							</p>
 						{:else}
 							<div class="flex flex-col">
@@ -533,7 +533,9 @@
 											</div>
 										</div>
 										<div class="flex items-center gap-3">
-											<Badge variant="secondary">{resolveFolderName(folders, feed.folder_id)}</Badge>
+											<Badge variant="secondary">
+											{resolveFolderName(folders, feed.folder_id, t('feeds.noFolder'))}
+										</Badge>
 											<Button variant="ghost" size="icon" onclick={() => removeFeed(feed.id)}>
 												<Trash2 class="size-4" />
 											</Button>

@@ -7,6 +7,7 @@
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { lumia } from '$technical/api/client';
+	import { t } from '$technical/i18n/i18n.svelte';
 
 	interface Props {
 		folders: Folder[];
@@ -20,15 +21,15 @@
 	let loading = $state(true);
 	let adding = $state<string | null>(null);
 	let folderId = $state('');
-	let error = $state<string | null>(null);
+	let failed = $state(false);
 
 	async function load() {
 		loading = true;
-		error = null;
+		failed = false;
 		try {
 			suggestions = await lumia.feed.discoverFeeds();
 		} catch {
-			error = 'Impossible de charger les suggestions.';
+			failed = true;
 		} finally {
 			loading = false;
 		}
@@ -41,10 +42,10 @@
 			// Drop it from the list right away rather than refetching: the backend excludes what is
 			// already subscribed, so a reload would do the same thing one round-trip later.
 			suggestions = suggestions.filter((item) => item.url !== suggestion.url);
-			toast(`${suggestion.title} ajouté.`);
+			toast(t('discover.addedToast', { title: suggestion.title }));
 			await onSubscribed();
 		} catch {
-			toast(`${suggestion.title} est injoignable.`, { tone: 'destructive' });
+			toast(t('discover.failedToast', { title: suggestion.title }), { tone: 'destructive' });
 		} finally {
 			adding = null;
 		}
@@ -59,27 +60,24 @@
 			<div>
 				<h2 class="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
 					<Compass class="size-4" />
-					Découvrir des sources
+					{t('discover.title')}
 				</h2>
-				<p class="mt-1 text-xs text-muted-foreground">
-					Un catalogue livré avec Lumia, classé selon les sujets que tu lis. Rien n'est déduit des
-					abonnements des autres comptes de l'instance.
-				</p>
+				<p class="mt-1 text-xs text-muted-foreground">{t('discover.intro')}</p>
 			</div>
 			<Button variant="ghost" size="sm" onclick={load}>
 				<RefreshCw class="size-4" />
-				Actualiser
+				{t('discover.refresh')}
 			</Button>
 		</div>
 
 		{#if folders.length > 0}
 			<label class="flex flex-col gap-1 text-sm sm:max-w-xs">
-				<span class="font-medium">Ranger dans</span>
+				<span class="font-medium">{t('discover.fileInto')}</span>
 				<select
 					bind:value={folderId}
 					class="min-h-9 rounded-md border border-input bg-background px-3 text-sm"
 				>
-					<option value="">Sans dossier</option>
+					<option value="">{t('feeds.noFolder')}</option>
 					{#each folders as folder (folder.id)}
 						<option value={folder.id}>{folder.name}</option>
 					{/each}
@@ -87,20 +85,18 @@
 			</label>
 		{/if}
 
-		{#if error}
-			<p role="alert" class="text-sm text-destructive">{error}</p>
+		{#if failed}
+			<p role="alert" class="text-sm text-destructive">{t('discover.loadFailed')}</p>
 		{/if}
 
 		{#if loading}
-			<div role="status" aria-label="Chargement des suggestions" class="flex flex-col gap-2">
+			<div role="status" aria-label={t('discover.loading')} class="flex flex-col gap-2">
 				{#each Array(3)}
 					<Skeleton class="h-20 w-full rounded-xl" />
 				{/each}
 			</div>
 		{:else if suggestions.length === 0}
-			<p class="text-sm text-muted-foreground">
-				Tu es déjà abonné à tout le catalogue. Ajoute une URL à la main pour aller plus loin.
-			</p>
+			<p class="text-sm text-muted-foreground">{t('discover.exhausted')}</p>
 		{:else}
 			<ul class="flex flex-col gap-2">
 				{#each suggestions as suggestion (suggestion.url)}
@@ -114,8 +110,8 @@
 									{suggestion.language}
 								</span>
 								{#if suggestion.affinity !== null}
-									<span class="text-xs text-primary" title="Proximité avec ce que tu lis">
-										affinité {suggestion.affinity}
+									<span class="text-xs text-primary" title={t('discover.affinityTitle')}>
+										{t('discover.affinity', { score: suggestion.affinity })}
 									</span>
 								{/if}
 							</div>
@@ -133,11 +129,11 @@
 								disabled={adding === suggestion.url}
 							>
 								<Plus class="size-4" />
-								{adding === suggestion.url ? 'Ajout…' : "S'abonner"}
+								{adding === suggestion.url ? t('common.adding') : t('discover.subscribe')}
 							</Button>
 							<Button variant="ghost" size="sm" href={suggestion.site_url} target="_blank">
 								<ExternalLink class="size-4" />
-								<span class="sr-only">Voir {suggestion.title}</span>
+								<span class="sr-only">{t('discover.view', { title: suggestion.title })}</span>
 							</Button>
 						</div>
 					</li>

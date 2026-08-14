@@ -6,6 +6,7 @@
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import Plus from '@lucide/svelte/icons/plus';
 	import { lumia } from '$technical/api/client';
+	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import ArticleGrid from '$domain/article/article-grid.svelte';
 
@@ -15,10 +16,11 @@
 	let loading = $state(true);
 	let loadingMore = $state(false);
 	let hasMore = $state(false);
-	let error = $state<string | null>(null);
+	// The key rather than the sentence: an error left on screen has to follow a language change too.
+	let error = $state<MessageKey | null>(null);
 	let newUrl = $state('');
 	let savingUrl = $state(false);
-	let saveError = $state<string | null>(null);
+	let saveError = $state<MessageKey | null>(null);
 
 	async function load() {
 		loading = true;
@@ -28,7 +30,7 @@
 			articles = loaded;
 			hasMore = loaded.length === PAGE_SIZE;
 		} catch {
-			error = 'Impossible de charger ta liste de lecture.';
+			error = 'readLater.loadFailed';
 		} finally {
 			loading = false;
 		}
@@ -42,7 +44,7 @@
 			articles = [...articles, ...next];
 			hasMore = next.length === PAGE_SIZE;
 		} catch {
-			error = 'Impossible de charger la suite.';
+			error = 'common.loadMoreFailed';
 		} finally {
 			loadingMore = false;
 		}
@@ -59,10 +61,9 @@
 			const saved = await lumia.article.saveUrl(url);
 			newUrl = '';
 			await load();
-			toast(`« ${saved.title} » enregistré.`);
+			toast(t('readLater.savedToast', { title: saved.title }));
 		} catch {
-			saveError =
-				'Impossible d’enregistrer cette page — elle est peut-être inaccessible ou sans contenu lisible.';
+			saveError = 'readLater.saveFailed';
 		} finally {
 			savingUrl = false;
 		}
@@ -77,55 +78,49 @@
 	<div>
 		<h1 class="flex items-center gap-2 text-2xl font-semibold">
 			<Bookmark class="size-6 text-primary" />
-			À lire plus tard
+			{t('readLater.title')}
 		</h1>
-		<p class="text-sm text-muted-foreground">
-			Les articles enregistrés depuis leur page, et les pages ajoutées par URL.
-		</p>
+		<p class="text-sm text-muted-foreground">{t('readLater.intro')}</p>
 	</div>
 
 	<Card>
 		<CardHeader>
-			<CardTitle>Enregistrer une page</CardTitle>
-			<CardDescription>
-				Colle l'URL de n'importe quelle page : Lumia en extrait le texte et l'ajoute ici.
-			</CardDescription>
+			<CardTitle>{t('readLater.saveTitle')}</CardTitle>
+			<CardDescription>{t('readLater.saveDescription')}</CardDescription>
 		</CardHeader>
 		<CardContent>
 			{#if saveError}
-				<p role="alert" class="mb-2 text-sm text-destructive">{saveError}</p>
+				<p role="alert" class="mb-2 text-sm text-destructive">{t(saveError)}</p>
 			{/if}
 			<form class="flex flex-wrap items-end gap-2" onsubmit={saveUrl}>
 				<div class="flex max-w-sm flex-1 flex-col gap-1.5">
-					<Label for="save-url">URL de la page</Label>
+					<Label for="save-url">{t('readLater.urlLabel')}</Label>
 					<Input
 						id="save-url"
 						type="url"
 						bind:value={newUrl}
-						placeholder="https://exemple.com/un-article"
+						placeholder={t('readLater.urlPlaceholder')}
 						required
 						disabled={savingUrl}
 					/>
 				</div>
 				<Button type="submit" disabled={savingUrl}>
 					<Plus class="size-4" />
-					{savingUrl ? 'Extraction…' : 'Enregistrer'}
+					{savingUrl ? t('readLater.extracting') : t('common.save')}
 				</Button>
 			</form>
 		</CardContent>
 	</Card>
 
 	{#if error}
-		<p role="alert" class="text-sm text-destructive">{error}</p>
+		<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{/if}
 
 	<ArticleGrid {articles} {loading}>
 		{#snippet empty()}
 			<div class="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-6">
-				<p class="text-sm text-muted-foreground">
-					Rien pour le moment — enregistre un article depuis sa page, ou colle une URL ci-dessus.
-				</p>
-				<Button size="sm" href="{base}/articles">Parcourir les articles</Button>
+				<p class="text-sm text-muted-foreground">{t('readLater.empty')}</p>
+				<Button size="sm" href="{base}/articles">{t('common.browseArticles')}</Button>
 			</div>
 		{/snippet}
 
@@ -133,7 +128,7 @@
 			{#if hasMore}
 				<div class="mt-6 flex justify-center">
 					<Button variant="outline" onclick={loadMore} disabled={loadingMore}>
-						{loadingMore ? 'Chargement…' : 'Charger plus'}
+						{loadingMore ? t('common.loading') : t('common.loadMore')}
 					</Button>
 				</div>
 			{/if}
