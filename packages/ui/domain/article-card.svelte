@@ -25,6 +25,13 @@
 		iconUrl?: string | null;
 		/** 0-100 affinity. Hidden at the neutral 50, where the number would say nothing. */
 		relevanceScore?: number | null;
+		// Text and date formatting come from the app: this package must not depend on its i18n, and a
+		// design system that hardcodes one language can't be reused.
+		locale?: string;
+		readLabel?: string;
+		scoreTitle?: string;
+		scoreSuffix?: string;
+		minutesLabel?: (minutes: number) => string;
 		class?: string;
 	}
 
@@ -43,6 +50,11 @@
 		scrollProgress = 0,
 		iconUrl = null,
 		relevanceScore = null,
+		locale = 'en',
+		readLabel = 'read',
+		scoreTitle,
+		scoreSuffix = 'out of 100 for relevance',
+		minutesLabel = (minutes: number) => `${minutes} min`,
 		class: className
 	}: Props = $props();
 
@@ -50,7 +62,7 @@
 	let iconFailed = $state(false);
 
 	const formattedDate = $derived(
-		new Date(publishedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+		new Date(publishedAt).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
 	);
 	const initial = $derived(sourceLabel.charAt(0).toUpperCase());
 	const progressPercent = $derived(Math.round(Math.min(Math.max(scrollProgress, 0), 1) * 100));
@@ -95,17 +107,17 @@
 			{#if showsScore}
 				<span
 					class="rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur"
-					title="Pertinence estimée d'après tes lectures"
+					title={scoreTitle}
 				>
 					{relevanceScore}
-					<span class="sr-only">sur 100 de pertinence</span>
+					<span class="sr-only">{scoreSuffix}</span>
 				</span>
 			{/if}
 			{#if readingMinutes}
 				<span
 					class="rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur"
 				>
-					{readingMinutes} min
+					{minutesLabel(readingMinutes)}
 				</span>
 			{/if}
 		</div>
@@ -133,7 +145,7 @@
 		<span class="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
 			{sourceLabel}
 			{#if read}
-				<span class="normal-case tracking-normal">· lu</span>
+				<span class="normal-case tracking-normal">· {readLabel}</span>
 			{/if}
 		</span>
 		<h3

@@ -5,6 +5,7 @@
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import Star from '@lucide/svelte/icons/star';
 	import { accentHueForFeed } from './accent-hue.js';
+	import { t } from '$technical/i18n/i18n.svelte';
 
 	interface Props {
 		articles: ArticleSummary[];
@@ -154,28 +155,28 @@
 							class="pointer-events-none absolute left-6 top-6 rounded-lg border-4 border-emerald-500 px-3 py-1 text-lg font-bold uppercase text-emerald-500"
 							style={`opacity: ${likeOpacity}; transform: rotate(-15deg);`}
 						>
-							J'aime
+							{t('swipe.like')}
 						</div>
 						<div
 							aria-hidden="true"
 							class="pointer-events-none absolute right-6 top-6 rounded-lg border-4 border-rose-500 px-3 py-1 text-lg font-bold uppercase text-rose-500"
 							style={`opacity: ${dislikeOpacity}; transform: rotate(15deg);`}
 						>
-							Non
+							{t('swipe.no')}
 						</div>
 						<div
 							aria-hidden="true"
 							class="pointer-events-none absolute inset-x-0 top-6 mx-auto w-fit rounded-lg border-4 border-amber-500 px-3 py-1 text-lg font-bold uppercase text-amber-500"
 							style={`opacity: ${favoriteOpacity};`}
 						>
-							Favori
+							{t('swipe.favorite')}
 						</div>
 						<div
 							aria-hidden="true"
 							class="pointer-events-none absolute inset-x-0 bottom-6 mx-auto w-fit rounded-lg border-4 border-primary px-3 py-1 text-lg font-bold uppercase text-primary"
 							style={`opacity: ${saveOpacity};`}
 						>
-							À lire
+							{t('swipe.readLater')}
 						</div>
 					{/if}
 				</div>
@@ -183,43 +184,41 @@
 		</div>
 
 		<p aria-live="polite" class="sr-only">
-			{current.title} — {articles.length - currentIndex} article{articles.length - currentIndex > 1
-				? 's'
-				: ''} restant{articles.length - currentIndex > 1 ? 's' : ''}
+			{t('swipe.remaining', { title: current.title, count: articles.length - currentIndex })}
 		</p>
 
 		<button
 			onclick={() => onOpen(current)}
 			class="rounded-md px-3 py-2 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 		>
-			Ouvrir l'article
+			{t('article.open')}
 		</button>
 
 		<div class="flex items-center gap-4">
 			<button
 				onclick={() => commit('dislike')}
-				aria-label="Je n'aime pas"
+				aria-label={t('article.dislike')}
 				class="flex size-14 items-center justify-center rounded-full border-2 border-rose-500 text-rose-500 shadow-sm transition-transform hover:scale-110 active:scale-95"
 			>
 				<ThumbsDown class="size-6" />
 			</button>
 			<button
 				onclick={() => commit('save')}
-				aria-label="Enregistrer"
+				aria-label={t('article.save')}
 				class="flex size-11 items-center justify-center rounded-full border-2 border-primary text-primary shadow-sm transition-transform hover:scale-110 active:scale-95"
 			>
 				<Bookmark class="size-5" />
 			</button>
 			<button
 				onclick={() => commit('favorite')}
-				aria-label="Mettre en favoris"
+				aria-label={t('swipe.favoriteAction')}
 				class="flex size-11 items-center justify-center rounded-full border-2 border-amber-500 text-amber-500 shadow-sm transition-transform hover:scale-110 active:scale-95"
 			>
 				<Star class="size-5" />
 			</button>
 			<button
 				onclick={() => commit('like')}
-				aria-label="J'aime"
+				aria-label={t('article.like')}
 				class="flex size-14 items-center justify-center rounded-full border-2 border-emerald-500 text-emerald-500 shadow-sm transition-transform hover:scale-110 active:scale-95"
 			>
 				<ThumbsUp class="size-6" />

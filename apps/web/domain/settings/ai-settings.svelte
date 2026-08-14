@@ -171,11 +171,11 @@
 							type="password"
 							autocomplete="off"
 							bind:value={aiApiKey}
-							placeholder={me.ai_api_key_set ? 'Laisser vide pour conserver la clé' : 'sk-…'}
+							placeholder={me.ai_api_key_set ? t('ai.keyKeep') : 'sk-…'}
 							aria-describedby="ai-key-hint"
 						/>
 						<p id="ai-key-hint" class="text-xs text-muted-foreground">
-							La clé n'est jamais réaffichée. Pour la retirer, utilise « Supprimer la clé ».
+							{t('ai.keyHint')}
 						</p>
 					</div>
 
@@ -184,7 +184,7 @@
 						<Input
 							id="ai-model"
 							bind:value={aiModel}
-							placeholder={aiProvider === 'custom' ? 'voxtral-small' : 'laisser vide = par défaut'}
+							placeholder={aiProvider === 'custom' ? 'voxtral-small' : t('ai.modelDefault')}
 						/>
 					</div>
 

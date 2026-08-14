@@ -14,6 +14,7 @@
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import LayoutTemplate from '@lucide/svelte/icons/layout-template';
 	import { lumia } from '$technical/api/client';
+	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { bindShortcuts } from '$technical/keyboard/shortcuts';
 	import ArticleGrid from '$domain/article/article-grid.svelte';
@@ -32,18 +33,31 @@
 	let authorId = $state<string | undefined>(undefined);
 	let categoryId = $state<string | undefined>(undefined);
 	let keywordId = $state<string | undefined>(undefined);
-	let filterLabel = $state<string | null>(null);
+	// Kept as kind + name rather than a formatted string, so the chip follows a language change.
+	let filterKind = $state<'author' | 'category' | 'keyword' | null>(null);
+	let filterName = $state('');
 	let searchInput = $state('');
 	let appliedQuery = $state('');
 	let unreadOnly = $state(false);
 	let loading = $state(true);
 	let loadingMore = $state(false);
 	let hasMore = $state(false);
-	let error = $state<string | null>(null);
+	// The key rather than the sentence: an error left on screen has to follow a language change too.
+	let error = $state<MessageKey | null>(null);
 	let cursor = $state(-1);
 	let searchEl = $state<HTMLInputElement | null>(null);
 	let sort = $state<'recent' | 'relevance'>('recent');
 	let flipping = $state(false);
+
+	const filterLabel = $derived(
+		filterKind === 'author'
+			? t('articles.filterAuthor', { name: filterName })
+			: filterKind === 'category'
+				? t('articles.filterCategory', { name: filterName })
+				: filterKind === 'keyword'
+					? t('articles.filterKeyword', { name: filterName })
+					: null
+	);
 
 	const currentScope = $derived(
 		selectedFeedId
@@ -84,7 +98,7 @@
 			// A full page back means there may be more; a short page means we've reached the end.
 			hasMore = loaded.length === PAGE_SIZE;
 		} catch {
-			error = 'Impossible de charger les articles.';
+			error = 'articles.loadFailed';
 		} finally {
 			loading = false;
 		}
@@ -98,7 +112,7 @@
 			articles = [...articles, ...next];
 			hasMore = next.length === PAGE_SIZE;
 		} catch {
-			error = 'Impossible de charger la suite.';
+			error = 'common.loadMoreFailed';
 		} finally {
 			loadingMore = false;
 		}
@@ -116,7 +130,7 @@
 		authorId = undefined;
 		categoryId = undefined;
 		keywordId = undefined;
-		filterLabel = null;
+		filterKind = null;
 		void loadArticles();
 	}
 
@@ -130,7 +144,7 @@
 		selectedFolderId = selectedFolderId === folderId ? '' : folderId;
 		selectedFeedId = '';
 		authorId = categoryId = keywordId = undefined;
-		filterLabel = null;
+		filterKind = null;
 		void loadArticles();
 	}
 
@@ -138,7 +152,7 @@
 		selectedFeedId = selectedFeedId === feedId ? '' : feedId;
 		selectedFolderId = '';
 		authorId = categoryId = keywordId = undefined;
-		filterLabel = null;
+		filterKind = null;
 		void loadArticles();
 	}
 
@@ -166,9 +180,9 @@
 			await lumia.recommendation.markRead(target);
 			articles = articles.map((article) => ({ ...article, read: true }));
 			await refreshUnread();
-			toast('Marqué comme lu.', {
+			toast(t('articles.markedRead'), {
 				action: {
-					label: 'Annuler',
+					label: t('common.undo'),
 					run: async () => {
 						await lumia.recommendation.markRead({ ...target, read: false });
 						const wasRead = new Map(previous.map((entry) => [entry.id, entry.read]));
@@ -182,7 +196,7 @@
 			});
 			if (unreadOnly) void loadArticles();
 		} catch {
-			toast('Impossible de marquer comme lu.', { tone: 'destructive' });
+			toast(t('articles.markReadFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -218,7 +232,7 @@
 		const article = articles[cursor];
 		if (!article) return;
 		await lumia.recommendation.sendFeedback(article.id, { saved: true });
-		toast('Ajouté à « À lire ».');
+		toast(t('etincelle.savedToast'));
 	}
 
 	onMount(() => {
@@ -229,9 +243,16 @@
 		authorId = search.get('author_id') ?? undefined;
 		categoryId = search.get('category_id') ?? undefined;
 		keywordId = search.get('keyword_id') ?? undefined;
-		if (authorId) filterLabel = `Auteur : ${search.get('author_name') ?? ''}`.trim();
-		else if (categoryId) filterLabel = `Catégorie : ${search.get('category_name') ?? ''}`.trim();
-		else if (keywordId) filterLabel = `Mot-clé : ${search.get('keyword_term') ?? ''}`.trim();
+		if (authorId) {
+			filterKind = 'author';
+			filterName = search.get('author_name') ?? '';
+		} else if (categoryId) {
+			filterKind = 'category';
+			filterName = search.get('category_name') ?? '';
+		} else if (keywordId) {
+			filterKind = 'keyword';
+			filterName = search.get('keyword_term') ?? '';
+		}
 
 		void Promise.all([lumia.feed.listFolders(), lumia.feed.listFeeds()]).then(([f, fe]) => {
 			folders = f;
@@ -272,15 +293,19 @@
 		<div class="flex flex-wrap items-center justify-between gap-3">
 			<h1 class="flex items-center gap-2 text-2xl font-semibold">
 				<Newspaper class="size-6 text-primary" />
-				Articles
+				{t('articles.title')}
 				{#if unread.total > 0}
 					<span class="rounded-full bg-primary/10 px-2 py-0.5 text-sm font-medium text-primary">
-						{unread.total} non lus
+						{t('articles.unreadBadge', { count: unread.total })}
 					</span>
 				{/if}
 			</h1>
 			<div class="flex flex-wrap items-center gap-2">
-				<div class="flex overflow-hidden rounded-md border" role="group" aria-label="Ordre d'affichage">
+				<div
+					class="flex overflow-hidden rounded-md border"
+					role="group"
+					aria-label={t('articles.sortGroup')}
+				>
 					<button
 						type="button"
 						onclick={() => setSort('recent')}
@@ -289,7 +314,7 @@
 							? 'bg-primary text-primary-foreground'
 							: 'hover:bg-secondary'}"
 					>
-						Récents
+						{t('articles.sortRecent')}
 					</button>
 					<button
 						type="button"
@@ -301,7 +326,7 @@
 							: 'hover:bg-secondary'}"
 					>
 						<LayoutTemplate class="size-4" />
-						Kiosque
+						{t('articles.sortKiosk')}
 					</button>
 				</div>
 				<Button
@@ -311,14 +336,14 @@
 					disabled={articles.length === 0}
 				>
 					<BookOpen class="size-4" />
-					Feuilleter
+					{t('articles.flip')}
 				</Button>
 				<Button variant={unreadOnly ? 'default' : 'outline'} size="sm" onclick={toggleUnreadOnly}>
-					Non lus seulement
+					{t('articles.unreadOnly')}
 				</Button>
 				<Button variant="outline" size="sm" onclick={() => markScopeRead(currentScope)}>
 					<CheckCheck class="size-4" />
-					Tout marquer comme lu
+					{t('feeds.markAllRead')}
 				</Button>
 			</div>
 		</div>
@@ -332,33 +357,33 @@
 		/>
 
 		<form class="flex items-center gap-2" onsubmit={submitSearch} role="search">
-			<label for="article-search" class="sr-only">Rechercher un article</label>
+			<label for="article-search" class="sr-only">{t('articles.searchLabel')}</label>
 			<Input
 				id="article-search"
 				bind:ref={searchEl}
 				bind:value={searchInput}
 				type="search"
-				placeholder="Rechercher (touche /)"
+				placeholder={t('articles.searchPlaceholder')}
 				class="max-w-sm"
 			/>
 			<Button type="submit" variant="secondary" size="sm">
 				<Search class="size-4" />
-				Rechercher
+				{t('articles.search')}
 			</Button>
 			{#if appliedQuery}
 				<Button type="button" variant="ghost" size="sm" onclick={clearSearch}>
 					<X class="size-4" />
-					Effacer
+					{t('articles.clear')}
 				</Button>
 			{/if}
 		</form>
 
 		{#if appliedQuery}
 			<p class="text-sm text-muted-foreground">
-				Résultats pour « {appliedQuery} » — {articles.length}{hasMore ? '+' : ''} article{articles.length >
-				1
-					? 's'
-					: ''}.
+				{t('articles.results', {
+					query: appliedQuery,
+					count: `${articles.length}${hasMore ? '+' : ''}`
+				})}
 			</p>
 		{/if}
 
@@ -373,7 +398,7 @@
 		{/if}
 
 		{#if error}
-			<p role="alert" class="text-sm text-destructive">{error}</p>
+			<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 		{/if}
 
 		<ArticleGrid {articles} {loading} {cursor} hero={sort === 'relevance'}>
@@ -382,25 +407,27 @@
 					<p class="flex items-center gap-2 text-sm text-muted-foreground">
 						<Inbox class="size-4" />
 						{#if appliedQuery}
-							Aucun article ne correspond à « {appliedQuery} ».
+							{t('articles.emptySearch', { query: appliedQuery })}
 						{:else if unreadOnly}
-							Tout est lu. Rien de neuf pour le moment.
+							{t('articles.emptyUnread')}
 						{:else}
-							Aucun article : il faut d'abord des flux.
+							{t('articles.emptyNoFeeds')}
 						{/if}
 					</p>
 					<div class="flex flex-wrap gap-2">
 						{#if appliedQuery}
-							<Button size="sm" variant="secondary" onclick={clearSearch}>Effacer la recherche</Button>
+							<Button size="sm" variant="secondary" onclick={clearSearch}>
+								{t('articles.clearSearch')}
+							</Button>
 						{/if}
 						{#if unreadOnly}
 							<Button size="sm" variant="secondary" onclick={toggleUnreadOnly}>
-								Afficher tous les articles
+								{t('articles.showAll')}
 							</Button>
 						{/if}
 						<Button size="sm" href="{base}/feeds">
 							<Plus class="size-4" />
-							Ajouter des flux
+							{t('articles.addFeeds')}
 						</Button>
 					</div>
 				</div>
@@ -410,7 +437,7 @@
 				{#if hasMore}
 					<div class="mt-6 flex justify-center">
 						<Button variant="outline" onclick={loadMore} disabled={loadingMore}>
-							{loadingMore ? 'Chargement…' : 'Charger plus'}
+							{loadingMore ? t('common.loading') : t('common.loadMore')}
 						</Button>
 					</div>
 				{/if}
@@ -418,8 +445,11 @@
 		</ArticleGrid>
 
 		<p class="text-xs text-muted-foreground">
-			Raccourcis : <kbd>j</kbd>/<kbd>k</kbd> naviguer · <kbd>o</kbd> ouvrir · <kbd>m</kbd> lu/non lu ·
-			<kbd>s</kbd> à lire · <kbd>u</kbd> non lus · <kbd>f</kbd> feuilleter · <kbd>/</kbd> rechercher
+			{t('articles.shortcuts')} <kbd>j</kbd>/<kbd>k</kbd> {t('articles.shortcutNavigate')} ·
+			<kbd>o</kbd>
+			{t('articles.shortcutOpen')} · <kbd>m</kbd> {t('articles.shortcutRead')} · <kbd>s</kbd>
+			{t('articles.shortcutSave')} · <kbd>u</kbd> {t('articles.shortcutUnread')} · <kbd>f</kbd>
+			{t('articles.shortcutFlip')} · <kbd>/</kbd> {t('articles.shortcutSearch')}
 		</p>
 	</div>
 </div>

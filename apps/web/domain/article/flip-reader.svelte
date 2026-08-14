@@ -8,6 +8,7 @@
 	import Clock from '@lucide/svelte/icons/clock';
 	import Gauge from '@lucide/svelte/icons/gauge';
 	import { accentHueForFeed } from './accent-hue';
+	import { getLocale, t } from '$technical/i18n/i18n.svelte';
 
 	interface Props {
 		articles: ArticleSummary[];
@@ -37,7 +38,7 @@
 	const hue = $derived(current ? accentHueForFeed(current.feed_id) : 0);
 	const formattedDate = $derived(
 		current
-			? new Date(current.published_at).toLocaleDateString('fr-FR', {
+			? new Date(current.published_at).toLocaleDateString(getLocale(), {
 					day: 'numeric',
 					month: 'long'
 				})
@@ -90,18 +91,18 @@
 	class="fixed inset-0 z-50 flex flex-col bg-background/98 backdrop-blur"
 	role="dialog"
 	aria-modal="true"
-	aria-label="Feuilleter les articles"
+	aria-label={t('flip.dialog')}
 >
 	<div class="flex items-center justify-between gap-2 border-b px-4 py-3">
 		<span class="text-sm text-muted-foreground">
 			{articles.length > 0 ? page + 1 : 0} / {articles.length}
 		</span>
 		<span class="hidden text-xs text-muted-foreground sm:block">
-			← → pour tourner les pages · Échap pour sortir
+			{t('flip.hint')}
 		</span>
 		<Button variant="ghost" size="sm" onclick={onClose}>
 			<X class="size-4" />
-			Fermer
+			{t('common.close')}
 		</Button>
 	</div>
 
@@ -109,7 +110,7 @@
 		<div
 			class="flex flex-1 items-center justify-center overflow-hidden px-4 py-6"
 			role="group"
-			aria-label="Page courante, glisse pour tourner"
+			aria-label={t('flip.page')}
 			onpointerdown={onPointerDown}
 			onpointermove={onPointerMove}
 			onpointerup={onPointerUp}
@@ -138,7 +139,7 @@
 					<div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
 						<span class="flex items-center gap-1">
 							<Clock class="size-3.5" />
-							{current.reading_minutes} min
+							{t('common.minutes', { count: current.reading_minutes ?? 0 })}
 						</span>
 						{#if current.relevance_score !== 50}
 							<span class="flex items-center gap-1">
@@ -147,7 +148,7 @@
 							</span>
 						{/if}
 					</div>
-					<Button class="mt-2 w-fit" href="{base}/articles/{current.id}">Ouvrir l'article</Button>
+					<Button class="mt-2 w-fit" href="{base}/articles/{current.id}">{t('article.open')}</Button>
 				</div>
 			</article>
 		</div>
@@ -155,7 +156,7 @@
 		<div class="flex items-center justify-between gap-2 border-t px-4 py-3">
 			<Button variant="outline" size="sm" onclick={() => go(-1)} disabled={page === 0}>
 				<ChevronLeft class="size-4" />
-				Précédent
+				{t('common.previous')}
 			</Button>
 			<Button
 				variant="outline"
@@ -163,13 +164,13 @@
 				onclick={() => go(1)}
 				disabled={page >= articles.length - 1}
 			>
-				Suivant
+				{t('common.next')}
 				<ChevronRight class="size-4" />
 			</Button>
 		</div>
 	{:else}
 		<p class="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-			Rien à feuilleter ici.
+			{t('flip.empty')}
 		</p>
 	{/if}
 </div>

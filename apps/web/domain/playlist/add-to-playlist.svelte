@@ -3,6 +3,7 @@
 	import { Button, Input, toast } from '@lumia/ui';
 	import ListPlus from '@lucide/svelte/icons/list-plus';
 	import { lumia } from '$technical/api/client';
+	import { t } from '$technical/i18n/i18n.svelte';
 
 	interface Props {
 		articleId: string;
@@ -21,7 +22,7 @@
 		try {
 			playlists = await lumia.playlist.listPlaylists();
 		} catch {
-			toast('Impossible de charger les playlists.', { tone: 'destructive' });
+			toast(t('playlists.loadFailed'), { tone: 'destructive' });
 		} finally {
 			loading = false;
 		}
@@ -36,9 +37,9 @@
 		try {
 			await lumia.playlist.addArticle(playlist.id, articleId);
 			open = false;
-			toast(`Ajouté à « ${playlist.name} ».`);
+			toast(t('addToPlaylist.addedToast', { name: playlist.name }));
 		} catch {
-			toast("Impossible d'ajouter à la playlist.", { tone: 'destructive' });
+			toast(t('addToPlaylist.addFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -51,9 +52,9 @@
 			await lumia.playlist.addArticle(created.id, articleId);
 			newName = '';
 			open = false;
-			toast(`Playlist « ${name} » créée.`);
+			toast(t('playlists.createdToast', { name }));
 		} catch {
-			toast('Impossible de créer la playlist.', { tone: 'destructive' });
+			toast(t('playlists.createFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -75,7 +76,7 @@
 		aria-expanded={open}
 	>
 		<ListPlus class="size-4 shrink-0" />
-		<span class="hidden sm:inline">Playlist</span>
+		<span class="hidden sm:inline">{t('addToPlaylist.button')}</span>
 	</Button>
 
 	{#if open}
@@ -83,9 +84,9 @@
 			class="absolute bottom-full left-0 z-50 mb-2 w-64 rounded-xl border bg-card p-2 shadow-xl"
 		>
 			{#if loading}
-				<p role="status" class="px-2 py-1.5 text-sm text-muted-foreground">Chargement…</p>
+				<p role="status" class="px-2 py-1.5 text-sm text-muted-foreground">{t('common.loading')}</p>
 			{:else if playlists.length === 0}
-				<p class="px-2 py-1.5 text-sm text-muted-foreground">Aucune playlist pour l'instant.</p>
+				<p class="px-2 py-1.5 text-sm text-muted-foreground">{t('addToPlaylist.empty')}</p>
 			{:else}
 				<ul class="flex max-h-48 flex-col overflow-y-auto">
 					{#each playlists as playlist (playlist.id)}
@@ -105,14 +106,14 @@
 			{/if}
 
 			<form class="mt-2 flex gap-1.5 border-t pt-2" onsubmit={createAndAdd}>
-				<label for="new-playlist-name" class="sr-only">Nouvelle playlist</label>
+				<label for="new-playlist-name" class="sr-only">{t('addToPlaylist.newLabel')}</label>
 				<Input
 					id="new-playlist-name"
 					bind:value={newName}
-					placeholder="Nouvelle playlist"
+					placeholder={t('addToPlaylist.newLabel')}
 					required
 				/>
-				<Button type="submit" size="sm" variant="secondary">Créer</Button>
+				<Button type="submit" size="sm" variant="secondary">{t('addToPlaylist.create')}</Button>
 			</form>
 		</div>
 	{/if}

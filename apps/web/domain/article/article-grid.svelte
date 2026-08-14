@@ -5,6 +5,7 @@
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import { accentHueForFeed } from './accent-hue';
 	import { feedIcons } from '$technical/api/feed-icons.svelte';
+	import { getLocale, t } from '$technical/i18n/i18n.svelte';
 
 	interface Props {
 		articles: ArticleSummary[];
@@ -27,10 +28,20 @@
 	const rest = $derived(lead ? articles.slice(1) : articles);
 	/** The grid indices shift by one when a lead is pulled out; the cursor has to follow. */
 	const gridCursor = $derived(lead ? cursor - 1 : cursor);
+
+	// The cards live in the design system, which knows nothing of the app's i18n: their text and the
+	// locale their dates are formatted in are handed over as props.
+	const cardLabels = $derived({
+		locale: getLocale(),
+		readLabel: t('article.read'),
+		scoreTitle: t('article.relevanceTitle'),
+		scoreSuffix: t('article.scoreSuffix'),
+		minutesLabel: (minutes: number) => t('common.minutes', { count: minutes })
+	});
 </script>
 
 {#if loading && articles.length === 0}
-	<div role="status" aria-label="Chargement des articles" class="flex flex-col gap-4">
+	<div role="status" aria-label={t('grid.loading')} class="flex flex-col gap-4">
 		{#if hero}
 			<ArticleCardSkeleton featured />
 		{/if}
@@ -46,7 +57,7 @@
 	{:else}
 		<p class="flex items-center gap-2 text-sm text-muted-foreground">
 			<Inbox class="size-4" />
-			Aucun article.
+			{t('grid.empty')}
 		</p>
 	{/if}
 {:else}
@@ -65,6 +76,8 @@
 				read={lead.read}
 				iconUrl={feedIcons.get(lead.feed_id)}
 				relevanceScore={lead.relevance_score}
+				{...cardLabels}
+				ctaLabel={t('article.heroCta')}
 				class={cursor === 0 ? 'ring-2 ring-ring ring-offset-2 ring-offset-background' : ''}
 			/>
 		{/if}
@@ -85,6 +98,7 @@
 					scrollProgress={article.scroll_progress}
 					iconUrl={feedIcons.get(article.feed_id)}
 					relevanceScore={article.relevance_score}
+					{...cardLabels}
 					class={index === gridCursor ? 'ring-2 ring-ring ring-offset-2 ring-offset-background' : ''}
 				/>
 			{/each}

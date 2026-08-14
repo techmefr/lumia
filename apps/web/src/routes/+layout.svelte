@@ -176,6 +176,6 @@
 	</nav>
 {/if}
 
-<Toaster />
+<Toaster closeLabel={t('common.dismissNotification')} />
 
 </ClickSpark>

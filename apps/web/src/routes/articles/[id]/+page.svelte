@@ -18,6 +18,7 @@
 	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import Square from '@lucide/svelte/icons/square';
 	import { lumia } from '$technical/api/client';
+	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { SpeechReader } from '$technical/speech/speech.svelte';
 	import { clearKaraoke, highlightChunk } from '$technical/speech/karaoke';
@@ -31,7 +32,8 @@
 
 	let article = $state<ArticleDetail | null>(null);
 	let loading = $state(true);
-	let error = $state<string | null>(null);
+	// The key rather than the sentence: an error left on screen has to follow a language change too.
+	let error = $state<MessageKey | null>(null);
 	let sentiment = $state<'like' | 'dislike' | null>(null);
 	let saved = $state(false);
 	let favorite = $state(false);
@@ -49,21 +51,27 @@
 		if (!article) return;
 		sentiment = sentiment === choice ? null : choice;
 		await lumia.recommendation.sendFeedback(article.id, { sentiment });
-		toast(sentiment === null ? 'Avis retiré.' : sentiment === 'like' ? 'Noté : j’aime.' : 'Noté : je n’aime pas.');
+		toast(
+			sentiment === null
+				? t('article.opinionRemoved')
+				: sentiment === 'like'
+					? t('article.likedToast')
+					: t('article.dislikedToast')
+		);
 	}
 
 	async function toggleSaved() {
 		if (!article) return;
 		saved = !saved;
 		await lumia.recommendation.sendFeedback(article.id, { saved });
-		toast(saved ? 'Ajouté à « À lire ».' : 'Retiré de « À lire ».');
+		toast(saved ? t('article.savedToast') : t('article.unsavedToast'));
 	}
 
 	async function toggleFavorite() {
 		if (!article) return;
 		favorite = !favorite;
 		await lumia.recommendation.sendFeedback(article.id, { favorite });
-		toast(favorite ? 'Ajouté aux favoris.' : 'Retiré des favoris.');
+		toast(favorite ? t('article.favoritedToast') : t('article.unfavoritedToast'));
 	}
 
 	async function share() {
@@ -92,7 +100,7 @@
 			return;
 		}
 		const text = `${article.title}. ${contentEl?.textContent ?? ''}`;
-		speech.speak(text, { onDone: () => toast('Lecture terminée.') });
+		speech.speak(text, { onDone: () => toast(t('article.speechDone')) });
 	}
 
 	// Follow the voice in the text. The title chunk is not part of the body, so it simply doesn't
@@ -151,14 +159,14 @@
 		if (scrollable <= 0) return;
 		window.scrollTo({ top: scrollable * target, behavior: 'auto' });
 		progress = target;
-		toast('Reprise où tu t’étais arrêté.');
+		toast(t('article.resumedToast'));
 	}
 
 	onMount(() => {
 		if (!requireAuth()) return;
 		const articleId = page.params.id;
 		if (!articleId) {
-			error = 'Article introuvable.';
+			error = 'article.notFound';
 			loading = false;
 			return;
 		}
@@ -174,7 +182,7 @@
 				markedRead = loaded.read;
 				await restoreScroll(loaded.scroll_progress);
 			})
-			.catch(() => (error = 'Article introuvable.'))
+			.catch(() => (error = 'article.notFound'))
 			.finally(() => (loading = false));
 
 		return () => {
@@ -190,7 +198,7 @@
 </script>
 
 {#if article}
-	<ReadingProgress {progress} />
+	<ReadingProgress {progress} label={t('common.readingProgress')} />
 {/if}
 
 <div class="mx-auto flex w-full flex-col gap-4 pb-24">
@@ -199,11 +207,11 @@
 		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline"
 	>
 		<ArrowLeft class="size-4" />
-		Retour aux articles
+		{t('article.back')}
 	</a>
 
 	{#if loading}
-		<div role="status" aria-label="Chargement de l'article" class="flex flex-col gap-3">
+		<div role="status" aria-label={t('article.loading')} class="flex flex-col gap-3">
 			<Skeleton class="h-72 w-full rounded-2xl sm:h-96" />
 			<Skeleton class="h-8 w-3/4" />
 			<Skeleton class="h-4 w-40" />
@@ -212,7 +220,7 @@
 			{/each}
 		</div>
 	{:else if error}
-		<p role="alert" class="text-sm text-destructive">{error}</p>
+		<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{:else if article}
 		<Card class="animate-in overflow-hidden fade-in zoom-in-95 slide-in-from-bottom-3 duration-500 ease-out">
 			{#if article.image_url}
@@ -247,19 +255,19 @@
 							class="flex w-fit items-center gap-1 text-sm text-primary hover:underline"
 						>
 							<ExternalLink class="size-3.5" />
-							Lire la source
+							{t('article.readSource')}
 						</a>
 						<span class="flex items-center gap-1 text-sm text-muted-foreground">
 							<Clock class="size-3.5" />
-							{article.reading_minutes} min de lecture
+							{t('article.readingTime', { count: article.reading_minutes })}
 						</span>
 						{#if article.relevance_score !== 50}
 							<span
 								class="flex items-center gap-1 text-sm text-muted-foreground"
-								title="Pertinence estimée d'après tes lectures"
+								title={t('article.relevanceTitle')}
 							>
 								<Gauge class="size-3.5" />
-								{article.relevance_score}/100
+								{t('article.relevance', { score: article.relevance_score })}
 							</span>
 						{/if}
 					</div>
@@ -272,10 +280,10 @@
 							>
 								{#if speech.speaking && !speech.paused}
 									<Square class="size-4 text-primary" />
-									Pause
+									{t('article.pause')}
 								{:else}
 									<Volume2 class="size-4" />
-									{speech.paused ? 'Reprendre' : 'Écouter'}
+									{speech.paused ? t('article.resume') : t('article.listen')}
 								{/if}
 							</button>
 						{/if}
@@ -285,10 +293,10 @@
 						>
 							{#if linkCopied}
 								<Check class="size-4 text-primary" />
-								Lien copié
+								{t('article.linkCopied')}
 							{:else}
 								<Share2 class="size-4" />
-								Partager
+								{t('article.share')}
 							{/if}
 						</button>
 					</div>
@@ -355,28 +363,32 @@
 					variant={sentiment === 'like' ? 'default' : 'outline'}
 					onclick={() => toggleSentiment('like')}
 				>
-					<ThumbsUp class="size-4 shrink-0" /> <span class="hidden sm:inline">J'aime</span>
+					<ThumbsUp class="size-4 shrink-0" />
+					<span class="hidden sm:inline">{t('article.like')}</span>
 				</Button>
 				<Button
 					class="flex-1 gap-1.5 px-2 sm:px-4"
 					variant={sentiment === 'dislike' ? 'default' : 'outline'}
 					onclick={() => toggleSentiment('dislike')}
 				>
-					<ThumbsDown class="size-4 shrink-0" /> <span class="hidden sm:inline">Je n'aime pas</span>
+					<ThumbsDown class="size-4 shrink-0" />
+					<span class="hidden sm:inline">{t('article.dislike')}</span>
 				</Button>
 				<Button
 					class="flex-1 gap-1.5 px-2 sm:px-4"
 					variant={saved ? 'default' : 'outline'}
 					onclick={toggleSaved}
 				>
-					<Bookmark class="size-4 shrink-0" /> <span class="hidden sm:inline">Enregistrer</span>
+					<Bookmark class="size-4 shrink-0" />
+					<span class="hidden sm:inline">{t('article.save')}</span>
 				</Button>
 				<Button
 					class="flex-1 gap-1.5 px-2 sm:px-4"
 					variant={favorite ? 'default' : 'outline'}
 					onclick={toggleFavorite}
 				>
-					<Star class="size-4 shrink-0" /> <span class="hidden sm:inline">Favoris</span>
+					<Star class="size-4 shrink-0" />
+					<span class="hidden sm:inline">{t('article.favorite')}</span>
 				</Button>
 				<AddToPlaylist articleId={article.id} />
 			</div>

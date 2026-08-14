@@ -2,6 +2,13 @@
 	import { fly } from 'svelte/transition';
 	import { cn } from '../utils.js';
 	import { toasts } from './toast.svelte.js';
+
+	interface Props {
+		/** Passed in by the app, which owns the translations; the default keeps the package standalone. */
+		closeLabel?: string;
+	}
+
+	let { closeLabel = 'Dismiss notification' }: Props = $props();
 </script>
 
 <!-- aria-live on the container, not on each toast: the region has to exist before the message is
@@ -36,7 +43,7 @@
 			{/if}
 			<button
 				onclick={() => toasts.dismiss(item.id)}
-				aria-label="Fermer la notification"
+				aria-label={closeLabel}
 				class="shrink-0 rounded-md px-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 			>
 				×

@@ -15,6 +15,7 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Clock from '@lucide/svelte/icons/clock';
 	import { lumia } from '$technical/api/client';
+	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { SpeechReader } from '$technical/speech/speech.svelte';
 
@@ -22,7 +23,8 @@
 
 	let playlist = $state<PlaylistDetail | null>(null);
 	let loading = $state(true);
-	let error = $state<string | null>(null);
+	// The key rather than the sentence: an error left on screen has to follow a language change too.
+	let error = $state<MessageKey | null>(null);
 	let currentIndex = $state(-1);
 	let rate = $state(1);
 
@@ -38,14 +40,14 @@
 		error = null;
 		const playlistId = page.params.id;
 		if (!playlistId) {
-			error = 'Playlist introuvable.';
+			error = 'playlists.notFound';
 			loading = false;
 			return;
 		}
 		try {
 			playlist = await lumia.playlist.getPlaylist(playlistId);
 		} catch {
-			error = 'Playlist introuvable.';
+			error = 'playlists.notFound';
 		} finally {
 			loading = false;
 		}
@@ -58,7 +60,7 @@
 		if (!article) {
 			speech.stop();
 			currentIndex = -1;
-			toast('Playlist terminée.');
+			toast(t('playlists.finishedToast'));
 			return;
 		}
 
@@ -115,7 +117,7 @@
 		try {
 			playlist = await lumia.playlist.reorder(playlist.id, ids);
 		} catch {
-			toast('Impossible de réordonner.', { tone: 'destructive' });
+			toast(t('playlists.reorderFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -123,9 +125,9 @@
 		if (!playlist) return;
 		try {
 			playlist = await lumia.playlist.removeArticle(playlist.id, articleId);
-			toast('Article retiré de la playlist.');
+			toast(t('playlists.removedToast'));
 		} catch {
-			toast('Impossible de retirer cet article.', { tone: 'destructive' });
+			toast(t('playlists.removeFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -142,40 +144,41 @@
 		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline"
 	>
 		<ArrowLeft class="size-4" />
-		Toutes les playlists
+		{t('playlists.all')}
 	</a>
 
 	{#if loading}
-		<div role="status" aria-label="Chargement de la playlist" class="flex flex-col gap-3">
+		<div role="status" aria-label={t('playlists.loadingOne')} class="flex flex-col gap-3">
 			<Skeleton class="h-8 w-56" />
 			{#each Array(4)}
 				<Skeleton class="h-16 w-full rounded-xl" />
 			{/each}
 		</div>
 	{:else if error}
-		<p role="alert" class="text-sm text-destructive">{error}</p>
+		<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{:else if playlist}
 		<div class="flex flex-wrap items-baseline justify-between gap-2">
 			<h1 class="text-2xl font-semibold">{playlist.name}</h1>
 			<span class="flex items-center gap-1.5 text-sm text-muted-foreground">
 				<Clock class="size-4" />
-				{playlist.articles.length} article{playlist.articles.length > 1 ? 's' : ''} · {totalMinutes} min
+				{playlist.articles.length > 1
+					? t('playlists.countMany', { count: playlist.articles.length })
+					: t('playlists.countOne', { count: playlist.articles.length })} · {t('common.minutes', {
+					count: totalMinutes
+				})}
 			</span>
 		</div>
 
 		{#if !speech.supported}
 			<p class="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-				Ce navigateur ne propose pas de synthèse vocale : la playlist reste lisible, mais pas
-				écoutable ici.
+				{t('playlists.noSpeech')}
 			</p>
 		{/if}
 
 		{#if playlist.articles.length === 0}
 			<div class="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-6">
-				<p class="text-sm text-muted-foreground">
-					Playlist vide. Ajoute des articles depuis leur page, bouton « Playlist ».
-				</p>
-				<Button size="sm" href="{base}/articles">Parcourir les articles</Button>
+				<p class="text-sm text-muted-foreground">{t('playlists.detailEmpty')}</p>
+				<Button size="sm" href="{base}/articles">{t('common.browseArticles')}</Button>
 			</div>
 		{:else}
 			<ol class="flex flex-col gap-2">
@@ -187,14 +190,16 @@
 								<a href="{base}/articles/{article.id}" class="flex min-w-0 flex-1 flex-col gap-0.5">
 									<span class="truncate font-medium">{article.title}</span>
 									<span class="text-xs text-muted-foreground">
-										{article.source_label} · {article.reading_minutes} min
-										{#if article.read}· lu{/if}
+										{article.source_label} · {t('common.minutes', {
+											count: article.reading_minutes
+										})}
+										{#if article.read}· {t('playlists.read')}{/if}
 									</span>
 								</a>
 								<div class="flex items-center gap-0.5">
 									<Button size="sm" variant="ghost" onclick={() => playFrom(index)}>
 										<Play class="size-4" />
-										<span class="sr-only">Écouter {article.title}</span>
+										<span class="sr-only">{t('playlists.listen', { title: article.title })}</span>
 									</Button>
 									<Button
 										size="sm"
@@ -203,7 +208,7 @@
 										onclick={() => move(index, -1)}
 									>
 										<ChevronUp class="size-4" />
-										<span class="sr-only">Monter {article.title}</span>
+										<span class="sr-only">{t('playlists.moveUp', { title: article.title })}</span>
 									</Button>
 									<Button
 										size="sm"
@@ -212,11 +217,13 @@
 										onclick={() => move(index, 1)}
 									>
 										<ChevronDown class="size-4" />
-										<span class="sr-only">Descendre {article.title}</span>
+										<span class="sr-only">{t('playlists.moveDown', { title: article.title })}</span>
 									</Button>
 									<Button size="sm" variant="ghost" onclick={() => remove(article.id)}>
 										<Trash2 class="size-4" />
-										<span class="sr-only">Retirer {article.title}</span>
+										<span class="sr-only">
+											{t('playlists.removeArticle', { title: article.title })}
+										</span>
 									</Button>
 								</div>
 							</CardContent>
@@ -234,15 +241,15 @@
 						<div class="flex items-center gap-2">
 							<Button variant="outline" size="sm" onclick={previous} disabled={currentIndex <= 0}>
 								<SkipBack class="size-4" />
-								<span class="sr-only">Précédent</span>
+								<span class="sr-only">{t('playlists.previous')}</span>
 							</Button>
 							<Button onclick={togglePlayback}>
 								{#if speech.speaking && !speech.paused}
 									<Pause class="size-4" />
-									Pause
+									{t('playlists.pause')}
 								{:else}
 									<Play class="size-4" />
-									{speech.paused ? 'Reprendre' : 'Écouter la playlist'}
+									{speech.paused ? t('playlists.resume') : t('playlists.listenAll')}
 								{/if}
 							</Button>
 							<Button
@@ -252,17 +259,17 @@
 								disabled={currentIndex >= playlist.articles.length - 1}
 							>
 								<SkipForward class="size-4" />
-								<span class="sr-only">Suivant</span>
+								<span class="sr-only">{t('playlists.next')}</span>
 							</Button>
 							{#if speech.speaking}
 								<Button variant="ghost" size="sm" onclick={stop}>
 									<Square class="size-4" />
-									<span class="sr-only">Arrêter</span>
+									<span class="sr-only">{t('playlists.stop')}</span>
 								</Button>
 							{/if}
 
 							<fieldset class="ml-auto flex items-center gap-1">
-								<legend class="sr-only">Vitesse de lecture</legend>
+								<legend class="sr-only">{t('playlists.speed')}</legend>
 								{#each RATES as value (value)}
 									<label
 										class="cursor-pointer rounded-md border px-2 py-1 text-xs transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
@@ -283,7 +290,7 @@
 
 						{#if current}
 							<p aria-live="polite" class="truncate text-xs text-muted-foreground">
-								En lecture : {current.title}
+								{t('playlists.nowPlaying', { title: current.title })}
 							</p>
 						{/if}
 					</div>

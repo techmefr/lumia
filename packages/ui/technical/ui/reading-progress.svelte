@@ -2,10 +2,11 @@
 	interface Props {
 		/** 0 to 1. Values outside the range are clamped rather than overflowing the track. */
 		progress: number;
+		/** Passed in by the app, which owns the translations; the default keeps the package standalone. */
 		label?: string;
 	}
 
-	let { progress, label = 'Progression de lecture' }: Props = $props();
+	let { progress, label = 'Reading progress' }: Props = $props();
 
 	const percent = $derived(Math.round(Math.min(Math.max(progress, 0), 1) * 100));
 </script>

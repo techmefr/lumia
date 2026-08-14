@@ -16,6 +16,14 @@
 		read?: boolean;
 		iconUrl?: string | null;
 		relevanceScore?: number | null;
+		// Text and date formatting come from the app: this package must not depend on its i18n, and a
+		// design system that hardcodes one language can't be reused.
+		locale?: string;
+		readLabel?: string;
+		scoreTitle?: string;
+		scoreSuffix?: string;
+		minutesLabel?: (minutes: number) => string;
+		ctaLabel?: string;
 		class?: string;
 	}
 
@@ -32,6 +40,12 @@
 		read = false,
 		iconUrl = null,
 		relevanceScore = null,
+		locale = 'en',
+		readLabel = 'read',
+		scoreTitle,
+		scoreSuffix = 'out of 100 for relevance',
+		minutesLabel = (minutes: number) => `${minutes} min`,
+		ctaLabel = 'Read the lead →',
 		class: className
 	}: Props = $props();
 
@@ -39,7 +53,7 @@
 	let iconFailed = $state(false);
 
 	const formattedDate = $derived(
-		new Date(publishedAt).toLocaleDateString('fr-FR', {
+		new Date(publishedAt).toLocaleDateString(locale, {
 			day: 'numeric',
 			month: 'long'
 		})
@@ -100,7 +114,7 @@
 			</span>
 			<span class="text-xs text-muted-foreground">· {formattedDate}</span>
 			{#if read}
-				<span class="text-xs text-muted-foreground">· lu</span>
+				<span class="text-xs text-muted-foreground">· {readLabel}</span>
 			{/if}
 		</div>
 
@@ -115,18 +129,18 @@
 		<div class="mt-auto flex flex-wrap items-center gap-2 pt-2 text-xs text-muted-foreground">
 			{#if readingMinutes}
 				<span class="rounded-full bg-secondary px-2 py-0.5 font-medium text-secondary-foreground">
-					{readingMinutes} min
+					{minutesLabel(readingMinutes)}
 				</span>
 			{/if}
 			{#if showsScore}
 				<span
 					class="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary"
-					title="Pertinence estimée d'après tes lectures"
+					title={scoreTitle}
 				>
-					{relevanceScore}<span class="sr-only">sur 100 de pertinence</span>
+					{relevanceScore}<span class="sr-only">{scoreSuffix}</span>
 				</span>
 			{/if}
-			<span class="ml-auto font-medium text-primary group-hover:underline">Lire la une →</span>
+			<span class="ml-auto font-medium text-primary group-hover:underline">{ctaLabel}</span>
 		</div>
 	</div>
 </a>

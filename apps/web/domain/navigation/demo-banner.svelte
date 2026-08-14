@@ -2,6 +2,7 @@
 	import { base } from '$app/paths';
 	import FlaskConical from '@lucide/svelte/icons/flask-conical';
 	import { resetDemo } from '$technical/api/demo/demo-client';
+	import { t } from '$technical/i18n/i18n.svelte';
 
 	function reset() {
 		resetDemo();
@@ -16,15 +17,15 @@
 >
 	<span class="flex items-center gap-1.5 font-medium">
 		<FlaskConical class="size-3.5 text-primary" />
-		Démo — données fictives, tout se passe dans ce navigateur
+		{t('demo.notice')}
 	</span>
 	<button type="button" onclick={reset} class="underline underline-offset-2 hover:text-primary">
-		Réinitialiser
+		{t('demo.reset')}
 	</button>
 	<a
 		href="https://github.com/techmefr/lumia"
 		class="underline underline-offset-2 hover:text-primary"
 	>
-		Le code
+		{t('demo.code')}
 	</a>
 </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Folder, UnreadCounts } from '@lumia/core';
+	import { t } from '$technical/i18n/i18n.svelte';
 
 	interface Props {
 		folders: Folder[];
@@ -23,7 +24,7 @@
 <div
 	class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0"
 	role="group"
-	aria-label="Filtrer par section"
+	aria-label={t('sections.group')}
 >
 	<div class="flex w-max items-center gap-2 pb-1">
 		<button
@@ -34,7 +35,7 @@
 				selectedFolderId === ''
 			)}"
 		>
-			Tout
+			{t('sections.all')}
 			{#if unread.total > 0}
 				<span class="text-xs opacity-70">{unread.total}</span>
 			{/if}

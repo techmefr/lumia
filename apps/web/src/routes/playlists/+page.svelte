@@ -20,11 +20,13 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Clock from '@lucide/svelte/icons/clock';
 	import { lumia } from '$technical/api/client';
+	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 
 	let playlists = $state<PlaylistSummary[]>([]);
 	let loading = $state(true);
-	let error = $state<string | null>(null);
+	// The key rather than the sentence: an error left on screen has to follow a language change too.
+	let error = $state<MessageKey | null>(null);
 	let newName = $state('');
 	let renamingId = $state<string | null>(null);
 	let renameValue = $state('');
@@ -39,14 +41,14 @@
 			const playlist = await lumia.playlist.createPlaylistForDuration(minutes);
 			await load();
 			if (playlist.articles.length === 0) {
-				toast('Rien à mettre dedans : aucun article non lus assez court.', { tone: 'destructive' });
+				toast(t('playlists.nothingShortEnough'), { tone: 'destructive' });
 				return;
 			}
-			toast(`${playlist.articles.length} article(s) pour ${minutes} min.`, {
-				action: { label: 'Ouvrir', run: () => goto(`${base}/playlists/${playlist.id}`) }
+			toast(t('playlists.filledToast', { count: playlist.articles.length, minutes }), {
+				action: { label: t('common.open'), run: () => goto(`${base}/playlists/${playlist.id}`) }
 			});
 		} catch {
-			toast('Impossible de composer la playlist.', { tone: 'destructive' });
+			toast(t('playlists.fillFailed'), { tone: 'destructive' });
 		} finally {
 			filling = null;
 		}
@@ -58,7 +60,7 @@
 		try {
 			playlists = await lumia.playlist.listPlaylists();
 		} catch {
-			error = 'Impossible de charger les playlists.';
+			error = 'playlists.loadFailed';
 		} finally {
 			loading = false;
 		}
@@ -72,9 +74,9 @@
 			await lumia.playlist.createPlaylist(name);
 			newName = '';
 			await load();
-			toast(`Playlist « ${name} » créée.`);
+			toast(t('playlists.createdToast', { name }));
 		} catch {
-			toast('Impossible de créer la playlist.', { tone: 'destructive' });
+			toast(t('playlists.createFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -92,7 +94,7 @@
 			renamingId = null;
 			await load();
 		} catch {
-			toast('Impossible de renommer la playlist.', { tone: 'destructive' });
+			toast(t('playlists.renameFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -100,9 +102,9 @@
 		try {
 			await lumia.playlist.deletePlaylist(playlist.id);
 			await load();
-			toast(`« ${playlist.name} » supprimée.`, {
+			toast(t('playlists.deletedToast', { name: playlist.name }), {
 				action: {
-					label: 'Recréer',
+					label: t('playlists.recreate'),
 					run: async () => {
 						await lumia.playlist.createPlaylist(playlist.name);
 						await load();
@@ -110,7 +112,7 @@
 				}
 			});
 		} catch {
-			toast('Impossible de supprimer la playlist.', { tone: 'destructive' });
+			toast(t('playlists.deleteFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -122,26 +124,21 @@
 <div class="flex flex-col gap-6">
 	<h1 class="flex items-center gap-2 text-2xl font-semibold">
 		<ListMusic class="size-6 text-primary" />
-		Playlists
+		{t('playlists.title')}
 	</h1>
 
-	<p class="text-sm text-muted-foreground">
-		Des files d'articles ordonnées, avec leur durée totale, à lire ou à écouter d'affilée.
-	</p>
+	<p class="text-sm text-muted-foreground">{t('playlists.intro')}</p>
 
 	{#if error}
-		<p role="alert" class="text-sm text-destructive">{error}</p>
+		<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{/if}
 
 	<Card>
 		<CardHeader>
-			<CardTitle>Selon le temps que tu as</CardTitle>
+			<CardTitle>{t('playlists.byTimeTitle')}</CardTitle>
 		</CardHeader>
 		<CardContent class="flex flex-col gap-2">
-			<p class="text-sm text-muted-foreground">
-				Lumia remplit une file avec tes articles non lus les plus pertinents, jusqu'à tenir dans la
-				durée choisie.
-			</p>
+			<p class="text-sm text-muted-foreground">{t('playlists.byTimeHint')}</p>
 			<div class="flex flex-wrap gap-2">
 				{#each TIME_OPTIONS as minutes (minutes)}
 					<Button
@@ -150,7 +147,9 @@
 						disabled={filling !== null}
 					>
 						<Clock class="size-4" />
-						{filling === minutes ? 'Composition…' : `${minutes} min`}
+						{filling === minutes
+							? t('playlists.composing')
+							: t('common.minutes', { count: minutes })}
 					</Button>
 				{/each}
 			</div>
@@ -159,34 +158,37 @@
 
 	<Card>
 		<CardHeader>
-			<CardTitle>Nouvelle playlist</CardTitle>
+			<CardTitle>{t('playlists.newTitle')}</CardTitle>
 		</CardHeader>
 		<CardContent>
 			<form class="flex items-end gap-2" onsubmit={create}>
 				<div class="flex max-w-xs flex-1 flex-col gap-1.5">
-					<Label for="new-playlist">Nom</Label>
-					<Input id="new-playlist" bind:value={newName} required placeholder="Trajet du matin" />
+					<Label for="new-playlist">{t('playlists.nameLabel')}</Label>
+					<Input
+						id="new-playlist"
+						bind:value={newName}
+						required
+						placeholder={t('playlists.namePlaceholder')}
+					/>
 				</div>
 				<Button type="submit">
 					<Plus class="size-4" />
-					Créer
+					{t('feeds.create')}
 				</Button>
 			</form>
 		</CardContent>
 	</Card>
 
 	{#if loading}
-		<div role="status" aria-label="Chargement des playlists" class="flex flex-col gap-3">
+		<div role="status" aria-label={t('playlists.loading')} class="flex flex-col gap-3">
 			{#each Array(3)}
 				<Skeleton class="h-20 w-full rounded-2xl" />
 			{/each}
 		</div>
 	{:else if playlists.length === 0}
 		<div class="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-6">
-			<p class="text-sm text-muted-foreground">
-				Aucune playlist. Crée-en une ci-dessus, puis ajoute des articles depuis leur page.
-			</p>
-			<Button size="sm" href="{base}/articles">Parcourir les articles</Button>
+			<p class="text-sm text-muted-foreground">{t('playlists.empty')}</p>
+			<Button size="sm" href="{base}/articles">{t('common.browseArticles')}</Button>
 		</div>
 	{:else}
 		<ul class="flex flex-col gap-3">
@@ -197,28 +199,30 @@
 							{#if renamingId === playlist.id}
 								<form class="flex flex-1 items-end gap-2" onsubmit={confirmRename}>
 									<div class="flex max-w-xs flex-1 flex-col gap-1.5">
-										<Label for="rename-{playlist.id}">Nouveau nom</Label>
+										<Label for="rename-{playlist.id}">{t('playlists.newName')}</Label>
 										<Input id="rename-{playlist.id}" bind:value={renameValue} required />
 									</div>
-									<Button type="submit" size="sm">Renommer</Button>
+									<Button type="submit" size="sm">{t('common.rename')}</Button>
 									<Button
 										type="button"
 										size="sm"
 										variant="ghost"
 										onclick={() => (renamingId = null)}
 									>
-										Annuler
+										{t('common.cancel')}
 									</Button>
 								</form>
 							{:else}
 								<a href="{base}/playlists/{playlist.id}" class="flex min-w-0 flex-1 flex-col gap-0.5">
 									<span class="truncate font-medium">{playlist.name}</span>
 									<span class="flex items-center gap-2 text-xs text-muted-foreground">
-										{playlist.item_count} article{playlist.item_count > 1 ? 's' : ''}
+										{playlist.item_count > 1
+											? t('playlists.countMany', { count: playlist.item_count })
+											: t('playlists.countOne', { count: playlist.item_count })}
 										{#if playlist.total_reading_minutes > 0}
 											<span class="flex items-center gap-1">
 												<Clock class="size-3" />
-												{playlist.total_reading_minutes} min
+												{t('common.minutes', { count: playlist.total_reading_minutes })}
 											</span>
 										{/if}
 									</span>
@@ -226,11 +230,11 @@
 								<div class="flex items-center gap-1">
 									<Button size="sm" variant="ghost" onclick={() => startRename(playlist)}>
 										<Pencil class="size-4" />
-										<span class="sr-only">Renommer {playlist.name}</span>
+										<span class="sr-only">{t('playlists.renameOne', { name: playlist.name })}</span>
 									</Button>
 									<Button size="sm" variant="ghost" onclick={() => remove(playlist)}>
 										<Trash2 class="size-4" />
-										<span class="sr-only">Supprimer {playlist.name}</span>
+										<span class="sr-only">{t('playlists.deleteOne', { name: playlist.name })}</span>
 									</Button>
 								</div>
 							{/if}
