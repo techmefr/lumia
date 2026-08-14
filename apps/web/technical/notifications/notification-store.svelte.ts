@@ -123,11 +123,14 @@ export function notificationFor(
  * app's wiring, and it keeps this testable without a fake HTTP layer.
  */
 export function watchUnread(fetchTotal: () => Promise<number>): () => void {
-	let timer: ReturnType<typeof setInterval> | null = null;
 	let stopped = false;
 
+	function isActive(): boolean {
+		return settings.enabled && permissionState() === 'granted';
+	}
+
 	async function poll(): Promise<void> {
-		if (stopped || !settings.enabled || permissionState() !== 'granted') return;
+		if (stopped || !isActive()) return;
 		if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
 			// Looking at the app is not an interruption worth a system notification.
 			try {
@@ -147,25 +150,24 @@ export function watchUnread(fetchTotal: () => Promise<number>): () => void {
 		}
 	}
 
-	function schedule(): void {
-		if (timer !== null) clearInterval(timer);
-		timer = setInterval(poll, settings.intervalMinutes * 60_000);
-	}
-
-	// The first poll only sets the baseline, whatever the tab's visibility, so enabling
-	// notifications never announces the backlog that was already there.
-	void fetchTotal()
-		.then(writeBaseline)
-		.catch(() => {});
-	schedule();
-
-	// The interval is a setting: re-read it when the tab comes back rather than on every change.
-	const onVisible = () => schedule();
-	document.addEventListener('visibilitychange', onVisible);
+	// An effect rather than a plain setInterval, so saving a new frequency — or enabling
+	// notifications at all — takes effect immediately instead of at the next tab switch.
+	const dispose = $effect.root(() => {
+		$effect(() => {
+			if (!isActive()) return;
+			// Reading the setting inside the effect is what re-runs it when the frequency changes.
+			const timer = setInterval(poll, settings.intervalMinutes * 60_000);
+			// The first read only records where the counter stood, so turning notifications on never
+			// announces the backlog that was already there.
+			void fetchTotal()
+				.then(writeBaseline)
+				.catch(() => {});
+			return () => clearInterval(timer);
+		});
+	});
 
 	return () => {
 		stopped = true;
-		if (timer !== null) clearInterval(timer);
-		document.removeEventListener('visibilitychange', onVisible);
+		dispose();
 	};
 }
