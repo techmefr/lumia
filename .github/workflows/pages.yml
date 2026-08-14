@@ -53,7 +53,10 @@ jobs:
           cp -r apps/web/build/. site/app/
           # Pages serves a real 404 for unknown paths; the SPA needs its shell there instead
           # so that a deep link such as /lumia/app/articles/article-7 still boots the router.
-          cp site/app/index.html site/app/404.html
+          # Pages only serves the 404.html sitting at the root of the published site, whatever the
+          # missing path is. Putting the SPA shell there is what makes a deep link such as
+          # /lumia/app/articles/article-7 boot the router instead of showing GitHub's 404.
+          cp site/app/index.html site/404.html
           # The manifest is static, so its absolute paths have to be rebased for the sub-path deploy.
           sed -i "s#\"/articles\"#\"${DEMO_BASE}/articles\"#; s#\"/favicon.svg\"#\"${DEMO_BASE}/favicon.svg\"#; s#\"scope\": \"/\"#\"scope\": \"${DEMO_BASE}/\"#" site/app/manifest.webmanifest
       - uses: actions/configure-pages@v5
