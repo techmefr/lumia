@@ -1,0 +1,205 @@
+/* Self-hosted so that reading an article never calls a third party.
+ * Generated from the google fonts css2 api, latin and latin-ext only.
+ * The src urls are relative, so the file works under any base path. */
+
+/* source-serif-4 400-700 latin-ext */
+@font-face {
+	font-family: 'Source Serif 4';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('./source-serif-4-400-700-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* source-serif-4 400-700 latin */
+@font-face {
+	font-family: 'Source Serif 4';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('./source-serif-4-400-700-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* inter 400-700 latin-ext */
+@font-face {
+	font-family: 'Inter';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('./inter-400-700-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* inter 400-700 latin */
+@font-face {
+	font-family: 'Inter';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('./inter-400-700-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* playfair 400-700 latin-ext */
+@font-face {
+	font-family: 'Playfair Display';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('./playfair-400-700-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* playfair 400-700 latin */
+@font-face {
+	font-family: 'Playfair Display';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('./playfair-400-700-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* source-sans-3 400-700 latin-ext */
+@font-face {
+	font-family: 'Source Sans 3';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('./source-sans-3-400-700-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* source-sans-3 400-700 latin */
+@font-face {
+	font-family: 'Source Sans 3';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('./source-sans-3-400-700-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* lora 400-700 latin-ext */
+@font-face {
+	font-family: 'Lora';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('./lora-400-700-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* lora 400-700 latin */
+@font-face {
+	font-family: 'Lora';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('./lora-400-700-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* work-sans 400-700 latin-ext */
+@font-face {
+	font-family: 'Work Sans';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('./work-sans-400-700-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* work-sans 400-700 latin */
+@font-face {
+	font-family: 'Work Sans';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('./work-sans-400-700-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* plex-serif 400 latin-ext */
+@font-face {
+	font-family: 'IBM Plex Serif';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('./plex-serif-400-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* plex-serif 400 latin */
+@font-face {
+	font-family: 'IBM Plex Serif';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('./plex-serif-400-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* plex-serif 600 latin-ext */
+@font-face {
+	font-family: 'IBM Plex Serif';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('./plex-serif-600-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* plex-serif 600 latin */
+@font-face {
+	font-family: 'IBM Plex Serif';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('./plex-serif-600-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* plex-serif 700 latin-ext */
+@font-face {
+	font-family: 'IBM Plex Serif';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('./plex-serif-700-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* plex-serif 700 latin */
+@font-face {
+	font-family: 'IBM Plex Serif';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('./plex-serif-700-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* plex-sans 400-700 latin-ext */
+@font-face {
+	font-family: 'IBM Plex Sans';
+	font-style: normal;
+	font-weight: 400 700;
+	font-stretch: 100%;
+	font-display: swap;
+	src: url('./plex-sans-400-700-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* plex-sans 400-700 latin */
+@font-face {
+	font-family: 'IBM Plex Sans';
+	font-style: normal;
+	font-weight: 400 700;
+	font-stretch: 100%;
+	font-display: swap;
+	src: url('./plex-sans-400-700-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}

@@ -11,6 +11,10 @@
 		<meta name="apple-mobile-web-app-title" content="Lumia" />
 		<meta name="mobile-web-app-capable" content="yes" />
 		<link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
+		<!-- Self-hosted faces for the four selectable pairs. Kept out of app.css so the src urls
+		     stay relative to this stylesheet and survive a sub-path deployment; the browser only
+		     downloads the faces the active pair actually uses. -->
+		<link rel="stylesheet" href="%sveltekit.assets%/fonts/fonts.css" />
 		<script>
 			(function () {
 				try {
@@ -36,6 +40,11 @@
 					var scales = { sm: 0.9, md: 1, lg: 1.15, xl: 1.3 };
 					var scale = scales[localStorage.getItem('lumia-font-scale')] ?? 1;
 					document.documentElement.style.fontSize = 16 * scale + 'px';
+
+					var pairs = ['editorial', 'magazine', 'humaniste', 'technique'];
+					var pair = localStorage.getItem('lumia-font-pair');
+					document.documentElement.dataset.fontPair =
+						pairs.indexOf(pair) === -1 ? pairs[0] : pair;
 				} catch (e) {}
 			})();
 		</script>

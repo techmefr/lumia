@@ -1,6 +1,7 @@
 const THEME_KEY = 'lumia-theme';
 const ACCENT_KEY = 'lumia-accent';
 const FONT_SCALE_KEY = 'lumia-font-scale';
+const FONT_PAIR_KEY = 'lumia-font-pair';
 
 export type Theme = 'light' | 'dark';
 
@@ -34,6 +35,51 @@ export const FONT_SCALE_PRESETS: FontScalePreset[] = [
 	{ id: 'xl', label: 'Très grand', scale: 1.3 }
 ];
 
+export interface FontPairPreset {
+	id: string;
+	label: string;
+	/** What the pair is for, shown next to the sample so the choice isn't blind. */
+	hint: string;
+	serif: string;
+	sans: string;
+}
+
+/**
+ * Four pairs, each a serif for the titles and a sans for the running text. All four are
+ * self-hosted from static/fonts; the ids double as the `data-font-pair` attribute values that
+ * app.css keys its token overrides on.
+ */
+export const FONT_PAIR_PRESETS: FontPairPreset[] = [
+	{
+		id: 'editorial',
+		label: 'Éditorial',
+		hint: 'Sobre et neutre, lisible partout',
+		serif: 'Source Serif 4',
+		sans: 'Inter'
+	},
+	{
+		id: 'magazine',
+		label: 'Magazine',
+		hint: 'Titres contrastés, presse papier',
+		serif: 'Playfair Display',
+		sans: 'Source Sans 3'
+	},
+	{
+		id: 'humaniste',
+		label: 'Humaniste',
+		hint: 'Chaleureux, pour les textes longs',
+		serif: 'Lora',
+		sans: 'Work Sans'
+	},
+	{
+		id: 'technique',
+		label: 'Technique',
+		hint: 'Rythme régulier, veille et code',
+		serif: 'IBM Plex Serif',
+		sans: 'IBM Plex Sans'
+	}
+];
+
 function readInitialTheme(): Theme {
 	if (typeof document === 'undefined') return 'light';
 	return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
@@ -53,9 +99,16 @@ function readInitialFontScale(): number {
 	return preset?.scale ?? 1;
 }
 
+function readInitialFontPair(): string {
+	if (typeof localStorage === 'undefined') return FONT_PAIR_PRESETS[0].id;
+	const stored = localStorage.getItem(FONT_PAIR_KEY);
+	return FONT_PAIR_PRESETS.some((p) => p.id === stored) ? stored! : FONT_PAIR_PRESETS[0].id;
+}
+
 let theme = $state<Theme>(readInitialTheme());
 let accentHue = $state<number>(readInitialAccentHue());
 let fontScale = $state<number>(readInitialFontScale());
+let fontPair = $state<string>(readInitialFontPair());
 
 function applyAccent(hue: number, currentTheme: Theme) {
 	const root = document.documentElement.style;
@@ -100,6 +153,23 @@ export function setAccent(presetId: string): void {
 	applyAccent(accentHue, theme);
 }
 
+function applyFontPair(id: string) {
+	document.documentElement.dataset.fontPair = id;
+	// The metrics of the new pair change every line box: let the bottom-nav tracker re-measure.
+	window.dispatchEvent(new Event('resize'));
+}
+
+export function getFontPair(): string {
+	return fontPair;
+}
+
+export function setFontPair(presetId: string): void {
+	if (!FONT_PAIR_PRESETS.some((p) => p.id === presetId)) return;
+	fontPair = presetId;
+	localStorage.setItem(FONT_PAIR_KEY, presetId);
+	applyFontPair(presetId);
+}
+
 export function getFontScale(): number {
 	return fontScale;
 }
@@ -115,4 +185,5 @@ export function setFontScale(presetId: string): void {
 export function initPreferences(): void {
 	applyAccent(accentHue, theme);
 	applyFontScale(fontScale);
+	applyFontPair(fontPair);
 }

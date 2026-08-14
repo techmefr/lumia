@@ -16,12 +16,16 @@
 		getFontScale,
 		setFontScale,
 		FONT_SCALE_PRESETS,
+		getFontPair,
+		setFontPair,
+		FONT_PAIR_PRESETS,
 		type Theme
 	} from '$technical/theme/theme-store.svelte.js';
 
 	let theme = $state<Theme>('light');
 	let accentHue = $state(0);
 	let fontScale = $state(1);
+	let fontPair = $state(FONT_PAIR_PRESETS[0].id);
 
 	function pickTheme(next: Theme) {
 		setTheme(next);
@@ -38,11 +42,17 @@
 		fontScale = getFontScale();
 	}
 
+	function pickFontPair(id: string) {
+		setFontPair(id);
+		fontPair = getFontPair();
+	}
+
 	onMount(() => {
 		if (!requireAuth()) return;
 		theme = getTheme();
 		accentHue = getAccentHue();
 		fontScale = getFontScale();
+		fontPair = getFontPair();
 	});
 </script>
 
@@ -120,6 +130,46 @@
 							{#if accentHue === preset.hue}
 								<Check class="size-4 text-white drop-shadow" />
 							{/if}
+						</label>
+					{/each}
+				</div>
+			</fieldset>
+		</CardContent>
+	</Card>
+
+	<Card>
+		<CardContent class="pt-6">
+			<fieldset class="flex flex-col gap-3">
+				<legend class="text-sm font-semibold text-muted-foreground">Paire de polices</legend>
+				<p class="text-xs text-muted-foreground">
+					Un serif pour les titres, un sans pour le texte courant. Les quatre paires sont servies par
+					ton instance : rien n'est chargé depuis un tiers.
+				</p>
+				<div class="grid gap-3 sm:grid-cols-2">
+					{#each FONT_PAIR_PRESETS as preset (preset.id)}
+						<label
+							class="cursor-pointer rounded-xl border-2 border-border p-4 transition-colors hover:border-muted-foreground has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2"
+						>
+							<input
+								type="radio"
+								name="font-pair"
+								value={preset.id}
+								checked={fontPair === preset.id}
+								onchange={() => pickFontPair(preset.id)}
+								class="sr-only"
+							/>
+							<span
+								class="block text-lg font-semibold"
+								style={`font-family: '${preset.serif}', Georgia, serif;`}
+							>
+								{preset.label}
+							</span>
+							<span
+								class="mt-1 block text-sm text-muted-foreground"
+								style={`font-family: '${preset.sans}', system-ui, sans-serif;`}
+							>
+								{preset.hint}
+							</span>
 						</label>
 					{/each}
 				</div>

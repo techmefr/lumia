@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&display=swap');
+/* The faces themselves live in static/fonts and are linked from app.html: a reader that promises
+   nothing leaves your machine cannot fetch its typography from a third party on every page. */
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -28,6 +29,25 @@
 	--input: oklch(0.922 0 0);
 	--ring: oklch(0.55 0.2 265);
 	--grain-opacity: 0.05;
+	/* Default pair, overridden by [data-font-pair] below. Kept as its own variable so the
+	   tailwind theme can point at it once and the switch stays a single attribute. */
+	--pair-serif: 'Source Serif 4', Georgia, serif;
+	--pair-sans: 'Inter', system-ui, sans-serif;
+}
+
+[data-font-pair='magazine'] {
+	--pair-serif: 'Playfair Display', Georgia, serif;
+	--pair-sans: 'Source Sans 3', system-ui, sans-serif;
+}
+
+[data-font-pair='humaniste'] {
+	--pair-serif: 'Lora', Georgia, serif;
+	--pair-sans: 'Work Sans', system-ui, sans-serif;
+}
+
+[data-font-pair='technique'] {
+	--pair-serif: 'IBM Plex Serif', Georgia, serif;
+	--pair-sans: 'IBM Plex Sans', system-ui, sans-serif;
 }
 
 .dark {
@@ -77,8 +97,8 @@
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-lg: var(--radius);
 	--radius-xl: calc(var(--radius) + 4px);
-	--font-serif: 'Source Serif 4', Georgia, serif;
-	--font-sans: 'Inter', system-ui, sans-serif;
+	--font-serif: var(--pair-serif);
+	--font-sans: var(--pair-sans);
 }
 
 @layer base {
