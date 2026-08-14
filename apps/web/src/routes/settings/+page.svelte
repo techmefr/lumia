@@ -43,6 +43,38 @@
 		return id in SCALE_KEYS ? t(SCALE_KEYS[id as keyof typeof SCALE_KEYS]) : id;
 	}
 
+	/** Same reasoning as the scales: the ids are stored, their names belong to the catalogues. */
+	const ACCENT_KEYS = {
+		violet: 'settings.accent.violet',
+		indigo: 'settings.accent.indigo',
+		bleu: 'settings.accent.blue',
+		cyan: 'settings.accent.cyan',
+		sarcelle: 'settings.accent.teal',
+		vert: 'settings.accent.green',
+		ambre: 'settings.accent.amber',
+		terracotta: 'settings.accent.terracotta',
+		rose: 'settings.accent.rose'
+	} as const;
+
+	const PAIR_KEYS = {
+		editorial: ['settings.pair.editorial', 'settings.pair.editorialHint'],
+		magazine: ['settings.pair.magazine', 'settings.pair.magazineHint'],
+		humaniste: ['settings.pair.humanist', 'settings.pair.humanistHint'],
+		technique: ['settings.pair.technical', 'settings.pair.technicalHint']
+	} as const;
+
+	function accentLabel(id: string): string {
+		return id in ACCENT_KEYS ? t(ACCENT_KEYS[id as keyof typeof ACCENT_KEYS]) : id;
+	}
+
+	function pairLabel(id: string): string {
+		return id in PAIR_KEYS ? t(PAIR_KEYS[id as keyof typeof PAIR_KEYS][0]) : id;
+	}
+
+	function pairHint(id: string): string {
+		return id in PAIR_KEYS ? t(PAIR_KEYS[id as keyof typeof PAIR_KEYS][1]) : '';
+	}
+
 	function pickLocale(code: string) {
 		setLocale(code);
 		locale = getLocale();
@@ -180,7 +212,7 @@
 								onchange={() => pickAccent(preset.id)}
 								class="sr-only"
 							/>
-							<span class="sr-only">{preset.label}</span>
+							<span class="sr-only">{accentLabel(preset.id)}</span>
 							{#if accentHue === preset.hue}
 								<Check class="size-4 text-white drop-shadow" />
 							{/if}
@@ -213,13 +245,13 @@
 								class="block text-lg font-semibold"
 								style={`font-family: '${preset.serif}', Georgia, serif;`}
 							>
-								{preset.label}
+								{pairLabel(preset.id)}
 							</span>
 							<span
 								class="mt-1 block text-sm text-muted-foreground"
 								style={`font-family: '${preset.sans}', system-ui, sans-serif;`}
 							>
-								{preset.hint}
+								{pairHint(preset.id)}
 							</span>
 						</label>
 					{/each}

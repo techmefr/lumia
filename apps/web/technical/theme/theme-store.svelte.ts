@@ -8,27 +8,26 @@ export type Theme = 'light' | 'dark';
 
 export interface AccentPreset {
 	id: string;
-	label: string;
 	hue: number;
 }
 
 // Colorblind-safe hues, distinct from the per-source avatar palette. The ids are the stored value,
-// so renaming one would reset everybody's choice: add rather than rename.
+// so renaming one would reset everybody's choice: add rather than rename. Their names live in the
+// catalogues rather than here, so this file stays free of any one language.
 export const ACCENT_PRESETS: AccentPreset[] = [
-	{ id: 'violet', label: 'Violet', hue: 265 },
-	{ id: 'indigo', label: 'Indigo', hue: 290 },
-	{ id: 'bleu', label: 'Bleu', hue: 220 },
-	{ id: 'cyan', label: 'Cyan', hue: 200 },
-	{ id: 'sarcelle', label: 'Sarcelle', hue: 175 },
-	{ id: 'vert', label: 'Vert', hue: 145 },
-	{ id: 'ambre', label: 'Ambre', hue: 50 },
-	{ id: 'terracotta', label: 'Terracotta', hue: 25 },
-	{ id: 'rose', label: 'Rose', hue: 340 }
+	{ id: 'violet', hue: 265 },
+	{ id: 'indigo', hue: 290 },
+	{ id: 'bleu', hue: 220 },
+	{ id: 'cyan', hue: 200 },
+	{ id: 'sarcelle', hue: 175 },
+	{ id: 'vert', hue: 145 },
+	{ id: 'ambre', hue: 50 },
+	{ id: 'terracotta', hue: 25 },
+	{ id: 'rose', hue: 340 }
 ];
 
 export interface FontScalePreset {
 	id: string;
-	label: string;
 	/** Multiplier applied to the 16px root — Tailwind's rem-based type scale keeps its
 	 * golden-ratio-like step proportions since every size scales together. */
 	scale: number;
@@ -39,18 +38,15 @@ export interface FontScalePreset {
  * running text sits at 24px, which is what a comfortable large-print book uses.
  */
 export const FONT_SCALE_PRESETS: FontScalePreset[] = [
-	{ id: 'sm', label: 'Petit', scale: 0.9 },
-	{ id: 'md', label: 'Normal', scale: 1 },
-	{ id: 'lg', label: 'Grand', scale: 1.15 },
-	{ id: 'xl', label: 'Très grand', scale: 1.3 },
-	{ id: 'xxl', label: 'Maximum', scale: 1.5 }
+	{ id: 'sm', scale: 0.9 },
+	{ id: 'md', scale: 1 },
+	{ id: 'lg', scale: 1.15 },
+	{ id: 'xl', scale: 1.3 },
+	{ id: 'xxl', scale: 1.5 }
 ];
 
 export interface FontPairPreset {
 	id: string;
-	label: string;
-	/** What the pair is for, shown next to the sample so the choice isn't blind. */
-	hint: string;
 	serif: string;
 	sans: string;
 }
@@ -58,37 +54,13 @@ export interface FontPairPreset {
 /**
  * Four pairs, each a serif for the titles and a sans for the running text. All four are
  * self-hosted from static/fonts; the ids double as the `data-font-pair` attribute values that
- * app.css keys its token overrides on.
+ * app.css keys its token overrides on. Their names and hints live in the catalogues.
  */
 export const FONT_PAIR_PRESETS: FontPairPreset[] = [
-	{
-		id: 'editorial',
-		label: 'Éditorial',
-		hint: 'Sobre et neutre, lisible partout',
-		serif: 'Source Serif 4',
-		sans: 'Inter'
-	},
-	{
-		id: 'magazine',
-		label: 'Magazine',
-		hint: 'Titres contrastés, presse papier',
-		serif: 'Playfair Display',
-		sans: 'Source Sans 3'
-	},
-	{
-		id: 'humaniste',
-		label: 'Humaniste',
-		hint: 'Chaleureux, pour les textes longs',
-		serif: 'Lora',
-		sans: 'Work Sans'
-	},
-	{
-		id: 'technique',
-		label: 'Technique',
-		hint: 'Rythme régulier, veille et code',
-		serif: 'IBM Plex Serif',
-		sans: 'IBM Plex Sans'
-	}
+	{ id: 'editorial', serif: 'Source Serif 4', sans: 'Inter' },
+	{ id: 'magazine', serif: 'Playfair Display', sans: 'Source Sans 3' },
+	{ id: 'humaniste', serif: 'Lora', sans: 'Work Sans' },
+	{ id: 'technique', serif: 'IBM Plex Serif', sans: 'IBM Plex Sans' }
 ];
 
 function readInitialTheme(): Theme {

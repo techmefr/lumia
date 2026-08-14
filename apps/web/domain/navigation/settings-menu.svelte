@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { t } from '$technical/i18n/i18n.svelte';
+
 	interface MenuEntry {
 		label: string;
 		href?: string;
@@ -14,6 +16,8 @@
 	}
 
 	let { entries, href, label, icon: Icon }: Props = $props();
+
+	const moreLabel = $derived(t('nav.moreOptions', { label }));
 
 	const LONG_PRESS_MS = 450;
 
@@ -80,7 +84,7 @@
 		onclick={() => (open = !open)}
 		aria-expanded={open}
 		aria-haspopup="menu"
-		aria-label="{label} — plus d'options"
+		aria-label={moreLabel}
 		class="flex min-h-9 w-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 	>
 		<span aria-hidden="true" class="text-xs">▾</span>
