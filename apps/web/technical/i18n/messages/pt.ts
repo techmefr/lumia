@@ -404,6 +404,8 @@ export const pt: Catalogue = {
 	'ai.readingLanguage': 'Idioma de leitura',
 	'ai.readingLanguageHint':
 		'Os artigos publicados noutra língua são traduzidos para esta, quando houver um fornecedor de tradução configurado.',
+	'ai.readingLanguageNoProvider':
+		'Nenhum serviço de tradução cobre esta língua: os artigos ficam na língua original.',
 	'ai.provider': 'Fornecedor do resumo',
 	'ai.providerNone': 'Nenhum — resumo local',
 	'ai.providerCustom': 'Endpoint compatível com OpenAI (auto-alojado)',

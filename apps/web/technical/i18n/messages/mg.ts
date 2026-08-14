@@ -406,6 +406,8 @@ export const mg: Catalogue = {
 	'ai.readingLanguage': 'Fiteny amakiana',
 	'ai.readingLanguageHint':
 		'Adika amin’ity fiteny ity ny lahatsoratra navoaka amin’ny fiteny hafa, rehefa misy mpanome fandikan-teny voaomana.',
+	'ai.readingLanguageNoProvider':
+		'Tsy misy serivisy fandikan-teny mandrakotra ity fiteny ity : mijanona amin’ny fiteny niaviany ny lahatsoratra.',
 	'ai.provider': 'Mpanome ny fintina',
 	'ai.providerNone': 'Tsy misy — fintina eo an-toerana',
 	'ai.providerCustom': 'Endpoint mifanaraka amin’ny OpenAI (an-tokantrano)',

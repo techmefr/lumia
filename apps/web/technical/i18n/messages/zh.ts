@@ -378,6 +378,7 @@ export const zh: Catalogue = {
 		'可选：关键词和摘要在本地计算。密钥用于由模型撰写的摘要，以及外语文章的翻译。每个账号各自填写——它在数据库中加密保存，API 永不返回。',
 	'ai.readingLanguage': '阅读语言',
 	'ai.readingLanguageHint': '配置了翻译服务商后，其他语言发表的文章会被翻译成这种语言。',
+	'ai.readingLanguageNoProvider': '没有翻译服务支持这种语言：文章将保留原文。',
 	'ai.provider': '摘要服务商',
 	'ai.providerNone': '不使用 — 本地摘要',
 	'ai.providerCustom': '兼容 OpenAI 的接口（自建）',

@@ -8,6 +8,7 @@ Create Date: 2026-08-14 10:20:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
@@ -18,6 +19,9 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 filter_mode = sa.Enum('BOOST', 'MUTE', name='filtermode')
+# The column reuses the type created above rather than declaring it again: passed to create_table as
+# it is, sqlalchemy emits a second CREATE TYPE and the whole chain fails on a fresh database.
+filter_mode_column = postgresql.ENUM('BOOST', 'MUTE', name='filtermode', create_type=False)
 
 
 def upgrade() -> None:
@@ -28,7 +32,7 @@ def upgrade() -> None:
         sa.Column('id', sa.Uuid(), nullable=False),
         sa.Column('user_id', sa.Uuid(), nullable=False),
         sa.Column('term', sa.String(), nullable=False),
-        sa.Column('mode', filter_mode, nullable=False),
+        sa.Column('mode', filter_mode_column, nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(['user_id'], ['users.id']),
         sa.PrimaryKeyConstraint('id'),

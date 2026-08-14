@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword, Author, Category, Keyword, Lang
 from api.domain.feed.models import Feed, SourceType
-from api.domain.user.models import AIProvider, User
+from api.domain.user.models import AIProvider, ReadingLang, User
 from api.technical.crypto.secret_box import decrypt_secret
 from worker.domain.extraction.stemming_en import stem_en
 from worker.domain.extraction.stemming_fr import stem_fr
@@ -27,7 +27,7 @@ from worker.technical.content_extraction import ContentExtractor, TrafilaturaCon
 from worker.technical.db import worker_session
 from worker.technical.html import extract_first_image, strip_html
 from worker.technical.lang_detect import detect_lang
-from worker.technical.translation.base import Translator
+from worker.technical.translation.base import TranslationApiError, Translator
 from worker.technical.translation.deepl_client import DeeplTranslator
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ async def enrich_article(
     lang = Lang.FR if detect_lang(plain_text) == "fr" else Lang.EN
     stems = stem_fr(plain_text) if lang == Lang.FR else stem_en(plain_text)
     keywords = extract_keywords(stems)
-    translated_cache: dict[Lang, tuple[str, str]] = {}
+    translated_cache: dict[ReadingLang, tuple[str, str]] = {}
 
     async with worker_session() as session:
         author = await _get_or_create_author(session, raw_article.author_name)
@@ -62,7 +62,7 @@ async def enrich_article(
         )
         for feed in feeds:
             user = await session.get(User, feed.user_id)
-            target_lang = user.preferred_language if user is not None else lang
+            target_lang = user.preferred_language if user is not None else ReadingLang(lang.value)
             title, content, summary_source = await _localize(
                 raw_article,
                 plain_text,
@@ -133,17 +133,26 @@ async def _localize(
     raw_article: RawArticle,
     plain_text: str,
     detected_lang: Lang,
-    target_lang: Lang,
+    target_lang: ReadingLang,
     translator: Translator,
-    translated_cache: dict[Lang, tuple[str, str]],
+    translated_cache: dict[ReadingLang, tuple[str, str]],
 ) -> tuple[str, str, str]:
-    if target_lang == detected_lang:
+    # Compared on the code rather than the enum: the two are different types on purpose, one being
+    # the language an article is in and the other one a reader's target.
+    if target_lang.value == detected_lang.value or not translator.supports(target_lang.value):
         return raw_article.title, raw_article.content, plain_text
     if target_lang not in translated_cache:
-        translated_title = await translator.translate(
-            raw_article.title, target_lang=target_lang.value
-        )
-        translated_content = await translator.translate(plain_text, target_lang=target_lang.value)
+        try:
+            translated_title = await translator.translate(
+                raw_article.title, target_lang=target_lang.value
+            )
+            translated_content = await translator.translate(
+                plain_text, target_lang=target_lang.value
+            )
+        except (TranslationApiError, httpx.HTTPError) as exc:
+            # A rejected key or a dead provider costs the translation, never the article.
+            logger.warning("translation failed, keeping the original text: %s", exc)
+            return raw_article.title, raw_article.content, plain_text
         translated_cache[target_lang] = (translated_title, translated_content)
     translated_title, translated_content = translated_cache[target_lang]
     return translated_title, translated_content, translated_content

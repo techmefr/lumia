@@ -3,7 +3,18 @@ export type Theme = 'light' | 'dark' | 'system';
 export type OrbitPosition = 'left' | 'right';
 export type AIProvider = 'mistral' | 'openai' | 'anthropic' | 'custom';
 export type TranslationProvider = 'deepl';
-export type PreferredLanguage = 'fr' | 'en';
+/** The reading language, which the backend translates foreign articles into. */
+export type PreferredLanguage =
+	| 'fr'
+	| 'en'
+	| 'es'
+	| 'de'
+	| 'it'
+	| 'pt'
+	| 'ru'
+	| 'ar'
+	| 'zh'
+	| 'mg';
 
 export interface TokenPair {
 	access_token: string;

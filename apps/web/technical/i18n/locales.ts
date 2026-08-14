@@ -4,19 +4,21 @@ export interface LocaleDescriptor {
 	/** The name of the language written in that language: nobody looks for "Allemand" in a German UI. */
 	nativeLabel: string;
 	dir: 'ltr' | 'rtl';
+	/** Whether articles can be machine-translated into it. Malagasy has no translation provider. */
+	translatable: boolean;
 }
 
 export const LOCALES: LocaleDescriptor[] = [
-	{ code: 'fr', nativeLabel: 'Français', dir: 'ltr' },
-	{ code: 'en', nativeLabel: 'English', dir: 'ltr' },
-	{ code: 'es', nativeLabel: 'Español', dir: 'ltr' },
-	{ code: 'de', nativeLabel: 'Deutsch', dir: 'ltr' },
-	{ code: 'it', nativeLabel: 'Italiano', dir: 'ltr' },
-	{ code: 'pt', nativeLabel: 'Português', dir: 'ltr' },
-	{ code: 'ru', nativeLabel: 'Русский', dir: 'ltr' },
-	{ code: 'ar', nativeLabel: 'العربية', dir: 'rtl' },
-	{ code: 'zh', nativeLabel: '中文', dir: 'ltr' },
-	{ code: 'mg', nativeLabel: 'Malagasy', dir: 'ltr' }
+	{ code: 'fr', nativeLabel: 'Français', dir: 'ltr', translatable: true },
+	{ code: 'en', nativeLabel: 'English', dir: 'ltr', translatable: true },
+	{ code: 'es', nativeLabel: 'Español', dir: 'ltr', translatable: true },
+	{ code: 'de', nativeLabel: 'Deutsch', dir: 'ltr', translatable: true },
+	{ code: 'it', nativeLabel: 'Italiano', dir: 'ltr', translatable: true },
+	{ code: 'pt', nativeLabel: 'Português', dir: 'ltr', translatable: true },
+	{ code: 'ru', nativeLabel: 'Русский', dir: 'ltr', translatable: true },
+	{ code: 'ar', nativeLabel: 'العربية', dir: 'rtl', translatable: true },
+	{ code: 'zh', nativeLabel: '中文', dir: 'ltr', translatable: true },
+	{ code: 'mg', nativeLabel: 'Malagasy', dir: 'ltr', translatable: false }
 ];
 
 export const DEFAULT_LOCALE = 'fr';

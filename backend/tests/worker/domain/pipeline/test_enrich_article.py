@@ -7,10 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from api.domain.article.models import Article, ArticleKeyword, Author, Category, Keyword, Lang
 from api.domain.feed.models import Feed, SourceType
-from api.domain.user.models import Instance, User
+from api.domain.user.models import Instance, ReadingLang, User
 from config.database import get_engine
 from worker.domain.pipeline.enrich_article import enrich_article
 from worker.technical.connectors.base import RawArticle
+from worker.technical.translation.base import TranslationApiError
 
 FRENCH_CONTENT = (
     "<p>Le chat est dans le jardin avec la souris et il mangeait des croquettes. "
@@ -31,12 +32,21 @@ async def session(db_schema: None) -> AsyncIterator[AsyncSession]:
         yield db_session
 
 
-async def _create_feed(session: AsyncSession, *, external_feed_id: str = "10") -> Feed:
+async def _create_feed(
+    session: AsyncSession,
+    *,
+    external_feed_id: str = "10",
+    preferred_language: ReadingLang = ReadingLang.FR,
+) -> Feed:
     instance = Instance(max_accounts=10, disk_quota_mb=1000)
     session.add(instance)
     await session.flush()
     user = User(
-        instance_id=instance.id, email="user@example.com", username="user", password_hash=None
+        instance_id=instance.id,
+        email="user@example.com",
+        username="user",
+        password_hash=None,
+        preferred_language=preferred_language,
     )
     session.add(user)
     await session.flush()
@@ -176,8 +186,22 @@ ENGLISH_CONTENT = (
 
 
 class _FakeTranslator:
+    def __init__(self, *, unsupported: frozenset[str] = frozenset()) -> None:
+        self._unsupported = unsupported
+
+    def supports(self, target_lang: str) -> bool:
+        return target_lang not in self._unsupported
+
     async def translate(self, text: str, *, target_lang: str) -> str:
         return f"[{target_lang}] {text}"
+
+
+class _FailingTranslator:
+    def supports(self, target_lang: str) -> bool:
+        return True
+
+    async def translate(self, text: str, *, target_lang: str) -> str:
+        raise TranslationApiError("quota exhausted")
 
 
 async def test_enrich_article_translates_foreign_content_to_the_users_preferred_language(
@@ -214,6 +238,60 @@ async def test_enrich_article_does_not_translate_when_language_already_matches(
     assert article is not None
     assert article.title == "Le chat et le jardin"
     assert article.original_lang == Lang.FR
+
+
+async def test_enrich_article_translates_into_a_language_beyond_the_two_it_can_stem(
+    session: AsyncSession,
+) -> None:
+    """A reading language is not bounded by the stemmers: German has none and is still a target."""
+    await _create_feed(session, preferred_language=ReadingLang.DE)
+
+    await enrich_article(
+        {},
+        _raw_article(title="The cat", content=ENGLISH_CONTENT),
+        translator=_FakeTranslator(),
+        content_extractor=_FakeContentExtractor(),
+    )
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    assert article.title == "[de] The cat"
+    assert article.original_lang == Lang.EN
+
+
+async def test_enrich_article_keeps_the_original_when_no_provider_covers_the_target(
+    session: AsyncSession,
+) -> None:
+    await _create_feed(session, preferred_language=ReadingLang.MG)
+
+    await enrich_article(
+        {},
+        _raw_article(title="The cat", content=ENGLISH_CONTENT),
+        translator=_FakeTranslator(unsupported=frozenset({"mg"})),
+        content_extractor=_FakeContentExtractor(),
+    )
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    assert article.title == "The cat"
+
+
+async def test_enrich_article_keeps_the_original_when_the_translation_fails(
+    session: AsyncSession,
+) -> None:
+    await _create_feed(session, preferred_language=ReadingLang.ES)
+
+    await enrich_article(
+        {},
+        _raw_article(title="The cat", content=ENGLISH_CONTENT),
+        translator=_FailingTranslator(),
+        content_extractor=_FakeContentExtractor(),
+    )
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    assert article.title == "The cat"
+    assert article.summary
 
 
 async def test_enrich_article_extracts_english_keywords_from_the_original_text(
@@ -285,7 +363,7 @@ async def test_enrich_article_translates_per_subscriber_preferred_language(
         email="en-reader@example.com",
         username="en-reader",
         password_hash=None,
-        preferred_language=Lang.EN,
+        preferred_language=ReadingLang.EN,
     )
     session.add(en_user)
     await session.flush()

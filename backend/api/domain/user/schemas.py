@@ -2,8 +2,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
 
-from api.domain.article.models import Lang
-from api.domain.user.models import AIProvider, OrbitPosition, Role, Theme, TranslationProvider
+from api.domain.user.models import (
+    AIProvider,
+    OrbitPosition,
+    ReadingLang,
+    Role,
+    Theme,
+    TranslationProvider,
+)
 
 
 class OnboardingAdminRequest(BaseModel):
@@ -58,7 +64,7 @@ class MeResponse(BaseModel):
     theme: Theme
     orbit_position: OrbitPosition
     font_base_size: int
-    preferred_language: Lang
+    preferred_language: ReadingLang
     ai_provider: AIProvider | None
     ai_endpoint_url: str | None
     ai_model: str | None
@@ -73,7 +79,7 @@ class MeUpdateRequest(BaseModel):
     theme: Theme | None = None
     orbit_position: OrbitPosition | None = None
     font_base_size: int | None = None
-    preferred_language: Lang | None = None
+    preferred_language: ReadingLang | None = None
     ai_provider: AIProvider | None = None
     ai_api_key: str | None = None
     ai_endpoint_url: str | None = None

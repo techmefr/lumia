@@ -15,6 +15,32 @@ async def test_translate_returns_the_translated_text() -> None:
     assert translated == "Bonjour le monde"
 
 
+async def test_translate_sends_the_regional_code_deepl_expects() -> None:
+    """Portuguese and English are only accepted as a regional variant, `PT` alone is rejected."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert b'"target_lang":"PT-PT"' in request.content
+        return httpx.Response(200, json={"translations": [{"text": "Ola mundo"}]})
+
+    translator = DeeplTranslator(transport=httpx.MockTransport(handler))
+    assert await translator.translate("Hello world", target_lang="pt") == "Ola mundo"
+
+
+async def test_supports_reports_the_languages_deepl_has() -> None:
+    translator = DeeplTranslator()
+    assert translator.supports("de")
+    assert not translator.supports("mg")
+
+
+async def test_translate_refuses_a_language_deepl_does_not_have() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise AssertionError("no request should be sent for an unsupported language")
+
+    translator = DeeplTranslator(transport=httpx.MockTransport(handler))
+    with pytest.raises(DeeplApiError):
+        await translator.translate("Hello world", target_lang="mg")
+
+
 async def test_translate_raises_on_an_error_response() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(456, text="quota exceeded")

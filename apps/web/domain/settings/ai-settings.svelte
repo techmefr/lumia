@@ -12,6 +12,7 @@
 	} from '@lumia/core';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte.js';
+	import { LOCALES } from '$technical/i18n/locales';
 
 	// Derived, so the two translated entries follow a language change like the rest of the screen.
 	const AI_PROVIDERS = $derived<{ value: AIProvider | ''; label: string }[]>([
@@ -21,10 +22,12 @@
 		{ value: 'anthropic', label: 'Anthropic (Claude)' },
 		{ value: 'custom', label: t('ai.providerCustom') }
 	]);
-	const LANGUAGES: { value: PreferredLanguage; label: string }[] = [
-		{ value: 'fr', label: 'Français' },
-		{ value: 'en', label: 'English' }
-	];
+	// The same ten as the interface, and named in their own language for the same reason.
+	const LANGUAGES = LOCALES.map((locale) => ({
+		value: locale.code as PreferredLanguage,
+		label: locale.nativeLabel,
+		translatable: locale.translatable
+	}));
 
 	let me = $state<Me | null>(null);
 	let loading = $state(true);
@@ -32,6 +35,11 @@
 	let error = $state<string | null>(null);
 
 	let language = $state<PreferredLanguage>('fr');
+	// Said plainly at the moment of the choice: a language no provider covers means the articles stay
+	// in their original one, which is better learnt here than by wondering why nothing is translated.
+	const translatableChoice = $derived(
+		LANGUAGES.find((option) => option.value === language)?.translatable ?? true
+	);
 	let aiProvider = $state<AIProvider | ''>('');
 	let aiModel = $state('');
 	let aiEndpointUrl = $state('');
@@ -104,9 +112,7 @@
 				{t('ai.title')}
 			</h2>
 			<p class="mt-1 text-sm text-muted-foreground">
-				Optionnel : les mots-clés et le résumé sont calculés localement. Une clé sert au résumé
-				enrichi par un modèle et à la traduction des articles étrangers. Chaque compte pose la
-				sienne — elle est chiffrée en base et n'est jamais renvoyée par l'API.
+				{t('ai.intro')}
 			</p>
 		</div>
 
@@ -123,25 +129,24 @@
 					{t('ai.readingLanguage')}
 				</legend>
 				<p class="text-xs text-muted-foreground">
-					Les articles publiés dans une autre langue sont traduits vers celle-ci.
+					{t('ai.readingLanguageHint')}
 				</p>
-				<div class="flex gap-2">
+				<!-- A select rather than a row of radios: ten of them wrap into an unreadable block, and
+					 this list is a single choice out of a long set. -->
+				<select
+					bind:value={language}
+					aria-label={t('ai.readingLanguage')}
+					class="h-10 rounded-md border border-input bg-background px-3 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+				>
 					{#each LANGUAGES as option (option.value)}
-						<label
-							class="flex-1 cursor-pointer rounded-lg border-2 border-border py-2 text-center text-sm font-medium transition-colors hover:border-muted-foreground has-[:checked]:border-primary has-[:checked]:bg-primary/10 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2"
-						>
-							<input
-								type="radio"
-								name="preferred-language"
-								value={option.value}
-								checked={language === option.value}
-								onchange={() => (language = option.value)}
-								class="sr-only"
-							/>
-							{option.label}
-						</label>
+						<option value={option.value}>{option.label}</option>
 					{/each}
-				</div>
+				</select>
+				{#if !translatableChoice}
+					<p class="text-xs text-muted-foreground" aria-live="polite">
+						{t('ai.readingLanguageNoProvider')}
+					</p>
+				{/if}
 			</fieldset>
 
 			<div class="flex flex-col gap-2">

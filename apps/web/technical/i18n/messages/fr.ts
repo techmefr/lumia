@@ -406,6 +406,8 @@ export const fr = {
 	'ai.readingLanguage': 'Langue de lecture',
 	'ai.readingLanguageHint':
 		"Les articles publiés dans une autre langue sont traduits vers celle-ci, quand un fournisseur de traduction est configuré.",
+	'ai.readingLanguageNoProvider':
+		"Aucun service de traduction ne couvre cette langue : les articles restent dans leur langue d'origine.",
 	'ai.provider': 'Fournisseur de résumé',
 	'ai.providerNone': 'Aucun — résumé local',
 	'ai.providerCustom': 'Endpoint compatible OpenAI (auto-hébergé)',

@@ -393,6 +393,8 @@ export const en: Catalogue = {
 	'ai.readingLanguage': 'Reading language',
 	'ai.readingLanguageHint':
 		'Articles published in another language are translated into this one, when a translation provider is configured.',
+	'ai.readingLanguageNoProvider':
+		'No translation service covers this language: articles stay in the one they were written in.',
 	'ai.provider': 'Summary provider',
 	'ai.providerNone': 'None — local summary',
 	'ai.providerCustom': 'OpenAI-compatible endpoint (self-hosted)',

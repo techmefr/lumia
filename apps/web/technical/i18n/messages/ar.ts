@@ -388,6 +388,8 @@ export const ar: Catalogue = {
 	'ai.readingLanguage': 'لغة القراءة',
 	'ai.readingLanguageHint':
 		'تُترجم المقالات المنشورة بلغة أخرى إلى هذه اللغة، عند إعداد مزوّد ترجمة.',
+	'ai.readingLanguageNoProvider':
+		'لا تدعم أي خدمة ترجمة هذه اللغة: تبقى المقالات بلغتها الأصلية.',
 	'ai.provider': 'مزوّد الملخّص',
 	'ai.providerNone': 'لا شيء — ملخّص محلي',
 	'ai.providerCustom': 'نقطة وصول متوافقة مع OpenAI (استضافة ذاتية)',

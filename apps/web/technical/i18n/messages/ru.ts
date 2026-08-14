@@ -401,6 +401,8 @@ export const ru: Catalogue = {
 	'ai.readingLanguage': 'Язык чтения',
 	'ai.readingLanguageHint':
 		'Статьи на других языках переводятся на этот, если настроен поставщик перевода.',
+	'ai.readingLanguageNoProvider':
+		'Ни один сервис перевода не поддерживает этот язык: статьи останутся на языке оригинала.',
 	'ai.provider': 'Поставщик резюме',
 	'ai.providerNone': 'Нет — локальное резюме',
 	'ai.providerCustom': 'Совместимый с OpenAI endpoint (свой сервер)',

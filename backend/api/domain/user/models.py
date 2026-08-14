@@ -5,7 +5,6 @@ from uuid import UUID, uuid4
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from api.domain.article.models import Lang
 from api.technical.orm import Base, TimestampMixin
 
 
@@ -23,6 +22,26 @@ class AIProvider(StrEnum):
 
 class TranslationProvider(StrEnum):
     DEEPL = "deepl"
+
+
+class ReadingLang(StrEnum):
+    """The language the reader wants articles in.
+
+    Deliberately not `Lang`: that one is the language an article was written in, and it only holds
+    the two the keyword extractor has a stemmer for. What a reader can ask to be translated into is
+    a wider, independent set, and merging the two would tie a translation target to a stemmer.
+    """
+
+    FR = "fr"
+    EN = "en"
+    ES = "es"
+    DE = "de"
+    IT = "it"
+    PT = "pt"
+    RU = "ru"
+    AR = "ar"
+    ZH = "zh"
+    MG = "mg"
 
 
 class Theme(StrEnum):
@@ -68,7 +87,7 @@ class User(Base, TimestampMixin):
     theme: Mapped[Theme] = mapped_column(default=Theme.SYSTEM)
     orbit_position: Mapped[OrbitPosition] = mapped_column(default=OrbitPosition.RIGHT)
     font_base_size: Mapped[int] = mapped_column(default=16)
-    preferred_language: Mapped[Lang] = mapped_column(default=Lang.FR)
+    preferred_language: Mapped[ReadingLang] = mapped_column(default=ReadingLang.FR)
 
 
 class RefreshToken(Base, TimestampMixin):

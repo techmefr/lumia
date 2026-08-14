@@ -403,6 +403,8 @@ export const de: Catalogue = {
 	'ai.readingLanguage': 'Lesesprache',
 	'ai.readingLanguageHint':
 		'Artikel in einer anderen Sprache werden in diese übersetzt, sofern ein Übersetzungsanbieter eingerichtet ist.',
+	'ai.readingLanguageNoProvider':
+		'Kein Übersetzungsdienst deckt diese Sprache ab: Artikel bleiben in ihrer Originalsprache.',
 	'ai.provider': 'Anbieter der Zusammenfassung',
 	'ai.providerNone': 'Keiner — lokale Zusammenfassung',
 	'ai.providerCustom': 'OpenAI-kompatibler Endpunkt (selbst gehostet)',
