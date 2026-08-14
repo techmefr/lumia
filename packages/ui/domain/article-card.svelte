@@ -23,6 +23,8 @@
 		scrollProgress?: number;
 		/** The feed's own icon, proxied by the API. Falls back to the source's initial. */
 		iconUrl?: string | null;
+		/** 0-100 affinity. Hidden at the neutral 50, where the number would say nothing. */
+		relevanceScore?: number | null;
 		class?: string;
 	}
 
@@ -40,6 +42,7 @@
 		read = false,
 		scrollProgress = 0,
 		iconUrl = null,
+		relevanceScore = null,
 		class: className
 	}: Props = $props();
 
@@ -51,6 +54,7 @@
 	);
 	const initial = $derived(sourceLabel.charAt(0).toUpperCase());
 	const progressPercent = $derived(Math.round(Math.min(Math.max(scrollProgress, 0), 1) * 100));
+	const showsScore = $derived(relevanceScore !== null && relevanceScore !== 50);
 </script>
 
 <a
@@ -87,13 +91,24 @@
 
 		<GlareHover class="absolute inset-0" glareColor="#ffffff" glareOpacity={0.35} glareSize={200} />
 
-		{#if readingMinutes}
-			<span
-				class="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur"
-			>
-				{readingMinutes} min
-			</span>
-		{/if}
+		<div class="absolute right-2 top-2 flex items-center gap-1">
+			{#if showsScore}
+				<span
+					class="rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur"
+					title="Pertinence estimée d'après tes lectures"
+				>
+					{relevanceScore}
+					<span class="sr-only">sur 100 de pertinence</span>
+				</span>
+			{/if}
+			{#if readingMinutes}
+				<span
+					class="rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur"
+				>
+					{readingMinutes} min
+				</span>
+			{/if}
+		</div>
 	</div>
 
 	<div class="flex flex-1 flex-col gap-1.5 p-4">
@@ -122,6 +137,7 @@
 			{/if}
 		</span>
 		<h3
+			style={`view-transition-name: article-title-${id};`}
 			class={cn(
 				'font-serif leading-snug transition-transform duration-200 group-hover:-translate-y-0.5',
 				featured ? 'line-clamp-3 text-xl sm:text-2xl' : 'line-clamp-2 text-base',

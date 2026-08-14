@@ -11,10 +11,14 @@
 	import Search from '@lucide/svelte/icons/search';
 	import CheckCheck from '@lucide/svelte/icons/check-check';
 	import Plus from '@lucide/svelte/icons/plus';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import LayoutTemplate from '@lucide/svelte/icons/layout-template';
 	import { lumia } from '$technical/api/client';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { bindShortcuts } from '$technical/keyboard/shortcuts';
 	import ArticleGrid from '$domain/article/article-grid.svelte';
+	import SectionChips from '$domain/article/section-chips.svelte';
+	import FlipReader from '$domain/article/flip-reader.svelte';
 	import FeedSidebar from '$domain/feed/feed-sidebar.svelte';
 
 	const PAGE_SIZE = 24;
@@ -38,6 +42,8 @@
 	let error = $state<string | null>(null);
 	let cursor = $state(-1);
 	let searchEl = $state<HTMLInputElement | null>(null);
+	let sort = $state<'recent' | 'relevance'>('recent');
+	let flipping = $state(false);
 
 	const currentScope = $derived(
 		selectedFeedId
@@ -56,9 +62,16 @@
 			keywordId,
 			query: appliedQuery.length >= 2 ? appliedQuery : undefined,
 			unreadOnly: unreadOnly || undefined,
+			sort,
 			limit: PAGE_SIZE,
 			offset
 		};
+	}
+
+	function setSort(next: 'recent' | 'relevance') {
+		if (sort === next) return;
+		sort = next;
+		void loadArticles();
 	}
 
 	async function loadArticles() {
@@ -228,6 +241,7 @@
 		void refreshUnread();
 
 		return bindShortcuts({
+			f: () => (flipping = articles.length > 0),
 			j: () => moveCursor(1),
 			k: () => moveCursor(-1),
 			o: () => void openCursor(),
@@ -266,6 +280,39 @@
 				{/if}
 			</h1>
 			<div class="flex flex-wrap items-center gap-2">
+				<div class="flex overflow-hidden rounded-md border" role="group" aria-label="Ordre d'affichage">
+					<button
+						type="button"
+						onclick={() => setSort('recent')}
+						aria-pressed={sort === 'recent'}
+						class="min-h-9 px-3 text-sm font-medium transition-colors {sort === 'recent'
+							? 'bg-primary text-primary-foreground'
+							: 'hover:bg-secondary'}"
+					>
+						Récents
+					</button>
+					<button
+						type="button"
+						onclick={() => setSort('relevance')}
+						aria-pressed={sort === 'relevance'}
+						class="flex min-h-9 items-center gap-1.5 border-l px-3 text-sm font-medium transition-colors {sort ===
+						'relevance'
+							? 'bg-primary text-primary-foreground'
+							: 'hover:bg-secondary'}"
+					>
+						<LayoutTemplate class="size-4" />
+						Kiosque
+					</button>
+				</div>
+				<Button
+					variant="outline"
+					size="sm"
+					onclick={() => (flipping = true)}
+					disabled={articles.length === 0}
+				>
+					<BookOpen class="size-4" />
+					Feuilleter
+				</Button>
 				<Button variant={unreadOnly ? 'default' : 'outline'} size="sm" onclick={toggleUnreadOnly}>
 					Non lus seulement
 				</Button>
@@ -275,6 +322,14 @@
 				</Button>
 			</div>
 		</div>
+
+		<SectionChips
+			{folders}
+			{unread}
+			{selectedFolderId}
+			onSelectAll={selectAll}
+			onSelectFolder={selectFolder}
+		/>
 
 		<form class="flex items-center gap-2" onsubmit={submitSearch} role="search">
 			<label for="article-search" class="sr-only">Rechercher un article</label>
@@ -321,7 +376,7 @@
 			<p role="alert" class="text-sm text-destructive">{error}</p>
 		{/if}
 
-		<ArticleGrid {articles} {loading} {cursor}>
+		<ArticleGrid {articles} {loading} {cursor} hero={sort === 'relevance'}>
 			{#snippet empty()}
 				<div class="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-6">
 					<p class="flex items-center gap-2 text-sm text-muted-foreground">
@@ -364,7 +419,16 @@
 
 		<p class="text-xs text-muted-foreground">
 			Raccourcis : <kbd>j</kbd>/<kbd>k</kbd> naviguer · <kbd>o</kbd> ouvrir · <kbd>m</kbd> lu/non lu ·
-			<kbd>s</kbd> à lire · <kbd>u</kbd> non lus · <kbd>/</kbd> rechercher
+			<kbd>s</kbd> à lire · <kbd>u</kbd> non lus · <kbd>f</kbd> feuilleter · <kbd>/</kbd> rechercher
 		</p>
 	</div>
 </div>
+
+{#if flipping}
+	<FlipReader
+		{articles}
+		startIndex={Math.max(cursor, 0)}
+		onClose={() => (flipping = false)}
+		onPage={(index) => (cursor = index)}
+	/>
+{/if}

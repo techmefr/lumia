@@ -1,5 +1,5 @@
 import type { HttpClient } from '../../technical/http-client';
-import type { Feed, Folder, UnreadCounts } from './types';
+import type { DiscoverSuggestion, Feed, Folder, UnreadCounts } from './types';
 
 export interface FeedUpdate {
 	title?: string;
@@ -55,7 +55,12 @@ export function createFeedApi(http: HttpClient) {
 		return http.request<Feed[]>('/feeds/import-opml', { method: 'POST', formData });
 	}
 
+	async function discoverFeeds(limit = 6): Promise<DiscoverSuggestion[]> {
+		return http.request<DiscoverSuggestion[]>(`/feeds/discover?limit=${limit}`);
+	}
+
 	return {
+		discoverFeeds,
 		listFolders,
 		createFolder,
 		renameFolder,

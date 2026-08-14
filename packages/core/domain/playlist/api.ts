@@ -10,6 +10,14 @@ export function createPlaylistApi(http: HttpClient) {
 		return http.request<PlaylistSummary>('/playlists', { method: 'POST', body: { name } });
 	}
 
+	/** Fills a fresh playlist with the best-scored unread articles that fit the given minutes. */
+	async function createPlaylistForDuration(targetMinutes: number): Promise<PlaylistDetail> {
+		return http.request<PlaylistDetail>('/playlists/for-duration', {
+			method: 'POST',
+			body: { target_minutes: targetMinutes }
+		});
+	}
+
 	async function getPlaylist(playlistId: string): Promise<PlaylistDetail> {
 		return http.request<PlaylistDetail>(`/playlists/${playlistId}`);
 	}
@@ -49,6 +57,7 @@ export function createPlaylistApi(http: HttpClient) {
 	return {
 		listPlaylists,
 		createPlaylist,
+		createPlaylistForDuration,
 		getPlaylist,
 		renamePlaylist,
 		deletePlaylist,

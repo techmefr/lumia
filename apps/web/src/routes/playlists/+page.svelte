@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import type { PlaylistSummary } from '@lumia/core';
 	import {
 		Button,
@@ -27,6 +28,29 @@
 	let newName = $state('');
 	let renamingId = $state<string | null>(null);
 	let renameValue = $state('');
+	let filling = $state<number | null>(null);
+
+	/** The three durations the design settled on: a coffee, a commute, a long train leg. */
+	const TIME_OPTIONS = [12, 25, 45];
+
+	async function fillForDuration(minutes: number) {
+		filling = minutes;
+		try {
+			const playlist = await lumia.playlist.createPlaylistForDuration(minutes);
+			await load();
+			if (playlist.articles.length === 0) {
+				toast('Rien à mettre dedans : aucun article non lus assez court.', { tone: 'destructive' });
+				return;
+			}
+			toast(`${playlist.articles.length} article(s) pour ${minutes} min.`, {
+				action: { label: 'Ouvrir', run: () => goto(`${base}/playlists/${playlist.id}`) }
+			});
+		} catch {
+			toast('Impossible de composer la playlist.', { tone: 'destructive' });
+		} finally {
+			filling = null;
+		}
+	}
 
 	async function load() {
 		loading = true;
@@ -108,6 +132,30 @@
 	{#if error}
 		<p role="alert" class="text-sm text-destructive">{error}</p>
 	{/if}
+
+	<Card>
+		<CardHeader>
+			<CardTitle>Selon le temps que tu as</CardTitle>
+		</CardHeader>
+		<CardContent class="flex flex-col gap-2">
+			<p class="text-sm text-muted-foreground">
+				Lumia remplit une file avec tes articles non lus les plus pertinents, jusqu'à tenir dans la
+				durée choisie.
+			</p>
+			<div class="flex flex-wrap gap-2">
+				{#each TIME_OPTIONS as minutes (minutes)}
+					<Button
+						variant="secondary"
+						onclick={() => fillForDuration(minutes)}
+						disabled={filling !== null}
+					>
+						<Clock class="size-4" />
+						{filling === minutes ? 'Composition…' : `${minutes} min`}
+					</Button>
+				{/each}
+			</div>
+		</CardContent>
+	</Card>
 
 	<Card>
 		<CardHeader>

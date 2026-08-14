@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { ArticleSummary } from '@lumia/core';
-	import { Button, Skeleton } from '@lumia/ui';
+	import { Button, Skeleton, toast } from '@lumia/ui';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import PartyPopper from '@lucide/svelte/icons/party-popper';
@@ -23,10 +23,12 @@
 
 	function save(article: ArticleSummary) {
 		void lumia.recommendation.sendFeedback(article.id, { saved: true });
+		toast('Ajouté à « À lire ».');
 	}
 
 	function favorite(article: ArticleSummary) {
 		void lumia.recommendation.sendFeedback(article.id, { favorite: true });
+		toast('Ajouté aux favoris.');
 	}
 
 	onMount(() => {
@@ -49,7 +51,8 @@
 			L'Étincelle
 		</h1>
 		<p class="text-sm text-muted-foreground">
-			Glisse à droite pour aimer, à gauche pour passer — ou touche la carte pour l'ouvrir.
+			Glisse à droite pour aimer, à gauche pour passer, vers le haut pour mettre en favori, vers le
+			bas pour garder à lire — ou touche la carte pour l'ouvrir.
 		</p>
 	</div>
 

@@ -9,6 +9,15 @@ export interface FeedbackUpdate {
 	scroll_progress?: number;
 }
 
+export type FilterMode = 'boost' | 'mute';
+
+export interface FilterRule {
+	id: string;
+	/** Always lowercase: the backend normalises before storing. */
+	term: string;
+	mode: FilterMode;
+}
+
 /** Exactly one scope must be set: the backend rejects zero or several with a 422. */
 export interface MarkReadScope {
 	article_ids?: string[];

@@ -357,3 +357,88 @@ export const SEED_PLAYLISTS: { id: string; name: string; article_ids: string[] }
 export const SEED_SAVED = ['article-3', 'article-8', 'article-11'];
 export const SEED_FAVORITES = ['article-1', 'article-7'];
 export const SEED_READ = ['article-6', 'article-10'];
+/**
+ * A handful of votes already cast, so the relevance scores are not all sitting at the neutral 50
+ * when the demo opens. They feed the same accumulation the real backend does.
+ */
+export const SEED_LIKED = ['article-1', 'article-7', 'article-11'];
+export const SEED_DISLIKED = ['article-9'];
+
+/**
+ * The same shape as the catalogue bundled with the backend, trimmed to a page's worth. These are
+ * real public feeds: the demo can't fetch them, but the urls have to be believable enough to judge
+ * the screen.
+ */
+export const SEED_DISCOVER: {
+	title: string;
+	url: string;
+	site_url: string;
+	description: string;
+	language: string;
+	topics: string[];
+}[] = [
+	{
+		title: 'Next',
+		url: 'https://next.ink/feed/',
+		site_url: 'https://next.ink',
+		description: 'Informatique, logiciel libre et politiques du numérique.',
+		language: 'fr',
+		topics: ['outils', 'vie privée', 'auto-hébergement']
+	},
+	{
+		title: 'LinuxFr.org',
+		url: 'https://linuxfr.org/news.atom',
+		site_url: 'https://linuxfr.org',
+		description: 'Actualité du logiciel libre, écrite par ses utilisateurs.',
+		language: 'fr',
+		topics: ['auto-hébergement', 'rss', 'outils']
+	},
+	{
+		title: 'Étapes',
+		url: 'https://etapes.com/feed/',
+		site_url: 'https://etapes.com',
+		description: 'Design graphique, typographie et culture visuelle.',
+		language: 'fr',
+		topics: ['typographie', 'composition', 'lisibilité']
+	},
+	{
+		title: 'CNRS Le Journal',
+		url: 'https://lejournal.cnrs.fr/rss',
+		site_url: 'https://lejournal.cnrs.fr',
+		description: 'La recherche française racontée par le CNRS.',
+		language: 'fr',
+		topics: ['recherche', 'science ouverte', 'préprint']
+	},
+	{
+		title: 'Julia Evans',
+		url: 'https://jvns.ca/atom.xml',
+		site_url: 'https://jvns.ca',
+		description: 'Systems and networking, explained from first principles.',
+		language: 'en',
+		topics: ['outils', 'algorithmes']
+	},
+	{
+		title: 'Quanta Magazine',
+		url: 'https://api.quantamagazine.org/feed/',
+		site_url: 'https://www.quantamagazine.org',
+		description: 'Mathematics, physics and computer science, at length.',
+		language: 'en',
+		topics: ['recherche', 'algorithmes']
+	},
+	{
+		title: 'Low-tech Magazine',
+		url: 'https://solar.lowtechmagazine.com/feeds/all-en.atom.xml',
+		site_url: 'https://solar.lowtechmagazine.com',
+		description: 'Energy, sobriety and technologies that last.',
+		language: 'en',
+		topics: ['web lent', 'attention', 'usages']
+	},
+	{
+		title: 'CSS-Tricks',
+		url: 'https://css-tricks.com/feed/',
+		site_url: 'https://css-tricks.com',
+		description: 'Front-end techniques, layout and browser behaviour.',
+		language: 'en',
+		topics: ['interface', 'grille', 'composition']
+	}
+];

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import type { ArticleSummary } from '@lumia/core';
-	import { ArticleCard, ArticleCardSkeleton, GradualBlur } from '@lumia/ui';
+	import { ArticleCard, ArticleCardSkeleton, ArticleHero, GradualBlur } from '@lumia/ui';
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import { accentHueForFeed } from './accent-hue';
 	import { feedIcons } from '$technical/api/feed-icons.svelte';
@@ -11,22 +11,34 @@
 		loading: boolean;
 		/** Index of the keyboard-focused card, or -1 when navigation hasn't started. */
 		cursor?: number;
+		/** Kiosque layout: the first article becomes a full-width lead, the rest keep the grid. */
+		hero?: boolean;
 		/** Shown when there is nothing to display; put the next action in here, not a dead end. */
 		empty?: import('svelte').Snippet;
 		/** Rendered under the grid — typically the "load more" button. */
 		footer?: import('svelte').Snippet;
 	}
 
-	let { articles, loading, cursor = -1, empty, footer }: Props = $props();
+	let { articles, loading, cursor = -1, hero = false, empty, footer }: Props = $props();
 
 	const SKELETON_COUNT = 6;
+
+	const lead = $derived(hero ? articles[0] : undefined);
+	const rest = $derived(lead ? articles.slice(1) : articles);
+	/** The grid indices shift by one when a lead is pulled out; the cursor has to follow. */
+	const gridCursor = $derived(lead ? cursor - 1 : cursor);
 </script>
 
 {#if loading && articles.length === 0}
-	<div role="status" aria-label="Chargement des articles" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-		{#each Array(SKELETON_COUNT), index}
-			<ArticleCardSkeleton featured={index === 0} />
-		{/each}
+	<div role="status" aria-label="Chargement des articles" class="flex flex-col gap-4">
+		{#if hero}
+			<ArticleCardSkeleton featured />
+		{/if}
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			{#each Array(SKELETON_COUNT), index}
+				<ArticleCardSkeleton featured={!hero && index === 0} />
+			{/each}
+		</div>
 	</div>
 {:else if articles.length === 0}
 	{#if empty}
@@ -38,9 +50,26 @@
 		</p>
 	{/if}
 {:else}
-	<div class="relative">
+	<div class="relative flex flex-col gap-4">
+		{#if lead}
+			<ArticleHero
+				id={lead.id}
+				href="{base}/articles/{lead.id}"
+				title={lead.title}
+				summary={lead.summary}
+				imageUrl={lead.image_url}
+				sourceLabel={lead.source_label}
+				publishedAt={lead.published_at}
+				accentHue={accentHueForFeed(lead.feed_id)}
+				readingMinutes={lead.reading_minutes}
+				read={lead.read}
+				iconUrl={feedIcons.get(lead.feed_id)}
+				relevanceScore={lead.relevance_score}
+				class={cursor === 0 ? 'ring-2 ring-ring ring-offset-2 ring-offset-background' : ''}
+			/>
+		{/if}
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each articles as article, index (article.id)}
+			{#each rest as article, index (article.id)}
 				<ArticleCard
 					id={article.id}
 					href="{base}/articles/{article.id}"
@@ -50,12 +79,13 @@
 					sourceLabel={article.source_label}
 					publishedAt={article.published_at}
 					accentHue={accentHueForFeed(article.feed_id)}
-					featured={index === 0}
+					featured={!lead && index === 0}
 					readingMinutes={article.reading_minutes}
 					read={article.read}
 					scrollProgress={article.scroll_progress}
 					iconUrl={feedIcons.get(article.feed_id)}
-					class={index === cursor ? 'ring-2 ring-ring ring-offset-2 ring-offset-background' : ''}
+					relevanceScore={article.relevance_score}
+					class={index === gridCursor ? 'ring-2 ring-ring ring-offset-2 ring-offset-background' : ''}
 				/>
 			{/each}
 		</div>

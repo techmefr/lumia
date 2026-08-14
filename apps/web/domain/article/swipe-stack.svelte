@@ -21,13 +21,17 @@
 	let dragX = $state(0);
 	let dragY = $state(0);
 	let dragging = $state(false);
-	let exiting = $state<'like' | 'dislike' | null>(null);
+	type SwipeAction = 'like' | 'dislike' | 'favorite' | 'save';
+
+	let exiting = $state<SwipeAction | null>(null);
 	let pointerStart = { x: 0, y: 0, time: 0 };
 
 	const visible = $derived(articles.slice(currentIndex, currentIndex + 3));
 	const current = $derived(articles[currentIndex]);
 
 	const SWIPE_THRESHOLD = 110;
+	/** How far the card flies off once a direction is committed. */
+	const EXIT_DISTANCE = 600;
 
 	function onPointerDown(event: PointerEvent) {
 		if (exiting) return;
@@ -45,28 +49,52 @@
 	function onPointerUp() {
 		if (!dragging) return;
 		dragging = false;
-		const distance = Math.abs(dragX);
 		const elapsed = Date.now() - pointerStart.time;
-		if (distance < 8 && elapsed < 300) {
+		if (Math.abs(dragX) < 8 && Math.abs(dragY) < 8 && elapsed < 300) {
 			if (current) onOpen(current);
 			dragX = 0;
 			dragY = 0;
 			return;
 		}
-		if (distance > SWIPE_THRESHOLD) {
-			commit(dragX > 0 ? 'like' : 'dislike');
+		// The dominant axis decides, so a diagonal drag resolves to one intent rather than firing
+		// both. Horizontal wins a tie: left/right are the two gestures every card game teaches.
+		const action =
+			Math.abs(dragX) >= Math.abs(dragY)
+				? Math.abs(dragX) > SWIPE_THRESHOLD
+					? dragX > 0
+						? 'like'
+						: 'dislike'
+					: null
+				: Math.abs(dragY) > SWIPE_THRESHOLD
+					? dragY < 0
+						? 'favorite'
+						: 'save'
+					: null;
+		if (action) {
+			commit(action);
 		} else {
 			dragX = 0;
 			dragY = 0;
 		}
 	}
 
-	function commit(direction: 'like' | 'dislike') {
-		exiting = direction;
-		dragX = direction === 'like' ? 600 : -600;
+	function commit(action: SwipeAction) {
+		exiting = action;
+		if (action === 'like') dragX = EXIT_DISTANCE;
+		else if (action === 'dislike') dragX = -EXIT_DISTANCE;
+		else if (action === 'favorite') dragY = -EXIT_DISTANCE;
+		else dragY = EXIT_DISTANCE;
+
 		const article = current;
 		setTimeout(() => {
-			if (article) direction === 'like' ? onLike(article) : onDislike(article);
+			if (article) {
+				if (action === 'like') onLike(article);
+				else if (action === 'dislike') onDislike(article);
+				else if (action === 'favorite') onFavorite(article);
+				else onSave(article);
+			}
+			// Favorite and save don't record a sentiment, so the backend may serve the article again
+			// later; advancing here is about this session's stack, not about hiding it forever.
 			currentIndex += 1;
 			exiting = null;
 			dragX = 0;
@@ -74,17 +102,11 @@
 		}, 250);
 	}
 
-	function saveCurrent() {
-		if (current) onSave(current);
-	}
-
-	function favoriteCurrent() {
-		if (current) onFavorite(current);
-	}
-
 	const rotation = $derived(dragX / 18);
 	const likeOpacity = $derived(Math.min(Math.max(dragX / SWIPE_THRESHOLD, 0), 1));
 	const dislikeOpacity = $derived(Math.min(Math.max(-dragX / SWIPE_THRESHOLD, 0), 1));
+	const favoriteOpacity = $derived(Math.min(Math.max(-dragY / SWIPE_THRESHOLD, 0), 1));
+	const saveOpacity = $derived(Math.min(Math.max(dragY / SWIPE_THRESHOLD, 0), 1));
 </script>
 
 {#if current}
@@ -141,6 +163,20 @@
 						>
 							Non
 						</div>
+						<div
+							aria-hidden="true"
+							class="pointer-events-none absolute inset-x-0 top-6 mx-auto w-fit rounded-lg border-4 border-amber-500 px-3 py-1 text-lg font-bold uppercase text-amber-500"
+							style={`opacity: ${favoriteOpacity};`}
+						>
+							Favori
+						</div>
+						<div
+							aria-hidden="true"
+							class="pointer-events-none absolute inset-x-0 bottom-6 mx-auto w-fit rounded-lg border-4 border-primary px-3 py-1 text-lg font-bold uppercase text-primary"
+							style={`opacity: ${saveOpacity};`}
+						>
+							À lire
+						</div>
 					{/if}
 				</div>
 			{/each}
@@ -168,14 +204,14 @@
 				<ThumbsDown class="size-6" />
 			</button>
 			<button
-				onclick={saveCurrent}
+				onclick={() => commit('save')}
 				aria-label="Enregistrer"
 				class="flex size-11 items-center justify-center rounded-full border-2 border-primary text-primary shadow-sm transition-transform hover:scale-110 active:scale-95"
 			>
 				<Bookmark class="size-5" />
 			</button>
 			<button
-				onclick={favoriteCurrent}
+				onclick={() => commit('favorite')}
 				aria-label="Mettre en favoris"
 				class="flex size-11 items-center justify-center rounded-full border-2 border-amber-500 text-amber-500 shadow-sm transition-transform hover:scale-110 active:scale-95"
 			>

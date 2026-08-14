@@ -16,6 +16,8 @@ export interface ArticleSummary {
 	read: boolean;
 	/** How far the user got, 0 to 1. */
 	scroll_progress: number;
+	/** 0 to 100 affinity, 50 meaning nothing has been learned about this article yet. */
+	relevance_score: number;
 }
 
 export interface Keyword {

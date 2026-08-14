@@ -1,7 +1,7 @@
 export type Role = 'admin' | 'member';
 export type Theme = 'light' | 'dark' | 'system';
 export type OrbitPosition = 'left' | 'right';
-export type AIProvider = 'mistral' | 'openai' | 'custom';
+export type AIProvider = 'mistral' | 'openai' | 'anthropic' | 'custom';
 export type TranslationProvider = 'deepl';
 export type PreferredLanguage = 'fr' | 'en';
 

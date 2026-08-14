@@ -1,6 +1,6 @@
 import type { HttpClient } from '../../technical/http-client';
 import type { ArticleSummary } from '../article/types';
-import type { FeedbackUpdate, MarkReadScope } from './types';
+import type { FeedbackUpdate, FilterMode, FilterRule, MarkReadScope } from './types';
 
 export function createRecommendationApi(http: HttpClient) {
 	async function getEtincelle(limit = 20, offset = 0): Promise<ArticleSummary[]> {
@@ -26,7 +26,28 @@ export function createRecommendationApi(http: HttpClient) {
 		});
 	}
 
-	return { getEtincelle, getSaved, getFavorites, sendFeedback, markRead };
+	async function listFilterRules(): Promise<FilterRule[]> {
+		return http.request<FilterRule[]>('/filter-rules');
+	}
+
+	async function addFilterRule(term: string, mode: FilterMode): Promise<FilterRule> {
+		return http.request<FilterRule>('/filter-rules', { method: 'POST', body: { term, mode } });
+	}
+
+	async function deleteFilterRule(ruleId: string): Promise<void> {
+		await http.request(`/filter-rules/${ruleId}`, { method: 'DELETE' });
+	}
+
+	return {
+		getEtincelle,
+		getSaved,
+		getFavorites,
+		sendFeedback,
+		markRead,
+		listFilterRules,
+		addFilterRule,
+		deleteFilterRule
+	};
 }
 
 export type RecommendationApi = ReturnType<typeof createRecommendationApi>;

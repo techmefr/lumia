@@ -45,6 +45,8 @@ export class SpeechReader {
 	paused = $state(false);
 	/** 0 to 1 across the whole queued text. */
 	progress = $state(0);
+	/** The chunk being spoken right now, empty when silent. Drives the karaoke highlight. */
+	currentChunk = $state('');
 
 	private chunks: string[] = [];
 	private index = 0;
@@ -103,6 +105,7 @@ export class SpeechReader {
 		this.speaking = false;
 		this.paused = false;
 		this.progress = 0;
+		this.currentChunk = '';
 		window.speechSynthesis.cancel();
 	}
 
@@ -115,6 +118,7 @@ export class SpeechReader {
 			return;
 		}
 
+		this.currentChunk = chunk;
 		const utterance = new SpeechSynthesisUtterance(chunk);
 		utterance.rate = this.rate;
 		utterance.lang = this.lang;

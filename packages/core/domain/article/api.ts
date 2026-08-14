@@ -10,6 +10,8 @@ export interface ListArticlesParams {
 	/** Free-text search over title, summary and content. Two characters minimum server-side. */
 	query?: string;
 	unreadOnly?: boolean;
+	/** `relevance` ranks by learned affinity instead of publication date. */
+	sort?: 'recent' | 'relevance';
 	limit?: number;
 	offset?: number;
 }
@@ -33,6 +35,7 @@ export function createArticleApi(http: HttpClient) {
 			keyword_id: params.keywordId,
 			q: params.query,
 			unread_only: params.unreadOnly ? true : undefined,
+			sort: params.sort,
 			limit: params.limit,
 			offset: params.offset
 		});

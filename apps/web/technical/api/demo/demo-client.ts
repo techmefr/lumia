@@ -1,9 +1,12 @@
 import type {
 	ArticleDetail,
 	ArticleSummary,
+	DiscoverSuggestion,
 	Feed,
 	FeedUpdate,
 	FeedbackUpdate,
+	FilterMode,
+	FilterRule,
 	Folder,
 	ListArticlesParams,
 	LumiaClient,
@@ -17,9 +20,12 @@ import type {
 } from '@lumia/core';
 import {
 	SEED_ARTICLES,
+	SEED_DISCOVER,
+	SEED_DISLIKED,
 	SEED_FAVORITES,
 	SEED_FEEDS,
 	SEED_FOLDERS,
+	SEED_LIKED,
 	SEED_PLAYLISTS,
 	SEED_READ,
 	SEED_SAVED,
@@ -30,6 +36,10 @@ const STORAGE_KEY = 'lumia:demo-state';
 const WORDS_PER_MINUTE = 200;
 /** Enough delay for skeletons and pending states to be visible, short enough not to annoy. */
 const LATENCY_MS = 180;
+/** Same numbers as the backend, so the demo teaches the right feel for a vote. */
+const VOTE_DELTA: Record<'like' | 'dislike', number> = { like: 1.5, dislike: -0.5 };
+const BOOST_WEIGHT = 1;
+const TANH_SCALE = 3;
 
 interface Feedback {
 	sentiment: 'like' | 'dislike' | null;
@@ -39,12 +49,22 @@ interface Feedback {
 	scroll_progress: number;
 }
 
+/** The four score tables the backend keeps, flattened to plain records. */
+interface Scores {
+	keywords: Record<string, number>;
+	feeds: Record<string, number>;
+	authors: Record<string, number>;
+	categories: Record<string, number>;
+}
+
 interface DemoState {
 	folders: Folder[];
 	feeds: Feed[];
 	articleIds: string[];
 	feedback: Record<string, Feedback>;
 	playlists: { id: string; name: string; article_ids: string[] }[];
+	filterRules: FilterRule[];
+	scores: Scores;
 	me: Me;
 	nextId: number;
 }
@@ -58,6 +78,28 @@ function readingMinutes(paragraphs: string[]): number {
 	return Math.max(1, Math.round(words / WORDS_PER_MINUTE));
 }
 
+function emptyScores(): Scores {
+	return { keywords: {}, feeds: {}, authors: {}, categories: {} };
+}
+
+/**
+ * Spreads one vote over every dimension of an article, exactly as the backend's feedback service
+ * does: the demo has to teach the right feel for what a like changes.
+ */
+function accumulate(scores: Scores, article: SeedArticle, delta: number): void {
+	for (const term of article.keywords) {
+		scores.keywords[term] = (scores.keywords[term] ?? 0) + delta;
+	}
+	scores.feeds[article.feed_id] = (scores.feeds[article.feed_id] ?? 0) + delta;
+	if (article.author_name) {
+		scores.authors[article.author_name] = (scores.authors[article.author_name] ?? 0) + delta;
+	}
+	if (article.category_name) {
+		scores.categories[article.category_name] =
+			(scores.categories[article.category_name] ?? 0) + delta;
+	}
+}
+
 function initialState(): DemoState {
 	const feedback: Record<string, Feedback> = {};
 	for (const article of SEED_ARTICLES) feedback[article.id] = emptyFeedback();
@@ -66,6 +108,18 @@ function initialState(): DemoState {
 	for (const id of SEED_READ) {
 		feedback[id].read = true;
 		feedback[id].scroll_progress = 1;
+	}
+	const scores = emptyScores();
+	for (const [ids, sentiment] of [
+		[SEED_LIKED, 'like'],
+		[SEED_DISLIKED, 'dislike']
+	] as const) {
+		for (const id of ids) {
+			const article = SEED_ARTICLES.find((candidate) => candidate.id === id);
+			if (!article) continue;
+			feedback[id].sentiment = sentiment;
+			accumulate(scores, article, VOTE_DELTA[sentiment]);
+		}
 	}
 	return {
 		folders: SEED_FOLDERS.map((folder) => ({ ...folder })),
@@ -80,6 +134,8 @@ function initialState(): DemoState {
 		articleIds: SEED_ARTICLES.map((article) => article.id),
 		feedback,
 		playlists: SEED_PLAYLISTS.map((playlist) => ({ ...playlist, article_ids: [...playlist.article_ids] })),
+		filterRules: [],
+		scores,
 		me: {
 			id: 'demo-user',
 			email: 'demo@lumia.local',
@@ -141,6 +197,35 @@ export function createDemoClient(): LumiaClient {
 		return state.feedback[articleId];
 	}
 
+	function ruleTerms(mode: FilterMode): string[] {
+		return state.filterRules.filter((rule) => rule.mode === mode).map((rule) => rule.term);
+	}
+
+	/**
+	 * Same substring match as the backend: title and summary only, never the rendered HTML, where a
+	 * term like « img » would match markup instead of subject matter.
+	 */
+	function matchesTerms(article: SeedArticle, terms: string[]): boolean {
+		if (terms.length === 0) return false;
+		const haystack = `${article.title} ${article.summary}`.toLowerCase();
+		return terms.some((term) => haystack.includes(term));
+	}
+
+	/** Average affinity over the article's dimensions, boost rules included. */
+	function rawScore(article: SeedArticle): number {
+		const parts = article.keywords.map((term) => state.scores.keywords[term] ?? 0);
+		parts.push(state.scores.feeds[article.feed_id] ?? 0);
+		if (article.author_name) parts.push(state.scores.authors[article.author_name] ?? 0);
+		if (article.category_name) parts.push(state.scores.categories[article.category_name] ?? 0);
+		let average = parts.length ? parts.reduce((total, part) => total + part, 0) / parts.length : 0;
+		if (matchesTerms(article, ruleTerms('boost'))) average += BOOST_WEIGHT;
+		return average;
+	}
+
+	function toRelevance(raw: number): number {
+		return Math.round(50 + 50 * Math.tanh(raw / TANH_SCALE));
+	}
+
 	function toSummary(id: string): ArticleSummary | null {
 		const article = seedArticle(id);
 		if (!article) return null;
@@ -160,6 +245,7 @@ export function createDemoClient(): LumiaClient {
 			image_url: null,
 			published_at: article.published_at,
 			reading_minutes: readingMinutes(article.paragraphs),
+			relevance_score: toRelevance(rawScore(article)),
 			read: state_.read,
 			scroll_progress: state_.scroll_progress
 		};
@@ -324,11 +410,49 @@ export function createDemoClient(): LumiaClient {
 				persist();
 				return settle({ ...feed });
 			},
-			importOpml: async () => settle(state.feeds.map((feed) => ({ ...feed })))
+			importOpml: async () => settle(state.feeds.map((feed) => ({ ...feed }))),
+			discoverFeeds: async (limit = 6) => {
+				const subscribed = new Set(state.feeds.map((feed) => feed.url.replace(/\/$/, '')));
+				// Only positive interest counts, as on the backend: a dislike says nothing about a source
+				// that merely mentions the topic.
+				const affinities: Record<string, number> = {};
+				for (const [term, score] of Object.entries(state.scores.keywords)) {
+					if (score > 0) affinities[term.toLowerCase()] = score;
+				}
+				for (const [name, score] of Object.entries(state.scores.categories)) {
+					if (score > 0) {
+						affinities[name.toLowerCase()] = Math.max(affinities[name.toLowerCase()] ?? 0, score);
+					}
+				}
+				const ranked: DiscoverSuggestion[] = SEED_DISCOVER.filter(
+					(entry) => !subscribed.has(entry.url.replace(/\/$/, ''))
+				)
+					.map((entry) => ({
+						...entry,
+						topics: [...entry.topics],
+						affinity: entry.topics.reduce((total, topic) => total + (affinities[topic] ?? 0), 0)
+					}))
+					.sort((left, right) => (right.affinity ?? 0) - (left.affinity ?? 0));
+				return settle(ranked.slice(0, limit));
+			}
 		},
 		article: {
 			listArticles: async (params: ListArticlesParams = {}) => {
-				const ids = sortedIds().filter((id) => matches(id, params));
+				const muted = ruleTerms('mute');
+				let ids = sortedIds().filter((id) => {
+					if (!matches(id, params)) return false;
+					const article = seedArticle(id);
+					return article !== undefined && !matchesTerms(article, muted);
+				});
+				if (params.sort === 'relevance') {
+					// Recency stays the tie-breaker, so an untouched library still reads chronologically.
+					ids = ids.sort((left, right) => {
+						const a = seedArticle(left);
+						const b = seedArticle(right);
+						if (!a || !b) return 0;
+						return rawScore(b) - rawScore(a);
+					});
+				}
 				return settle(summaries(page(ids, params.limit, params.offset)));
 			},
 			getArticle: async (articleId: string) => {
@@ -387,7 +511,16 @@ export function createDemoClient(): LumiaClient {
 			},
 			sendFeedback: async (articleId: string, update: FeedbackUpdate) => {
 				const feedback = feedbackFor(articleId);
-				if (update.sentiment !== undefined) feedback.sentiment = update.sentiment;
+				if (update.sentiment !== undefined && update.sentiment !== feedback.sentiment) {
+					// The previous vote is undone before the new one is applied, exactly as the backend
+					// does, so flipping like → dislike doesn't leave the old boost behind.
+					const article = seedArticle(articleId);
+					if (article) {
+						if (feedback.sentiment) accumulate(state.scores, article, -VOTE_DELTA[feedback.sentiment]);
+						if (update.sentiment) accumulate(state.scores, article, VOTE_DELTA[update.sentiment]);
+					}
+					feedback.sentiment = update.sentiment;
+				}
 				if (update.saved !== undefined) feedback.saved = update.saved;
 				if (update.favorite !== undefined) feedback.favorite = update.favorite;
 				if (update.read !== undefined) feedback.read = update.read;
@@ -422,6 +555,24 @@ export function createDemoClient(): LumiaClient {
 				}
 				persist();
 				return settle({ updated });
+			},
+			listFilterRules: async () => settle(state.filterRules.map((rule) => ({ ...rule }))),
+			addFilterRule: async (term: string, mode: FilterMode) => {
+				const normalized = term.trim().toLowerCase();
+				// Idempotent like the backend: the same term in the same mode returns the existing rule.
+				const existing = state.filterRules.find(
+					(rule) => rule.term === normalized && rule.mode === mode
+				);
+				if (existing) return settle({ ...existing });
+				const rule: FilterRule = { id: nextId('rule'), term: normalized, mode };
+				state.filterRules = [...state.filterRules, rule];
+				persist();
+				return settle({ ...rule });
+			},
+			deleteFilterRule: async (ruleId: string) => {
+				state.filterRules = state.filterRules.filter((rule) => rule.id !== ruleId);
+				persist();
+				return settle(undefined);
 			}
 		},
 		playlist: {
@@ -431,6 +582,42 @@ export function createDemoClient(): LumiaClient {
 				state.playlists = [...state.playlists, playlist];
 				persist();
 				return settle(playlistSummary(playlist));
+			},
+			createPlaylistForDuration: async (targetMinutes: number) => {
+				const muted = ruleTerms('mute');
+				const candidates = sortedIds()
+					.map((id) => ({ id, article: seedArticle(id) }))
+					.filter(
+						(entry): entry is { id: string; article: SeedArticle } =>
+							entry.article !== undefined &&
+							!feedbackFor(entry.id).read &&
+							!matchesTerms(entry.article, muted)
+					)
+					.sort((left, right) => rawScore(right.article) - rawScore(left.article));
+
+				// Greedy over the relevance order, like the backend: reading-time estimates are
+				// approximate, so squeezing the last minute out would be false precision.
+				const chosen: string[] = [];
+				let remaining = targetMinutes;
+				for (const entry of candidates) {
+					const minutes = readingMinutes(entry.article.paragraphs);
+					if (minutes > remaining) continue;
+					chosen.push(entry.id);
+					remaining -= minutes;
+					if (remaining <= 0) break;
+				}
+
+				const stamp = new Date();
+				const day = String(stamp.getDate()).padStart(2, '0');
+				const month = String(stamp.getMonth() + 1).padStart(2, '0');
+				const playlist = {
+					id: nextId('playlist'),
+					name: `${targetMinutes} min · ${day}/${month}`,
+					article_ids: chosen
+				};
+				state.playlists = [...state.playlists, playlist];
+				persist();
+				return settle(playlistDetail(playlist.id));
 			},
 			getPlaylist: async (playlistId: string) => settle(playlistDetail(playlistId)),
 			renamePlaylist: async (playlistId: string, name: string) => {

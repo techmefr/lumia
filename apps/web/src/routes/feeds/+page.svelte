@@ -30,6 +30,7 @@
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { resolveFolderName } from '$domain/feed/resolve-folder-name';
 	import FeedSidebar from '$domain/feed/feed-sidebar.svelte';
+	import DiscoverFeeds from '$domain/feed/discover-feeds.svelte';
 
 	let folders = $state<Folder[]>([]);
 	let feeds = $state<Feed[]>([]);
@@ -244,6 +245,8 @@
 		{#if error}
 			<p role="alert" class="text-sm text-destructive">{error}</p>
 		{/if}
+
+		<DiscoverFeeds {folders} onSubscribed={load} />
 
 		{#if selectedFeed}
 			<Card>

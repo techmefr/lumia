@@ -14,11 +14,13 @@
 	import Share2 from '@lucide/svelte/icons/share-2';
 	import Check from '@lucide/svelte/icons/check';
 	import Clock from '@lucide/svelte/icons/clock';
+	import Gauge from '@lucide/svelte/icons/gauge';
 	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import Square from '@lucide/svelte/icons/square';
 	import { lumia } from '$technical/api/client';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { SpeechReader } from '$technical/speech/speech.svelte';
+	import { clearKaraoke, highlightChunk } from '$technical/speech/karaoke';
 	import AddToPlaylist from '$domain/playlist/add-to-playlist.svelte';
 
 	/** Below this, "reading" is really just landing on the page; don't record it as progress. */
@@ -92,6 +94,17 @@
 		const text = `${article.title}. ${contentEl?.textContent ?? ''}`;
 		speech.speak(text, { onDone: () => toast('Lecture terminée.') });
 	}
+
+	// Follow the voice in the text. The title chunk is not part of the body, so it simply doesn't
+	// match and nothing is painted until the first paragraph.
+	$effect(() => {
+		const chunk = speech.currentChunk;
+		if (!contentEl || !chunk || speech.paused) {
+			clearKaraoke();
+			return;
+		}
+		highlightChunk(contentEl, chunk);
+	});
 
 	/** Fraction of the document scrolled past, clamped to [0, 1]. */
 	function computeProgress(): number {
@@ -168,6 +181,7 @@
 			window.removeEventListener('scroll', onScroll);
 			if (saveTimer) clearTimeout(saveTimer);
 			speech.stop();
+			clearKaraoke();
 			// A last write on the way out, so leaving quickly still records where reading stopped.
 			const finalProgress = computeProgress();
 			if (finalProgress >= MIN_TRACKED_PROGRESS) persistProgress(finalProgress);
@@ -216,7 +230,12 @@
 				</div>
 			{/if}
 			<CardContent class="pt-6">
-				<h1 class="animate-in font-serif text-2xl font-semibold fade-in slide-in-from-bottom-1 duration-500 sm:text-3xl">
+				<!-- Same name as the card's title, so the tile grows into the article rather than
+					 cross-fading with it. -->
+				<h1
+					style={`view-transition-name: article-title-${article.id};`}
+					class="animate-in font-serif text-2xl font-semibold fade-in slide-in-from-bottom-1 duration-500 sm:text-3xl"
+				>
 					{article.title}
 				</h1>
 				<div class="mt-1 flex flex-wrap items-center justify-between gap-2">
@@ -234,6 +253,15 @@
 							<Clock class="size-3.5" />
 							{article.reading_minutes} min de lecture
 						</span>
+						{#if article.relevance_score !== 50}
+							<span
+								class="flex items-center gap-1 text-sm text-muted-foreground"
+								title="Pertinence estimée d'après tes lectures"
+							>
+								<Gauge class="size-3.5" />
+								{article.relevance_score}/100
+							</span>
+						{/if}
 					</div>
 					<div class="flex items-center gap-1">
 						{#if speech.supported}
