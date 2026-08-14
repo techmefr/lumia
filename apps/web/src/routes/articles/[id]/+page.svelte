@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount, tick } from 'svelte';
 	import { page } from '$app/state';
 	import { sanitizeArticleHtml, type ArticleDetail } from '@lumia/core';
@@ -180,7 +181,7 @@
 
 <div class="mx-auto flex w-full flex-col gap-4 pb-24">
 	<a
-		href="/articles"
+		href="{base}/articles"
 		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline"
 	>
 		<ArrowLeft class="size-4" />
@@ -266,14 +267,14 @@
 				</div>
 
 				<div class="mt-3 flex flex-wrap items-center gap-1.5">
-					<a href="/articles?feed_id={article.feed_id}">
+					<a href="{base}/articles?feed_id={article.feed_id}">
 						<Badge variant="secondary" class="transition-transform hover:-translate-y-0.5">
 							{article.source_label}
 						</Badge>
 					</a>
 					{#if article.author_id && article.author_name}
 						<a
-							href="/articles?author_id={article.author_id}&author_name={encodeURIComponent(
+							href="{base}/articles?author_id={article.author_id}&author_name={encodeURIComponent(
 								article.author_name
 							)}"
 						>
@@ -284,7 +285,7 @@
 					{/if}
 					{#if article.category_id && article.category_name}
 						<a
-							href="/articles?category_id={article.category_id}&category_name={encodeURIComponent(
+							href="{base}/articles?category_id={article.category_id}&category_name={encodeURIComponent(
 								article.category_name
 							)}"
 						>
@@ -295,7 +296,7 @@
 					{/if}
 					{#each article.keywords as keyword (keyword.id)}
 						<a
-							href="/articles?keyword_id={keyword.id}&keyword_term={encodeURIComponent(
+							href="{base}/articles?keyword_id={keyword.id}&keyword_term={encodeURIComponent(
 								keyword.term
 							)}"
 						>

@@ -528,9 +528,10 @@
 					Lumia
 				</a>
 				<nav aria-label="Sections">
+					<a href="app/">Démo</a>
 					<a class="hide-sm" href="#fonctionnalites">Fonctionnalités</a>
 					<a class="hide-sm" href="#installer">Installer</a>
-					<a href="#tester">Tester chez soi</a>
+					<a class="hide-sm" href="#tester">Mon instance</a>
 					<a href="https://github.com/techmefr/lumia">GitHub</a>
 				</nav>
 			</div>
@@ -548,14 +549,14 @@
 							lectures. Sur ta machine, sans abonnement et sans revendre tes lectures.
 						</p>
 						<div class="actions">
-							<a class="btn primary" id="open-app" href="#tester" aria-disabled="true">
-								Ouvrir l'app
-							</a>
+							<a class="btn primary" href="app/">Essayer la démo</a>
+							<a class="btn" id="open-app" href="#tester" aria-disabled="true">Ouvrir mon instance</a>
 							<a class="btn" href="#installer">Installer en 4 commandes</a>
 						</div>
 						<p class="hint" id="target-hint">
-							Aucune adresse enregistrée sur cet appareil — renseigne-la dans
-							<a href="#tester">Tester chez soi</a>.
+							La démo tourne entièrement dans ce navigateur, sur des articles fictifs : rien à
+							installer, aucun compte. Pour ouvrir ta propre instance, enregistre son adresse dans
+							<a href="#tester">Tester sur tes appareils</a>.
 						</p>
 					</div>
 
@@ -733,8 +734,10 @@ docker compose up -d</code></pre>
 				<div class="wrap">
 					<h2>Tester sur tes appareils</h2>
 					<p class="section-lede">
-						Lumia tourne sur ta machine, pas sur cette page. Enregistre ici l'adresse de l'app sur ton
-						réseau local : le bouton « Ouvrir l'app » pointera dessus, sur cet appareil.
+						La <a href="app/">démo</a> se contente de ce navigateur : elle sert à juger l'interface, la
+						lecture et la synthèse vocale sur téléphone comme sur écran large, sur des articles
+						fictifs. Une fois Lumia installé chez toi, enregistre ici l'adresse de l'app sur ton réseau
+						local : le bouton « Ouvrir mon instance » pointera dessus, sur cet appareil.
 					</p>
 
 					<div class="field">
@@ -765,6 +768,15 @@ docker compose up -d</code></pre>
 			<section class="tinted">
 				<div class="wrap">
 					<h2>Questions raisonnables</h2>
+					<details>
+						<summary>La démo envoie-t-elle quelque chose quelque part ?</summary>
+						<p>
+							Non. C'est le même front que l'app réelle, avec le client d'API remplacé par un jeu
+							d'articles fictifs stocké dans le <code>localStorage</code> du navigateur. Aucun serveur
+							derrière, donc aucun compte, aucune requête, et le bouton « Réinitialiser » remet la
+							démo à zéro. La synthèse vocale utilise les voix du système, comme dans l'app.
+						</p>
+					</details>
 					<details>
 						<summary>Faut-il payer une IA pour que ça marche ?</summary>
 						<p>
@@ -861,12 +873,13 @@ docker compose up -d</code></pre>
 					if (target) {
 						openLink.href = target;
 						openLink.removeAttribute('aria-disabled');
-						hint.textContent = 'Le bouton ouvre ' + target + ' depuis cet appareil.';
+						hint.textContent =
+							'« Ouvrir mon instance » pointe sur ' + target + ' depuis cet appareil. La démo, elle, reste dans ce navigateur.';
 					} else {
 						openLink.href = '#tester';
 						openLink.setAttribute('aria-disabled', 'true');
 						hint.textContent =
-							'Aucune adresse enregistrée sur cet appareil — renseigne-la dans « Tester chez soi ».';
+							'La démo tourne entièrement dans ce navigateur, sur des articles fictifs : rien à installer, aucun compte. Aucune adresse d’instance enregistrée sur cet appareil.';
 					}
 				}
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import type { ArticleSummary } from '@lumia/core';
 	import { Button } from '@lumia/ui';
@@ -69,7 +70,7 @@
 				<p class="text-sm text-muted-foreground">
 					Rien pour le moment — marque un article en favori depuis sa page ou en le swipant.
 				</p>
-				<Button size="sm" href="/articles">Parcourir les articles</Button>
+				<Button size="sm" href="{base}/articles">Parcourir les articles</Button>
 			</div>
 		{/snippet}
 

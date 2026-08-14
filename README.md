@@ -6,7 +6,14 @@ Lumia is a self-hosted RSS reader that pulls your feeds, strips the articles dow
 article, extracts keywords and a summary, and learns what interests you as you read. Everything runs
 on your own machine.
 
-**[Landing page](https://techmefr.github.io/lumia/)** · Version française : [README.fr.md](README.fr.md)
+**[Landing page](https://techmefr.github.io/lumia/)** ·
+**[Live demo](https://techmefr.github.io/lumia/app/)** ·
+Version française : [README.fr.md](README.fr.md)
+
+The demo is the real front end with the http client swapped for an in-memory one seeded with made-up
+articles. Nothing leaves the browser, there is no account and no backend behind it; the reset button
+in the banner clears the seeded state. It exists to judge the interface, the reading view and the
+text-to-speech on a real device before installing anything.
 
 ## What it does
 

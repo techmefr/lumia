@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import type { Feed, Folder, UnreadCounts } from '@lumia/core';
 	import Newspaper from '@lucide/svelte/icons/newspaper';
 	import FolderIcon from '@lucide/svelte/icons/folder';
@@ -196,14 +197,14 @@
 	</div>
 
 	<a
-		href="/playlists"
+		href="{base}/playlists"
 		class="mt-auto flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
 	>
 		<ListMusic class="size-4" />
 		Playlists
 	</a>
 	<a
-		href="/favoris"
+		href="{base}/favoris"
 		class="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
 	>
 		<Star class="size-4" />

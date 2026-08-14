@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { ApiError } from '@lumia/core';
 	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '@lumia/ui';
@@ -18,7 +19,7 @@
 		loading = true;
 		try {
 			await lumia.user.onboardAdmin({ email, username, password });
-			await goto('/articles');
+			await goto(base + '/articles');
 		} catch (err) {
 			error =
 				err instanceof ApiError && err.status === 409

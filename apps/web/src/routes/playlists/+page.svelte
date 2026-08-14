@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import type { PlaylistSummary } from '@lumia/core';
 	import {
@@ -137,7 +138,7 @@
 			<p class="text-sm text-muted-foreground">
 				Aucune playlist. Crée-en une ci-dessus, puis ajoute des articles depuis leur page.
 			</p>
-			<Button size="sm" href="/articles">Parcourir les articles</Button>
+			<Button size="sm" href="{base}/articles">Parcourir les articles</Button>
 		</div>
 	{:else}
 		<ul class="flex flex-col gap-3">
@@ -162,7 +163,7 @@
 									</Button>
 								</form>
 							{:else}
-								<a href="/playlists/{playlist.id}" class="flex min-w-0 flex-1 flex-col gap-0.5">
+								<a href="{base}/playlists/{playlist.id}" class="flex min-w-0 flex-1 flex-col gap-0.5">
 									<span class="truncate font-medium">{playlist.name}</span>
 									<span class="flex items-center gap-2 text-xs text-muted-foreground">
 										{playlist.item_count} article{playlist.item_count > 1 ? 's' : ''}

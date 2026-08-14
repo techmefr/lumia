@@ -1,4 +1,4 @@
-import { lumia } from './client';
+import { isDemo, lumia } from './client';
 
 /**
  * Feed icons are proxied by the API behind bearer auth, and an `<img src>` cannot carry an
@@ -18,6 +18,11 @@ class FeedIconStore {
 	}
 
 	private async load(feedId: string): Promise<void> {
+		// No API in the demo build: the cards fall back to the source initial.
+		if (isDemo) {
+			this.missing.add(feedId);
+			return;
+		}
 		this.pending.add(feedId);
 		try {
 			const base = import.meta.env.VITE_API_BASE_URL;

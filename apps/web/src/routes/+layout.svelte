@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
@@ -12,14 +13,19 @@
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import ListMusic from '@lucide/svelte/icons/list-music';
 	import Settings from '@lucide/svelte/icons/settings';
-	import { lumia } from '$technical/api/client';
+	import { isDemo, lumia } from '$technical/api/client';
 	import SettingsMenu from '$domain/navigation/settings-menu.svelte';
+	import DemoBanner from '$domain/navigation/demo-banner.svelte';
 
 	let { children } = $props();
 
 	let bottomNavEl = $state<HTMLElement | null>(null);
 
 	const authRoutes = ['/login', '/onboarding'];
+
+	function isAuthRoute(pathname: string): boolean {
+		return authRoutes.some((route) => pathname === base + route);
+	}
 
 	const navLinks = [
 		{ href: '/articles', label: 'Articles', icon: Newspaper },
@@ -29,21 +35,23 @@
 		{ href: '/playlists', label: 'Playlists', icon: ListMusic }
 	];
 
+	// `page.url.pathname` carries the base path, so the comparison has to carry it too.
 	function isActive(href: string): boolean {
-		return page.url.pathname === href || page.url.pathname.startsWith(`${href}/`);
+		const full = base + href;
+		return page.url.pathname === full || page.url.pathname.startsWith(`${full}/`);
 	}
 
-	const mainPadding = $derived(authRoutes.includes(page.url.pathname) ? '' : 'pb-20 sm:pb-6');
+	const mainPadding = $derived(isAuthRoute(page.url.pathname) ? '' : 'pb-20 sm:pb-6');
 
 	async function logout() {
 		await lumia.user.logout();
-		await goto('/login');
+		await goto(base + '/login');
 	}
 
 	const settingsEntries = [
-		{ label: 'Réglages', href: '/settings' },
-		{ label: 'Favoris', href: '/favoris' },
-		{ label: 'Playlists', href: '/playlists' },
+		{ label: 'Réglages', href: `${base}/settings` },
+		{ label: 'Favoris', href: `${base}/favoris` },
+		{ label: 'Playlists', href: `${base}/playlists` },
 		{ label: 'Déconnexion', run: logout }
 	];
 
@@ -88,11 +96,15 @@
 
 <ClickSpark sparkColor="var(--primary)" sparkCount={6} sparkRadius={14} sparkSize={7} duration={320}>
 
-{#if !authRoutes.includes(page.url.pathname)}
+{#if isDemo}
+	<DemoBanner />
+{/if}
+
+{#if !isAuthRoute(page.url.pathname)}
 	<a href="#main-content" class="skip-link">Aller au contenu</a>
 	<header class="sticky top-0 z-30 animate-in border-b bg-card/95 backdrop-blur fade-in slide-in-from-top-2 duration-300">
 		<nav aria-label="Navigation principale" class="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-3">
-			<a href="/articles" class="mr-4 flex items-center gap-1.5 font-serif text-lg font-semibold">
+			<a href="{base}/articles" class="mr-4 flex items-center gap-1.5 font-serif text-lg font-semibold">
 				<Sparkles class="size-5 text-primary transition-transform duration-300 hover:rotate-12" />
 				Lumia
 			</a>
@@ -101,7 +113,7 @@
 					<Button
 						variant={isActive(link.href) ? 'secondary' : 'ghost'}
 						size="sm"
-						href={link.href}
+						href={base + link.href}
 						aria-current={isActive(link.href) ? 'page' : undefined}
 					>
 						<link.icon class="size-4" />
@@ -111,7 +123,7 @@
 			</div>
 			<div class="ml-auto flex items-center">
 				<SettingsMenu
-					href="/settings"
+					href="{base}/settings"
 					label="Réglages"
 					icon={Settings}
 					entries={settingsEntries}
@@ -132,7 +144,7 @@
 	</main>
 {/key}
 
-{#if !authRoutes.includes(page.url.pathname)}
+{#if !isAuthRoute(page.url.pathname)}
 	<nav
 		bind:this={bottomNavEl}
 		aria-label="Navigation mobile"
@@ -140,7 +152,7 @@
 	>
 		{#each navLinks as link (link.href)}
 			<a
-				href={link.href}
+				href={base + link.href}
 				aria-current={isActive(link.href) ? 'page' : undefined}
 				class="flex min-h-11 flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] transition-colors {isActive(
 					link.href

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { ArticleSummary } from '@lumia/core';
@@ -67,7 +68,7 @@
 				Pas encore assez de retours pour te faire une sélection — aime ou passe des articles pour
 				l'entraîner.
 			</p>
-			<Button size="sm" href="/articles">Parcourir les articles</Button>
+			<Button size="sm" href="{base}/articles">Parcourir les articles</Button>
 		</div>
 	{:else if remaining.length === 0}
 		<div class="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
@@ -82,7 +83,7 @@
 			onDislike={(article) => vote(article, 'dislike')}
 			onSave={save}
 			onFavorite={favorite}
-			onOpen={(article) => goto(`/articles/${article.id}`)}
+			onOpen={(article) => goto(`${base}/articles/${article.id}`)}
 		/>
 	{/if}
 </div>

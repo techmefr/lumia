@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -188,7 +189,7 @@
 
 	async function openCursor() {
 		const article = articles[cursor];
-		if (article) await goto(`/articles/${article.id}`);
+		if (article) await goto(`${base}/articles/${article.id}`);
 	}
 
 	async function markCursorRead() {
@@ -342,7 +343,7 @@
 								Afficher tous les articles
 							</Button>
 						{/if}
-						<Button size="sm" href="/feeds">
+						<Button size="sm" href="{base}/feeds">
 							<Plus class="size-4" />
 							Ajouter des flux
 						</Button>

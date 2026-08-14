@@ -6,7 +6,14 @@ Lumia est un lecteur RSS auto-hébergé. Il récupère tes flux, nettoie les art
 n'est pas l'article, en extrait les mots-clés et un résumé, puis apprend ce qui t'intéresse au fil de
 tes lectures. Tout tourne sur ta propre machine.
 
-**[Page de présentation](https://techmefr.github.io/lumia/)** · English version: [README.md](README.md)
+**[Page de présentation](https://techmefr.github.io/lumia/)** ·
+**[Démo en ligne](https://techmefr.github.io/lumia/app/)** ·
+English version: [README.md](README.md)
+
+La démo est le vrai front, avec le client http remplacé par un client en mémoire alimenté par des
+articles fictifs. Rien ne sort du navigateur, il n'y a ni compte ni backend derrière ; le bouton
+« Réinitialiser » de la bannière remet l'état seedé à zéro. Elle sert à juger l'interface, la vue de
+lecture et la synthèse vocale sur un vrai appareil avant d'installer quoi que ce soit.
 
 ## Ce que ça fait
 

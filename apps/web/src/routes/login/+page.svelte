@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { ApiError } from '@lumia/core';
 	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '@lumia/ui';
@@ -17,7 +18,7 @@
 		loading = true;
 		try {
 			await lumia.user.login(email, password);
-			await goto('/articles');
+			await goto(base + '/articles');
 		} catch (err) {
 			error = err instanceof ApiError && err.status === 401 ? 'Email ou mot de passe incorrect.' : "Connexion impossible.";
 		} finally {
@@ -61,7 +62,7 @@
 			</form>
 			<p class="mt-4 text-center text-sm text-muted-foreground">
 				Premier lancement ?
-				<a href="/onboarding" class="text-primary underline-offset-4 hover:underline"
+				<a href="{base}/onboarding" class="text-primary underline-offset-4 hover:underline"
 					>Créer le compte administrateur</a
 				>
 			</p>

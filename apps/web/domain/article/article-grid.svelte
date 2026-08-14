@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import type { ArticleSummary } from '@lumia/core';
 	import { ArticleCard, ArticleCardSkeleton, GradualBlur } from '@lumia/ui';
 	import Inbox from '@lucide/svelte/icons/inbox';
@@ -42,7 +43,7 @@
 			{#each articles as article, index (article.id)}
 				<ArticleCard
 					id={article.id}
-					href="/articles/{article.id}"
+					href="{base}/articles/{article.id}"
 					title={article.title}
 					summary={article.summary}
 					imageUrl={article.image_url}

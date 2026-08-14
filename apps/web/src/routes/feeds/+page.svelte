@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { Feed, Folder } from '@lumia/core';
@@ -207,17 +208,17 @@
 	}
 
 	function viewArticles() {
-		if (selectedFeedId) void goto(`/articles?feed_id=${selectedFeedId}`);
-		else if (selectedFolderId) void goto(`/articles?folder_id=${selectedFolderId}`);
+		if (selectedFeedId) void goto(`${base}/articles?feed_id=${selectedFeedId}`);
+		else if (selectedFolderId) void goto(`${base}/articles?folder_id=${selectedFolderId}`);
 	}
 
 	function readInSwipeMode() {
 		if (selectedFeedId) {
 			const label = encodeURIComponent(selectedFeed?.title ?? '');
-			void goto(`/lire?feed_id=${selectedFeedId}&label=${label}`);
+			void goto(`${base}/lire?feed_id=${selectedFeedId}&label=${label}`);
 		} else if (selectedFolderId) {
 			const label = encodeURIComponent(selectedFolder?.name ?? '');
-			void goto(`/lire?folder_id=${selectedFolderId}&label=${label}`);
+			void goto(`${base}/lire?folder_id=${selectedFolderId}&label=${label}`);
 		}
 	}
 

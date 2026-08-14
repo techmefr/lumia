@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import type { ArticleSummary } from '@lumia/core';
 	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, toast } from '@lumia/ui';
@@ -124,7 +125,7 @@
 				<p class="text-sm text-muted-foreground">
 					Rien pour le moment — enregistre un article depuis sa page, ou colle une URL ci-dessus.
 				</p>
-				<Button size="sm" href="/articles">Parcourir les articles</Button>
+				<Button size="sm" href="{base}/articles">Parcourir les articles</Button>
 			</div>
 		{/snippet}
 

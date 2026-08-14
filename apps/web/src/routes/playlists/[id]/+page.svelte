@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import type { PlaylistDetail } from '@lumia/core';
@@ -137,7 +138,7 @@
 
 <div class="flex flex-col gap-6 pb-28">
 	<a
-		href="/playlists"
+		href="{base}/playlists"
 		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline"
 	>
 		<ArrowLeft class="size-4" />
@@ -174,7 +175,7 @@
 				<p class="text-sm text-muted-foreground">
 					Playlist vide. Ajoute des articles depuis leur page, bouton « Playlist ».
 				</p>
-				<Button size="sm" href="/articles">Parcourir les articles</Button>
+				<Button size="sm" href="{base}/articles">Parcourir les articles</Button>
 			</div>
 		{:else}
 			<ol class="flex flex-col gap-2">
@@ -183,7 +184,7 @@
 						<Card class={index === currentIndex ? 'border-primary' : ''}>
 							<CardContent class="flex flex-wrap items-center gap-3 py-3">
 								<span class="w-6 shrink-0 text-sm text-muted-foreground">{index + 1}</span>
-								<a href="/articles/{article.id}" class="flex min-w-0 flex-1 flex-col gap-0.5">
+								<a href="{base}/articles/{article.id}" class="flex min-w-0 flex-1 flex-col gap-0.5">
 									<span class="truncate font-medium">{article.title}</span>
 									<span class="text-xs text-muted-foreground">
 										{article.source_label} · {article.reading_minutes} min

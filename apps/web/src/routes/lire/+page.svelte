@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -81,7 +82,7 @@
 			onDislike={(article) => vote(article, 'dislike')}
 			onSave={save}
 			onFavorite={favorite}
-			onOpen={(article) => goto(`/articles/${article.id}`)}
+			onOpen={(article) => goto(`${base}/articles/${article.id}`)}
 		/>
 	{/if}
 </div>

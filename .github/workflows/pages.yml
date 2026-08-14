@@ -1,10 +1,15 @@
-name: Deploy landing page
+name: Deploy landing page and demo
 
 on:
   push:
     branches: [main]
     paths:
       - 'landing/**'
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -18,6 +23,10 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  # The demo lives under the repository sub-path pages serves the site from.
+  DEMO_BASE: /lumia/app
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -26,9 +35,30 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build the seeded demo
+        env:
+          BASE_PATH: ${{ env.DEMO_BASE }}
+          VITE_DEMO: 'true'
+        run: pnpm --filter web build
+      - name: Assemble the site
+        run: |
+          mkdir -p site/app
+          cp -r landing/. site/
+          cp -r apps/web/build/. site/app/
+          # Pages serves a real 404 for unknown paths; the SPA needs its shell there instead
+          # so that a deep link such as /lumia/app/articles/article-7 still boots the router.
+          cp site/app/index.html site/app/404.html
+          # The manifest is static, so its absolute paths have to be rebased for the sub-path deploy.
+          sed -i "s#\"/articles\"#\"${DEMO_BASE}/articles\"#; s#\"/favicon.svg\"#\"${DEMO_BASE}/favicon.svg\"#; s#\"scope\": \"/\"#\"scope\": \"${DEMO_BASE}/\"#" site/app/manifest.webmanifest
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: landing
+          path: site
       - id: deployment
         uses: actions/deploy-pages@v4
