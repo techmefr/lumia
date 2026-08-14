@@ -1,7 +1,15 @@
 import httpx
 
+from worker.technical.ai.base import (
+    MAX_INPUT_CHARS,
+    SUMMARY_PROMPT,
+    TIMEOUT_SECONDS,
+    LlmApiError,
+)
+
 # Mistral, OpenAI and most self-hosted servers (vLLM, Ollama, LM Studio, Voxtral) all speak the
-# same /chat/completions shape, so one client covers the three providers we offer.
+# same /chat/completions shape, so one client covers those providers. Anthropic does not, and has
+# its own client next door.
 _PROVIDER_BASE_URLS = {
     "mistral": "https://api.mistral.ai/v1",
     "openai": "https://api.openai.com/v1",
@@ -10,18 +18,8 @@ _DEFAULT_MODELS = {
     "mistral": "mistral-small-latest",
     "openai": "gpt-4o-mini",
 }
-_PROMPT = (
-    "Résume cet article en trois phrases maximum, dans la langue de l'article. "
-    "Ne commence pas par « Cet article » et n'ajoute aucun commentaire."
-)
-# Long articles blow the context window and the bill for no gain: the opening of a piece
-# carries its subject.
-_MAX_INPUT_CHARS = 12_000
-_TIMEOUT_SECONDS = 60.0
 
-
-class LlmApiError(Exception):
-    pass
+__all__ = ["LlmApiError", "OpenAiCompatibleSummarizer", "resolve_base_url", "resolve_model"]
 
 
 def resolve_base_url(provider: str, endpoint_url: str | None) -> str | None:
@@ -55,15 +53,15 @@ class OpenAiCompatibleSummarizer:
             base_url=self._base_url,
             headers={"Authorization": f"Bearer {self._api_key}"},
             transport=self._transport,
-            timeout=_TIMEOUT_SECONDS,
+            timeout=TIMEOUT_SECONDS,
         ) as client:
             response = await client.post(
                 "/chat/completions",
                 json={
                     "model": self._model,
                     "messages": [
-                        {"role": "system", "content": _PROMPT},
-                        {"role": "user", "content": text[:_MAX_INPUT_CHARS]},
+                        {"role": "system", "content": SUMMARY_PROMPT},
+                        {"role": "user", "content": text[:MAX_INPUT_CHARS]},
                     ],
                 },
             )

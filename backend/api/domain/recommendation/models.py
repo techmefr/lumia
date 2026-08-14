@@ -1,7 +1,7 @@
 from enum import StrEnum
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.technical.orm import Base, TimestampMixin
@@ -10,6 +10,30 @@ from api.technical.orm import Base, TimestampMixin
 class Vote(StrEnum):
     LIKE = "like"
     DISLIKE = "dislike"
+
+
+class FilterMode(StrEnum):
+    BOOST = "boost"
+    MUTE = "mute"
+
+
+class UserFilterRule(Base, TimestampMixin):
+    """An explicit rule on top of what the votes have learned.
+
+    A boosted term lifts an article's relevance; a muted term removes it from the lists and from
+    L'Étincelle entirely. Terms are stored lowercased so the uniqueness constraint means what it
+    looks like.
+    """
+
+    __tablename__ = "user_filter_rules"
+    __table_args__ = (
+        UniqueConstraint("user_id", "term", "mode", name="uq_user_filter_rules_user_term_mode"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    term: Mapped[str]
+    mode: Mapped[FilterMode]
 
 
 class UserArticleFeedback(Base, TimestampMixin):

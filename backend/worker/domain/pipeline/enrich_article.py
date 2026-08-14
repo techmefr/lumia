@@ -8,15 +8,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword, Author, Category, Keyword, Lang
 from api.domain.feed.models import Feed, SourceType
-from api.domain.user.models import User
+from api.domain.user.models import AIProvider, User
 from api.technical.crypto.secret_box import decrypt_secret
 from worker.domain.extraction.stemming_en import stem_en
 from worker.domain.extraction.stemming_fr import stem_fr
 from worker.domain.extraction.tfidf import extract_keywords
 from worker.domain.summarizer.extractive import summarize_extractive
-from worker.technical.ai.base import Summarizer
+from worker.technical.ai.anthropic_client import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
+from worker.technical.ai.anthropic_client import AnthropicSummarizer
+from worker.technical.ai.base import LlmApiError, Summarizer
 from worker.technical.ai.llm_client import (
-    LlmApiError,
     OpenAiCompatibleSummarizer,
     resolve_base_url,
     resolve_model,
@@ -94,7 +95,7 @@ def _translator_for(user: User | None) -> DeeplTranslator:
     return DeeplTranslator(api_key=decrypt_secret(user.translation_api_key_encrypted))
 
 
-def _summarizer_for(user: User | None) -> OpenAiCompatibleSummarizer | None:
+def _summarizer_for(user: User | None) -> AnthropicSummarizer | OpenAiCompatibleSummarizer | None:
     """The account's own LLM summarizer, or None to keep the local extractive summary.
 
     A provider without a key, or a self-hosted endpoint with no url or model, is an incomplete
@@ -102,6 +103,11 @@ def _summarizer_for(user: User | None) -> OpenAiCompatibleSummarizer | None:
     """
     if user is None or user.ai_provider is None or user.ai_api_key_encrypted is None:
         return None
+    if user.ai_provider is AIProvider.ANTHROPIC:
+        return AnthropicSummarizer(
+            api_key=decrypt_secret(user.ai_api_key_encrypted),
+            model=user.ai_model or ANTHROPIC_DEFAULT_MODEL,
+        )
     base_url = resolve_base_url(user.ai_provider.value, user.ai_endpoint_url)
     model = resolve_model(user.ai_provider.value, user.ai_model)
     if base_url is None or model is None:

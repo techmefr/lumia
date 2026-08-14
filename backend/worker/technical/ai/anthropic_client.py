@@ -1,0 +1,59 @@
+"""Anthropic's Messages API, which is not OpenAI-compatible.
+
+Three differences make a separate client cheaper than bending the shared one: the key travels in
+`x-api-key` rather than a bearer header, the version is a required header, and the system prompt is
+a top-level field instead of a message with `role: system`.
+"""
+
+import httpx
+
+from worker.technical.ai.base import (
+    MAX_INPUT_CHARS,
+    SUMMARY_PROMPT,
+    TIMEOUT_SECONDS,
+    LlmApiError,
+)
+
+BASE_URL = "https://api.anthropic.com/v1"
+DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+#: Pinned rather than tracking latest: a silent shape change in the response would break the
+#: pipeline for every self-hoster at once.
+API_VERSION = "2023-06-01"
+_MAX_OUTPUT_TOKENS = 512
+
+
+class AnthropicSummarizer:
+    def __init__(
+        self,
+        *,
+        api_key: str,
+        model: str,
+        transport: httpx.AsyncBaseTransport | None = None,
+    ) -> None:
+        self._api_key = api_key
+        self._model = model
+        self._transport = transport
+
+    async def summarize(self, text: str) -> str:
+        async with httpx.AsyncClient(
+            base_url=BASE_URL,
+            headers={"x-api-key": self._api_key, "anthropic-version": API_VERSION},
+            transport=self._transport,
+            timeout=TIMEOUT_SECONDS,
+        ) as client:
+            response = await client.post(
+                "/messages",
+                json={
+                    "model": self._model,
+                    "max_tokens": _MAX_OUTPUT_TOKENS,
+                    "system": SUMMARY_PROMPT,
+                    "messages": [{"role": "user", "content": text[:MAX_INPUT_CHARS]}],
+                },
+            )
+            if response.status_code >= 400:
+                raise LlmApiError(response.text)
+            blocks = response.json().get("content") or []
+            texts = [block.get("text", "") for block in blocks if block.get("type") == "text"]
+            if not texts:
+                raise LlmApiError("no text block returned")
+            return "".join(texts).strip()

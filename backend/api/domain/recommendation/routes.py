@@ -9,10 +9,13 @@ from api.domain.article.schemas import ArticleSummaryResponse
 from api.domain.recommendation.etincelle_service import list_etincelle
 from api.domain.recommendation.favorite_service import list_favorites
 from api.domain.recommendation.feedback_service import apply_feedback
+from api.domain.recommendation.filter_rule_service import add_rule, delete_rule, list_rules
 from api.domain.recommendation.read_service import mark_articles_read, resolve_scope_article_ids
 from api.domain.recommendation.saved_service import list_saved
 from api.domain.recommendation.schemas import (
     FeedbackRequest,
+    FilterRuleCreateRequest,
+    FilterRuleResponse,
     MarkReadRequest,
     MarkReadResponse,
 )
@@ -86,3 +89,34 @@ async def send_feedback(
 
     updates = payload.model_dump(exclude_unset=True)
     await apply_feedback(session, user_id=user.id, article_id=article_id, **updates)
+
+
+@router.get("/filter-rules", response_model=list[FilterRuleResponse])
+async def get_filter_rules(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[FilterRuleResponse]:
+    rules = await list_rules(session, user.id)
+    return [FilterRuleResponse(id=r.id, term=r.term, mode=r.mode) for r in rules]
+
+
+@router.post(
+    "/filter-rules", response_model=FilterRuleResponse, status_code=status.HTTP_201_CREATED
+)
+async def create_filter_rule(
+    payload: FilterRuleCreateRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> FilterRuleResponse:
+    rule = await add_rule(session, user.id, term=payload.term, mode=payload.mode)
+    return FilterRuleResponse(id=rule.id, term=rule.term, mode=rule.mode)
+
+
+@router.delete("/filter-rules/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_filter_rule(
+    rule_id: UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    if not await delete_rule(session, user.id, rule_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

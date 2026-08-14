@@ -2,7 +2,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from api.domain.recommendation.models import Vote
+from api.domain.recommendation.models import FilterMode, Vote
 
 
 class FeedbackRequest(BaseModel):
@@ -32,3 +32,14 @@ class MarkReadRequest(BaseModel):
 
 class MarkReadResponse(BaseModel):
     updated: int
+
+
+class FilterRuleCreateRequest(BaseModel):
+    term: str = Field(min_length=2, max_length=80)
+    mode: FilterMode
+
+
+class FilterRuleResponse(BaseModel):
+    id: UUID
+    term: str
+    mode: FilterMode

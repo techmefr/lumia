@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from api.domain.article.schemas import ArticleSummaryResponse
 
@@ -11,6 +11,12 @@ class PlaylistCreateRequest(BaseModel):
 
 class PlaylistUpdateRequest(BaseModel):
     name: str
+
+
+class PlaylistForDurationRequest(BaseModel):
+    """The UI offers 12, 25 and 45 minutes; the range is wider so the API isn't tied to those."""
+
+    target_minutes: int = Field(ge=5, le=240)
 
 
 class PlaylistItemAddRequest(BaseModel):

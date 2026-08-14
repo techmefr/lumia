@@ -45,6 +45,17 @@ class UnreadCountsResponse(BaseModel):
     folders: dict[UUID, int]
 
 
+class DiscoverSuggestionResponse(BaseModel):
+    title: str
+    url: str
+    site_url: str
+    description: str
+    language: str
+    topics: list[str]
+    #: None when nothing is known about the reader yet, rather than a misleading 0.
+    affinity: float | None
+
+
 class FeedResponse(BaseModel):
     id: UUID
     folder_id: UUID | None

@@ -17,6 +17,7 @@ class Role(StrEnum):
 class AIProvider(StrEnum):
     MISTRAL = "mistral"
     OPENAI = "openai"
+    ANTHROPIC = "anthropic"
     CUSTOM = "custom"
 
 

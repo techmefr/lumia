@@ -1,14 +1,16 @@
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFile, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.domain.feed.discover_service import list_suggestions
 from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError, InvalidOpmlError
 from api.domain.feed.models import Feed, Folder, SourceType
 from api.domain.feed.opml_service import add_feed, import_opml
 from api.domain.feed.schemas import (
+    DiscoverSuggestionResponse,
     FeedAddByUrlRequest,
     FeedCreateRequest,
     FeedResponse,
@@ -122,6 +124,28 @@ async def get_unread_counts(
 ) -> UnreadCountsResponse:
     counts = await count_unread(session, user.id)
     return UnreadCountsResponse(total=counts.total, feeds=counts.feeds, folders=counts.folders)
+
+
+@router.get("/feeds/discover", response_model=list[DiscoverSuggestionResponse])
+async def discover_feeds(
+    limit: int = Query(default=6, ge=1, le=20),
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[DiscoverSuggestionResponse]:
+    ranked = await list_suggestions(session, user.id, limit=limit)
+    return [
+        DiscoverSuggestionResponse(
+            title=entry.title,
+            url=entry.url,
+            site_url=entry.site_url,
+            description=entry.description,
+            language=entry.language,
+            topics=list(entry.topics),
+            # A pool with no votes behind it would show a column of zeroes; say "unknown" instead.
+            affinity=round(affinity, 2) if affinity > 0 else None,
+        )
+        for entry, affinity in ranked
+    ]
 
 
 @router.post("/feeds", response_model=FeedResponse, status_code=status.HTTP_201_CREATED)

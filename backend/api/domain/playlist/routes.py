@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.routes import to_summaries
+from api.domain.playlist.duration_service import build_for_duration
 from api.domain.playlist.exceptions import ArticleNotFoundError, PlaylistNotFoundError
 from api.domain.playlist.models import Playlist
 from api.domain.playlist.playlist_service import (
@@ -17,6 +18,7 @@ from api.domain.playlist.playlist_service import (
 from api.domain.playlist.schemas import (
     PlaylistCreateRequest,
     PlaylistDetailResponse,
+    PlaylistForDurationRequest,
     PlaylistItemAddRequest,
     PlaylistReorderRequest,
     PlaylistSummaryResponse,
@@ -79,6 +81,22 @@ async def create_playlist(
     # `items` is unloaded on a freshly inserted instance; reading it would lazy-load under asyncio.
     await session.refresh(playlist, ["items"])
     return _to_summary(playlist)
+
+
+@router.post(
+    "/playlists/for-duration",
+    response_model=PlaylistDetailResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_playlist_for_duration(
+    payload: PlaylistForDurationRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> PlaylistDetailResponse:
+    playlist = await build_for_duration(
+        session, user.id, target_minutes=payload.target_minutes
+    )
+    return await _to_detail(session, user.id, playlist)
 
 
 @router.get("/playlists/{playlist_id}", response_model=PlaylistDetailResponse)

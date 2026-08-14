@@ -107,6 +107,27 @@ services:
     networks:
       - public
 
+  # The backend gate (ruff, mypy, pytest), run on demand:
+  #   docker compose run --rm lumia-backend-tests
+  # Its own env vars are deliberately minimal: tests/conftest.py fills the rest in with test values,
+  # and anything set here would override them and make a test assert against the real config.
+  lumia-backend-tests:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: docker/lumia-backend/Dockerfile
+      target: dev
+    command: pytest -q
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia_test
+      # Database 1, so a test run never touches the queue the real worker is consuming.
+      REDIS_URL: redis://redis:6379/1
+    networks:
+      - internal
+
 networks:
   internal:
   public:

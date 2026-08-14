@@ -25,6 +25,8 @@ class ArticleSummaryResponse(BaseModel):
     reading_minutes: int
     read: bool = False
     scroll_progress: float = 0.0
+    # 0-100 affinity, 50 meaning "nothing learned about this one yet".
+    relevance_score: int = 50
 
 
 class ArticleDetailResponse(ArticleSummaryResponse):
