@@ -84,7 +84,7 @@
 
 	<div
 		class={cn('relative w-full overflow-hidden', featured ? 'h-64 sm:h-80' : 'h-36')}
-		style={`background: linear-gradient(135deg, hsl(${accentHue} 70% 55%), hsl(${accentHue + 40} 70% 45%)); view-transition-name: article-image-${id};`}
+		style={`background: linear-gradient(135deg, hsl(${accentHue} 45% 55% / 20%), hsl(${accentHue + 40} 45% 45% / 28%)), var(--card, #fff); view-transition-name: article-image-${id};`}
 	>
 		{#if imageUrl && !imageFailed}
 			<img
@@ -96,8 +96,8 @@
 			/>
 		{:else}
 			<div
-				class="absolute inset-0 opacity-90 transition-transform duration-500 ease-out group-hover:scale-110"
-				style={`background-image: radial-gradient(circle at 30% 30%, hsl(${accentHue + 60} 80% 75% / 60%), transparent 65%);`}
+				class="absolute inset-0 transition-transform duration-500 ease-out group-hover:scale-110"
+				style={`background-image: radial-gradient(circle at 30% 25%, hsl(${accentHue + 60} 50% 70% / 20%), transparent 70%);`}
 			></div>
 		{/if}
 
@@ -127,7 +127,7 @@
 		<!-- The avatar lives here, not inside the image box: that box is overflow-hidden, which used
 			 to clip the overlapping circle in half. A negative margin keeps the overlap look. -->
 		<span
-			class="-mt-8 mb-1 flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold text-white shadow-md ring-4 ring-card"
+			class="relative z-10 -mt-8 mb-1 flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold text-white shadow-md ring-4 ring-card"
 			style={`background: hsl(${accentHue} 65% 45%);`}
 		>
 			{#if iconUrl && !iconFailed}

@@ -74,7 +74,7 @@
 
 	<div
 		class="relative h-56 w-full overflow-hidden md:h-full md:min-h-[22rem]"
-		style={`background: linear-gradient(135deg, hsl(${accentHue} 70% 55%), hsl(${accentHue + 40} 70% 45%)); view-transition-name: article-image-${id};`}
+		style={`background: linear-gradient(135deg, hsl(${accentHue} 45% 55% / 20%), hsl(${accentHue + 40} 45% 45% / 28%)), var(--card, #fff); view-transition-name: article-image-${id};`}
 	>
 		{#if imageUrl && !imageFailed}
 			<img
@@ -85,8 +85,8 @@
 			/>
 		{:else}
 			<div
-				class="absolute inset-0 opacity-90"
-				style={`background-image: radial-gradient(circle at 30% 25%, hsl(${accentHue + 60} 80% 78% / 65%), transparent 65%);`}
+				class="absolute inset-0"
+				style={`background-image: radial-gradient(circle at 30% 25%, hsl(${accentHue + 60} 50% 70% / 20%), transparent 70%);`}
 			></div>
 		{/if}
 		<GlareHover class="absolute inset-0" glareColor="#ffffff" glareOpacity={0.3} glareSize={280} />

@@ -128,8 +128,8 @@
 	<canvas
 		bind:this={canvas}
 		aria-hidden="true"
-		class="pointer-events-none fixed inset-0 z-[999]"
-		style="width:100vw;height:100vh;"
+		class="pointer-events-none fixed inset-0"
+		style="width:100vw;height:100dvh;z-index:var(--z-effects, 80);"
 	></canvas>
 	{#if children}{@render children()}{/if}
 </div>

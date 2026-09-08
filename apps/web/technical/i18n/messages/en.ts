@@ -36,6 +36,11 @@ export const en: Catalogue = {
 	'common.previous': 'Previous',
 	'common.next': 'Next',
 
+	'error.notFoundTitle': 'Page not found',
+	'error.notFoundBody': 'This address leads nowhere. The content may have moved.',
+	'error.genericTitle': 'Something went wrong.',
+	'error.genericBody': 'Reload the page. If it keeps happening, check that your instance is responding.',
+
 	'login.tagline': 'Sign in to get back to your feeds.',
 	'login.email': 'Email',
 	'login.password': 'Password',

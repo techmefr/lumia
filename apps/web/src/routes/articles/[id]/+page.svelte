@@ -347,7 +347,7 @@
 					{/each}
 				</div>
 
-				<div bind:this={contentEl} class="prose prose-base mt-4 max-w-none">
+				<div bind:this={contentEl} class="prose prose-base mt-4">
 					{@html sanitizeArticleHtml(article.content)}
 				</div>
 			</CardContent>

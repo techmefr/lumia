@@ -36,6 +36,11 @@ export const mg: Catalogue = {
 	'common.previous': 'Teo aloha',
 	'common.next': 'Manaraka',
 
+	'error.notFoundTitle': 'Tsy hita ny pejy',
+	'error.notFoundBody': 'Tsy mitondra na inona na inona ity adiresy ity. Mety nafindra ny votoaty.',
+	'error.genericTitle': 'Nisy tsy nandeha araka ny tokony ho izy.',
+	'error.genericBody': 'Alefaso indray ny pejy. Raha mitohy izany, jereo raha mamaly ny sehatrao.',
+
 	'login.tagline': 'Midira mba hiverina amin’ny fantsonao.',
 	'login.email': 'Mailaka',
 	'login.password': 'Teny miafina',

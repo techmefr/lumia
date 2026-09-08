@@ -76,13 +76,13 @@
 	aria-label={t('feeds.sidebarLabel')}
 	class="{mobileOpen
 		? 'flex'
-		: 'hidden'} w-full shrink-0 flex-col gap-0.5 rounded-2xl border border-zinc-700 bg-zinc-900 p-3 text-zinc-300 shadow-xl dark:border-zinc-500 dark:bg-zinc-800 sm:sticky sm:top-[4.5rem] sm:flex sm:h-[calc(100vh-7.5rem)] sm:w-60"
+		: 'hidden'} w-full shrink-0 flex-col gap-0.5 rounded-2xl border bg-card p-3 shadow-sm sm:sticky sm:top-[4.5rem] sm:flex sm:h-[calc(100vh-7.5rem)] sm:w-60"
 >
 	<button
 		onclick={onSelectAll}
 		class="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors {isAllActive
 			? 'bg-primary text-primary-foreground'
-			: 'hover:bg-white/10 hover:text-white'}"
+			: 'hover:bg-secondary hover:text-foreground'}"
 	>
 		<Newspaper class="size-4" />
 		<span class="flex-1 text-left">{t('feeds.allArticles')}</span>
@@ -102,7 +102,7 @@
 						aria-current={isFolderActive ? 'true' : undefined}
 						class="flex flex-1 items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors {isFolderActive
 							? 'bg-primary text-primary-foreground'
-							: 'text-zinc-300 hover:bg-white/10 hover:text-white'}"
+							: 'hover:bg-secondary hover:text-foreground'}"
 					>
 						<FolderIcon class="size-4" />
 						<span class="flex-1 truncate text-left">{folder.name}</span>
@@ -115,7 +115,7 @@
 							onclick={() => onMarkFolderRead(folder.id)}
 							aria-label={t('feeds.markAllReadIn', { name: folder.name })}
 							title={t('feeds.markAllRead')}
-							class="rounded-md p-1 text-zinc-400 opacity-0 transition-opacity hover:text-white focus-visible:opacity-100 group-hover/folder:opacity-100"
+							class="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/folder:opacity-100"
 						>
 							<CheckCheck class="size-3.5" />
 						</button>
@@ -126,7 +126,7 @@
 						aria-label={collapsed[folder.id]
 							? t('feeds.expand', { name: folder.name })
 							: t('feeds.collapse', { name: folder.name })}
-						class="rounded-md p-1 text-zinc-400 hover:text-white"
+						class="rounded-md p-1 text-muted-foreground hover:text-foreground"
 					>
 						<ChevronDown
 							class="size-3.5 transition-transform {collapsed[folder.id] ? '-rotate-90' : ''}"
@@ -147,8 +147,8 @@
 									aria-current={selectedFeedId === feed.id ? 'true' : undefined}
 									class="flex flex-1 items-center gap-2 truncate rounded-md px-2 py-1 text-left text-sm transition-colors {selectedFeedId ===
 									feed.id
-										? 'font-medium text-white'
-										: 'text-zinc-300 hover:text-white'}"
+										? 'font-medium text-primary'
+										: 'text-muted-foreground hover:text-foreground'}"
 								>
 									<Rss class="size-3.5 shrink-0" />
 									<span class="flex-1 truncate">{feed.title}</span>
@@ -161,7 +161,7 @@
 										onclick={() => onMarkFeedRead(feed.id)}
 										aria-label={t('feeds.markAllReadIn', { name: feed.title })}
 										title={t('feeds.markAllRead')}
-										class="rounded-md p-1 text-zinc-400 opacity-0 transition-opacity hover:text-white focus-visible:opacity-100 group-hover/feed:opacity-100"
+										class="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/feed:opacity-100"
 									>
 										<CheckCheck class="size-3.5" />
 									</button>
@@ -174,7 +174,7 @@
 		{/each}
 
 		{#if unfiledFeeds.length > 0}
-			<span class="mt-2 px-2.5 text-xs font-medium uppercase tracking-wide text-zinc-400">
+			<span class="mt-2 px-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
 				{t('feeds.noFolder')}
 			</span>
 			<AnimatedList items={unfiledFeeds} getKey={(feed) => feed.id}>
@@ -185,8 +185,8 @@
 						aria-current={selectedFeedId === feed.id ? 'true' : undefined}
 						class="flex w-full items-center gap-2 truncate rounded-md px-2.5 py-1 text-left text-sm transition-colors {selectedFeedId ===
 						feed.id
-							? 'font-medium text-white'
-							: 'text-zinc-400 hover:text-white'}"
+							? 'font-medium text-primary'
+							: 'text-muted-foreground hover:text-foreground'}"
 					>
 						<Rss class="size-3.5 shrink-0" />
 						<span class="flex-1 truncate">{feed.title}</span>
@@ -201,14 +201,14 @@
 
 	<a
 		href="{base}/playlists"
-		class="mt-auto flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+		class="mt-auto flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 	>
 		<ListMusic class="size-4" />
 		{t('nav.playlists')}
 	</a>
 	<a
 		href="{base}/favoris"
-		class="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+		class="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 	>
 		<Star class="size-4" />
 		{t('nav.favorites')}

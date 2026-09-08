@@ -36,6 +36,11 @@ export const ar: Catalogue = {
 	'common.previous': 'السابق',
 	'common.next': 'التالي',
 
+	'error.notFoundTitle': 'الصفحة غير موجودة',
+	'error.notFoundBody': 'هذا العنوان لا يقود إلى شيء. ربما تم نقل المحتوى.',
+	'error.genericTitle': 'حدث خطأ ما.',
+	'error.genericBody': 'أعد تحميل الصفحة. إن تكرر الأمر، تحقق من أن خادمك يستجيب.',
+
 	'login.tagline': 'سجّل الدخول للعودة إلى خلاصاتك.',
 	'login.email': 'البريد الإلكتروني',
 	'login.password': 'كلمة المرور',

@@ -36,6 +36,11 @@ export const ru: Catalogue = {
 	'common.previous': 'Назад',
 	'common.next': 'Далее',
 
+	'error.notFoundTitle': 'Страница не найдена',
+	'error.notFoundBody': 'Этот адрес никуда не ведёт. Возможно, содержимое переместили.',
+	'error.genericTitle': 'Что-то пошло не так.',
+	'error.genericBody': 'Обновите страницу. Если повторяется, проверьте, отвечает ли ваш сервер.',
+
 	'login.tagline': 'Войдите, чтобы вернуться к своим лентам.',
 	'login.email': 'Эл. почта',
 	'login.password': 'Пароль',

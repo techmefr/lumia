@@ -36,6 +36,11 @@ export const pt: Catalogue = {
 	'common.previous': 'Anterior',
 	'common.next': 'Próximo',
 
+	'error.notFoundTitle': 'Página não encontrada',
+	'error.notFoundBody': 'Este endereço não leva a nada. O conteúdo pode ter sido movido.',
+	'error.genericTitle': 'Algo correu mal.',
+	'error.genericBody': 'Recarrega a página. Se continuar, verifica se a tua instância responde.',
+
 	'login.tagline': 'Inicia sessão para voltar aos teus feeds.',
 	'login.email': 'Email',
 	'login.password': 'Palavra-passe',

@@ -36,6 +36,11 @@ export const es: Catalogue = {
 	'common.previous': 'Anterior',
 	'common.next': 'Siguiente',
 
+	'error.notFoundTitle': 'Página no encontrada',
+	'error.notFoundBody': 'Esta dirección no lleva a ninguna parte. Puede que el contenido se haya movido.',
+	'error.genericTitle': 'Algo ha fallado.',
+	'error.genericBody': 'Recarga la página. Si continúa, comprueba que tu instancia responde.',
+
 	'login.tagline': 'Inicia sesión para volver a tus fuentes.',
 	'login.email': 'Correo',
 	'login.password': 'Contraseña',

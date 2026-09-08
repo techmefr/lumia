@@ -36,6 +36,11 @@ export const de: Catalogue = {
 	'common.previous': 'Zurück',
 	'common.next': 'Weiter',
 
+	'error.notFoundTitle': 'Seite nicht gefunden',
+	'error.notFoundBody': 'Diese Adresse führt ins Leere. Der Inhalt wurde möglicherweise verschoben.',
+	'error.genericTitle': 'Etwas ist schiefgelaufen.',
+	'error.genericBody': 'Lade die Seite neu. Bleibt es dabei, prüfe, ob deine Instanz antwortet.',
+
 	'login.tagline': 'Melde dich an, um zu deinen Feeds zurückzukehren.',
 	'login.email': 'E-Mail',
 	'login.password': 'Passwort',

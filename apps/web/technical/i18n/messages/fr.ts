@@ -40,6 +40,11 @@ export const fr = {
 	'common.previous': 'Précédent',
 	'common.next': 'Suivant',
 
+	'error.notFoundTitle': 'Page introuvable',
+	'error.notFoundBody': 'Cette adresse ne mène à rien. Le contenu a peut-être été déplacé.',
+	'error.genericTitle': "Quelque chose s'est mal passé.",
+	'error.genericBody': 'Recharge la page. Si cela persiste, vérifie que ton instance répond.',
+
 	'login.tagline': 'Connecte-toi pour retrouver tes flux.',
 	'login.email': 'Email',
 	'login.password': 'Mot de passe',

@@ -29,6 +29,10 @@
 	--input: oklch(0.922 0 0);
 	--ring: oklch(0.55 0.2 265);
 	--grain-opacity: 0.05;
+	/* Named rather than arbitrary: the two fixed decorative layers sit above the app chrome
+	   (sticky header 30, panels 40, dialogs and toasts 50) and must not reorder by accident. */
+	--z-effects: 80;
+	--z-grain: 90;
 	/* Default pair, overridden by [data-font-pair] below. Kept as its own variable so the
 	   tailwind theme can point at it once and the switch stays a single attribute. */
 	--pair-serif: 'Source Serif 4', Georgia, serif;
@@ -120,7 +124,7 @@
 		content: '';
 		position: fixed;
 		inset: 0;
-		z-index: 9999;
+		z-index: var(--z-grain);
 		pointer-events: none;
 		opacity: var(--grain-opacity);
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -131,6 +135,18 @@
 	h3 {
 		@apply font-serif;
 		letter-spacing: -0.01em;
+		/* Headlines are short and wrap often here (cards, heroes, feed names): balancing the
+		   lines keeps a single word from sitting alone on the last one. */
+		text-wrap: balance;
+	}
+	/* Counters, relevance scores, reading minutes and playlist durations all change in place;
+	   proportional digits make them jump sideways as the value changes. Running text keeps its
+	   proportional figures, which is why the exception below is on .prose rather than a class. */
+	body {
+		font-variant-numeric: tabular-nums;
+	}
+	.prose {
+		font-variant-numeric: normal;
 	}
 }
 
@@ -198,6 +214,10 @@
 	font-size: 1.0625rem;
 	line-height: 1.8;
 	color: var(--foreground);
+	/* A measure, not the container width: past roughly 75 characters the eye loses the start of
+	   the next line, which is the one thing a reader cannot afford. */
+	max-width: 68ch;
+	text-wrap: pretty;
 }
 
 /* Reading comfort: looser leading and a touch more letter and word spacing. Separate from the text
@@ -221,12 +241,12 @@
 	line-height: 1.95;
 }
 
-.prose > * + * {
-	margin-top: 1.4em;
+.prose > * {
+	margin: 0;
 }
 
-.prose p {
-	margin: 0;
+.prose > * + * {
+	margin-top: 1.4em;
 }
 
 .prose h1,

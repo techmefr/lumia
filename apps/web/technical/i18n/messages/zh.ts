@@ -36,6 +36,11 @@ export const zh: Catalogue = {
 	'common.previous': '上一页',
 	'common.next': '下一页',
 
+	'error.notFoundTitle': '页面未找到',
+	'error.notFoundBody': '这个地址没有对应的内容，内容可能已移动。',
+	'error.genericTitle': '出现了问题。',
+	'error.genericBody': '请刷新页面。若仍然如此，请检查你的实例是否正常响应。',
+
 	'login.tagline': '登录后回到你的订阅源。',
 	'login.email': '邮箱',
 	'login.password': '密码',
