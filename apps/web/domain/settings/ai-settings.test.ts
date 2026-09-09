@@ -132,7 +132,7 @@ describe('the reading language', () => {
 });
 
 describe('choosing an ai provider', () => {
-	it('offers none, the three hosted ones, and a custom endpoint', async () => {
+	it('offers none, the four hosted ones, and a custom endpoint', async () => {
 		const view = await loaded();
 
 		expect([...view.provider().options].map((option) => option.value)).toEqual([
@@ -140,6 +140,7 @@ describe('choosing an ai provider', () => {
 			'mistral',
 			'openai',
 			'anthropic',
+			'gemma',
 			'custom'
 		]);
 	});

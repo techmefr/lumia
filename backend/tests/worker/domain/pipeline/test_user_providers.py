@@ -74,6 +74,15 @@ def test_summarizer_for_a_fully_configured_user_is_built() -> None:
     assert summarizer._model == "mistral-small-latest"
 
 
+def test_summarizer_for_a_gemma_user_uses_googles_openai_compatible_endpoint() -> None:
+    user = _user(ai_provider=AIProvider.GEMMA, ai_api_key_encrypted=encrypt_secret("gm-secret"))
+    summarizer = _summarizer_for(user)
+    assert isinstance(summarizer, OpenAiCompatibleSummarizer)
+    assert summarizer._api_key == "gm-secret"
+    assert summarizer._base_url == "https://generativelanguage.googleapis.com/v1beta/openai"
+    assert summarizer._model == "gemma-3-27b-it"
+
+
 def test_summarizer_for_an_anthropic_user_uses_the_messages_client() -> None:
     user = _user(
         ai_provider=AIProvider.ANTHROPIC, ai_api_key_encrypted=encrypt_secret("sk-ant-secret")

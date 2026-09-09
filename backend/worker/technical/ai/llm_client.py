@@ -13,10 +13,14 @@ from worker.technical.ai.base import (
 _PROVIDER_BASE_URLS = {
     "mistral": "https://api.mistral.ai/v1",
     "openai": "https://api.openai.com/v1",
+    # Googles own OpenAI-compatible endpoint, the same one that serves Gemini also serves the
+    # hosted Gemma models under it.
+    "gemma": "https://generativelanguage.googleapis.com/v1beta/openai",
 }
 _DEFAULT_MODELS = {
     "mistral": "mistral-small-latest",
     "openai": "gpt-4o-mini",
+    "gemma": "gemma-3-27b-it",
 }
 
 __all__ = ["LlmApiError", "OpenAiCompatibleSummarizer", "resolve_base_url", "resolve_model"]

@@ -17,6 +17,7 @@ class AIProvider(StrEnum):
     MISTRAL = "mistral"
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
+    GEMMA = "gemma"
     CUSTOM = "custom"
 
 

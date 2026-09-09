@@ -20,6 +20,7 @@
 		{ value: 'mistral', label: 'Mistral' },
 		{ value: 'openai', label: 'OpenAI' },
 		{ value: 'anthropic', label: 'Anthropic (Claude)' },
+		{ value: 'gemma', label: 'Gemma' },
 		{ value: 'custom', label: t('ai.providerCustom') }
 	]);
 	// The same ten as the interface, and named in their own language for the same reason.
