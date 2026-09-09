@@ -19,10 +19,16 @@
 		<FlaskConical class="size-3.5 text-primary" />
 		{t('demo.notice')}
 	</span>
-	<button type="button" onclick={reset} class="underline underline-offset-2 hover:text-primary">
+	<button
+		data-test-demo-reset
+		type="button"
+		onclick={reset}
+		class="underline underline-offset-2 hover:text-primary"
+	>
 		{t('demo.reset')}
 	</button>
 	<a
+		data-test-demo-code
 		href="https://github.com/techmefr/lumia"
 		class="underline underline-offset-2 hover:text-primary"
 	>

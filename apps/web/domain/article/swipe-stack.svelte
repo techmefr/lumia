@@ -80,6 +80,10 @@
 	}
 
 	function commit(action: SwipeAction) {
+		// The drag path already guards on this in onPointerDown, but the action buttons call commit()
+		// directly: a second click landing mid-exit would otherwise fire a second callback for the
+		// same article and skip the one behind it.
+		if (exiting) return;
 		exiting = action;
 		if (action === 'like') dragX = EXIT_DISTANCE;
 		else if (action === 'dislike') dragX = -EXIT_DISTANCE;
@@ -116,6 +120,7 @@
 			{#each visible as article, stackIndex (article.id)}
 				{@const isTop = stackIndex === 0}
 				<div
+					data-test-swipe-card={isTop ? 'top' : undefined}
 					class="absolute inset-0 flex flex-col overflow-hidden rounded-3xl border bg-card shadow-lg select-none"
 					style={isTop
 						? `transform: translate(${dragX}px, ${dragY}px) rotate(${rotation}deg); transition: ${dragging ? 'none' : 'transform 300ms ease-out'}; touch-action: none; cursor: grab; z-index: 3;`
@@ -188,6 +193,7 @@
 		</p>
 
 		<button
+			data-test-swipe-open
 			onclick={() => onOpen(current)}
 			class="rounded-md px-3 py-2 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 		>
@@ -196,6 +202,7 @@
 
 		<div class="flex items-center gap-4">
 			<button
+				data-test-swipe-dislike
 				onclick={() => commit('dislike')}
 				aria-label={t('article.dislike')}
 				class="flex size-14 items-center justify-center rounded-full border-2 border-rose-500 text-rose-500 shadow-sm transition-transform hover:scale-110 active:scale-95"
@@ -203,6 +210,7 @@
 				<ThumbsDown class="size-6" />
 			</button>
 			<button
+				data-test-swipe-save
 				onclick={() => commit('save')}
 				aria-label={t('article.save')}
 				class="flex size-11 items-center justify-center rounded-full border-2 border-primary text-primary shadow-sm transition-transform hover:scale-110 active:scale-95"
@@ -210,6 +218,7 @@
 				<Bookmark class="size-5" />
 			</button>
 			<button
+				data-test-swipe-favorite
 				onclick={() => commit('favorite')}
 				aria-label={t('swipe.favoriteAction')}
 				class="flex size-11 items-center justify-center rounded-full border-2 border-amber-500 text-amber-500 shadow-sm transition-transform hover:scale-110 active:scale-95"
@@ -217,6 +226,7 @@
 				<Star class="size-5" />
 			</button>
 			<button
+				data-test-swipe-like
 				onclick={() => commit('like')}
 				aria-label={t('article.like')}
 				class="flex size-14 items-center justify-center rounded-full border-2 border-emerald-500 text-emerald-500 shadow-sm transition-transform hover:scale-110 active:scale-95"

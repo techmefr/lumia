@@ -54,6 +54,7 @@
 </script>
 
 <button
+	data-test-sidebar-mobile-toggle
 	onclick={() => (mobileOpen = !mobileOpen)}
 	aria-expanded={mobileOpen}
 	aria-controls="feed-nav"
@@ -79,6 +80,7 @@
 		: 'hidden'} w-full shrink-0 flex-col gap-0.5 rounded-2xl border bg-card p-3 shadow-sm sm:sticky sm:top-[4.5rem] sm:flex sm:h-[calc(100vh-7.5rem)] sm:w-60"
 >
 	<button
+		data-test-select-all
 		onclick={onSelectAll}
 		class="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors {isAllActive
 			? 'bg-primary text-primary-foreground'
@@ -98,6 +100,7 @@
 			<div>
 				<div class="group/folder flex items-center">
 					<button
+						data-test-folder={folder.id}
 						onclick={() => onSelectFolder(folder.id)}
 						aria-current={isFolderActive ? 'true' : undefined}
 						class="flex flex-1 items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors {isFolderActive
@@ -112,6 +115,7 @@
 					</button>
 					{#if onMarkFolderRead && folderUnread > 0}
 						<button
+							data-test-folder-mark-read={folder.id}
 							onclick={() => onMarkFolderRead(folder.id)}
 							aria-label={t('feeds.markAllReadIn', { name: folder.name })}
 							title={t('feeds.markAllRead')}
@@ -121,6 +125,7 @@
 						</button>
 					{/if}
 					<button
+						data-test-folder-toggle={folder.id}
 						onclick={() => toggle(folder.id)}
 						aria-expanded={!collapsed[folder.id]}
 						aria-label={collapsed[folder.id]
@@ -143,6 +148,7 @@
 							{@const feedUnread = unread.feeds[feed.id] ?? 0}
 							<div class="group/feed flex items-center">
 								<button
+									data-test-feed={feed.id}
 									onclick={() => onSelectFeed(feed.id)}
 									aria-current={selectedFeedId === feed.id ? 'true' : undefined}
 									class="flex flex-1 items-center gap-2 truncate rounded-md px-2 py-1 text-left text-sm transition-colors {selectedFeedId ===
@@ -158,6 +164,7 @@
 								</button>
 								{#if onMarkFeedRead && feedUnread > 0}
 									<button
+										data-test-feed-mark-read={feed.id}
 										onclick={() => onMarkFeedRead(feed.id)}
 										aria-label={t('feeds.markAllReadIn', { name: feed.title })}
 										title={t('feeds.markAllRead')}
@@ -181,6 +188,7 @@
 				{#snippet children(feed)}
 					{@const feedUnread = unread.feeds[feed.id] ?? 0}
 					<button
+						data-test-feed={feed.id}
 						onclick={() => onSelectFeed(feed.id)}
 						aria-current={selectedFeedId === feed.id ? 'true' : undefined}
 						class="flex w-full items-center gap-2 truncate rounded-md px-2.5 py-1 text-left text-sm transition-colors {selectedFeedId ===
@@ -200,6 +208,7 @@
 	</div>
 
 	<a
+		data-test-nav-playlists
 		href="{base}/playlists"
 		class="mt-auto flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 	>
@@ -207,6 +216,7 @@
 		{t('nav.playlists')}
 	</a>
 	<a
+		data-test-nav-favorites
 		href="{base}/favoris"
 		class="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 	>

@@ -94,13 +94,13 @@
 	aria-label={t('flip.dialog')}
 >
 	<div class="flex items-center justify-between gap-2 border-b px-4 py-3">
-		<span class="text-sm text-muted-foreground">
+		<span data-test-flip-counter class="text-sm text-muted-foreground">
 			{articles.length > 0 ? page + 1 : 0} / {articles.length}
 		</span>
 		<span class="hidden text-xs text-muted-foreground sm:block">
 			{t('flip.hint')}
 		</span>
-		<Button variant="ghost" size="sm" onclick={onClose}>
+		<Button data-test-flip-close variant="ghost" size="sm" onclick={onClose}>
 			<X class="size-4" />
 			{t('common.close')}
 		</Button>
@@ -108,6 +108,7 @@
 
 	{#if current}
 		<div
+			data-test-flip-stage
 			class="flex flex-1 items-center justify-center overflow-hidden px-4 py-6"
 			role="group"
 			aria-label={t('flip.page')}
@@ -148,17 +149,26 @@
 							</span>
 						{/if}
 					</div>
-					<Button class="mt-2 w-fit" href="{base}/articles/{current.id}">{t('article.open')}</Button>
+					<Button data-test-flip-open class="mt-2 w-fit" href="{base}/articles/{current.id}"
+						>{t('article.open')}</Button
+					>
 				</div>
 			</article>
 		</div>
 
 		<div class="flex items-center justify-between gap-2 border-t px-4 py-3">
-			<Button variant="outline" size="sm" onclick={() => go(-1)} disabled={page === 0}>
+			<Button
+				data-test-flip-prev
+				variant="outline"
+				size="sm"
+				onclick={() => go(-1)}
+				disabled={page === 0}
+			>
 				<ChevronLeft class="size-4" />
 				{t('common.previous')}
 			</Button>
 			<Button
+				data-test-flip-next
 				variant="outline"
 				size="sm"
 				onclick={() => go(1)}
@@ -169,7 +179,7 @@
 			</Button>
 		</div>
 	{:else}
-		<p class="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+		<p data-test-flip-empty class="flex flex-1 items-center justify-center text-sm text-muted-foreground">
 			{t('flip.empty')}
 		</p>
 	{/if}
