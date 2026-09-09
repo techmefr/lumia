@@ -28,6 +28,7 @@
 >
 	<div class="flex w-max items-center gap-2 pb-1">
 		<button
+			data-test-section-chip=""
 			type="button"
 			onclick={onSelectAll}
 			aria-pressed={selectedFolderId === ''}
@@ -37,12 +38,13 @@
 		>
 			{t('sections.all')}
 			{#if unread.total > 0}
-				<span class="text-xs opacity-70">{unread.total}</span>
+				<span data-test-chip-count class="text-xs opacity-70">{unread.total}</span>
 			{/if}
 		</button>
 		{#each folders as folder (folder.id)}
 			{@const count = unread.folders[folder.id] ?? 0}
 			<button
+				data-test-section-chip={folder.id}
 				type="button"
 				onclick={() => onSelectFolder(folder.id)}
 				aria-pressed={selectedFolderId === folder.id}
@@ -52,7 +54,7 @@
 			>
 				{folder.name}
 				{#if count > 0}
-					<span class="text-xs opacity-70">{count}</span>
+					<span data-test-chip-count class="text-xs opacity-70">{count}</span>
 				{/if}
 			</button>
 		{/each}

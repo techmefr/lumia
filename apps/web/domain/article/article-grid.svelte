@@ -41,7 +41,12 @@
 </script>
 
 {#if loading && articles.length === 0}
-	<div role="status" aria-label={t('grid.loading')} class="flex flex-col gap-4">
+	<div
+		data-test-grid-loading
+		role="status"
+		aria-label={t('grid.loading')}
+		class="flex flex-col gap-4"
+	>
 		{#if hero}
 			<ArticleCardSkeleton featured />
 		{/if}
@@ -55,13 +60,13 @@
 	{#if empty}
 		{@render empty()}
 	{:else}
-		<p class="flex items-center gap-2 text-sm text-muted-foreground">
+		<p data-test-grid-empty class="flex items-center gap-2 text-sm text-muted-foreground">
 			<Inbox class="size-4" />
 			{t('grid.empty')}
 		</p>
 	{/if}
 {:else}
-	<div class="relative flex flex-col gap-4">
+	<div data-test-article-grid class="relative flex flex-col gap-4">
 		{#if lead}
 			<ArticleHero
 				id={lead.id}

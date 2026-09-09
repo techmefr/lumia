@@ -50,6 +50,13 @@ export class SpeechReader {
 
 	private chunks: string[] = [];
 	private index = 0;
+	/**
+	 * The utterance currently allowed to advance the queue. `cancel()` fires `onend` for the
+	 * utterance it drops, and that is the same event the queue advances on — so a cancelled
+	 * utterance whose event arrives late would silently skip the chunk that replaced it, or end the
+	 * article outright when it was the last one. Only the active utterance counts.
+	 */
+	private utterance: SpeechSynthesisUtterance | null = null;
 	private onDone: (() => void) | null = null;
 	private rate = 1;
 	private lang = 'fr-FR';
@@ -80,6 +87,7 @@ export class SpeechReader {
 		this.rate = rate;
 		// The rate of an utterance already handed to the engine can't be changed; restart the chunk.
 		if (this.speaking && !this.paused) {
+			this.utterance = null;
 			window.speechSynthesis.cancel();
 			this.speakCurrent();
 		}
@@ -106,6 +114,7 @@ export class SpeechReader {
 		this.paused = false;
 		this.progress = 0;
 		this.currentChunk = '';
+		this.utterance = null;
 		window.speechSynthesis.cancel();
 	}
 
@@ -120,17 +129,19 @@ export class SpeechReader {
 
 		this.currentChunk = chunk;
 		const utterance = new SpeechSynthesisUtterance(chunk);
+		this.utterance = utterance;
 		utterance.rate = this.rate;
 		utterance.lang = this.lang;
 		utterance.onend = () => {
-			// A cancel() from pause()/stop() also fires onend; only advance while actually playing.
-			if (this.paused || !this.speaking) return;
+			// A cancel() from pause()/stop()/setRate() also fires onend; only advance while actually
+			// playing, and only for the utterance still on air.
+			if (this.paused || !this.speaking || this.utterance !== utterance) return;
 			this.index += 1;
 			this.progress = this.index / this.chunks.length;
 			this.speakCurrent();
 		};
 		utterance.onerror = () => {
-			if (this.paused || !this.speaking) return;
+			if (this.paused || !this.speaking || this.utterance !== utterance) return;
 			this.index += 1;
 			this.speakCurrent();
 		};
