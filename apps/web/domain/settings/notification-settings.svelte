@@ -75,18 +75,19 @@
 		</div>
 
 		{#if permission === 'unsupported'}
-			<p class="flex items-center gap-2 text-sm text-muted-foreground">
+			<p data-test-notif-unsupported class="flex items-center gap-2 text-sm text-muted-foreground">
 				<BellOff class="size-4" />
 				{t('notifications.unsupported')}
 			</p>
 		{:else if permission === 'denied'}
-			<p class="flex items-center gap-2 text-sm text-destructive">
+			<p data-test-notif-denied class="flex items-center gap-2 text-sm text-destructive">
 				<BellOff class="size-4" />
 				{t('notifications.denied')}
 			</p>
 		{/if}
 
 		<Button
+			data-test-notif-toggle
 			variant={enabled ? 'secondary' : 'default'}
 			class="self-start"
 			disabled={isBlocked}
@@ -105,6 +106,7 @@
 			<Label for="notif-interval">{t('notifications.frequency')}</Label>
 			<select
 				id="notif-interval"
+				data-test-notif-interval
 				bind:value={intervalMinutes}
 				class="h-10 max-w-xs rounded-md border border-input bg-background px-3 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 			>
@@ -122,6 +124,7 @@
 			<Label for="notif-threshold">{t('notifications.threshold')}</Label>
 			<select
 				id="notif-threshold"
+				data-test-notif-threshold
 				bind:value={threshold}
 				class="h-10 max-w-xs rounded-md border border-input bg-background px-3 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 			>
@@ -147,6 +150,7 @@
 				<label class="flex flex-col gap-1 text-sm">
 					<span class="text-muted-foreground">{t('notifications.quietFrom')}</span>
 					<select
+						data-test-notif-quiet-from
 						bind:value={quietFromHour}
 						class="h-10 rounded-md border border-input bg-background px-3 text-sm"
 					>
@@ -158,6 +162,7 @@
 				<label class="flex flex-col gap-1 text-sm">
 					<span class="text-muted-foreground">{t('notifications.quietTo')}</span>
 					<select
+						data-test-notif-quiet-to
 						bind:value={quietToHour}
 						class="h-10 rounded-md border border-input bg-background px-3 text-sm"
 					>
@@ -172,6 +177,6 @@
 			</p>
 		</fieldset>
 
-		<Button class="self-start" onclick={save}>{t('common.save')}</Button>
+		<Button data-test-notif-save class="self-start" onclick={save}>{t('common.save')}</Button>
 	</CardContent>
 </Card>
