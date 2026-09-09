@@ -117,9 +117,11 @@
 		</div>
 
 		{#if loading}
-			<p class="text-sm text-muted-foreground" aria-live="polite">{t('ai.loading')}</p>
+			<p data-test-ai-loading class="text-sm text-muted-foreground" aria-live="polite">
+				{t('ai.loading')}
+			</p>
 		{:else if me === null}
-			<p class="text-sm text-destructive" aria-live="polite">
+			<p data-test-ai-unavailable class="text-sm text-destructive" aria-live="polite">
 				{error ?? t('ai.unavailable')}
 			</p>
 		{:else}
@@ -134,6 +136,7 @@
 				<!-- A select rather than a row of radios: ten of them wrap into an unreadable block, and
 					 this list is a single choice out of a long set. -->
 				<select
+					data-test-reading-language
 					bind:value={language}
 					aria-label={t('ai.readingLanguage')}
 					class="h-10 rounded-md border border-input bg-background px-3 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
@@ -143,7 +146,11 @@
 					{/each}
 				</select>
 				{#if !translatableChoice}
-					<p class="text-xs text-muted-foreground" aria-live="polite">
+					<p
+						data-test-language-untranslatable
+						class="text-xs text-muted-foreground"
+						aria-live="polite"
+					>
 						{t('ai.readingLanguageNoProvider')}
 					</p>
 				{/if}
@@ -153,6 +160,7 @@
 				<Label for="ai-provider">{t('ai.provider')}</Label>
 				<select
 					id="ai-provider"
+					data-test-ai-provider
 					bind:value={aiProvider}
 					class="h-10 rounded-md border border-input bg-background px-3 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 				>
@@ -173,6 +181,7 @@
 						</Label>
 						<Input
 							id="ai-key"
+							data-test-ai-key
 							type="password"
 							autocomplete="off"
 							bind:value={aiApiKey}
@@ -188,6 +197,7 @@
 						<Label for="ai-model">{t('ai.model')}</Label>
 						<Input
 							id="ai-model"
+							data-test-ai-model
 							bind:value={aiModel}
 							placeholder={aiProvider === 'custom' ? 'voxtral-small' : t('ai.modelDefault')}
 						/>
@@ -198,6 +208,7 @@
 							<Label for="ai-endpoint">{t('ai.endpoint')}</Label>
 							<Input
 								id="ai-endpoint"
+								data-test-ai-endpoint
 								type="url"
 								bind:value={aiEndpointUrl}
 								placeholder="http://voxtral.local/v1"
@@ -207,6 +218,7 @@
 
 					{#if me.ai_api_key_set}
 						<Button
+							data-test-delete-ai-key
 							variant="outline"
 							size="sm"
 							class="self-start"
@@ -223,6 +235,7 @@
 				<Label for="translation-provider">{t('ai.translationProvider')}</Label>
 				<select
 					id="translation-provider"
+					data-test-translation-provider
 					bind:value={translationProvider}
 					class="h-10 rounded-md border border-input bg-background px-3 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 				>
@@ -242,17 +255,17 @@
 						</Label>
 						<Input
 							id="translation-key"
+							data-test-translation-key
 							type="password"
 							autocomplete="off"
 							bind:value={translationApiKey}
-							placeholder={me.translation_api_key_set
-								? 'Laisser vide pour conserver la clé'
-								: 'xxxxxxxx-xxxx-…:fx'}
+							placeholder={me.translation_api_key_set ? t('ai.keyKeep') : 'xxxxxxxx-xxxx-…:fx'}
 						/>
 					</div>
 
 					{#if me.translation_api_key_set}
 						<Button
+							data-test-delete-translation-key
 							variant="outline"
 							size="sm"
 							class="self-start"
@@ -266,10 +279,10 @@
 			</div>
 
 			{#if error}
-				<p class="text-sm text-destructive" aria-live="polite">{error}</p>
+				<p data-test-ai-error class="text-sm text-destructive" aria-live="polite">{error}</p>
 			{/if}
 
-			<Button class="self-start" disabled={saving} onclick={save}>
+			<Button data-test-ai-save class="self-start" disabled={saving} onclick={save}>
 				{saving ? t('common.saving') : t('common.save')}
 			</Button>
 		{/if}
