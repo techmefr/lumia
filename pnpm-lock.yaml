@@ -108,15 +108,34 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      svelte:
-        specifier: ^5.0.0
-        version: 5.56.9
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0
       tailwind-variants:
         specifier: ^3.3.1
         version: 3.3.1(tailwind-merge@3.6.0)(tailwindcss@4.3.3)
+    devDependencies:
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^7.1.2
+        version: 7.3.0(svelte@5.56.9)(vite@8.2.1(jiti@2.7.0))
+      '@testing-library/jest-dom':
+        specifier: ^7.0.1
+        version: 7.0.1(@testing-library/dom@10.4.1)(vitest@5.0.0(@vitest/coverage-v8@5.0.0)(jsdom@30.0.1)(vite@8.2.1(jiti@2.7.0)))
+      '@testing-library/svelte':
+        specifier: ^5.4.2
+        version: 5.4.2(svelte@5.56.9)(vite@8.2.1(jiti@2.7.0))(vitest@5.0.0(@vitest/coverage-v8@5.0.0)(jsdom@30.0.1)(vite@8.2.1(jiti@2.7.0)))
+      '@vitest/coverage-v8':
+        specifier: ^5.0.0
+        version: 5.0.0(vitest@5.0.0)
+      jsdom:
+        specifier: ^30.0.1
+        version: 30.0.1
+      svelte:
+        specifier: ^5.56.1
+        version: 5.56.9
+      vitest:
+        specifier: ^5.0.0
+        version: 5.0.0(@vitest/coverage-v8@5.0.0)(jsdom@30.0.1)(vite@8.2.1(jiti@2.7.0))
 
 packages:
 
@@ -891,9 +910,6 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
-  magic-string@1.1.1:
-    resolution: {integrity: sha512-qFemKPzc3ttrYVaMmnSkGtGc5nE6Ncl4bj7c9IE6C9OUIRXjf6PzJ+UZ1xhVIjYc7dolHq3qKzpAJPZUbvNj+A==}
-
   magic-string@1.2.3:
     resolution: {integrity: sha512-Bpb0W2TbLKOZ7vJnOUnVRGq3WL2p+ISV29M6hYPL1AFCpyKZpdr5ytiXoTSSxRVhg8YW7f65+6gbG8WG6PCa/g==}
 
@@ -1430,7 +1446,7 @@ snapshots:
   '@sveltejs/vite-plugin-svelte@7.3.0(svelte@5.56.9)(vite@8.2.1(jiti@2.7.0))':
     dependencies:
       deepmerge: 4.3.1
-      magic-string: 1.1.1
+      magic-string: 1.2.3
       obug: 2.1.4
       svelte: 5.56.9
       vite: 8.2.1(jiti@2.7.0)
@@ -1858,10 +1874,6 @@ snapshots:
   lz-string@1.5.0: {}
 
   magic-string@0.30.21:
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
-
-  magic-string@1.1.1:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 

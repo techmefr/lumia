@@ -34,6 +34,9 @@ jobs:
       - name: Test the shared core
         run: pnpm --filter @lumia/core test:coverage
 
+      - name: Test the design system
+        run: pnpm --filter @lumia/ui test:coverage
+
       - name: Test the app
         run: pnpm --filter web test:coverage
 
@@ -46,6 +49,7 @@ jobs:
           name: coverage-frontend
           path: |
             packages/core/coverage/lcov.info
+            packages/ui/coverage/lcov.info
             apps/web/coverage/lcov.info
           if-no-files-found: warn
 

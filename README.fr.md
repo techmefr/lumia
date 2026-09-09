@@ -138,13 +138,52 @@ pnpm --filter web build
 Backend, depuis `backend/` :
 
 ```bash
-uv sync
-uv run pytest
+uv sync --all-groups
 uv run ruff check .
+uv run ruff format --check .
 uv run mypy .
+uv run pytest
 ```
 
-La suite de tests a besoin de PostgreSQL et Redis accessibles ; la stack compose fournit les deux.
+La suite backend a besoin de PostgreSQL et Redis accessibles. Elle vise par défaut
+`postgresql+asyncpg://lumia:lumia@localhost:55432/lumia_test`, qu'un conteneur jetable fournit :
+
+```bash
+docker run -d --name lumia-test-db -p 55432:5432 -e POSTGRES_USER=lumia -e POSTGRES_PASSWORD=lumia -e POSTGRES_DB=lumia_test postgres:16-alpine
+```
+
+### Tests et couverture
+
+Quatre suites, chacune avec son plancher de couverture vérifié à chaque push :
+
+```bash
+uv run pytest                             # backend, depuis backend/
+pnpm --filter @lumia/core test:coverage   # contrats d'api et client http partagés
+pnpm --filter @lumia/ui test:coverage     # composants du design system
+pnpm --filter web test:coverage           # stores de l'app, i18n, client de démo
+```
+
+| Suite            | Tests | Couverture | Plancher |
+| ---------------- | ----- | ---------- | -------- |
+| `backend`        | 312   | 86 %       | 80 %     |
+| `packages/core`  | 108   | 100 %      | 80 %     |
+| `packages/ui`    | 31    | 21 %       | 21 %     |
+| `apps/web`       | 226   | 16 %       | 15 %     |
+
+Les deux planchers du front sont des crans, pas des objectifs : la cible est 80 % partout, et ce
+qui manque, ce sont les écrans et les pages de route, encore sans tests. On relève un plancher quand
+on ajoute des tests ; on ne l'abaisse jamais pour faire passer une CI rouge. Voir
+[CONTRIBUTING.md](CONTRIBUTING.md) pour la façon dont les tests sont écrits.
+
+### Intégration continue
+
+`.github/workflows/ci.yml` tourne à chaque push et chaque pull request :
+
+- **frontend** — `svelte-check`, puis les trois suites vitest avec leurs planchers
+- **backend** — ruff, ruff format, mypy, pytest avec son plancher, contre un vrai PostgreSQL
+- **migrations** — `alembic upgrade head` sur une base vide, puis retour à `base` et remontée, pour
+  qu'une version puisse être annulée puis réappliquée
+- **docker** — l'image du backend se construit
 
 ## Clés d'IA et de traduction
 

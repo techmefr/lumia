@@ -130,13 +130,51 @@ pnpm --filter web build
 Backend, from `backend/`:
 
 ```bash
-uv sync
-uv run pytest
+uv sync --all-groups
 uv run ruff check .
+uv run ruff format --check .
 uv run mypy .
+uv run pytest
 ```
 
-The test suite needs PostgreSQL and Redis reachable; the compose stack provides both.
+The backend suite needs PostgreSQL and Redis reachable. It defaults to
+`postgresql+asyncpg://lumia:lumia@localhost:55432/lumia_test`, which a throwaway container provides:
+
+```bash
+docker run -d --name lumia-test-db -p 55432:5432 -e POSTGRES_USER=lumia -e POSTGRES_PASSWORD=lumia -e POSTGRES_DB=lumia_test postgres:16-alpine
+```
+
+### Tests and coverage
+
+Four suites, each with its own coverage floor enforced on every push:
+
+```bash
+uv run pytest                             # backend, from backend/
+pnpm --filter @lumia/core test:coverage   # shared api contracts and http client
+pnpm --filter @lumia/ui test:coverage     # design system components
+pnpm --filter web test:coverage           # app stores, i18n, demo client
+```
+
+| Suite            | Tests | Coverage | Floor |
+| ---------------- | ----- | -------- | ----- |
+| `backend`        | 312   | 86%      | 80%   |
+| `packages/core`  | 108   | 100%     | 80%   |
+| `packages/ui`    | 31    | 21%      | 21%   |
+| `apps/web`       | 226   | 16%      | 15%   |
+
+The two frontend floors are ratchets, not targets: 80% is the target everywhere, and the gap is the
+screens and route pages, which have no tests yet. Raise a floor when you add tests; never lower one
+to turn a red run green. See [CONTRIBUTING.md](CONTRIBUTING.md) for how the tests are written.
+
+### Continuous integration
+
+`.github/workflows/ci.yml` runs on every push and pull request:
+
+- **frontend** — `svelte-check`, then the three vitest suites with their coverage floors
+- **backend** — ruff, ruff format, mypy, pytest with its coverage floor, against a real PostgreSQL
+- **migrations** — `alembic upgrade head` on an empty database, then down to `base` and back up, so a
+  release can be rolled back and re-applied
+- **docker** — the backend image builds
 
 ## AI and translation keys
 

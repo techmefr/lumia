@@ -71,6 +71,8 @@
 
 <a
 	{href}
+	data-test-article-card={id}
+	data-test-read={read ? 'true' : 'false'}
 	class={cn(
 		'group relative flex animate-in flex-col overflow-hidden rounded-2xl border bg-card shadow-sm fade-in slide-in-from-bottom-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl',
 		featured ? 'sm:col-span-2 lg:col-span-2' : '',
@@ -106,6 +108,7 @@
 		<div class="absolute right-2 top-2 flex items-center gap-1">
 			{#if showsScore}
 				<span
+					data-test-relevance-score
 					class="rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur"
 					title={scoreTitle}
 				>
@@ -115,6 +118,7 @@
 			{/if}
 			{#if readingMinutes}
 				<span
+					data-test-reading-minutes
 					class="rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur"
 				>
 					{minutesLabel(readingMinutes)}
@@ -127,6 +131,7 @@
 		<!-- The avatar lives here, not inside the image box: that box is overflow-hidden, which used
 			 to clip the overlapping circle in half. A negative margin keeps the overlap look. -->
 		<span
+			data-test-source-avatar
 			class="relative z-10 -mt-8 mb-1 flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold text-white shadow-md ring-4 ring-card"
 			style={`background: hsl(${accentHue} 65% 45%);`}
 		>
@@ -142,13 +147,17 @@
 				{initial}
 			{/if}
 		</span>
-		<span class="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+		<span
+			data-test-source-label
+			class="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground"
+		>
 			{sourceLabel}
 			{#if read}
 				<span class="normal-case tracking-normal">· {readLabel}</span>
 			{/if}
 		</span>
 		<h3
+			data-test-article-title
 			style={`view-transition-name: article-title-${id};`}
 			class={cn(
 				'font-serif leading-snug transition-transform duration-200 group-hover:-translate-y-0.5',
@@ -159,14 +168,20 @@
 			{title}
 		</h3>
 		{#if featured && summary}
-			<p class="line-clamp-2 text-sm text-muted-foreground">{summary}</p>
+			<p data-test-article-summary class="line-clamp-2 text-sm text-muted-foreground">{summary}</p>
 		{/if}
-		<span class="mt-auto pt-1 text-xs text-muted-foreground">{formattedDate}</span>
+		<span data-test-published-date class="mt-auto pt-1 text-xs text-muted-foreground">
+			{formattedDate}
+		</span>
 	</div>
 
 	{#if progressPercent > 0 && progressPercent < 100}
 		<div aria-hidden="true" class="h-0.5 w-full bg-muted">
-			<div class="h-full bg-primary" style={`width: ${progressPercent}%;`}></div>
+			<div
+				data-test-reading-progress={progressPercent}
+				class="h-full bg-primary"
+				style={`width: ${progressPercent}%;`}
+			></div>
 		</div>
 	{/if}
 </a>
