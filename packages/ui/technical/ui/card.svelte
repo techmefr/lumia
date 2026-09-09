@@ -6,6 +6,7 @@
 </script>
 
 <div
+	data-test-card
 	class={cn('rounded-xl border bg-card text-card-foreground shadow-sm', className)}
 	{...restProps}
 >

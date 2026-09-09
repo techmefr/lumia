@@ -64,6 +64,8 @@
 
 <a
 	{href}
+	data-test-article-hero={id}
+	data-test-read={read ? 'true' : 'false'}
 	class={cn(
 		'group relative grid animate-in overflow-hidden rounded-2xl border bg-card shadow-sm fade-in slide-in-from-bottom-4 transition-all duration-300 ease-out hover:shadow-xl md:grid-cols-2',
 		read ? 'opacity-70 hover:opacity-100' : '',
@@ -78,6 +80,7 @@
 	>
 		{#if imageUrl && !imageFailed}
 			<img
+				data-test-article-image
 				src={imageUrl}
 				alt=""
 				class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
@@ -95,11 +98,13 @@
 	<div class="flex flex-col gap-3 p-6 sm:p-8">
 		<div class="flex items-center gap-2">
 			<span
+				data-test-source-avatar
 				class="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold text-white shadow-md"
 				style={`background: hsl(${accentHue} 65% 45%);`}
 			>
 				{#if iconUrl && !iconFailed}
 					<img
+						data-test-source-icon
 						src={iconUrl}
 						alt=""
 						class="size-full object-cover"
@@ -109,38 +114,52 @@
 					{initial}
 				{/if}
 			</span>
-			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+			<span
+				data-test-source-label
+				class="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+			>
 				{sourceLabel}
 			</span>
-			<span class="text-xs text-muted-foreground">· {formattedDate}</span>
+			<span data-test-published-date class="text-xs text-muted-foreground">· {formattedDate}</span>
 			{#if read}
-				<span class="text-xs text-muted-foreground">· {readLabel}</span>
+				<span data-test-read-label class="text-xs text-muted-foreground">· {readLabel}</span>
 			{/if}
 		</div>
 
-		<h2 class="font-serif text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl">
+		<h2
+			data-test-article-title
+			class="font-serif text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl"
+		>
 			{title}
 		</h2>
 
 		{#if summary}
-			<p class="line-clamp-4 text-sm text-muted-foreground sm:text-base">{summary}</p>
+			<p data-test-article-summary class="line-clamp-4 text-sm text-muted-foreground sm:text-base">
+				{summary}
+			</p>
 		{/if}
 
 		<div class="mt-auto flex flex-wrap items-center gap-2 pt-2 text-xs text-muted-foreground">
 			{#if readingMinutes}
-				<span class="rounded-full bg-secondary px-2 py-0.5 font-medium text-secondary-foreground">
+				<span
+					data-test-reading-minutes
+					class="rounded-full bg-secondary px-2 py-0.5 font-medium text-secondary-foreground"
+				>
 					{minutesLabel(readingMinutes)}
 				</span>
 			{/if}
 			{#if showsScore}
 				<span
+					data-test-relevance-score
 					class="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary"
 					title={scoreTitle}
 				>
 					{relevanceScore}<span class="sr-only">{scoreSuffix}</span>
 				</span>
 			{/if}
-			<span class="ml-auto font-medium text-primary group-hover:underline">{ctaLabel}</span>
+			<span data-test-cta class="ml-auto font-medium text-primary group-hover:underline"
+				>{ctaLabel}</span
+			>
 		</div>
 	</div>
 </a>

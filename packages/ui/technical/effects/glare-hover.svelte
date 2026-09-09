@@ -76,6 +76,7 @@
 </script>
 
 <div
+	data-test-glare
 	class="relative grid place-items-center overflow-hidden {className}"
 	style="width:{width};height:{height};background:{background};border-radius:{borderRadius};border-color:{borderColor};{style}"
 	onmouseenter={animateIn}
@@ -83,6 +84,7 @@
 	role="presentation"
 >
 	<div
+		data-test-glare-overlay
 		bind:this={overlay}
 		style="position:absolute;inset:0;background:linear-gradient({glareAngle}deg, hsla(0,0%,0%,0) 60%, {rgba} 70%, hsla(0,0%,0%,0) 100%);background-size:{glareSize}% {glareSize}%, 100% 100%;background-repeat:no-repeat;background-position:-100% -100%, 0 0;pointer-events:none;"
 	></div>

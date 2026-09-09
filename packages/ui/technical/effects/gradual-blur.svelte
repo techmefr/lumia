@@ -90,10 +90,10 @@
 	});
 </script>
 
-<div aria-hidden="true" class="gradual-blur relative isolate {className}" style={containerStyle}>
+<div data-test-gradual-blur aria-hidden="true" class="gradual-blur relative isolate {className}" style={containerStyle}>
 	<div class="relative h-full w-full">
 		{#each divs as d, i (i)}
-			<div class="absolute inset-0" style={d.style}></div>
+			<div data-test-blur-layer={i} class="absolute inset-0" style={d.style}></div>
 		{/each}
 	</div>
 </div>

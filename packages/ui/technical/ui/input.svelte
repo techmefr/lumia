@@ -17,6 +17,7 @@
 </script>
 
 <input
+	data-test-input
 	bind:this={ref}
 	{type}
 	bind:value

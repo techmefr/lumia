@@ -14,6 +14,7 @@
 <!-- aria-live on the container, not on each toast: the region has to exist before the message is
 	 inserted for screen readers to announce it. -->
 <div
+	data-test-toast-region
 	aria-live="polite"
 	aria-atomic="false"
 	class="pointer-events-none fixed inset-x-0 z-50 flex flex-col items-center gap-2 px-4"
@@ -21,6 +22,8 @@
 >
 	{#each toasts.toasts as item (item.id)}
 		<div
+			data-test-toast={item.id}
+			data-test-tone={item.tone}
 			transition:fly={{ y: 12, duration: 180 }}
 			class={cn(
 				'pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur',
@@ -29,9 +32,10 @@
 					: 'bg-card/95'
 			)}
 		>
-			<span class="flex-1">{item.message}</span>
+			<span data-test-toast-message class="flex-1">{item.message}</span>
 			{#if item.action}
 				<button
+					data-test-toast-action
 					onclick={() => {
 						void item.action?.run();
 						toasts.dismiss(item.id);
@@ -42,6 +46,7 @@
 				</button>
 			{/if}
 			<button
+				data-test-toast-close
 				onclick={() => toasts.dismiss(item.id)}
 				aria-label={closeLabel}
 				class="shrink-0 rounded-md px-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

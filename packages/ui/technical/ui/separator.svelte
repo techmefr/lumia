@@ -10,6 +10,7 @@
 </script>
 
 <SeparatorPrimitive.Root
+	data-test-separator
 	{orientation}
 	class={cn(
 		'shrink-0 bg-border',

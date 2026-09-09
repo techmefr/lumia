@@ -63,7 +63,9 @@
 		resizeCanvas();
 
 		const ctx = canvas.getContext('2d');
-		if (!ctx) return;
+		// The listener is already attached, so bailing out bare would leave it on the window for the
+		// life of the page, writing to a canvas that is gone the moment this unmounts.
+		if (!ctx) return () => window.removeEventListener('resize', resizeCanvas);
 		const resolvedColor = resolveColor(sparkColor);
 		let raf = 0;
 		const draw = (timestamp: number) => {
@@ -126,6 +128,7 @@
 
 <div bind:this={wrapper} class="contents {className}">
 	<canvas
+		data-test-click-spark
 		bind:this={canvas}
 		aria-hidden="true"
 		class="pointer-events-none fixed inset-0"

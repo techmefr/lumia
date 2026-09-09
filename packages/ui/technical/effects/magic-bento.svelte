@@ -28,16 +28,21 @@
 		cell.style.setProperty('--ry', `${rotateY}deg`);
 	}
 
+	// Every cell, not the one under the cursor: `pointerleave` does not bubble, so it fires on the
+	// grid itself with the grid as its target — walking up from there finds no cell, and the card
+	// the pointer just left stayed frozen mid-tilt, which reads as a rendering bug. The cursor is
+	// outside the grid by now, so flattening the lot is also the correct end state.
 	function resetTilt(event: PointerEvent) {
-		const target = event.target as HTMLElement;
-		const cell = target.closest<HTMLElement>('.magic-bento-cell');
-		if (!cell) return;
-		cell.style.setProperty('--rx', '0deg');
-		cell.style.setProperty('--ry', '0deg');
+		const grid = event.currentTarget as HTMLElement;
+		for (const cell of grid.querySelectorAll<HTMLElement>('.magic-bento-cell')) {
+			cell.style.setProperty('--rx', '0deg');
+			cell.style.setProperty('--ry', '0deg');
+		}
 	}
 </script>
 
 <div
+	data-test-magic-bento
 	class="magic-bento grid gap-4 {className}"
 	style={`--glow-color: ${glowColor}`}
 	onpointermove={handlePointerMove}

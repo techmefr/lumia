@@ -9,4 +9,4 @@
 </script>
 
 <!-- Decorative: the surrounding region announces the loading state via role="status". -->
-<div aria-hidden="true" class={cn('animate-pulse rounded-md bg-muted', className)}></div>
+<div data-test-skeleton aria-hidden="true" class={cn('animate-pulse rounded-md bg-muted', className)}></div>

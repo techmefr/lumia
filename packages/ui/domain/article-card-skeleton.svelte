@@ -12,6 +12,7 @@
 </script>
 
 <div
+	data-test-article-card-skeleton
 	aria-hidden="true"
 	class={cn(
 		'flex flex-col overflow-hidden rounded-2xl border bg-card shadow-sm',

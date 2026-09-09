@@ -18,11 +18,12 @@ export default defineConfig({
 			exclude: ['**/*.test.ts', 'index.ts'],
 			reporter: ['text', 'lcov'],
 			/**
-			 * A ratchet, not the target. One component of fifteen is covered so far; 80 is where
-			 * this is going. Raise it with each component tested, never lower it to turn a red run
-			 * green.
+			 * A ratchet, set just under what the suite covers today. Every component and effect in
+			 * the package is now tested; what the branch figure is missing is the handful of prop
+			 * defaults no caller in the app overrides. Raise it when you add tests, never lower it
+			 * to turn a red run green.
 			 */
-			thresholds: { lines: 20, functions: 16, statements: 22, branches: 30 }
+			thresholds: { lines: 99, functions: 99, statements: 98, branches: 85 }
 		}
 	}
 });

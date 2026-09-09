@@ -20,6 +20,7 @@
 	class="fixed inset-x-0 top-0 z-50 h-1 bg-transparent"
 >
 	<div
+		data-test-progress-bar
 		class="h-full bg-primary transition-[width] duration-150 ease-out"
 		style={`width: ${percent}%;`}
 	></div>
