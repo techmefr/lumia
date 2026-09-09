@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 from api.domain.user.models import (
     AIProvider,
@@ -15,7 +15,9 @@ from api.domain.user.models import (
 class OnboardingAdminRequest(BaseModel):
     email: EmailStr
     username: str
-    password: str
+    # The account created here has full instance-admin rights, so a short password is the one
+    # place in the app that can't be left to the reader's own judgement.
+    password: str = Field(min_length=8)
     max_accounts: int = 10
     disk_quota_mb: int = 1000
 

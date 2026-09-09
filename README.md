@@ -109,6 +109,10 @@ serves the static build behind nginx and proxies `/api` to the API, so the app w
 with no configuration and no CORS. On first launch the app walks you through admin onboarding: admin account, instance
 limits (max accounts, per-user disk quota), then you're ready to import an OPML file or add feeds.
 
+`FRONTEND_URL` (defaults to `http://localhost:8080`, the docker-compose default) is only used to
+build the clickable link in the "sign in without a password" email; set it to the app's real address
+if it's reached from a domain or a LAN address instead.
+
 `MINIFLUX_WEBHOOK_SECRET` is required: Miniflux signs every webhook call with it
 (`X-Miniflux-Signature`), and the API rejects anything that doesn't match rather than trusting
 whatever reaches `/webhooks/miniflux`. Set it once in `.env` before the first `docker compose up`,
@@ -173,7 +177,7 @@ pnpm --filter web test:coverage           # app stores, i18n, demo client
 | `backend`        | 318   | 86%      | 80%   |
 | `packages/core`  | 108   | 100%     | 80%   |
 | `packages/ui`    | 319   | 99%      | 98%   |
-| `apps/web`       | 571   | 49%      | 46%   |
+| `apps/web`       | 578   | 49%      | 50%   |
 
 `packages/ui` covers every component and effect in the design system now, floor raised accordingly.
 `apps/web` now covers the feed sidebar, the flip reader and the swipe stack too; the remaining gap

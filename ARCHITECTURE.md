@@ -44,6 +44,12 @@ The Miniflux webhook is signed (`X-Miniflux-Signature`, HMAC-SHA256 over the raw
 `hmac.compare_digest` in `worker/technical/webhook.py`) against `MINIFLUX_WEBHOOK_SECRET`, which has
 no default — the config fails to start without one rather than accepting unsigned calls silently.
 
+Passwordless sign-in (`api/domain/user/magic_link_service.py`) issues an opaque token, stores only
+its hash (`MagicLinkToken`, single-use, TTL-bound), and emails a clickable
+`{FRONTEND_URL}/login?magic_token=...` link built from `EmailConfig.frontend_url`. `/login` reads
+that query param on mount and calls `verifyMagicLink` before showing any form — this is also the
+app's only account-recovery path, there being no separate forgot-password flow.
+
 ## Bounded contexts
 
 | Context | Responsibility |

@@ -41,6 +41,13 @@ async def test_onboard_admin_twice_is_rejected(client: httpx.AsyncClient) -> Non
     assert second.status_code == 409
 
 
+async def test_onboard_admin_rejects_a_password_shorter_than_eight_characters(
+    client: httpx.AsyncClient,
+) -> None:
+    response = await client.post("/onboarding/admin", json={**ADMIN_PAYLOAD, "password": "short1"})
+    assert response.status_code == 422
+
+
 async def test_login_with_valid_credentials_returns_tokens(client: httpx.AsyncClient) -> None:
     await client.post("/onboarding/admin", json=ADMIN_PAYLOAD)
 

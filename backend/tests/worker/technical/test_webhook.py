@@ -84,7 +84,9 @@ async def test_signature_for_a_different_body_is_rejected(client: httpx.AsyncCli
     # Proves the signature is checked against the body that was actually sent, not just against
     # any signature shaped like a hex digest: sign one payload, send another.
     mock_pool = AsyncMock()
-    tampered = json.dumps({**MINIFLUX_PAYLOAD, "feed": {"id": 999, "title": "Hacker News"}}).encode()
+    tampered = json.dumps(
+        {**MINIFLUX_PAYLOAD, "feed": {"id": 999, "title": "Hacker News"}}
+    ).encode()
     with patch("worker.technical.webhook.get_arq_pool", AsyncMock(return_value=mock_pool)):
         response = await _post(client, tampered, _signature(_BODY))
 

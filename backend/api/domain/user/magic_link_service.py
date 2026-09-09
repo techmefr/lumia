@@ -9,6 +9,7 @@ from api.domain.user.models import MagicLinkToken, User
 from api.technical.auth.tokens import generate_opaque_token, hash_token
 from api.technical.email.smtp import send_email
 from config.auth import get_auth_config
+from config.email import get_email_config
 
 
 async def request_magic_link(session: AsyncSession, email: str) -> None:
@@ -27,10 +28,12 @@ async def request_magic_link(session: AsyncSession, email: str) -> None:
     )
     await session.commit()
 
+    frontend_url = get_email_config().frontend_url.rstrip("/")
+    magic_link_url = f"{frontend_url}/login?magic_token={raw_token}"
     await send_email(
         to=user.email,
         subject="Votre lien de connexion Lumia",
-        body=f"Cliquez sur ce lien pour vous connecter : {raw_token}",
+        body=f"Cliquez sur ce lien pour vous connecter : {magic_link_url}",
     )
 
 

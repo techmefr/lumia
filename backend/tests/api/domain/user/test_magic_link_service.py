@@ -43,6 +43,24 @@ async def test_request_magic_link_sends_an_email_for_a_known_address(
     assert mock_send.await_args.kwargs["to"] == user.email
 
 
+async def test_request_magic_link_email_contains_a_clickable_login_url(
+    session: AsyncSession,
+) -> None:
+    await _create_user(session, "known@example.com")
+    with (
+        patch("api.domain.user.magic_link_service.send_email", new_callable=AsyncMock) as mock_send,
+        patch(
+            "api.domain.user.magic_link_service.generate_opaque_token",
+            return_value="the-raw-token",
+        ),
+    ):
+        await request_magic_link(session, "known@example.com")
+
+    assert mock_send.await_args is not None
+    body = mock_send.await_args.kwargs["body"]
+    assert "http://localhost:8080/login?magic_token=the-raw-token" in body
+
+
 async def test_request_magic_link_does_nothing_for_an_unknown_address(
     session: AsyncSession,
 ) -> None:

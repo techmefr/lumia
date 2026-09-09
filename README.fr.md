@@ -118,6 +118,10 @@ n'importe quelle adresse sans configuration ni CORS. Au premier lancement, l'app
 limites de l'instance (nombre de comptes, quota disque par utilisateur), puis tu peux importer un
 OPML ou ajouter des flux.
 
+`FRONTEND_URL` (par défaut `http://localhost:8080`, celui de docker-compose) ne sert qu'à construire
+le lien cliquable de l'email « se connecter sans mot de passe » ; à renseigner avec l'adresse réelle
+de l'app si elle est jointe par un domaine ou une adresse LAN.
+
 `MINIFLUX_WEBHOOK_SECRET` est obligatoire : Miniflux signe chaque appel de webhook avec
 (`X-Miniflux-Signature`), et l'API rejette tout ce qui ne correspond pas plutôt que de faire
 confiance à ce qui arrive sur `/webhooks/miniflux`. Renseigne-la une fois dans `.env` avant le
@@ -184,7 +188,7 @@ pnpm --filter web test:coverage           # stores de l'app, i18n, client de dé
 | `backend`        | 318   | 86 %       | 80 %     |
 | `packages/core`  | 108   | 100 %      | 80 %     |
 | `packages/ui`    | 319   | 99 %       | 98 %     |
-| `apps/web`       | 571   | 49 %       | 46 %     |
+| `apps/web`       | 578   | 49 %       | 50 %     |
 
 `packages/ui` couvre désormais chaque composant et effet du design system, plancher relevé en
 conséquence. `apps/web` couvre maintenant aussi la sidebar des flux, le lecteur flip et la pile de

@@ -59,8 +59,10 @@
 						type="password"
 						bind:value={password}
 						required
+						minlength={8}
 						autocomplete="new-password"
 					/>
+					<p class="text-xs text-muted-foreground">{t('onboarding.passwordHint')}</p>
 				</div>
 				{#if error}
 					<p role="alert" class="text-sm text-destructive">{t(error)}</p>
