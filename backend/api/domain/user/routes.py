@@ -191,7 +191,9 @@ async def sso_callback(
         code=payload.code,
         transport=transport,
     )
-    userinfo = await fetch_userinfo(document, access_token=tokens["access_token"], transport=transport)
+    userinfo = await fetch_userinfo(
+        document, access_token=tokens["access_token"], transport=transport
+    )
     user = await get_or_create_sso_user(
         session, instance, sub=userinfo["sub"], email=userinfo["email"]
     )

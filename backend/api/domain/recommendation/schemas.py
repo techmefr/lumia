@@ -24,7 +24,11 @@ class MarkReadRequest(BaseModel):
 
     @model_validator(mode="after")
     def check_single_scope(self) -> "MarkReadRequest":
-        scopes = [self.article_ids is not None, self.feed_id is not None, self.folder_id is not None]
+        scopes = [
+            self.article_ids is not None,
+            self.feed_id is not None,
+            self.folder_id is not None,
+        ]
         if sum(scopes) != 1:
             raise ValueError("exactly one of article_ids, feed_id or folder_id is required")
         return self

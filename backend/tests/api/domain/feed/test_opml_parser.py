@@ -45,4 +45,4 @@ def test_parse_opml_rejects_malformed_xml() -> None:
 
 def test_parse_opml_rejects_a_document_without_a_body() -> None:
     with pytest.raises(InvalidOpmlError):
-        parse_opml(b"<opml version=\"1.0\"></opml>")
+        parse_opml(b'<opml version="1.0"></opml>')

@@ -78,9 +78,7 @@ async def test_import_opml_creates_folders_and_feeds(session: AsyncSession) -> N
 
     hn_feed = next(feed for feed in feeds if feed.url == "https://hnrss.org/frontpage")
     assert hn_feed.folder_id == tech_folder.id
-    uncategorized_feed = next(
-        feed for feed in feeds if feed.url == "https://example.com/feed.xml"
-    )
+    uncategorized_feed = next(feed for feed in feeds if feed.url == "https://example.com/feed.xml")
     assert uncategorized_feed.folder_id is None
 
 

@@ -43,9 +43,7 @@ def _to_summary(playlist: Playlist) -> PlaylistSummaryResponse:
 async def _to_detail(
     session: AsyncSession, user_id: UUID, playlist: Playlist
 ) -> PlaylistDetailResponse:
-    articles = await to_summaries(
-        session, user_id, [item.article for item in playlist.items]
-    )
+    articles = await to_summaries(session, user_id, [item.article for item in playlist.items])
     return PlaylistDetailResponse(id=playlist.id, name=playlist.name, articles=articles)
 
 
@@ -93,9 +91,7 @@ async def create_playlist_for_duration(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> PlaylistDetailResponse:
-    playlist = await build_for_duration(
-        session, user.id, target_minutes=payload.target_minutes
-    )
+    playlist = await build_for_duration(session, user.id, target_minutes=payload.target_minutes)
     return await _to_detail(session, user.id, playlist)
 
 

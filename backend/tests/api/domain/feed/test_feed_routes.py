@@ -90,7 +90,5 @@ async def test_delete_feed_of_another_user_is_rejected(client: httpx.AsyncClient
 
 async def test_delete_an_unknown_feed_returns_404(client: httpx.AsyncClient) -> None:
     headers = await _headers(client)
-    response = await client.delete(
-        "/feeds/00000000-0000-0000-0000-000000000000", headers=headers
-    )
+    response = await client.delete("/feeds/00000000-0000-0000-0000-000000000000", headers=headers)
     assert response.status_code == 404

@@ -64,9 +64,7 @@ def test_summarizer_for_a_custom_provider_without_a_model_is_none() -> None:
 
 
 def test_summarizer_for_a_fully_configured_user_is_built() -> None:
-    user = _user(
-        ai_provider=AIProvider.MISTRAL, ai_api_key_encrypted=encrypt_secret("sk-secret")
-    )
+    user = _user(ai_provider=AIProvider.MISTRAL, ai_api_key_encrypted=encrypt_secret("sk-secret"))
     summarizer = _summarizer_for(user)
     # Narrowed rather than asserted loosely: only the OpenAI-compatible client carries a base url,
     # and picking the wrong client for a provider is exactly what this test is here to catch.

@@ -132,7 +132,5 @@ async def test_sso_callback_reuses_the_existing_user_for_a_known_sub(
 
     session_factory = async_sessionmaker(get_engine(), expire_on_commit=False)
     async with session_factory() as session:
-        users = (
-            await session.scalars(select(User).where(User.sso_subject == "user-1"))
-        ).all()
+        users = (await session.scalars(select(User).where(User.sso_subject == "user-1"))).all()
         assert len(users) == 1

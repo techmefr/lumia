@@ -63,9 +63,7 @@ async def build_for_duration(
         minutes = estimate_reading_minutes(article.content)
         if minutes > remaining:
             continue
-        session.add(
-            PlaylistItem(playlist_id=playlist.id, article_id=article.id, position=position)
-        )
+        session.add(PlaylistItem(playlist_id=playlist.id, article_id=article.id, position=position))
         position += 1
         remaining -= minutes
         if remaining <= 0:

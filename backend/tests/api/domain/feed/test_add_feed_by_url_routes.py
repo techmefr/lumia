@@ -63,7 +63,10 @@ async def test_add_feed_by_url_returns_404_for_a_foreign_folder(
     response = await client.post(
         "/feeds/add-by-url",
         headers=headers,
-        json={"url": "https://hnrss.org/frontpage", "folder_id": "00000000-0000-0000-0000-000000000000"},
+        json={
+            "url": "https://hnrss.org/frontpage",
+            "folder_id": "00000000-0000-0000-0000-000000000000",
+        },
     )
 
     assert response.status_code == 404

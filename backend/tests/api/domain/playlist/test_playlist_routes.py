@@ -268,9 +268,7 @@ async def test_another_users_playlist_is_not_reachable(client: httpx.AsyncClient
         await session.commit()
         other_headers = {"Authorization": f"Bearer {create_access_token(other.id)}"}
 
-    assert (
-        await client.get(f"/playlists/{playlist_id}", headers=other_headers)
-    ).status_code == 404
+    assert (await client.get(f"/playlists/{playlist_id}", headers=other_headers)).status_code == 404
     assert (
         await client.patch(f"/playlists/{playlist_id}", json={"name": "X"}, headers=other_headers)
     ).status_code == 404

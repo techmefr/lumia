@@ -45,9 +45,7 @@ async def test_valid_payload_enqueues_a_job_and_responds_202(client: httpx.Async
 async def test_invalid_payload_is_rejected_before_enqueueing(client: httpx.AsyncClient) -> None:
     mock_pool = AsyncMock()
     with patch("worker.technical.webhook.get_arq_pool", AsyncMock(return_value=mock_pool)):
-        response = await client.post(
-            "/webhooks/miniflux", json={"feed": {}, "entries": []}
-        )
+        response = await client.post("/webhooks/miniflux", json={"feed": {}, "entries": []})
 
     assert response.status_code == 400
     mock_pool.enqueue_job.assert_not_awaited()

@@ -20,7 +20,9 @@ async def test_summarize_returns_the_joined_text_blocks() -> None:
         assert request.url.path == "/v1/messages"
         return httpx.Response(
             200,
-            json={"content": [{"type": "text", "text": " Un "}, {"type": "text", "text": "résumé. "}]},
+            json={
+                "content": [{"type": "text", "text": " Un "}, {"type": "text", "text": "résumé. "}]
+            },
         )
 
     assert await _summarizer(handler).summarize("texte") == "Un résumé."

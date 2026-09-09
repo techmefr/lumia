@@ -24,7 +24,9 @@ async def _seed_user_with_feed(session: AsyncSession, *, email: str) -> tuple[Us
     session.add(instance)
     await session.flush()
     user = User(
-        instance_id=instance.id, email=email, username="user",
+        instance_id=instance.id,
+        email=email,
+        username="user",
         password_hash=None,
     )
     session.add(user)

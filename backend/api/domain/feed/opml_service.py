@@ -95,7 +95,9 @@ async def add_feed(
         )
 
     try:
-        miniflux_feed = await create_feed(url, category_id=category_id, transport=miniflux_transport)
+        miniflux_feed = await create_feed(
+            url, category_id=category_id, transport=miniflux_transport
+        )
         detail = await get_feed(miniflux_feed.feed_id, transport=miniflux_transport)
     except (MinifluxApiError, httpx.HTTPError) as exc:
         raise FeedUnreachableError from exc
@@ -154,7 +156,5 @@ async def _register_with_miniflux(
             category_id = category.category_id
             category_id_by_folder_name[entry.folder_name] = category_id
 
-    miniflux_feed = await create_feed(
-        entry.url, category_id=category_id, transport=transport
-    )
+    miniflux_feed = await create_feed(entry.url, category_id=category_id, transport=transport)
     return str(miniflux_feed.feed_id)

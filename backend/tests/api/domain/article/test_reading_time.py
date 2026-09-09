@@ -12,9 +12,7 @@ def test_two_hundred_words_is_one_minute() -> None:
 def test_word_count_ignores_the_markup() -> None:
     words = " ".join(["mot"] * 400)
     plain = estimate_reading_minutes(words)
-    wrapped = estimate_reading_minutes(
-        f'<div class="entry-content"><p>{words}</p></div>'
-    )
+    wrapped = estimate_reading_minutes(f'<div class="entry-content"><p>{words}</p></div>')
     assert plain == wrapped == 2
 
 

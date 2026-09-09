@@ -48,9 +48,7 @@ async def test_create_feed_omits_category_id_when_not_given() -> None:
         assert "category_id" not in request.content.decode()
         return httpx.Response(201, json={"feed_id": 9})
 
-    feed = await create_feed(
-        "https://example.com/feed.xml", transport=httpx.MockTransport(handler)
-    )
+    feed = await create_feed("https://example.com/feed.xml", transport=httpx.MockTransport(handler))
     assert feed.feed_id == 9
 
 

@@ -103,7 +103,9 @@ async def test_enrich_article_extracts_the_first_image_from_the_content(
     await _create_feed(session)
     content = FRENCH_CONTENT + '<img src="https://example.com/cover.jpg">'
 
-    await enrich_article({}, _raw_article(content=content), content_extractor=_FakeContentExtractor())
+    await enrich_article(
+        {}, _raw_article(content=content), content_extractor=_FakeContentExtractor()
+    )
 
     article = await session.scalar(select(Article))
     assert article is not None
@@ -379,9 +381,7 @@ async def test_enrich_article_translates_per_subscriber_preferred_language(
 
     await enrich_article(
         {},
-        _raw_article(
-            feed_external_id="30", title="The cat", content=ENGLISH_CONTENT
-        ),
+        _raw_article(feed_external_id="30", title="The cat", content=ENGLISH_CONTENT),
         translator=_FakeTranslator(),
         content_extractor=_FakeContentExtractor(),
     )

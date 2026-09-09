@@ -3,9 +3,7 @@ from collections.abc import AsyncIterator
 
 import pytest
 
-os.environ.setdefault(
-    "DATABASE_URL", "postgresql+asyncpg://lumia:lumia@localhost:55432/lumia_test"
-)
+os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://lumia:lumia@localhost:55432/lumia_test")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/1")
 os.environ.setdefault("JWT_SECRET", "test-jwt-secret-at-least-32-bytes-long")
 os.environ.setdefault("SECRET_ENCRYPTION_KEY", "LcYOJkf45vBbcjn7M8_S69E2pQfd_Qv8GNOW2_HkJpk=")

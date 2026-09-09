@@ -47,11 +47,7 @@ async def resolve_scope_article_ids(
     folder_id: UUID | None = None,
 ) -> list[UUID]:
     """Expands a mark-read scope into article ids, always restricted to this user's own feeds."""
-    query = (
-        select(Article.id)
-        .join(Feed, Feed.id == Article.feed_id)
-        .where(Feed.user_id == user_id)
-    )
+    query = select(Article.id).join(Feed, Feed.id == Article.feed_id).where(Feed.user_id == user_id)
     if article_ids is not None:
         query = query.where(Article.id.in_(article_ids))
     if feed_id is not None:

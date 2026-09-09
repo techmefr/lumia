@@ -38,11 +38,7 @@ async def verify_magic_link_token(session: AsyncSession, raw_token: str) -> UUID
     stored = await session.scalar(
         select(MagicLinkToken).where(MagicLinkToken.token == hash_token(raw_token))
     )
-    if (
-        stored is None
-        or stored.used_at is not None
-        or stored.expires_at < datetime.now(UTC)
-    ):
+    if stored is None or stored.used_at is not None or stored.expires_at < datetime.now(UTC):
         raise InvalidMagicLinkTokenError
 
     stored.used_at = datetime.now(UTC)

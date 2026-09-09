@@ -70,9 +70,7 @@ async def score_articles(
     }
 
 
-async def load_rule_terms(
-    session: AsyncSession, user_id: UUID, mode: FilterMode
-) -> list[str]:
+async def load_rule_terms(session: AsyncSession, user_id: UUID, mode: FilterMode) -> list[str]:
     """The user's rule terms for one mode, lowercased."""
     terms = await session.scalars(
         select(UserFilterRule.term).where(

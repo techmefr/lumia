@@ -33,10 +33,19 @@ export function createUserApi(http: HttpClient, tokenStore: TokenStore) {
 
 	async function logout(): Promise<void> {
 		const refreshToken = tokenStore.getRefreshToken();
-		if (refreshToken) {
-			await http.request('/auth/logout', { method: 'POST', body: { refresh_token: refreshToken } });
+		try {
+			if (refreshToken) {
+				await http.request('/auth/logout', {
+					method: 'POST',
+					body: { refresh_token: refreshToken }
+				});
+			}
+		} finally {
+			// Whatever the server answered, the session on this device goes. A logout that fails to
+			// log out because the network was down leaves someone signed in on a shared machine,
+			// which is the one outcome worse than an orphaned refresh token server-side.
+			tokenStore.clear();
 		}
-		tokenStore.clear();
 	}
 
 	async function requestMagicLink(email: string): Promise<void> {

@@ -56,9 +56,7 @@ class Article(Base, TimestampMixin):
     author: Mapped[Author | None] = relationship(lazy="selectin")
     category: Mapped[Category | None] = relationship(lazy="selectin")
     feed: Mapped["Feed"] = relationship(lazy="selectin")
-    keyword_links: Mapped[list["ArticleKeyword"]] = relationship(
-        lazy="selectin", viewonly=True
-    )
+    keyword_links: Mapped[list["ArticleKeyword"]] = relationship(lazy="selectin", viewonly=True)
 
 
 class ArticleKeyword(Base):

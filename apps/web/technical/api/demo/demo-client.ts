@@ -304,9 +304,15 @@ export function createDemoClient(): LumiaClient {
 		};
 	}
 
+	/**
+	 * Namespaced away from the seed on purpose. The counter starts at 1, so a plain
+	 * `article-${n}` collided with the seed's own `article-1`..`article-12`: saving a url handed
+	 * back the seed article of that number instead of the page just saved, because `seedArticle`
+	 * looks in the seed first. A prefix the seed can never use makes that impossible again.
+	 */
 	function nextId(prefix: string): string {
 		state.nextId += 1;
-		return `${prefix}-${state.nextId}`;
+		return `demo-${prefix}-${state.nextId}`;
 	}
 
 	// The demo has no login, so the token store answers as if a session were open: the route

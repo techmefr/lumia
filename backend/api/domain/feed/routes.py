@@ -46,9 +46,7 @@ async def list_folders(
     return [_to_folder_response(folder) for folder in folders]
 
 
-@router.post(
-    "/folders", response_model=FolderResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/folders", response_model=FolderResponse, status_code=status.HTTP_201_CREATED)
 async def create_folder(
     payload: FolderCreateRequest,
     user: User = Depends(get_current_user),
@@ -90,9 +88,7 @@ async def delete_folder(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     # Deleting a folder must not take its feeds (and their articles) with it — unfile them.
-    await session.execute(
-        update(Feed).where(Feed.folder_id == folder.id).values(folder_id=None)
-    )
+    await session.execute(update(Feed).where(Feed.folder_id == folder.id).values(folder_id=None))
     await session.delete(folder)
     await session.commit()
 
@@ -261,9 +257,7 @@ async def delete_feed(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> None:
-    feed = await session.scalar(
-        select(Feed).where(Feed.id == feed_id, Feed.user_id == user.id)
-    )
+    feed = await session.scalar(select(Feed).where(Feed.id == feed_id, Feed.user_id == user.id))
     if feed is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     await session.delete(feed)

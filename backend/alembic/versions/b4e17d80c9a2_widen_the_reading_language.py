@@ -5,6 +5,7 @@ Revises: f7c3b91a02de
 Create Date: 2026-08-14 11:05:00.000000
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -12,15 +13,15 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'b4e17d80c9a2'
-down_revision: str | Sequence[str] | None = 'f7c3b91a02de'
+revision: str = "b4e17d80c9a2"
+down_revision: str | Sequence[str] | None = "f7c3b91a02de"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 reading_lang = sa.Enum(
-    'FR', 'EN', 'ES', 'DE', 'IT', 'PT', 'RU', 'AR', 'ZH', 'MG', name='readinglang'
+    "FR", "EN", "ES", "DE", "IT", "PT", "RU", "AR", "ZH", "MG", name="readinglang"
 )
-lang = sa.Enum('FR', 'EN', name='lang')
+lang = sa.Enum("FR", "EN", name="lang")
 
 
 def upgrade() -> None:
@@ -32,8 +33,8 @@ def upgrade() -> None:
     """
     reading_lang.create(op.get_bind(), checkfirst=True)
     op.execute(
-        'ALTER TABLE users ALTER COLUMN preferred_language '
-        'TYPE readinglang USING preferred_language::text::readinglang'
+        "ALTER TABLE users ALTER COLUMN preferred_language "
+        "TYPE readinglang USING preferred_language::text::readinglang"
     )
 
 
@@ -44,11 +45,10 @@ def downgrade() -> None:
     is no honest narrower value for them.
     """
     op.execute(
-        "UPDATE users SET preferred_language = 'FR' "
-        "WHERE preferred_language NOT IN ('FR', 'EN')"
+        "UPDATE users SET preferred_language = 'FR' WHERE preferred_language NOT IN ('FR', 'EN')"
     )
     op.execute(
-        'ALTER TABLE users ALTER COLUMN preferred_language '
-        'TYPE lang USING preferred_language::text::lang'
+        "ALTER TABLE users ALTER COLUMN preferred_language "
+        "TYPE lang USING preferred_language::text::lang"
     )
     reading_lang.drop(op.get_bind(), checkfirst=True)

@@ -1,0 +1,188 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A newer push on the same branch supersedes the run in flight: nobody reads the result of a
+# commit that has already been replaced.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend — types, tests, coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Type-check the app
+        run: pnpm --filter web check
+
+      - name: Test the shared core
+        run: pnpm --filter @lumia/core test:coverage
+
+      - name: Test the app
+        run: pnpm --filter web test:coverage
+
+      # Kept even when a step above failed: the report is most useful precisely when it is the
+      # coverage gate that went red.
+      - name: Upload the coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-frontend
+          path: |
+            packages/core/coverage/lcov.info
+            apps/web/coverage/lcov.info
+          if-no-files-found: warn
+
+  backend:
+    name: Backend — lint, types, tests, coverage
+    runs-on: ubuntu-latest
+
+    # The suite talks to a real Postgres rather than sqlite: the schema uses postgres enums and
+    # server-side defaults, so an in-memory stand-in would pass on code the real database rejects.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lumia
+          POSTGRES_PASSWORD: lumia
+          POSTGRES_DB: lumia_test
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U lumia -d lumia_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # The same defaults the test conftest falls back to, stated here so a CI failure is never a
+      # guess about which database the run used. Throwaway credentials for a throwaway container.
+      DATABASE_URL: postgresql+asyncpg://lumia:lumia@localhost:55432/lumia_test
+      REDIS_URL: redis://localhost:6379/1
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --all-groups --frozen
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Check the formatting
+        run: uv run ruff format --check .
+
+      - name: Type-check
+        run: uv run mypy .
+
+      - name: Test with coverage
+        run: uv run pytest
+
+      - name: Upload the coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend
+          path: backend/coverage.xml
+          if-no-files-found: warn
+
+  migrations:
+    name: Backend — migrations run on an empty database
+    runs-on: ubuntu-latest
+
+    # The test suite builds its schema with create_all, so it never runs a migration. A fresh
+    # install does, and a broken chain there means nobody can install Lumia at all — which is
+    # exactly the failure that shipped once already.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lumia
+          POSTGRES_PASSWORD: lumia
+          POSTGRES_DB: lumia_fresh
+        ports:
+          - 55433:5432
+        options: >-
+          --health-cmd "pg_isready -U lumia -d lumia_fresh"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://lumia:lumia@localhost:55433/lumia_fresh
+      REDIS_URL: redis://localhost:6379/1
+      JWT_SECRET: ci-jwt-secret-at-least-32-bytes-long
+      SECRET_ENCRYPTION_KEY: LcYOJkf45vBbcjn7M8_S69E2pQfd_Qv8GNOW2_HkJpk=
+      SMTP_HOST: localhost
+      SMTP_USERNAME: ci
+      SMTP_PASSWORD: ci
+      SMTP_FROM_ADDRESS: lumia@example.com
+      MINIFLUX_BASE_URL: http://miniflux.test
+      MINIFLUX_USERNAME: admin
+      MINIFLUX_PASSWORD: ci-miniflux-password
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --all-groups --frozen
+
+      - name: Upgrade to head
+        run: uv run alembic upgrade head
+
+      # A downgrade nobody runs is a downgrade that does not work. Going back to base and up again
+      # proves both directions of every revision in the chain.
+      - name: Downgrade to base and back up
+        run: |
+          uv run alembic downgrade base
+          uv run alembic upgrade head
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/lumia-backend/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

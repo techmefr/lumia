@@ -56,9 +56,12 @@ async def test_request_magic_link_does_nothing_for_an_unknown_address(
 
 async def test_verify_magic_link_token_round_trip(session: AsyncSession) -> None:
     user = await _create_user(session, "user@example.com")
-    with patch("api.domain.user.magic_link_service.send_email", new_callable=AsyncMock), patch(
-        "api.domain.user.magic_link_service.generate_opaque_token",
-        return_value="the-raw-token",
+    with (
+        patch("api.domain.user.magic_link_service.send_email", new_callable=AsyncMock),
+        patch(
+            "api.domain.user.magic_link_service.generate_opaque_token",
+            return_value="the-raw-token",
+        ),
     ):
         await request_magic_link(session, "user@example.com")
 
@@ -103,9 +106,12 @@ async def test_verify_magic_link_token_rejects_an_expired_token(session: AsyncSe
 
 async def test_verify_magic_link_token_can_only_be_used_once(session: AsyncSession) -> None:
     user = await _create_user(session, "user@example.com")
-    with patch("api.domain.user.magic_link_service.send_email", new_callable=AsyncMock), patch(
-        "api.domain.user.magic_link_service.generate_opaque_token",
-        return_value="single-use-token",
+    with (
+        patch("api.domain.user.magic_link_service.send_email", new_callable=AsyncMock),
+        patch(
+            "api.domain.user.magic_link_service.generate_opaque_token",
+            return_value="single-use-token",
+        ),
     ):
         await request_magic_link(session, "user@example.com")
 

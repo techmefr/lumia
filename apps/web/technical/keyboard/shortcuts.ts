@@ -3,7 +3,10 @@ export type ShortcutHandlers = Record<string, () => void>;
 /** Typing in a field must never trigger a shortcut, so those targets are skipped entirely. */
 function isTypingTarget(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false;
-	if (target.isContentEditable) return true;
+	// Both forms, because neither covers the other on its own: `isContentEditable` is inherited from
+	// an ancestor but is absent outside a real browser, and the attribute is the html contract
+	// itself. `closest` walks up, so typing inside a `<b>` nested in an editable region counts too.
+	if (target.isContentEditable || target.closest('[contenteditable="true"]') !== null) return true;
 	return ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 }
 

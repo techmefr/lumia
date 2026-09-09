@@ -96,9 +96,7 @@ async def test_patch_me_sets_and_clears_the_translation_api_key(
     assert set_response.json()["translation_provider"] == "deepl"
     assert set_response.json()["translation_api_key_set"] is True
 
-    clear_response = await client.patch(
-        "/me", headers=headers, json={"translation_api_key": None}
-    )
+    clear_response = await client.patch("/me", headers=headers, json={"translation_api_key": None})
     assert clear_response.json()["translation_api_key_set"] is False
 
 
