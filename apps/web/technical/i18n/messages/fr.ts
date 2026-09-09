@@ -231,6 +231,7 @@ export const fr = {
 	'articles.unreadOnly': 'Non lus seulement',
 	'articles.markedRead': 'Marqué comme lu.',
 	'articles.markReadFailed': 'Impossible de marquer comme lu.',
+	'articles.confirmMarkAllRead': 'Marquer les {count} articles non lus comme lus ?',
 	'articles.loadFailed': 'Impossible de charger les articles.',
 	'articles.searchLabel': 'Rechercher un article',
 	'articles.searchPlaceholder': 'Rechercher (touche /)',

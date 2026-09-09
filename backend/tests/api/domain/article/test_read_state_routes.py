@@ -161,6 +161,25 @@ async def test_mark_read_can_unmark(client: httpx.AsyncClient) -> None:
     assert all(article["read"] is False for article in listed)
 
 
+async def test_mark_read_with_all_marks_every_feed(client: httpx.AsyncClient) -> None:
+    headers = await _headers(client)
+    await _seed_two_feeds_in_a_folder()
+
+    response = await client.post("/articles/mark-read", json={"all": True}, headers=headers)
+    assert response.json() == {"updated": 2}
+
+    listed = (await client.get("/articles", headers=headers)).json()
+    assert all(article["read"] is True for article in listed)
+
+
+async def test_mark_read_with_all_false_and_no_other_scope_is_rejected(
+    client: httpx.AsyncClient,
+) -> None:
+    headers = await _headers(client)
+    response = await client.post("/articles/mark-read", json={"all": False}, headers=headers)
+    assert response.status_code == 422
+
+
 async def test_mark_read_without_a_scope_is_rejected(client: httpx.AsyncClient) -> None:
     headers = await _headers(client)
     response = await client.post("/articles/mark-read", json={}, headers=headers)

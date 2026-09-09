@@ -229,6 +229,7 @@ export const de: Catalogue = {
 	'articles.unreadOnly': 'Nur ungelesene',
 	'articles.markedRead': 'Als gelesen markiert.',
 	'articles.markReadFailed': 'Als gelesen markieren nicht möglich.',
+	'articles.confirmMarkAllRead': '{count} ungelesene Artikel als gelesen markieren?',
 	'articles.loadFailed': 'Die Artikel konnten nicht geladen werden.',
 	'articles.searchLabel': 'Nach einem Artikel suchen',
 	'articles.searchPlaceholder': 'Suchen (Taste /)',

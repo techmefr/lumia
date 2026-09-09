@@ -227,6 +227,7 @@ export const ru: Catalogue = {
 	'articles.unreadOnly': 'Только непрочитанные',
 	'articles.markedRead': 'Отмечено прочитанным.',
 	'articles.markReadFailed': 'Не удалось отметить прочитанным.',
+	'articles.confirmMarkAllRead': 'Отметить {count} непрочитанных статей как прочитанные?',
 	'articles.loadFailed': 'Не удалось загрузить статьи.',
 	'articles.searchLabel': 'Поиск статьи',
 	'articles.searchPlaceholder': 'Поиск (клавиша /)',

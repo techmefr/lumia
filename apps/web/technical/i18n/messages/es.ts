@@ -229,6 +229,7 @@ export const es: Catalogue = {
 	'articles.unreadOnly': 'Solo sin leer',
 	'articles.markedRead': 'Marcado como leído.',
 	'articles.markReadFailed': 'No se ha podido marcar como leído.',
+	'articles.confirmMarkAllRead': '¿Marcar los {count} artículos no leídos como leídos?',
 	'articles.loadFailed': 'No se han podido cargar los artículos.',
 	'articles.searchLabel': 'Buscar un artículo',
 	'articles.searchPlaceholder': 'Buscar (tecla /)',

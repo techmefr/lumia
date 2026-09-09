@@ -15,11 +15,14 @@ class FeedbackRequest(BaseModel):
 
 class MarkReadRequest(BaseModel):
     """Marks a whole scope as read. Exactly one scope must be given, to keep 'mark all as read'
-    from silently applying to every feed when the caller forgets the filter."""
+    from silently applying to every feed when the caller forgets the filter. `all` still has to be
+    passed explicitly and true, rather than inferred from every other field being empty, so a
+    client that simply forgot to set a scope gets rejected instead of wiping every feed."""
 
     article_ids: list[UUID] | None = None
     feed_id: UUID | None = None
     folder_id: UUID | None = None
+    all: bool = False
     read: bool = True
 
     @model_validator(mode="after")
@@ -28,9 +31,10 @@ class MarkReadRequest(BaseModel):
             self.article_ids is not None,
             self.feed_id is not None,
             self.folder_id is not None,
+            self.all,
         ]
         if sum(scopes) != 1:
-            raise ValueError("exactly one of article_ids, feed_id or folder_id is required")
+            raise ValueError("exactly one of article_ids, feed_id, folder_id or all is required")
         return self
 
 

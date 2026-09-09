@@ -230,6 +230,7 @@ export const pt: Catalogue = {
 	'articles.unreadOnly': 'Só os não lidos',
 	'articles.markedRead': 'Marcado como lido.',
 	'articles.markReadFailed': 'Não foi possível marcar como lido.',
+	'articles.confirmMarkAllRead': 'Marcar os {count} artigos não lidos como lidos?',
 	'articles.loadFailed': 'Não foi possível carregar os artigos.',
 	'articles.searchLabel': 'Procurar um artigo',
 	'articles.searchPlaceholder': 'Procurar (tecla /)',

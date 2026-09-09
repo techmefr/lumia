@@ -229,6 +229,7 @@ export const it: Catalogue = {
 	'articles.unreadOnly': 'Solo non letti',
 	'articles.markedRead': 'Segnato come letto.',
 	'articles.markReadFailed': 'Impossibile segnare come letto.',
+	'articles.confirmMarkAllRead': 'Segnare i {count} articoli non letti come letti?',
 	'articles.loadFailed': 'Impossibile caricare gli articoli.',
 	'articles.searchLabel': 'Cercare un articolo',
 	'articles.searchPlaceholder': 'Cerca (tasto /)',

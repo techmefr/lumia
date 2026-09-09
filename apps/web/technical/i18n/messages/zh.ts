@@ -211,6 +211,7 @@ export const zh: Catalogue = {
 	'articles.unreadOnly': '仅未读',
 	'articles.markedRead': '已标为已读。',
 	'articles.markReadFailed': '无法标为已读。',
+	'articles.confirmMarkAllRead': '将 {count} 篇未读文章标为已读？',
 	'articles.loadFailed': '无法加载文章。',
 	'articles.searchLabel': '搜索文章',
 	'articles.searchPlaceholder': '搜索（按 /）',

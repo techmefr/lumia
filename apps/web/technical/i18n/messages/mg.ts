@@ -231,6 +231,7 @@ export const mg: Catalogue = {
 	'articles.unreadOnly': 'Ny tsy voavaky ihany',
 	'articles.markedRead': 'Voamarika ho voavaky.',
 	'articles.markReadFailed': 'Tsy afaka nanamarika ho voavaky.',
+	'articles.confirmMarkAllRead': 'Mariho ho voavaky daholo ve ireo lahatsoratra {count} tsy mbola novakina?',
 	'articles.loadFailed': 'Tsy afaka nampiditra ny lahatsoratra.',
 	'articles.searchLabel': 'Hikaroka lahatsoratra',
 	'articles.searchPlaceholder': 'Karoka (fanalahidy /)',

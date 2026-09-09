@@ -23,5 +23,7 @@ export interface MarkReadScope {
 	article_ids?: string[];
 	feed_id?: string;
 	folder_id?: string;
+	/** Every article across every feed, not just the ones currently loaded on screen. */
+	all?: boolean;
 	read?: boolean;
 }

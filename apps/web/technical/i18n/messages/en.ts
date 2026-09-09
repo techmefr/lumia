@@ -219,6 +219,7 @@ export const en: Catalogue = {
 	'articles.unreadOnly': 'Unread only',
 	'articles.markedRead': 'Marked as read.',
 	'articles.markReadFailed': 'Could not mark as read.',
+	'articles.confirmMarkAllRead': 'Mark all {count} unread articles as read?',
 	'articles.loadFailed': 'Could not load the articles.',
 	'articles.searchLabel': 'Search for an article',
 	'articles.searchPlaceholder': 'Search (press /)',

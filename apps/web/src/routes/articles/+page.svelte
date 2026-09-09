@@ -174,7 +174,16 @@
 	}
 
 	async function markScopeRead(scope: { feed_id?: string; folder_id?: string } | null) {
-		const target = scope ?? { article_ids: articles.map((article) => article.id) };
+		// No feed or folder selected means "Tout": every unread article across every feed, not just
+		// the page currently on screen, otherwise a reader with several hundred unread articles would
+		// see the button clear the visible batch and leave the rest looking untouched. It is also the
+		// one scope with no natural ceiling, so it is the one that asks first; a single feed or
+		// folder stays a quick, undoable action.
+		const target = scope ?? { all: true };
+		if (scope === null && unread.total > 10) {
+			const confirmed = confirm(t('articles.confirmMarkAllRead', { count: unread.total }));
+			if (!confirmed) return;
+		}
 		const previous = articles.map((article) => ({ id: article.id, read: article.read }));
 		try {
 			await lumia.recommendation.markRead(target);

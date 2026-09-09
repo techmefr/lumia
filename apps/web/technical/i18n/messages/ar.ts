@@ -218,6 +218,7 @@ export const ar: Catalogue = {
 	'articles.unreadOnly': 'غير المقروء فقط',
 	'articles.markedRead': 'عُلّم كمقروء.',
 	'articles.markReadFailed': 'تعذّر التعليم كمقروء.',
+	'articles.confirmMarkAllRead': 'تعليم الـ {count} مقالة غير مقروءة كمقروءة؟',
 	'articles.loadFailed': 'تعذّر تحميل المقالات.',
 	'articles.searchLabel': 'البحث عن مقال',
 	'articles.searchPlaceholder': 'ابحث (المفتاح /)',
