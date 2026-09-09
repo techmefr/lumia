@@ -40,6 +40,7 @@ services:
       DATABASE_URL: postgres://miniflux:${POSTGRES_PASSWORD}@miniflux-postgres/miniflux?sslmode=disable
       RUN_MIGRATIONS: 1
       WEBHOOK_URL: http://lumia-backend-api:8000/webhooks/miniflux
+      WEBHOOK_SECRET: ${MINIFLUX_WEBHOOK_SECRET}
       ADMIN_USERNAME: ${MINIFLUX_USERNAME}
       ADMIN_PASSWORD: ${MINIFLUX_PASSWORD}
       CREATE_ADMIN: 1
@@ -71,6 +72,7 @@ services:
       MINIFLUX_BASE_URL: http://miniflux:8080
       MINIFLUX_USERNAME: ${MINIFLUX_USERNAME}
       MINIFLUX_PASSWORD: ${MINIFLUX_PASSWORD}
+      MINIFLUX_WEBHOOK_SECRET: ${MINIFLUX_WEBHOOK_SECRET}
       DEEPL_API_KEY: ${DEEPL_API_KEY}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://localhost:8080}
     ports:
