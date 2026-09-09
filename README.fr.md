@@ -34,8 +34,10 @@ lecture et la synthèse vocale sur un vrai appareil avant d'installer quoi que c
 ### Organisation
 
 - **Lu/non-lu** avec compteurs par flux et par dossier, filtre « non lus seulement », et
-  « tout marquer comme lu » sur un flux, un dossier ou une liste d'articles explicite — l'API exige
-  exactement un périmètre, pour qu'un filtre oublié ne marque pas toute la bibliothèque comme lue.
+  « tout marquer comme lu » sur un flux, un dossier, une liste d'articles explicite ou toute la
+  bibliothèque — l'API exige exactement un périmètre, pour qu'un filtre oublié ne marque pas toute
+  la bibliothèque comme lue par accident, et marquer toute la bibliothèque demande confirmation
+  au-delà de dix articles non lus.
 - **Dossiers** renommables et supprimables ; supprimer un dossier laisse ses flux en place, ils
   passent simplement « sans dossier ». Les flux peuvent être renommés et déplacés.
 - **Recherche** sur le titre, le résumé et le contenu, combinable avec les filtres
@@ -63,7 +65,7 @@ lecture et la synthèse vocale sur un vrai appareil avant d'installer quoi que c
 ### Interface
 
 - Raccourcis clavier : `j`/`k` naviguer, `o` ouvrir, `m` lu/non lu, `s` à lire, `u` non lus,
-  `/` rechercher.
+  `f` feuilleter, `/` rechercher, toujours listés en bas de la liste d'articles.
 - Squelettes de chargement, états vides qui proposent l'action suivante, et notifications avec
   annulation sur les actions destructives.
 - Clair/sombre, taille de texte réglable, transitions de page, `prefers-reduced-motion` respecté
@@ -116,6 +118,18 @@ n'importe quelle adresse sans configuration ni CORS. Au premier lancement, l'app
 limites de l'instance (nombre de comptes, quota disque par utilisateur), puis tu peux importer un
 OPML ou ajouter des flux.
 
+`MINIFLUX_WEBHOOK_SECRET` est obligatoire : Miniflux signe chaque appel de webhook avec
+(`X-Miniflux-Signature`), et l'API rejette tout ce qui ne correspond pas plutôt que de faire
+confiance à ce qui arrive sur `/webhooks/miniflux`. Renseigne-la une fois dans `.env` avant le
+premier `docker compose up`, la même valeur des deux côtés — le docker-compose la relie déjà aux
+deux.
+
+Tu as déjà ta propre instance Miniflux plutôt que celle fournie ? Pointe `MINIFLUX_BASE_URL` dessus
+et configure son webhook de la même façon ; voir
+[l'issue #1](https://github.com/techmefr/lumia/issues/1) pour la marche à suivre et les limites
+actuelles (les flux déjà présents dans Miniflux ne se rattachent pas encore à Lumia tout seuls —
+[l'issue #11](https://github.com/techmefr/lumia/issues/11) suit ce sujet).
+
 Pour y accéder depuis un téléphone ou une tablette du même réseau, utilise l'adresse locale de la
 machine, pas `localhost`. La [page de présentation](https://techmefr.github.io/lumia/) sait retenir
 cette adresse par appareil et te donne un bouton direct.
@@ -146,10 +160,12 @@ uv run pytest
 ```
 
 La suite backend a besoin de PostgreSQL et Redis accessibles. Elle vise par défaut
-`postgresql+asyncpg://lumia:lumia@localhost:55432/lumia_test`, qu'un conteneur jetable fournit :
+`postgresql+asyncpg://lumia:lumia@localhost:55432/lumia_test` et `redis://localhost:6379/1`, que
+deux conteneurs jetables fournissent :
 
 ```bash
 docker run -d --name lumia-test-db -p 55432:5432 -e POSTGRES_USER=lumia -e POSTGRES_PASSWORD=lumia -e POSTGRES_DB=lumia_test postgres:16-alpine
+docker run -d --name lumia-test-redis -p 6379:6379 redis:7-alpine
 ```
 
 ### Tests et couverture
@@ -165,15 +181,17 @@ pnpm --filter web test:coverage           # stores de l'app, i18n, client de dé
 
 | Suite            | Tests | Couverture | Plancher |
 | ---------------- | ----- | ---------- | -------- |
-| `backend`        | 312   | 86 %       | 80 %     |
+| `backend`        | 318   | 86 %       | 80 %     |
 | `packages/core`  | 108   | 100 %      | 80 %     |
-| `packages/ui`    | 31    | 21 %       | 21 %     |
-| `apps/web`       | 226   | 16 %       | 15 %     |
+| `packages/ui`    | 319   | 99 %       | 98 %     |
+| `apps/web`       | 520   | 40 %       | 36 %     |
 
-Les deux planchers du front sont des crans, pas des objectifs : la cible est 80 % partout, et ce
-qui manque, ce sont les écrans et les pages de route, encore sans tests. On relève un plancher quand
-on ajoute des tests ; on ne l'abaisse jamais pour faire passer une CI rouge. Voir
-[CONTRIBUTING.md](CONTRIBUTING.md) pour la façon dont les tests sont écrits.
+`packages/ui` couvre désormais chaque composant et effet du design system, plancher relevé en
+conséquence. Ce qui manque encore à `apps/web`, ce sont les pages de route sous `src/routes/`
+(sidebar des flux, pile de swipe, lecteur flip, et les pages elles-mêmes) — environ 3000 lignes
+encore sans test dédié. Le plancher `apps/web` est un cran, pas un objectif : la cible est 80 %
+partout. On relève un plancher quand on ajoute des tests ; on ne l'abaisse jamais pour faire passer
+une CI rouge. Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour la façon dont les tests sont écrits.
 
 ### Intégration continue
 
@@ -191,9 +209,11 @@ Tout se règle par compte, dans **Réglages → IA et traduction** ; il n'y a pa
 l'instance.
 
 - **Résumé.** Sans clé, le résumé est extractif et calculé localement. Avec une clé, il passe par un
-  modèle : Mistral, OpenAI, ou n'importe quel endpoint compatible OpenAI (vLLM, Ollama, Voxtral) —
-  ces derniers demandent l'URL et le nom du modèle, qu'on ne peut pas deviner. Un provider
-  injoignable ou une clé refusée ne coûte pas son résumé à l'article : on retombe sur l'extractif.
+  modèle : Mistral, OpenAI, Anthropic, Gemma (l'endpoint compatible OpenAI de Google), ou un
+  endpoint personnalisé — vLLM, Ollama, llama.cpp, Voxtral, un Gemma en local, n'importe quoi qui
+  parle le format `/chat/completions`. L'endpoint personnalisé demande l'URL et le nom du modèle,
+  qu'on ne peut pas deviner. Un provider injoignable ou une clé refusée ne coûte pas son résumé à
+  l'article : on retombe sur l'extractif.
 - **Traduction.** Une clé DeepL par compte, sinon le `DEEPL_API_KEY` de l'instance en secours. La
   langue cible est la « langue de lecture » du compte.
 

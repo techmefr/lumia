@@ -32,8 +32,9 @@ text-to-speech on a real device before installing anything.
 ### Organising
 
 - **Read/unread** with unread counts per feed and per folder, an unread-only filter, and
-  "mark everything read" scoped to a feed, a folder, or an explicit list of articles — the API
-  requires exactly one scope, so a forgotten filter can't mark your whole library read.
+  "mark everything read" scoped to a feed, a folder, an explicit list of articles, or the whole
+  library — the API requires exactly one scope, so a forgotten filter can't mark it all read by
+  accident, and marking the whole library asks for confirmation past ten unread articles.
 - **Folders** you can rename and delete; deleting one unfiles its feeds instead of taking them with
   it. Feeds can be retitled and moved between folders.
 - **Search** across title, summary and content, combinable with the folder/feed/author/keyword
@@ -60,7 +61,7 @@ text-to-speech on a real device before installing anything.
 ### Interface
 
 - Keyboard shortcuts: `j`/`k` to move, `o` to open, `m` read/unread, `s` save, `u` unread-only,
-  `/` search.
+  `f` flip through, `/` search, always listed at the bottom of the article list.
 - Skeleton loaders, actionable empty states, and toasts with undo on destructive actions.
 - Light/dark, adjustable text size, page transitions, `prefers-reduced-motion` honoured throughout.
 - WCAG 2.2 AA: skip link, `aria-current` on navigation, live regions on async state, native radio
@@ -108,6 +109,16 @@ serves the static build behind nginx and proxies `/api` to the API, so the app w
 with no configuration and no CORS. On first launch the app walks you through admin onboarding: admin account, instance
 limits (max accounts, per-user disk quota), then you're ready to import an OPML file or add feeds.
 
+`MINIFLUX_WEBHOOK_SECRET` is required: Miniflux signs every webhook call with it
+(`X-Miniflux-Signature`), and the API rejects anything that doesn't match rather than trusting
+whatever reaches `/webhooks/miniflux`. Set it once in `.env` before the first `docker compose up`,
+the same value on both sides — the compose file already wires it to both.
+
+Already running your own Miniflux instead of the bundled one? Point `MINIFLUX_BASE_URL` at it and
+set its webhook the same way; see [issue #1](https://github.com/techmefr/lumia/issues/1) for the
+walkthrough and the current limits (feeds already in Miniflux don't attach to Lumia on their own
+yet — [issue #11](https://github.com/techmefr/lumia/issues/11) tracks that).
+
 To reach it from a phone or tablet on the same network, use the machine's LAN address rather than
 `localhost`. The [landing page](https://techmefr.github.io/lumia/) can store that address per device
 and give you a direct button.
@@ -138,10 +149,12 @@ uv run pytest
 ```
 
 The backend suite needs PostgreSQL and Redis reachable. It defaults to
-`postgresql+asyncpg://lumia:lumia@localhost:55432/lumia_test`, which a throwaway container provides:
+`postgresql+asyncpg://lumia:lumia@localhost:55432/lumia_test` and `redis://localhost:6379/1`, which
+two throwaway containers provide:
 
 ```bash
 docker run -d --name lumia-test-db -p 55432:5432 -e POSTGRES_USER=lumia -e POSTGRES_PASSWORD=lumia -e POSTGRES_DB=lumia_test postgres:16-alpine
+docker run -d --name lumia-test-redis -p 6379:6379 redis:7-alpine
 ```
 
 ### Tests and coverage
@@ -157,14 +170,17 @@ pnpm --filter web test:coverage           # app stores, i18n, demo client
 
 | Suite            | Tests | Coverage | Floor |
 | ---------------- | ----- | -------- | ----- |
-| `backend`        | 312   | 86%      | 80%   |
+| `backend`        | 318   | 86%      | 80%   |
 | `packages/core`  | 108   | 100%     | 80%   |
-| `packages/ui`    | 31    | 21%      | 21%   |
-| `apps/web`       | 226   | 16%      | 15%   |
+| `packages/ui`    | 319   | 99%      | 98%   |
+| `apps/web`       | 520   | 40%      | 36%   |
 
-The two frontend floors are ratchets, not targets: 80% is the target everywhere, and the gap is the
-screens and route pages, which have no tests yet. Raise a floor when you add tests; never lower one
-to turn a red run green. See [CONTRIBUTING.md](CONTRIBUTING.md) for how the tests are written.
+`packages/ui` covers every component and effect in the design system now, floor raised accordingly.
+`apps/web`'s remaining gap is the route pages under `src/routes/` (feed sidebar, swipe stack, flip
+reader, and the pages themselves) — roughly 3000 lines still with no dedicated test. The `apps/web`
+floor is a ratchet, not a target: 80% is the target everywhere. Raise a floor when you add tests;
+never lower one to turn a red run green. See [CONTRIBUTING.md](CONTRIBUTING.md) for how the tests are
+written.
 
 ### Continuous integration
 
@@ -181,9 +197,11 @@ to turn a red run green. See [CONTRIBUTING.md](CONTRIBUTING.md) for how the test
 Everything is per account, under **Réglages → IA et traduction**; there is no instance-wide key.
 
 - **Summarization.** With no key, the summary is extractive and computed locally. With a key it goes
-  through a model: Mistral, OpenAI, or any OpenAI-compatible endpoint (vLLM, Ollama, Voxtral) — those
-  need the URL and the model name, which can't be guessed. An unreachable provider or a rejected key
-  doesn't cost the article its summary: it falls back to the extractive one.
+  through a model: Mistral, OpenAI, Anthropic, Gemma (Google's own OpenAI-compatible endpoint), or a
+  Custom endpoint — vLLM, Ollama, llama.cpp, Voxtral, a local Gemma, anything that speaks the
+  `/chat/completions` shape. Custom needs the URL and the model name, which can't be guessed. An
+  unreachable provider or a rejected key doesn't cost the article its summary: it falls back to the
+  extractive one.
 - **Translation.** A per-account DeepL key, falling back to the instance `DEEPL_API_KEY`. The target
   language is the account's reading language.
 

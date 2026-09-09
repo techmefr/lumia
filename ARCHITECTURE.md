@@ -40,6 +40,10 @@ lumia/
 
 Every ingestion engine (Miniflux today, mail/social feeds later) implements a `SourceConnector` in `worker/technical/connectors/`: it turns that engine's raw webhook payload into a normalized `RawArticle` before it enters the shared enrichment pipeline in `domain/`. Adding an engine means adding a connector and running its own upstream service (like the `miniflux` container) — the domain pipeline, the API, and the `lumia-backend` image never change.
 
+The Miniflux webhook is signed (`X-Miniflux-Signature`, HMAC-SHA256 over the raw body, checked with
+`hmac.compare_digest` in `worker/technical/webhook.py`) against `MINIFLUX_WEBHOOK_SECRET`, which has
+no default — the config fails to start without one rather than accepting unsigned calls silently.
+
 ## Bounded contexts
 
 | Context | Responsibility |
