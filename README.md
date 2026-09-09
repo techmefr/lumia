@@ -173,11 +173,12 @@ pnpm --filter web test:coverage           # app stores, i18n, demo client
 | `backend`        | 318   | 86%      | 80%   |
 | `packages/core`  | 108   | 100%     | 80%   |
 | `packages/ui`    | 319   | 99%      | 98%   |
-| `apps/web`       | 520   | 40%      | 36%   |
+| `apps/web`       | 571   | 49%      | 46%   |
 
 `packages/ui` covers every component and effect in the design system now, floor raised accordingly.
-`apps/web`'s remaining gap is the route pages under `src/routes/` (feed sidebar, swipe stack, flip
-reader, and the pages themselves) — roughly 3000 lines still with no dedicated test. The `apps/web`
+`apps/web` now covers the feed sidebar, the flip reader and the swipe stack too; the remaining gap
+is the route pages under `src/routes/` themselves — roughly 3000 lines still with no dedicated test.
+The `apps/web`
 floor is a ratchet, not a target: 80% is the target everywhere. Raise a floor when you add tests;
 never lower one to turn a red run green. See [CONTRIBUTING.md](CONTRIBUTING.md) for how the tests are
 written.

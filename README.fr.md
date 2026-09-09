@@ -184,12 +184,13 @@ pnpm --filter web test:coverage           # stores de l'app, i18n, client de dé
 | `backend`        | 318   | 86 %       | 80 %     |
 | `packages/core`  | 108   | 100 %      | 80 %     |
 | `packages/ui`    | 319   | 99 %       | 98 %     |
-| `apps/web`       | 520   | 40 %       | 36 %     |
+| `apps/web`       | 571   | 49 %       | 46 %     |
 
 `packages/ui` couvre désormais chaque composant et effet du design system, plancher relevé en
-conséquence. Ce qui manque encore à `apps/web`, ce sont les pages de route sous `src/routes/`
-(sidebar des flux, pile de swipe, lecteur flip, et les pages elles-mêmes) — environ 3000 lignes
-encore sans test dédié. Le plancher `apps/web` est un cran, pas un objectif : la cible est 80 %
+conséquence. `apps/web` couvre maintenant aussi la sidebar des flux, le lecteur flip et la pile de
+swipe ; ce qui manque encore, ce sont les pages de route sous `src/routes/` elles-mêmes — environ
+3000 lignes encore sans test dédié. Le plancher `apps/web` est un cran, pas un objectif : la cible
+est 80 %
 partout. On relève un plancher quand on ajoute des tests ; on ne l'abaisse jamais pour faire passer
 une CI rouge. Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour la façon dont les tests sont écrits.
 
