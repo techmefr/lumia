@@ -66,6 +66,7 @@
 
 <div bind:this={container} class="relative flex items-center">
 	<a
+		data-test-menu-link
 		{href}
 		aria-label={label}
 		onpointerdown={startPress}
@@ -81,6 +82,7 @@
 	<!-- An explicit toggle next to the link: a long press is undiscoverable on its own and
 		 unreachable by keyboard. -->
 	<button
+		data-test-menu-toggle
 		onclick={() => (open = !open)}
 		aria-expanded={open}
 		aria-haspopup="menu"
@@ -92,12 +94,14 @@
 
 	{#if open}
 		<div
+			data-test-menu
 			role="menu"
 			class="absolute right-0 top-full z-40 mt-1 w-52 overflow-hidden rounded-xl border bg-card py-1 shadow-xl"
 		>
 			{#each entries as entry (entry.label)}
 				{#if entry.href}
 					<a
+						data-test-menu-entry={entry.label}
 						role="menuitem"
 						href={entry.href}
 						onclick={() => (open = false)}
@@ -107,6 +111,7 @@
 					</a>
 				{:else}
 					<button
+						data-test-menu-entry={entry.label}
 						role="menuitem"
 						onclick={() => {
 							open = false;

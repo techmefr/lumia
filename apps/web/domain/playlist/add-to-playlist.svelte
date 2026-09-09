@@ -70,6 +70,7 @@
 
 <div bind:this={container} class="relative flex-1">
 	<Button
+		data-test-add-to-playlist
 		class="w-full gap-1.5 px-2 sm:px-4"
 		variant="outline"
 		onclick={openPanel}
@@ -81,17 +82,23 @@
 
 	{#if open}
 		<div
+			data-test-playlist-panel
 			class="absolute bottom-full left-0 z-50 mb-2 w-64 rounded-xl border bg-card p-2 shadow-xl"
 		>
 			{#if loading}
-				<p role="status" class="px-2 py-1.5 text-sm text-muted-foreground">{t('common.loading')}</p>
+				<p data-test-playlist-loading role="status" class="px-2 py-1.5 text-sm text-muted-foreground">
+					{t('common.loading')}
+				</p>
 			{:else if playlists.length === 0}
-				<p class="px-2 py-1.5 text-sm text-muted-foreground">{t('addToPlaylist.empty')}</p>
+				<p data-test-playlist-empty class="px-2 py-1.5 text-sm text-muted-foreground">
+					{t('addToPlaylist.empty')}
+				</p>
 			{:else}
 				<ul class="flex max-h-48 flex-col overflow-y-auto">
 					{#each playlists as playlist (playlist.id)}
 						<li>
 							<button
+								data-test-playlist-option={playlist.id}
 								onclick={() => addTo(playlist)}
 								class="flex min-h-10 w-full items-center justify-between gap-2 rounded-md px-2 text-left text-sm transition-colors hover:bg-secondary"
 							>
@@ -113,7 +120,9 @@
 					placeholder={t('addToPlaylist.newLabel')}
 					required
 				/>
-				<Button type="submit" size="sm" variant="secondary">{t('addToPlaylist.create')}</Button>
+				<Button data-test-create-playlist type="submit" size="sm" variant="secondary"
+					>{t('addToPlaylist.create')}</Button
+				>
 			</form>
 		</div>
 	{/if}

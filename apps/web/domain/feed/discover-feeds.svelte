@@ -64,7 +64,7 @@
 				</h2>
 				<p class="mt-1 text-xs text-muted-foreground">{t('discover.intro')}</p>
 			</div>
-			<Button variant="ghost" size="sm" onclick={load}>
+			<Button data-test-discover-refresh variant="ghost" size="sm" onclick={load}>
 				<RefreshCw class="size-4" />
 				{t('discover.refresh')}
 			</Button>
@@ -74,6 +74,7 @@
 			<label class="flex flex-col gap-1 text-sm sm:max-w-xs">
 				<span class="font-medium">{t('discover.fileInto')}</span>
 				<select
+					data-test-discover-folder
 					bind:value={folderId}
 					class="min-h-9 rounded-md border border-input bg-background px-3 text-sm"
 				>
@@ -86,31 +87,47 @@
 		{/if}
 
 		{#if failed}
-			<p role="alert" class="text-sm text-destructive">{t('discover.loadFailed')}</p>
+			<p data-test-discover-error role="alert" class="text-sm text-destructive">
+				{t('discover.loadFailed')}
+			</p>
 		{/if}
 
 		{#if loading}
-			<div role="status" aria-label={t('discover.loading')} class="flex flex-col gap-2">
+			<div
+				data-test-discover-loading
+				role="status"
+				aria-label={t('discover.loading')}
+				class="flex flex-col gap-2"
+			>
 				{#each Array(3)}
 					<Skeleton class="h-20 w-full rounded-xl" />
 				{/each}
 			</div>
 		{:else if suggestions.length === 0}
-			<p class="text-sm text-muted-foreground">{t('discover.exhausted')}</p>
+			<p data-test-discover-exhausted class="text-sm text-muted-foreground">
+				{t('discover.exhausted')}
+			</p>
 		{:else}
 			<ul class="flex flex-col gap-2">
 				{#each suggestions as suggestion (suggestion.url)}
-					<li class="flex flex-wrap items-start gap-3 rounded-xl border p-3">
+					<li
+						data-test-suggestion={suggestion.url}
+						class="flex flex-wrap items-start gap-3 rounded-xl border p-3"
+					>
 						<div class="min-w-0 flex-1">
 							<div class="flex flex-wrap items-center gap-2">
-								<span class="font-medium">{suggestion.title}</span>
+								<span data-test-suggestion-title class="font-medium">{suggestion.title}</span>
 								<span
 									class="rounded-full bg-secondary px-2 py-0.5 text-[11px] uppercase text-secondary-foreground"
 								>
 									{suggestion.language}
 								</span>
 								{#if suggestion.affinity !== null}
-									<span class="text-xs text-primary" title={t('discover.affinityTitle')}>
+									<span
+										data-test-suggestion-affinity
+										class="text-xs text-primary"
+										title={t('discover.affinityTitle')}
+									>
 										{t('discover.affinity', { score: suggestion.affinity })}
 									</span>
 								{/if}
@@ -124,6 +141,7 @@
 						</div>
 						<div class="flex shrink-0 items-center gap-1">
 							<Button
+								data-test-subscribe
 								size="sm"
 								onclick={() => subscribe(suggestion)}
 								disabled={adding === suggestion.url}
@@ -131,7 +149,13 @@
 								<Plus class="size-4" />
 								{adding === suggestion.url ? t('common.adding') : t('discover.subscribe')}
 							</Button>
-							<Button variant="ghost" size="sm" href={suggestion.site_url} target="_blank">
+							<Button
+								data-test-suggestion-site
+								variant="ghost"
+								size="sm"
+								href={suggestion.site_url}
+								target="_blank"
+							>
 								<ExternalLink class="size-4" />
 								<span class="sr-only">{t('discover.view', { title: suggestion.title })}</span>
 							</Button>

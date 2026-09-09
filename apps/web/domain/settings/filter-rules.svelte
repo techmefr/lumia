@@ -74,6 +74,7 @@
 			<label class="flex flex-col gap-1 text-sm">
 				<span class="font-medium">{t('rules.effect')}</span>
 				<select
+					data-test-rule-mode
 					bind:value={mode}
 					class="min-h-9 rounded-md border border-input bg-background px-3 text-sm"
 				>
@@ -81,27 +82,31 @@
 					<option value="mute">{t('rules.mute')}</option>
 				</select>
 			</label>
-			<Button type="submit" disabled={saving}>{saving ? t('common.adding') : t('common.add')}</Button>
+			<Button data-test-rule-submit type="submit" disabled={saving}
+				>{saving ? t('common.adding') : t('common.add')}</Button
+			>
 		</form>
 
 		{#if error}
-			<p role="alert" class="text-sm text-destructive">{error}</p>
+			<p data-test-rules-error role="alert" class="text-sm text-destructive">{error}</p>
 		{/if}
 
 		<div class="flex flex-col gap-3">
 			{#each [{ label: t('rules.boosted'), icon: TrendingUp, list: boosted }, { label: t('rules.muted'), icon: VolumeX, list: muted }] as group (group.label)}
-				<div class="flex flex-col gap-1.5">
+				<div data-test-rule-group class="flex flex-col gap-1.5">
 					<span class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
 						<group.icon class="size-3.5" />
 						{group.label}
 					</span>
 					{#if group.list.length === 0}
-						<p class="text-xs text-muted-foreground">{t('common.none')}</p>
+						<p data-test-rule-group-empty class="text-xs text-muted-foreground">{t('common.none')}</p>
 					{:else}
 						<ul class="flex flex-wrap gap-1.5">
 							{#each group.list as rule (rule.id)}
 								<li>
 									<button
+										data-test-rule={rule.id}
+										data-test-rule-mode-of={rule.mode}
 										type="button"
 										onclick={() => remove(rule)}
 										class="flex min-h-8 items-center gap-1.5 rounded-full bg-secondary px-3 text-sm text-secondary-foreground transition-colors hover:bg-secondary/70"
