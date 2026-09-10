@@ -58,3 +58,11 @@ describe('sanitizeArticleHtml', () => {
 		expect(sanitizeArticleHtml('<p>coupé')).toBe('<p>coupé</p>');
 	});
 });
+
+describe('a link out of a feed', () => {
+	it('cannot open a new tab at all, so it never gets our window or our referrer', () => {
+		const clean = sanitizeArticleHtml('<a href="https://ad.test" target="_blank">Deal</a>');
+
+		expect(clean).not.toContain('target');
+	});
+});

@@ -12,4 +12,5 @@ RUN pnpm --filter web build
 
 FROM nginx:1.27-alpine
 COPY docker/lumia-web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/lumia-web/security-headers.conf /etc/nginx/conf.d/security-headers.conf
 COPY --from=build /repo/apps/web/build /usr/share/nginx/html
