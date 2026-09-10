@@ -1,10 +1,13 @@
 import base64
 import binascii
 from dataclasses import dataclass
+from datetime import datetime
 
 import httpx
 
 from config.miniflux import get_miniflux_config
+from worker.technical.connectors.base import RawArticle
+from worker.technical.connectors.miniflux import MinifluxConnector
 
 
 class MinifluxApiError(Exception):
@@ -64,6 +67,28 @@ async def list_categories(
             MinifluxNamedCategory(category_id=item["id"], title=item["title"])
             for item in response.json()
         ]
+
+
+async def list_recent_entries(
+    *,
+    published_after: datetime,
+    limit: int,
+    transport: httpx.AsyncBaseTransport | None = None,
+) -> list[RawArticle]:
+    """Lists the entries Miniflux published since a point in time, newest first."""
+    async with _client(transport) as client:
+        response = await client.get(
+            "/v1/entries",
+            params={
+                "published_after": int(published_after.timestamp()),
+                "limit": limit,
+                "order": "published_at",
+                "direction": "desc",
+            },
+        )
+        if response.status_code >= 400:
+            raise MinifluxApiError(response.text)
+        return MinifluxConnector().parse_entries_payload(response.json())
 
 
 async def create_category(

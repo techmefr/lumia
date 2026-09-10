@@ -40,6 +40,15 @@ lumia/
 
 Every ingestion engine (Miniflux today, mail/social feeds later) implements a `SourceConnector` in `worker/technical/connectors/`: it turns that engine's raw webhook payload into a normalized `RawArticle` before it enters the shared enrichment pipeline in `domain/`. Adding an engine means adding a connector and running its own upstream service (like the `miniflux` container) — the domain pipeline, the API, and the `lumia-backend` image never change.
 
+The worker also runs two scheduled passes of its own (`worker/domain/maintenance/`, registered as
+`cron_jobs` in `worker/technical/queue.py`). Reconciliation, on the hour, asks Miniflux for the
+entries of the last day and re-queues those missing from the database: a webhook can be lost for
+reasons nothing in the app can prevent — the API restarting mid-post, a network blip, a signature
+refused after a secret rotation — and it doubles as the recovery for an enrichment that exhausted
+its retries. It skips entries of feeds nobody subscribes to, which enrichment would drop anyway.
+The nightly purge deletes login tokens well past their expiry, keeping a grace period so a
+just-lapsed token is still recognised as expired rather than as never issued.
+
 The Miniflux webhook is signed (`X-Miniflux-Signature`, HMAC-SHA256 over the raw body, checked with
 `hmac.compare_digest` in `worker/technical/webhook.py`) against `MINIFLUX_WEBHOOK_SECRET`, which has
 no default — the config fails to start without one rather than accepting unsigned calls silently.
