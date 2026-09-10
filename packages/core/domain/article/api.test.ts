@@ -93,3 +93,21 @@ describe('saveUrl', () => {
 		expect(last().auth).toBe(true);
 	});
 });
+
+describe('translateArticle', () => {
+	it('posts the target language to the article translation endpoint', async () => {
+		const { articles, last } = api([{ target_lang: 'fr', title: 'Titre', content: 'Corps' }]);
+		await articles.translateArticle('article-1', 'fr');
+		expect(last()).toMatchObject({
+			path: '/articles/article-1/translate',
+			method: 'POST',
+			body: { target_lang: 'fr' }
+		});
+	});
+
+	it('returns the translation the server computed', async () => {
+		const translation = { target_lang: 'de', title: 'Titel', content: 'Inhalt' };
+		const { articles } = api([translation]);
+		expect(await articles.translateArticle('article-1', 'de')).toEqual(translation);
+	});
+});

@@ -3,14 +3,14 @@ import pytest
 
 from worker.technical.ai.llm_client import (
     LlmApiError,
-    OpenAiCompatibleSummarizer,
+    OpenAiCompatibleChatClient,
     resolve_base_url,
     resolve_model,
 )
 
 
-def _summarizer(handler: object) -> OpenAiCompatibleSummarizer:
-    return OpenAiCompatibleSummarizer(
+def _summarizer(handler: object) -> OpenAiCompatibleChatClient:
+    return OpenAiCompatibleChatClient(
         api_key="sk-test",
         base_url="http://provider.test/v1",
         model="test-model",

@@ -1,5 +1,5 @@
 import type { HttpClient } from '../../technical/http-client';
-import type { ArticleDetail, ArticleSummary } from './types';
+import type { ArticleDetail, ArticleSummary, ArticleTranslation } from './types';
 
 export interface ListArticlesParams {
 	folderId?: string;
@@ -51,7 +51,21 @@ export function createArticleApi(http: HttpClient) {
 		return http.request<ArticleSummary>('/articles/save-url', { method: 'POST', body: { url } });
 	}
 
-	return { listArticles, getArticle, saveUrl };
+	/**
+	 * Translates one article on demand. Nothing is stored server-side, so the caller keeps the
+	 * original text and can put it back.
+	 */
+	async function translateArticle(
+		articleId: string,
+		targetLang: string
+	): Promise<ArticleTranslation> {
+		return http.request<ArticleTranslation>(`/articles/${articleId}/translate`, {
+			method: 'POST',
+			body: { target_lang: targetLang }
+		});
+	}
+
+	return { listArticles, getArticle, saveUrl, translateArticle };
 }
 
 export type ArticleApi = ReturnType<typeof createArticleApi>;

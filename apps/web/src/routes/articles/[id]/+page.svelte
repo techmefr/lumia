@@ -2,7 +2,7 @@
 	import { base } from '$app/paths';
 	import { onMount, tick } from 'svelte';
 	import { page } from '$app/state';
-	import { sanitizeArticleHtml, type ArticleDetail } from '@lumia/core';
+	import { sanitizeArticleHtml, type ArticleDetail, type ArticleTranslation } from '@lumia/core';
 	import { Button, Card, CardContent, Badge, GlareHover, ReadingProgress, Skeleton, toast } from '@lumia/ui';
 	import ThumbsUp from '@lucide/svelte/icons/thumbs-up';
 	import ThumbsDown from '@lucide/svelte/icons/thumbs-down';
@@ -23,6 +23,7 @@
 	import { SpeechReader } from '$technical/speech/speech.svelte';
 	import { clearKaraoke, highlightChunk } from '$technical/speech/karaoke';
 	import AddToPlaylist from '$domain/playlist/add-to-playlist.svelte';
+	import TranslateButton from '$domain/article/translate-button.svelte';
 
 	/** Below this, "reading" is really just landing on the page; don't record it as progress. */
 	const MIN_TRACKED_PROGRESS = 0.02;
@@ -40,6 +41,8 @@
 	let linkCopied = $state(false);
 	let progress = $state(0);
 	let contentEl = $state<HTMLElement | null>(null);
+	// Held here rather than written over the article, so going back to the original is free.
+	let translation = $state<ArticleTranslation | null>(null);
 
 	const speech = new SpeechReader();
 
@@ -244,7 +247,7 @@
 					style={`view-transition-name: article-title-${article.id};`}
 					class="animate-in font-serif text-2xl font-semibold fade-in slide-in-from-bottom-1 duration-500 sm:text-3xl"
 				>
-					{article.title}
+					{translation?.title ?? article.title}
 				</h1>
 				<div class="mt-1 flex flex-wrap items-center justify-between gap-2">
 					<div class="flex items-center gap-3">
@@ -272,6 +275,11 @@
 						{/if}
 					</div>
 					<div class="flex items-center gap-1">
+						<TranslateButton
+							articleId={article.id}
+							{translation}
+							onchange={(next) => (translation = next)}
+						/>
 						{#if speech.supported}
 							<button
 								onclick={toggleSpeech}
@@ -347,8 +355,18 @@
 					{/each}
 				</div>
 
-				<div bind:this={contentEl} class="prose prose-base mt-4">
-					{@html sanitizeArticleHtml(article.content)}
+				{#if translation}
+					<p class="mt-3 text-xs text-muted-foreground" data-test-translated-notice>
+						{t('article.translatedNotice')}
+					</p>
+				{/if}
+
+				<div
+					bind:this={contentEl}
+					class="prose prose-base mt-4"
+					lang={translation?.target_lang}
+				>
+					{@html sanitizeArticleHtml(translation?.content ?? article.content)}
 				</div>
 			</CardContent>
 		</Card>

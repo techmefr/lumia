@@ -54,7 +54,7 @@ lecture et la synthèse vocale sur un vrai appareil avant d'installer quoi que c
 - **Enregistrement de n'importe quelle page par URL**, à la Pocket : la page est extraite et rangée
   dans un flux « Enregistrés » propre à l'utilisateur. Ré-enregistrer la même URL renvoie l'article
   existant au lieu de le dupliquer.
-- **Traduction** des articles en langue étrangère (DeepL).
+- **Traduction** des articles en langue étrangère (DeepL ou l'IA configurée par le compte), avec un bouton de traduction sur la page article.
 
 ### Apprentissage
 
@@ -219,8 +219,12 @@ l'instance.
   parle le format `/chat/completions`. L'endpoint personnalisé demande l'URL et le nom du modèle,
   qu'on ne peut pas deviner. Un provider injoignable ou une clé refusée ne coûte pas son résumé à
   l'article : on retombe sur l'extractif.
-- **Traduction.** Une clé DeepL par compte, sinon le `DEEPL_API_KEY` de l'instance en secours. La
-  langue cible est la « langue de lecture » du compte.
+- **Traduction.** D'abord la clé DeepL du compte, puis l'IA que le compte a configurée, puis le
+  `DEEPL_API_KEY` de l'instance — selon ce qui est réellement configuré. `DEEPL_API_KEY` est
+  facultatif : une instance avec une clé IA et sans DeepL traduit via le modèle, et une instance
+  sans aucune clé garde les articles dans leur langue au lieu d'échouer sur chacun. Les articles
+  sont traduits vers la « langue de lecture » du compte à leur arrivée, et la page article porte un
+  bouton pour traduire l'article affiché dans la langue de l'interface et revenir à l'original.
 
 Les clés sont chiffrées en base (Fernet, `SECRET_ENCRYPTION_KEY`) et l'API ne les renvoie jamais :
 elle expose seulement `ai_api_key_set` / `translation_api_key_set`.

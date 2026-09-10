@@ -23,7 +23,7 @@ _DEFAULT_MODELS = {
     "gemma": "gemma-3-27b-it",
 }
 
-__all__ = ["LlmApiError", "OpenAiCompatibleSummarizer", "resolve_base_url", "resolve_model"]
+__all__ = ["LlmApiError", "OpenAiCompatibleChatClient", "resolve_base_url", "resolve_model"]
 
 
 def resolve_base_url(provider: str, endpoint_url: str | None) -> str | None:
@@ -38,7 +38,7 @@ def resolve_model(provider: str, model: str | None) -> str | None:
     return model or _DEFAULT_MODELS.get(provider)
 
 
-class OpenAiCompatibleSummarizer:
+class OpenAiCompatibleChatClient:
     def __init__(
         self,
         *,
@@ -52,7 +52,7 @@ class OpenAiCompatibleSummarizer:
         self._model = model
         self._transport = transport
 
-    async def summarize(self, text: str) -> str:
+    async def complete(self, *, system: str, user: str) -> str:
         async with httpx.AsyncClient(
             base_url=self._base_url,
             headers={"Authorization": f"Bearer {self._api_key}"},
@@ -64,8 +64,8 @@ class OpenAiCompatibleSummarizer:
                 json={
                     "model": self._model,
                     "messages": [
-                        {"role": "system", "content": SUMMARY_PROMPT},
-                        {"role": "user", "content": text[:MAX_INPUT_CHARS]},
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": user},
                     ],
                 },
             )
@@ -75,3 +75,6 @@ class OpenAiCompatibleSummarizer:
             if not choices:
                 raise LlmApiError("no choice returned")
             return str(choices[0]["message"]["content"]).strip()
+
+    async def summarize(self, text: str) -> str:
+        return await self.complete(system=SUMMARY_PROMPT, user=text[:MAX_INPUT_CHARS])

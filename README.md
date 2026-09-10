@@ -207,8 +207,12 @@ Everything is per account, under **Réglages → IA et traduction**; there is no
   `/chat/completions` shape. Custom needs the URL and the model name, which can't be guessed. An
   unreachable provider or a rejected key doesn't cost the article its summary: it falls back to the
   extractive one.
-- **Translation.** A per-account DeepL key, falling back to the instance `DEEPL_API_KEY`. The target
-  language is the account's reading language.
+- **Translation.** A per-account DeepL key first, then the account's own LLM, then the instance
+  `DEEPL_API_KEY` — whichever the account has actually configured. `DEEPL_API_KEY` is optional: an
+  install with an LLM key and no DeepL key translates through the model, and one with neither keeps
+  articles in their own language rather than failing on each of them. Articles are translated into
+  the account's reading language when they arrive, and the article page carries a button to
+  translate the one on screen into the interface language and to put the original back.
 
 Keys are encrypted at rest (Fernet, `SECRET_ENCRYPTION_KEY`) and the API never returns them: it only
 exposes `ai_api_key_set` / `translation_api_key_set`.

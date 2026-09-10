@@ -1,6 +1,8 @@
+import logging
 from typing import Literal
 from uuid import UUID
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import Select, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,8 +13,10 @@ from api.domain.article.save_url_service import save_url
 from api.domain.article.schemas import (
     ArticleDetailResponse,
     ArticleSummaryResponse,
+    ArticleTranslationResponse,
     KeywordResponse,
     SaveUrlRequest,
+    TranslateArticleRequest,
 )
 from api.domain.feed.models import Feed
 from api.domain.recommendation.models import FilterMode, UserArticleFeedback
@@ -25,12 +29,17 @@ from api.domain.recommendation.relevance import (
 )
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
+from api.domain.user.providers import get_translator
 from api.technical.db import get_db_session
 from worker.technical.content_extraction import (
     PageExtractor,
     PageFetchError,
     get_page_extractor,
 )
+from worker.technical.html import strip_html
+from worker.technical.translation.base import TranslationApiError, Translator
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -167,12 +176,7 @@ async def save_article_url(
     return to_summary(article)
 
 
-@router.get("/articles/{article_id}", response_model=ArticleDetailResponse)
-async def get_article(
-    article_id: UUID,
-    user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_db_session),
-) -> ArticleDetailResponse:
+async def _load_own_article(session: AsyncSession, article_id: UUID, user: User) -> Article:
     article = await session.scalar(
         select(Article)
         .join(Feed, Feed.id == Article.feed_id)
@@ -180,6 +184,16 @@ async def get_article(
     )
     if article is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return article
+
+
+@router.get("/articles/{article_id}", response_model=ArticleDetailResponse)
+async def get_article(
+    article_id: UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> ArticleDetailResponse:
+    article = await _load_own_article(session, article_id, user)
 
     keywords = [
         KeywordResponse(id=link.keyword.id, term=link.keyword.term)
@@ -197,3 +211,40 @@ async def get_article(
         content=article.content,
         keywords=keywords,
     )
+
+
+@router.post("/articles/{article_id}/translate", response_model=ArticleTranslationResponse)
+async def translate_article(
+    article_id: UUID,
+    payload: TranslateArticleRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    translator: Translator | None = Depends(get_translator),
+) -> ArticleTranslationResponse:
+    """Translates one article on demand, leaving the stored one untouched.
+
+    Unavailable rather than failed when the account has no provider or the provider does not cover
+    the language: neither is a bug on either side, and the reader keeps the original.
+    """
+    article = await _load_own_article(session, article_id, user)
+    if translator is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="no_translation_provider"
+        )
+    if not translator.supports(payload.target_lang.value):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="language_not_supported"
+        )
+    try:
+        title = await translator.translate(article.title, target_lang=payload.target_lang.value)
+        content = await translator.translate(
+            strip_html(article.content), target_lang=payload.target_lang.value
+        )
+    except (TranslationApiError, httpx.HTTPError) as exc:
+        # Logged for the operator, never relayed: the provider's own message is not ours to hand
+        # back to a reader.
+        logger.warning("on-demand translation failed: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY, detail="translation_failed"
+        ) from exc
+    return ArticleTranslationResponse(target_lang=payload.target_lang, title=title, content=content)

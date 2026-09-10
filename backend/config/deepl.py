@@ -4,7 +4,8 @@ from pydantic_settings import BaseSettings
 
 
 class DeeplConfig(BaseSettings):
-    deepl_api_key: str
+    # Optional: an install can translate through the account's own LLM instead, or not at all.
+    deepl_api_key: str | None = None
     deepl_base_url: str = "https://api-free.deepl.com"
 
 

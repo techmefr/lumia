@@ -3,12 +3,12 @@ import json
 import httpx
 import pytest
 
-from worker.technical.ai.anthropic_client import API_VERSION, AnthropicSummarizer
+from worker.technical.ai.anthropic_client import API_VERSION, AnthropicChatClient
 from worker.technical.ai.base import LlmApiError
 
 
-def _summarizer(handler: object) -> AnthropicSummarizer:
-    return AnthropicSummarizer(
+def _summarizer(handler: object) -> AnthropicChatClient:
+    return AnthropicChatClient(
         api_key="sk-ant-test",
         model="claude-test",
         transport=httpx.MockTransport(handler),  # type: ignore[arg-type]
