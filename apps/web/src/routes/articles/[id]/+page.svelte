@@ -20,7 +20,7 @@
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
-	import { SpeechReader } from '$technical/speech/speech.svelte';
+	import { SPEECH_FAILURE_MESSAGES, SpeechReader } from '$technical/speech/speech.svelte';
 	import { clearKaraoke, highlightChunk } from '$technical/speech/karaoke';
 	import AddToPlaylist from '$domain/playlist/add-to-playlist.svelte';
 
@@ -102,6 +102,13 @@
 		const text = `${article.title}. ${contentEl?.textContent ?? ''}`;
 		speech.speak(text, { onDone: () => toast(t('article.speechDone')) });
 	}
+
+	// A reading the engine never performed used to be indistinguishable from a finished one: the
+	// button fell silent and the article was marked read. Say what went wrong instead.
+	$effect(() => {
+		const failure = speech.error;
+		if (failure) toast(t(SPEECH_FAILURE_MESSAGES[failure]));
+	});
 
 	// Follow the voice in the text. The title chunk is not part of the body, so it simply doesn't
 	// match and nothing is painted until the first paragraph.
