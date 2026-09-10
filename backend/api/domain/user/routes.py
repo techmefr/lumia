@@ -11,6 +11,7 @@ from api.domain.user.exceptions import (
     InvalidMagicLinkTokenError,
     InvalidRefreshTokenError,
     SsoNotConfiguredError,
+    SsoSubjectMismatchError,
 )
 from api.domain.user.magic_link_service import request_magic_link, verify_magic_link_token
 from api.domain.user.models import Instance, Role, User
@@ -194,9 +195,28 @@ async def sso_callback(
     userinfo = await fetch_userinfo(
         document, access_token=tokens["access_token"], transport=transport
     )
-    user = await get_or_create_sso_user(
-        session, instance, sub=userinfo["sub"], email=userinfo["email"]
-    )
+    subject = userinfo.get("sub")
+    email = userinfo.get("email")
+    # A provider that grants no email scope answers without the claim. That is a configuration
+    # the administrator has to fix, not a fault of the reader signing in, so it deserves a
+    # message rather than a stack trace.
+    if not isinstance(subject, str) or not subject:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="The identity provider returned no subject.",
+        )
+    if not isinstance(email, str) or not email:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="The identity provider returned no email address. Grant the email scope.",
+        )
+    try:
+        user = await get_or_create_sso_user(session, instance, sub=subject, email=email)
+    except SsoSubjectMismatchError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This address is already linked to another identity provider account.",
+        ) from exc
     return await _issue_token_pair(session, user.id)
 
 

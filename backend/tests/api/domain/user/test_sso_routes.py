@@ -134,3 +134,96 @@ async def test_sso_callback_reuses_the_existing_user_for_a_known_sub(
     async with session_factory() as session:
         users = (await session.scalars(select(User).where(User.sso_subject == "user-1"))).all()
         assert len(users) == 1
+
+
+def _incomplete_transport(userinfo: dict[str, object]) -> httpx.MockTransport:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/.well-known/openid-configuration":
+            return httpx.Response(200, json=DISCOVERY_PAYLOAD)
+        if str(request.url) == DISCOVERY_PAYLOAD["token_endpoint"]:
+            return httpx.Response(200, json={"access_token": "the-access-token"})
+        if str(request.url) == DISCOVERY_PAYLOAD["userinfo_endpoint"]:
+            return httpx.Response(200, json=userinfo)
+        raise AssertionError(f"unexpected request to {request.url}")
+
+    return httpx.MockTransport(handler)
+
+
+async def test_signing_in_with_a_known_address_lands_on_the_existing_account(
+    client: httpx.AsyncClient,
+) -> None:
+    """The administrator onboarded with a password, then turned SSO on. Signing in through the
+    provider must hand them their own account, not fail on the unique address."""
+    await _onboard(client)
+    await _configure_sso()
+    app.dependency_overrides[get_oidc_transport] = lambda: _mock_transport(
+        sub="idp-subject", email=ADMIN_PAYLOAD["email"]
+    )
+
+    response = await client.post("/auth/sso/callback", json={"code": "the-code"})
+
+    assert response.status_code == 200
+    headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
+    me = await client.get("/me", headers=headers)
+    assert me.json()["email"] == ADMIN_PAYLOAD["email"]
+    assert me.json()["role"] == "admin"
+    session_factory = async_sessionmaker(get_engine(), expire_on_commit=False)
+    async with session_factory() as session:
+        users = list(await session.scalars(select(User)))
+    assert len(users) == 1
+    assert users[0].sso_subject == "idp-subject"
+    # The password they onboarded with still works.
+    login = await client.post(
+        "/auth/login",
+        json={"email": ADMIN_PAYLOAD["email"], "password": ADMIN_PAYLOAD["password"]},
+    )
+    assert login.status_code == 200
+
+
+async def test_an_address_already_linked_to_another_subject_is_refused(
+    client: httpx.AsyncClient,
+) -> None:
+    await _onboard(client)
+    await _configure_sso()
+    app.dependency_overrides[get_oidc_transport] = lambda: _mock_transport(
+        sub="first-subject", email=ADMIN_PAYLOAD["email"]
+    )
+    assert (await client.post("/auth/sso/callback", json={"code": "the-code"})).status_code == 200
+
+    app.dependency_overrides[get_oidc_transport] = lambda: _mock_transport(
+        sub="second-subject", email=ADMIN_PAYLOAD["email"]
+    )
+    response = await client.post("/auth/sso/callback", json={"code": "the-code"})
+
+    assert response.status_code == 409
+
+
+async def test_a_provider_answering_without_an_email_claim_is_reported(
+    client: httpx.AsyncClient,
+) -> None:
+    """A provider whose email scope was not granted answers without the claim; that used to
+    raise a KeyError and surface as an unexplained 500."""
+    await _onboard(client)
+    await _configure_sso()
+    app.dependency_overrides[get_oidc_transport] = lambda: _incomplete_transport(
+        {"sub": "idp-subject"}
+    )
+
+    response = await client.post("/auth/sso/callback", json={"code": "the-code"})
+
+    assert response.status_code == 502
+    assert "email" in response.json()["detail"]
+
+
+async def test_a_provider_answering_without_a_subject_is_reported(
+    client: httpx.AsyncClient,
+) -> None:
+    await _onboard(client)
+    await _configure_sso()
+    app.dependency_overrides[get_oidc_transport] = lambda: _incomplete_transport(
+        {"email": "someone@example.com"}
+    )
+
+    response = await client.post("/auth/sso/callback", json={"code": "the-code"})
+
+    assert response.status_code == 502
