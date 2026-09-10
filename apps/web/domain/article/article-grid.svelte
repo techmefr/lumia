@@ -22,6 +22,12 @@
 
 	let { articles, loading, cursor = -1, hero = false, empty, footer }: Props = $props();
 
+	// Written once for the grid and its placeholders so a wide screen cannot show one column count
+	// while loading and another once loaded. Past `lg` the room goes into columns rather than into
+	// cards that keep growing: a card wider than its own image is mostly empty space.
+	const GRID_COLUMNS =
+		'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 wide:grid-cols-6';
+
 	const SKELETON_COUNT = 6;
 
 	const lead = $derived(hero ? articles[0] : undefined);
@@ -50,7 +56,7 @@
 		{#if hero}
 			<ArticleCardSkeleton featured />
 		{/if}
-		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+		<div data-test-article-columns class={GRID_COLUMNS}>
 			{#each Array(SKELETON_COUNT), index}
 				<ArticleCardSkeleton featured={!hero && index === 0} />
 			{/each}
@@ -86,7 +92,7 @@
 				class={cursor === 0 ? 'ring-2 ring-ring ring-offset-2 ring-offset-background' : ''}
 			/>
 		{/if}
-		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+		<div data-test-article-columns class={GRID_COLUMNS}>
 			{#each rest as article, index (article.id)}
 				<ArticleCard
 					id={article.id}

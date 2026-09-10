@@ -103,6 +103,19 @@
 	--radius-xl: calc(var(--radius) + 4px);
 	--font-serif: var(--pair-serif);
 	--font-sans: var(--pair-sans);
+	/* Two widths, not one. `max-w-app` is for lists, grids and settings: on a wide display the room
+	   goes into more columns instead of empty margins. `max-w-reading` is for a text a reader
+	   follows line by line, where the measure — not the display — sets the width. */
+	--container-app: 140rem;
+	--container-reading: 64rem;
+}
+
+/* A breakpoint has to be declared in a plain theme block, and in rem like the built-in steps: the
+   generated media queries are ordered by their bare number, so a px value here would be emitted
+   before 2xl's 96 and then be overridden by it. */
+@theme {
+	/* One step past 2xl, for the displays that still have room for another column of cards. */
+	--breakpoint-wide: 132rem;
 }
 
 @layer base {

@@ -46,6 +46,14 @@
 
 	const mainPadding = $derived(isAuthRoute(page.url.pathname) ? '' : 'pb-20 sm:pb-6');
 
+	// An article body is the one screen whose width is a measure rather than a container; every
+	// other screen is a list, a grid or a form and gets the whole display.
+	function isReadingRoute(pathname: string): boolean {
+		return pathname.startsWith(`${base}/articles/`);
+	}
+
+	const mainWidth = $derived(isReadingRoute(page.url.pathname) ? 'max-w-reading' : 'max-w-app');
+
 	async function logout() {
 		await lumia.user.logout();
 		await goto(base + '/login');
@@ -112,7 +120,10 @@
 {#if !isAuthRoute(page.url.pathname)}
 	<a href="#main-content" class="skip-link">{t('nav.skipToContent')}</a>
 	<header class="sticky top-0 z-30 animate-in border-b bg-card/95 backdrop-blur fade-in slide-in-from-top-2 duration-300">
-		<nav aria-label={t('nav.main')} class="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-3">
+		<nav
+			aria-label={t('nav.main')}
+			class="mx-auto flex w-full max-w-app flex-wrap items-center gap-1 px-4 py-3"
+		>
 			<a href="{base}/articles" class="mr-4 flex items-center gap-1.5 font-serif text-lg font-semibold">
 				<Sparkles class="size-5 text-primary transition-transform duration-300 hover:rotate-12" />
 				Lumia
@@ -145,7 +156,8 @@
 {#key page.url.pathname}
 	<main
 		id="main-content"
-		class="mx-auto max-w-5xl px-4 py-6 sm:px-6 {mainPadding}"
+		data-test-main
+		class="mx-auto w-full {mainWidth} px-4 py-6 sm:px-6 {mainPadding}"
 		in:fly={{ y: 16, duration: 260, delay: 120 }}
 		out:fade={{ duration: 120 }}
 	>
