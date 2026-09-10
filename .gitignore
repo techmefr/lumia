@@ -17,6 +17,7 @@ coverage/
 coverage.xml
 .coverage
 lcov.info
+pip-audit.json
 
 .env
 .env.*

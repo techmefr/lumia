@@ -1,6 +1,9 @@
+# Images are pinned to a patch tag rather than a digest: a digest cannot be checked by hand
+# on review, and Dependabot bumps the tag anyway. A floating tag was the real problem — two
+# installs a fortnight apart did not run the same Miniflux.
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.15-alpine
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U lumia -d lumia"]
@@ -17,7 +20,7 @@ services:
       - internal
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.11-alpine
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -28,7 +31,7 @@ services:
       - internal
 
   miniflux-postgres:
-    image: postgres:16-alpine
+    image: postgres:16.15-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: miniflux
@@ -40,7 +43,7 @@ services:
       - internal
 
   miniflux:
-    image: miniflux/miniflux:latest
+    image: miniflux/miniflux:2.3.3
     restart: unless-stopped
     depends_on:
       - miniflux-postgres
