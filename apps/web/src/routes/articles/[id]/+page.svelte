@@ -251,7 +251,7 @@
 						<a
 							href={article.url}
 							target="_blank"
-							rel="noopener"
+							rel="noopener noreferrer"
 							class="flex w-fit items-center gap-1 text-sm text-primary hover:underline"
 						>
 							<ExternalLink class="size-3.5" />

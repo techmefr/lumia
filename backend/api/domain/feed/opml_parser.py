@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from xml.etree import ElementTree
+from xml.etree.ElementTree import Element
+
+from defusedxml.common import DefusedXmlException
+from defusedxml.ElementTree import ParseError, fromstring
 
 from api.domain.feed.exceptions import InvalidOpmlError
 
@@ -12,10 +15,18 @@ class OpmlEntry:
 
 
 def parse_opml(xml_bytes: bytes) -> list[OpmlEntry]:
+    """Reads a subscription export.
+
+    The document comes from whatever produced the user's export, so it is parsed with defusedxml:
+    the stdlib parser expands entities, and a few kilobytes of nested ones are enough to exhaust the
+    process's memory.
+    """
     try:
-        root = ElementTree.fromstring(xml_bytes)
-    except ElementTree.ParseError as exc:
+        root = fromstring(xml_bytes)
+    except ParseError as exc:
         raise InvalidOpmlError("malformed OPML document") from exc
+    except DefusedXmlException as exc:
+        raise InvalidOpmlError("OPML document uses forbidden XML constructs") from exc
 
     body = root.find("body")
     if body is None:
@@ -36,5 +47,5 @@ def parse_opml(xml_bytes: bytes) -> list[OpmlEntry]:
     return entries
 
 
-def _title(outline: ElementTree.Element) -> str:
+def _title(outline: Element) -> str:
     return outline.get("title") or outline.get("text") or ""

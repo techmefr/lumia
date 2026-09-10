@@ -78,15 +78,69 @@ async def test_login_with_unknown_email_returns_401(client: httpx.AsyncClient) -
     assert response.status_code == 401
 
 
-async def test_refresh_with_a_valid_refresh_token_returns_a_new_access_token(
+async def test_refresh_returns_a_new_access_token_and_a_new_refresh_token(
     client: httpx.AsyncClient,
 ) -> None:
     onboarding = await client.post("/onboarding/admin", json=ADMIN_PAYLOAD)
     refresh_token = onboarding.json()["refresh_token"]
 
     response = await client.post("/auth/refresh", json={"refresh_token": refresh_token})
+
     assert response.status_code == 200
-    assert "access_token" in response.json()
+    body = response.json()
+    assert "access_token" in body
+    assert body["refresh_token"] != refresh_token
+
+
+async def test_the_refresh_token_is_single_use(client: httpx.AsyncClient) -> None:
+    onboarding = await client.post("/onboarding/admin", json=ADMIN_PAYLOAD)
+    refresh_token = onboarding.json()["refresh_token"]
+    await client.post("/auth/refresh", json={"refresh_token": refresh_token})
+
+    replay = await client.post("/auth/refresh", json={"refresh_token": refresh_token})
+
+    assert replay.status_code == 401
+
+
+async def test_replaying_a_spent_refresh_token_ends_that_session(
+    client: httpx.AsyncClient,
+) -> None:
+    onboarding = await client.post("/onboarding/admin", json=ADMIN_PAYLOAD)
+    spent = onboarding.json()["refresh_token"]
+    successor = (await client.post("/auth/refresh", json={"refresh_token": spent})).json()[
+        "refresh_token"
+    ]
+
+    await client.post("/auth/refresh", json={"refresh_token": spent})
+
+    assert (
+        await client.post("/auth/refresh", json={"refresh_token": successor})
+    ).status_code == 401
+
+
+async def test_logout_all_ends_every_session_of_the_account(client: httpx.AsyncClient) -> None:
+    onboarding = await client.post("/onboarding/admin", json=ADMIN_PAYLOAD)
+    body = onboarding.json()
+    headers = {"Authorization": f"Bearer {body['access_token']}"}
+    other_login = await client.post(
+        "/auth/login",
+        json={"email": ADMIN_PAYLOAD["email"], "password": ADMIN_PAYLOAD["password"]},
+    )
+
+    response = await client.post("/auth/logout-all", headers=headers)
+
+    assert response.status_code == 204
+    for refresh_token in (body["refresh_token"], other_login.json()["refresh_token"]):
+        refused = await client.post("/auth/refresh", json={"refresh_token": refresh_token})
+        assert refused.status_code == 401
+
+
+async def test_logout_all_requires_being_logged_in(client: httpx.AsyncClient) -> None:
+    await client.post("/onboarding/admin", json=ADMIN_PAYLOAD)
+
+    response = await client.post("/auth/logout-all")
+
+    assert response.status_code == 401
 
 
 async def test_refresh_with_an_unknown_refresh_token_returns_401(

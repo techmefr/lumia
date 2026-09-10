@@ -33,6 +33,27 @@ export default defineConfig({
 			// published under a sub-path and sets BASE_PATH at build time.
 			paths: { base: basePath },
 
+			// Emitted by the build as a meta tag carrying the hashes of the inline scripts
+			// SvelteKit generates, which is why this cannot live in the nginx config: a header
+			// written by hand could not know those hashes and would block the app's own start-up.
+			// `style-src` is deliberately left out — Svelte transitions build inline <style>
+			// elements, and a hash-bearing policy makes browsers ignore 'unsafe-inline'.
+			// `frame-ancestors` is left out too: a meta policy cannot carry it, so nginx sends it.
+			csp: {
+				mode: 'hash',
+				directives: {
+					'script-src': ['self'],
+					'connect-src': ['self'],
+					// Article images and feed icons come from whatever host the feed points at,
+					// http included: plenty of feeds still serve their images that way.
+					'img-src': ['self', 'data:', 'https:', 'http:'],
+					'font-src': ['self', 'data:'],
+					'object-src': ['none'],
+					'base-uri': ['self'],
+					'form-action': ['self']
+				}
+			},
+
 			alias: {
 				$technical: 'technical',
 				'$technical/*': 'technical/*',
