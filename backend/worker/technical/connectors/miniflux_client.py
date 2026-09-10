@@ -1,17 +1,34 @@
 import base64
 import binascii
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 
 import httpx
 
+from api.technical.logging.external import log_external_failure
 from config.miniflux import get_miniflux_config
 from worker.technical.connectors.base import RawArticle
 from worker.technical.connectors.miniflux import MinifluxConnector
 
+SERVICE_NAME = "miniflux"
+
+logger = logging.getLogger(__name__)
+
 
 class MinifluxApiError(Exception):
     pass
+
+
+def _api_error(operation: str, response: httpx.Response) -> MinifluxApiError:
+    log_external_failure(
+        logger,
+        service=SERVICE_NAME,
+        operation=operation,
+        url=str(response.request.url),
+        status_code=response.status_code,
+    )
+    return MinifluxApiError(response.text)
 
 
 def get_miniflux_transport() -> httpx.AsyncBaseTransport | None:
@@ -62,7 +79,7 @@ async def list_categories(
     async with _client(transport) as client:
         response = await client.get("/v1/categories")
         if response.status_code >= 400:
-            raise MinifluxApiError(response.text)
+            raise _api_error("list_categories", response)
         return [
             MinifluxNamedCategory(category_id=item["id"], title=item["title"])
             for item in response.json()
@@ -97,7 +114,7 @@ async def create_category(
     async with _client(transport) as client:
         response = await client.post("/v1/categories", json={"title": title})
         if response.status_code >= 400:
-            raise MinifluxApiError(response.text)
+            raise _api_error("create_category", response)
         return MinifluxCategory(category_id=response.json()["id"])
 
 
@@ -115,7 +132,7 @@ async def create_feed(
     async with _client(transport) as client:
         response = await client.post("/v1/feeds", json=payload)
         if response.status_code >= 400:
-            raise MinifluxApiError(response.text)
+            raise _api_error("create_feed", response)
         return MinifluxFeed(feed_id=response.json()["feed_id"])
 
 
@@ -138,7 +155,7 @@ async def get_feed_icon(
         if response.status_code == 404:
             return None
         if response.status_code >= 400:
-            raise MinifluxApiError(response.text)
+            raise _api_error("get_feed_icon", response)
 
         payload = response.json()
         raw = str(payload.get("data", ""))
@@ -158,6 +175,6 @@ async def get_feed(
     async with _client(transport) as client:
         response = await client.get(f"/v1/feeds/{feed_id}")
         if response.status_code >= 400:
-            raise MinifluxApiError(response.text)
+            raise _api_error("get_feed", response)
         data = response.json()
         return MinifluxFeedDetail(feed_id=data["id"], title=data["title"])

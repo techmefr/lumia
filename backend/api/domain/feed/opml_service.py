@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 import httpx
@@ -8,6 +9,11 @@ from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError
 from api.domain.feed.models import Feed, Folder, SourceType
 from api.domain.feed.opml_parser import OpmlEntry, parse_opml
 from api.domain.user.models import User
+from api.technical.logging.external import (
+    EXTERNAL_CALL_FAILED_EVENT,
+    describe_error,
+    redact_url,
+)
 from api.technical.net.url_guard import (
     BlockedUrlError,
     Resolver,
@@ -21,6 +27,8 @@ from worker.technical.connectors.miniflux_client import (
     get_feed,
     list_categories,
 )
+
+logger = logging.getLogger(__name__)
 
 
 async def import_opml(
@@ -61,9 +69,19 @@ async def import_opml(
                 category_id_by_folder_name,
                 transport=miniflux_transport,
             )
-        except (MinifluxApiError, httpx.HTTPError):
+        except (MinifluxApiError, httpx.HTTPError) as exc:
             # An unreachable/invalid feed URL must not abort the rest of the batch —
             # the user still gets every other feed from their Feedly export.
+            logger.warning(
+                "opml entry skipped, its feed could not be registered",
+                extra={
+                    "event": EXTERNAL_CALL_FAILED_EVENT,
+                    "service": "miniflux",
+                    "operation": "import_opml_entry",
+                    "url": redact_url(entry.url),
+                    "error": describe_error(exc),
+                },
+            )
             continue
 
         feed = Feed(

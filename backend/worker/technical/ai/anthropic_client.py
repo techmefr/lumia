@@ -5,8 +5,11 @@ Three differences make a separate client cheaper than bending the shared one: th
 a top-level field instead of a message with `role: system`.
 """
 
+import logging
+
 import httpx
 
+from api.technical.logging.external import log_external_failure
 from worker.technical.ai.base import (
     MAX_INPUT_CHARS,
     SUMMARY_PROMPT,
@@ -20,6 +23,9 @@ DEFAULT_MODEL = "claude-haiku-4-5-20251001"
 #: pipeline for every self-hoster at once.
 API_VERSION = "2023-06-01"
 _MAX_OUTPUT_TOKENS = 512
+SERVICE_NAME = "anthropic"
+
+logger = logging.getLogger(__name__)
 
 
 class AnthropicSummarizer:
@@ -51,6 +57,13 @@ class AnthropicSummarizer:
                 },
             )
             if response.status_code >= 400:
+                log_external_failure(
+                    logger,
+                    service=SERVICE_NAME,
+                    operation="summarize",
+                    url=str(response.request.url),
+                    status_code=response.status_code,
+                )
                 raise LlmApiError(response.text)
             blocks = response.json().get("content") or []
             texts = [block.get("text", "") for block in blocks if block.get("type") == "text"]

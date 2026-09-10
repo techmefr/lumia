@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
@@ -5,6 +6,7 @@ from typing import Protocol
 import httpx
 import trafilatura
 
+from api.technical.logging.external import describe_error, log_external_failure
 from api.technical.net.url_guard import (
     BlockedUrlError,
     Resolver,
@@ -17,6 +19,24 @@ _MIN_EXTRACTED_TEXT_LENGTH = 200
 _USER_AGENT = "Mozilla/5.0 (compatible; LumiaBot/1.0)"
 _MAX_BODY_BYTES = 5 * 1024 * 1024
 _MAX_REDIRECTS = 5
+
+SERVICE_NAME = "page-extraction"
+
+logger = logging.getLogger(__name__)
+
+
+def _log_extraction_failure(
+    *, operation: str, url: str, error: BaseException | None = None, reason: str | None = None
+) -> None:
+    status_code = error.response.status_code if isinstance(error, httpx.HTTPStatusError) else None
+    log_external_failure(
+        logger,
+        service=SERVICE_NAME,
+        operation=operation,
+        url=url,
+        status_code=status_code,
+        error=describe_error(error) if error is not None else reason,
+    )
 
 
 class ContentExtractor(Protocol):
@@ -112,6 +132,7 @@ class TrafilaturaPageExtractor:
                 url, transport=self._transport, timeout=15.0, resolve=self._resolve
             )
         except httpx.HTTPError as exc:
+            _log_extraction_failure(operation="fetch_page", url=url, error=exc)
             raise PageFetchError(str(exc)) from exc
         except BlockedUrlError as exc:
             raise PageFetchError(str(exc)) from exc
@@ -124,6 +145,9 @@ class TrafilaturaPageExtractor:
             favor_recall=True,
         )
         if not content or len(strip_html(content)) < _MIN_EXTRACTED_TEXT_LENGTH:
+            _log_extraction_failure(
+                operation="fetch_page", url=url, reason="no readable content extracted"
+            )
             raise PageFetchError("no readable content extracted")
 
         metadata = trafilatura.extract_metadata(html, default_url=url)
@@ -173,7 +197,8 @@ class TrafilaturaContentExtractor:
             html = await fetch_page_html(
                 url, transport=self._transport, timeout=10.0, resolve=self._resolve
             )
-        except (httpx.HTTPError, PageFetchError, BlockedUrlError):
+        except (httpx.HTTPError, PageFetchError, BlockedUrlError) as exc:
+            _log_extraction_failure(operation="recrawl_article", url=url, error=exc)
             return fallback_html
 
         extracted = trafilatura.extract(
@@ -184,5 +209,8 @@ class TrafilaturaContentExtractor:
             favor_recall=True,
         )
         if not extracted or len(strip_html(extracted)) < _MIN_EXTRACTED_TEXT_LENGTH:
+            _log_extraction_failure(
+                operation="recrawl_article", url=url, reason="no readable content extracted"
+            )
             return fallback_html
         return str(extracted)
