@@ -33,3 +33,8 @@ Thumbs.db
 *.ipa
 android/app/build/
 ios/App/build/
+
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/

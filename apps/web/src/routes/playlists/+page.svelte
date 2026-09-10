@@ -122,7 +122,7 @@
 </script>
 
 <div class="flex flex-col gap-6">
-	<h1 class="flex items-center gap-2 text-2xl font-semibold">
+	<h1 data-test-page="playlists" class="flex items-center gap-2 text-2xl font-semibold">
 		<ListMusic class="size-6 text-primary" />
 		{t('playlists.title')}
 	</h1>

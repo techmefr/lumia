@@ -203,6 +203,7 @@
 
 <div class="mx-auto flex w-full flex-col gap-4 pb-24">
 	<a
+		data-test-article-back
 		href="{base}/articles"
 		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline"
 	>
@@ -241,6 +242,7 @@
 				<!-- Same name as the card's title, so the tile grows into the article rather than
 					 cross-fading with it. -->
 				<h1
+					data-test-article-heading
 					style={`view-transition-name: article-title-${article.id};`}
 					class="animate-in font-serif text-2xl font-semibold fade-in slide-in-from-bottom-1 duration-500 sm:text-3xl"
 				>
@@ -274,6 +276,7 @@
 					<div class="flex items-center gap-1">
 						{#if speech.supported}
 							<button
+								data-test-listen
 								onclick={toggleSpeech}
 								aria-pressed={speech.speaking && !speech.paused}
 								class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -347,7 +350,7 @@
 					{/each}
 				</div>
 
-				<div bind:this={contentEl} class="prose prose-base mt-4">
+				<div data-test-article-content bind:this={contentEl} class="prose prose-base mt-4">
 					{@html sanitizeArticleHtml(article.content)}
 				</div>
 			</CardContent>

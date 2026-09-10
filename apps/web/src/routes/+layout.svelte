@@ -120,6 +120,7 @@
 			<div class="hidden items-center gap-1 sm:flex">
 				{#each navLinks as link (link.href)}
 					<Button
+						data-test-nav-link={link.href}
 						variant={isActive(link.href) ? 'secondary' : 'ghost'}
 						size="sm"
 						href={base + link.href}

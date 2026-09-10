@@ -53,6 +53,57 @@ jobs:
             apps/web/coverage/lcov.info
           if-no-files-found: warn
 
+  e2e:
+    name: Frontend — end-to-end journeys
+    runs-on: ubuntu-latest
+
+    # Deliberately its own job rather than a step of `frontend`: the browser install and the demo
+    # build cost minutes the unit suites should not wait for, and a red journey has to be readable
+    # as a red journey rather than hiding behind a coverage number.
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Keyed on the lockfile: the browser build to download is pinned by the @playwright/test
+      # version, so a hit means there is nothing left to fetch.
+      - name: Restore the browser cache
+        id: browser-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install chromium and its system libraries
+        if: steps.browser-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      # The cached browser skips the download but not the shared libraries, which live outside the
+      # cached path and are gone on a fresh runner.
+      - name: Install the system libraries only
+        if: steps.browser-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter web exec playwright install-deps chromium
+
+      # The demo build the journeys run against: a static SPA seeded in memory, so this job needs
+      # no backend, no database and no secret.
+      - name: Play the journeys
+        run: pnpm --filter web test:e2e
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
   backend:
     name: Backend — lint, types, tests, coverage
     runs-on: ubuntu-latest
