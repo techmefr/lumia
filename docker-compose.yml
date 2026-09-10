@@ -75,6 +75,7 @@ services:
       MINIFLUX_PASSWORD: ${MINIFLUX_PASSWORD}
       MINIFLUX_WEBHOOK_SECRET: ${MINIFLUX_WEBHOOK_SECRET}
       DEEPL_API_KEY: ${DEEPL_API_KEY}
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://localhost:8080}
     ports:
       - "8000:8000"

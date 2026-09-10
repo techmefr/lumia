@@ -48,7 +48,17 @@ Passwordless sign-in (`api/domain/user/magic_link_service.py`) issues an opaque 
 its hash (`MagicLinkToken`, single-use, TTL-bound), and emails a clickable
 `{FRONTEND_URL}/login?magic_token=...` link built from `EmailConfig.frontend_url`. `/login` reads
 that query param on mount and calls `verifyMagicLink` before showing any form — this is also the
-app's only account-recovery path, there being no separate forgot-password flow.
+app's only account-recovery path, there being no separate forgot-password flow. Asking for a new
+link retires the ones already sent, so only one live link exists per reader at any time.
+
+The authentication routes are rate limited (`api/technical/rate_limit/`) with a fixed-window
+counter in Redis, keyed on two identifiers at once: the caller's address and the account being
+addressed. One alone is not enough — by address only, a botnet walks past the cap; by account only,
+an attacker locks a reader out of their own account by burning its allowance. The address is read
+from the last `X-Forwarded-For` entry, the one the shipped nginx vouches for, and only when
+`TRUST_PROXY_HEADERS` is on. Over the allowance the answer is a 429 carrying `Retry-After`, for the
+correct password as much as for a wrong one: a limit that lets the right password through does not
+limit what is being guessed.
 
 ## Bounded contexts
 
