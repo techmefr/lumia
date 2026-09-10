@@ -62,6 +62,22 @@ its hash (`MagicLinkToken`, single-use, TTL-bound), and emails a clickable
 that query param on mount and calls `verifyMagicLink` before showing any form — this is also the
 app's only account-recovery path, there being no separate forgot-password flow.
 
+Beyond the first admin, accounts exist only through an invitation an admin sends
+(`api/domain/user/invitation_service.py`): a single-use token, stored hashed like the magic link,
+bound to one address and one role, emailed as `{FRONTEND_URL}/invitation?token=...` and redeemed at
+`POST /invitations/accept` — the one write route left unauthenticated on purpose, the token being the
+only credential the invitee has yet. `Instance.max_accounts` is the ceiling all three creation paths
+respect: invitation, acceptance, and SSO provisioning. Pending invitations count against it, so a
+seat already promised cannot be promised twice.
+
+Beyond the first admin, accounts exist only through an invitation an admin sends
+(): a single-use token, stored hashed like the magic link,
+bound to one address and one role, emailed as  and redeemed at
+ — the one write route that is unauthenticated on purpose, the token being
+the only credential the invitee has yet.  is the ceiling all three creation
+paths respect: invitation, acceptance, and SSO provisioning. Pending invitations count against it,
+so seats already promised cannot be promised twice.
+
 ## Bounded contexts
 
 | Context | Responsibility |

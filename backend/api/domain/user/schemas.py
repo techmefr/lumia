@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
@@ -51,6 +52,26 @@ class TokenPairResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+
+
+class InvitationRequest(BaseModel):
+    email: EmailStr
+    role: Role = Role.MEMBER
+
+
+class InvitationResponse(BaseModel):
+    id: UUID
+    email: str
+    role: Role
+    expires_at: datetime
+    # The raw token is never returned: it only ever exists in the invitee's mailbox, so a leaked
+    # admin listing cannot be redeemed.
+
+
+class InvitationAcceptRequest(BaseModel):
+    token: str
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=8)
 
 
 class MeResponse(BaseModel):

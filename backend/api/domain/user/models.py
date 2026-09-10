@@ -106,6 +106,25 @@ class RefreshToken(Base, TimestampMixin):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
 
+class Invitation(Base, TimestampMixin):
+    """An admin's promise of a seat, redeemable once.
+
+    The invited address is fixed at invitation time: the token is a proof that the admin meant to
+    let *that* person in, not a general-purpose sign-up voucher.
+    """
+
+    __tablename__ = "invitations"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    instance_id: Mapped[UUID] = mapped_column(ForeignKey("instances.id"))
+    email: Mapped[str]
+    role: Mapped[Role] = mapped_column(default=Role.MEMBER)
+    token: Mapped[str] = mapped_column(unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+
+
 class MagicLinkToken(Base, TimestampMixin):
     __tablename__ = "magic_link_tokens"
 

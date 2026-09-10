@@ -3,7 +3,7 @@ from collections.abc import AsyncIterator
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from api.domain.user.exceptions import SsoNotConfiguredError
+from api.domain.user.exceptions import InstanceFullError, SsoNotConfiguredError
 from api.domain.user.models import Instance
 from api.domain.user.sso_service import get_or_create_sso_user, read_sso_configuration
 from config.database import get_engine
@@ -80,3 +80,15 @@ async def test_get_or_create_sso_user_reuses_the_existing_user_for_a_known_sub(
         session, instance, sub="sso-subject-2", email="known@example.com"
     )
     assert first.id == second.id
+
+
+async def test_get_or_create_sso_user_stops_at_the_instance_ceiling(
+    session: AsyncSession,
+) -> None:
+    """The provider decides who is authentic, not how many seats the instance sells."""
+    instance = await _create_instance(session, oidc_issuer="https://idp.example.com")
+    instance.max_accounts = 1
+    await get_or_create_sso_user(session, instance, sub="first", email="first@example.com")
+
+    with pytest.raises(InstanceFullError):
+        await get_or_create_sso_user(session, instance, sub="second", email="second@example.com")
