@@ -37,12 +37,13 @@ export function highlightChunk(root: HTMLElement, chunk: string): boolean {
 	if (needle.length < 2) return false;
 
 	const flat = flatten(root);
-	const start = flat.text.indexOf(needle);
-	if (start === -1) {
+	const found = locate(flat.text, needle);
+	if (found === null) {
 		clearKaraoke();
 		return false;
 	}
-	const end = start + needle.length - 1;
+	const { start, length } = found;
+	const end = start + length - 1;
 
 	const range = document.createRange();
 	range.setStart(flat.nodes[start], flat.offsets[start]);
@@ -52,6 +53,24 @@ export function highlightChunk(root: HTMLElement, chunk: string): boolean {
 	CSS.highlights.set(HIGHLIGHT_NAME, new Highlight(range));
 	scrollIntoViewIfNeeded(range);
 	return true;
+}
+
+/**
+ * Where `needle` sits in `haystack`, and how much of it matched.
+ *
+ * The text handed to the voice closes every block on a full stop so the reading breathes, and
+ * that stop is nowhere in the rendered article. Searching for it verbatim would leave every
+ * heading and list item unhighlighted, so a needle that carries an added stop is looked up
+ * without it.
+ */
+function locate(haystack: string, needle: string): { start: number; length: number } | null {
+	const start = haystack.indexOf(needle);
+	if (start !== -1) return { start, length: needle.length };
+
+	const trimmed = needle.replace(/[.!?…]$/, '');
+	if (trimmed.length < 2 || trimmed === needle) return null;
+	const fallback = haystack.indexOf(trimmed);
+	return fallback === -1 ? null : { start: fallback, length: trimmed.length };
 }
 
 function collapse(value: string): string {

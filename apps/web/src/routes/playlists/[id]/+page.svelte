@@ -18,6 +18,7 @@
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { SpeechReader } from '$technical/speech/speech.svelte';
+	import { readableText } from '$technical/speech/readable-text';
 
 	const RATES = [0.8, 1, 1.25, 1.5];
 
@@ -69,7 +70,8 @@
 		try {
 			// The list only carries the summary; the body has to be fetched to read it in full.
 			const detail = await lumia.article.getArticle(article.id);
-			text = new DOMParser().parseFromString(detail.content, 'text/html').body.textContent ?? text;
+			const parsed = new DOMParser().parseFromString(detail.content, 'text/html');
+			text = readableText(parsed.body) || text;
 			await lumia.recommendation.sendFeedback(article.id, { read: true });
 		} catch {
 			// Fall back on the summary rather than skipping the article silently.
