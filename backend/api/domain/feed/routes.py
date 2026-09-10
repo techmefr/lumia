@@ -33,6 +33,9 @@ from worker.technical.connectors.miniflux_client import (
 
 router = APIRouter()
 
+_MAX_OPML_BYTES = 2 * 1024 * 1024
+_UPLOAD_CHUNK_BYTES = 64 * 1024
+
 
 def _to_folder_response(folder: Folder) -> FolderResponse:
     return FolderResponse(id=folder.id, name=folder.name)
@@ -188,6 +191,21 @@ async def add_feed_by_url(
     return _to_feed_response(feed)
 
 
+async def _read_capped(file: UploadFile) -> bytes:
+    """Reads an upload in chunks, refusing one that goes over the cap.
+
+    A subscription export is a list of URLs, so a couple of megabytes is already generous — and
+    reading first, checking after, would mean holding whatever was sent in memory before deciding
+    it was too big.
+    """
+    body = bytearray()
+    while chunk := await file.read(_UPLOAD_CHUNK_BYTES):
+        body += chunk
+        if len(body) > _MAX_OPML_BYTES:
+            raise HTTPException(status_code=status.HTTP_413_CONTENT_TOO_LARGE)
+    return bytes(body)
+
+
 @router.post("/feeds/import-opml", response_model=list[FeedResponse])
 async def import_opml_feeds(
     file: UploadFile,
@@ -196,7 +214,7 @@ async def import_opml_feeds(
     transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
     resolve: Resolver = Depends(get_url_resolver),
 ) -> list[FeedResponse]:
-    xml_bytes = await file.read()
+    xml_bytes = await _read_capped(file)
     try:
         feeds = await import_opml(
             session, user, xml_bytes, miniflux_transport=transport, resolve=resolve

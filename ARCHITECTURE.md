@@ -51,6 +51,11 @@ redirect hop (`fetch_page_html`), because a public URL redirecting to a metadata
 otherwise walk straight past a first-hop-only guard, and the response body is capped so an endless
 one cannot take the process down.
 
+A subscription export is parsed with `defusedxml` (`api/domain/feed/opml_parser.py`) and the upload
+is capped before it is read whole (`_read_capped` in `api/domain/feed/routes.py`, 413 over 2 MB):
+the stdlib XML parser expands entities, so a few kilobytes of nested ones are otherwise enough to
+exhaust the API process.
+
 Passwordless sign-in (`api/domain/user/magic_link_service.py`) issues an opaque token, stores only
 its hash (`MagicLinkToken`, single-use, TTL-bound), and emails a clickable
 `{FRONTEND_URL}/login?magic_token=...` link built from `EmailConfig.frontend_url`. `/login` reads
