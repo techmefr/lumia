@@ -6,14 +6,23 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.domain.user.dependencies import get_current_user
+from api.domain.user.dependencies import get_current_user, require_admin
 from api.domain.user.exceptions import (
+    EmailAlreadyTakenError,
+    InstanceFullError,
+    InvalidInvitationError,
     InvalidMagicLinkTokenError,
     InvalidRefreshTokenError,
     SsoNotConfiguredError,
 )
+from api.domain.user.invitation_service import (
+    accept_invitation,
+    invite_member,
+    list_pending_invitations,
+    revoke_invitation,
+)
 from api.domain.user.magic_link_service import request_magic_link, verify_magic_link_token
-from api.domain.user.models import Instance, Role, User
+from api.domain.user.models import Instance, Invitation, Role, User
 from api.domain.user.refresh_token_service import (
     get_user_id_for_refresh_token,
     issue_refresh_token,
@@ -21,6 +30,9 @@ from api.domain.user.refresh_token_service import (
 )
 from api.domain.user.schemas import (
     AccessTokenResponse,
+    InvitationAcceptRequest,
+    InvitationRequest,
+    InvitationResponse,
     LoginRequest,
     LogoutRequest,
     MagicLinkRequest,
@@ -82,6 +94,89 @@ async def onboard_admin(
     session.add(user)
     await session.commit()
 
+    return await _issue_token_pair(session, user.id)
+
+
+def _to_invitation_response(invitation: Invitation) -> InvitationResponse:
+    return InvitationResponse(
+        id=invitation.id,
+        email=invitation.email,
+        role=invitation.role,
+        expires_at=invitation.expires_at,
+    )
+
+
+async def _current_instance(session: AsyncSession) -> Instance:
+    instance = await session.scalar(select(Instance))
+    if instance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return instance
+
+
+@router.post(
+    "/invitations",
+    response_model=InvitationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_invitation(
+    payload: InvitationRequest,
+    _admin: User = Depends(require_admin),
+    session: AsyncSession = Depends(get_db_session),
+) -> InvitationResponse:
+    instance = await _current_instance(session)
+    try:
+        invitation = await invite_member(session, instance, email=payload.email, role=payload.role)
+    except EmailAlreadyTakenError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT) from exc
+    except InstanceFullError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="the instance has no seat left",
+        ) from exc
+    return _to_invitation_response(invitation)
+
+
+@router.get("/invitations", response_model=list[InvitationResponse])
+async def list_invitations(
+    _admin: User = Depends(require_admin),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[InvitationResponse]:
+    instance = await _current_instance(session)
+    invitations = await list_pending_invitations(session, instance.id)
+    return [_to_invitation_response(invitation) for invitation in invitations]
+
+
+@router.delete("/invitations/{invitation_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_invitation(
+    invitation_id: UUID,
+    _admin: User = Depends(require_admin),
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    instance = await _current_instance(session)
+    try:
+        await revoke_invitation(session, instance.id, invitation_id)
+    except InvalidInvitationError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
+
+
+@router.post(
+    "/invitations/accept",
+    response_model=TokenPairResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def accept_invitation_route(
+    payload: InvitationAcceptRequest,
+    session: AsyncSession = Depends(get_db_session),
+) -> TokenPairResponse:
+    """Unauthenticated on purpose: the token is the only credential the invitee has yet."""
+    try:
+        user = await accept_invitation(
+            session, payload.token, username=payload.username, password=payload.password
+        )
+    except InvalidInvitationError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
+    except (EmailAlreadyTakenError, InstanceFullError) as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT) from exc
     return await _issue_token_pair(session, user.id)
 
 
@@ -194,9 +289,15 @@ async def sso_callback(
     userinfo = await fetch_userinfo(
         document, access_token=tokens["access_token"], transport=transport
     )
-    user = await get_or_create_sso_user(
-        session, instance, sub=userinfo["sub"], email=userinfo["email"]
-    )
+    try:
+        user = await get_or_create_sso_user(
+            session, instance, sub=userinfo["sub"], email=userinfo["email"]
+        )
+    except InstanceFullError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="the instance has no seat left",
+        ) from exc
     return await _issue_token_pair(session, user.id)
 
 

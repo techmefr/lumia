@@ -9,6 +9,7 @@ class AuthConfig(BaseSettings):
     access_token_ttl_minutes: int = 15
     refresh_token_ttl_days: int = 30
     magic_link_ttl_minutes: int = 15
+    invitation_ttl_days: int = 7
 
 
 @lru_cache
