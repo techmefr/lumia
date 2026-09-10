@@ -1,11 +1,17 @@
 from collections.abc import AsyncIterator
 
 import pytest
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from api.domain.user.exceptions import SsoNotConfiguredError
-from api.domain.user.models import Instance
-from api.domain.user.sso_service import ensure_sso_configured, get_or_create_sso_user
+from api.domain.user.exceptions import (
+    InstanceFullError,
+    SsoNotConfiguredError,
+    SsoSubjectMismatchError,
+)
+from api.domain.user.models import Instance, Role, User
+from api.domain.user.sso_service import get_or_create_sso_user, read_sso_configuration
+from api.technical.auth.hashing import hash_password
 from config.database import get_engine
 
 
@@ -23,15 +29,38 @@ async def _create_instance(session: AsyncSession, *, oidc_issuer: str | None) ->
     return instance
 
 
-def test_ensure_sso_configured_rejects_an_instance_without_oidc_issuer() -> None:
-    instance = Instance(max_accounts=10, disk_quota_mb=1000)
+def _configured_instance(**overrides: str | None) -> Instance:
+    settings: dict[str, str | None] = {
+        "oidc_issuer": "https://idp.example.com",
+        "oidc_client_id": "lumia",
+        "oidc_client_secret_encrypted": "encrypted-secret",
+        "oidc_redirect_uri": "https://lumia.example.com/auth/sso/callback",
+    }
+    settings.update(overrides)
+    return Instance(max_accounts=10, disk_quota_mb=1000, **settings)
+
+
+def test_reading_the_configuration_of_an_instance_without_sso_is_refused() -> None:
     with pytest.raises(SsoNotConfiguredError):
-        ensure_sso_configured(instance)
+        read_sso_configuration(Instance(max_accounts=10, disk_quota_mb=1000))
 
 
-def test_ensure_sso_configured_accepts_an_instance_with_oidc_issuer() -> None:
-    instance = Instance(max_accounts=10, disk_quota_mb=1000, oidc_issuer="https://idp.example.com")
-    ensure_sso_configured(instance)
+@pytest.mark.parametrize(
+    "missing",
+    ["oidc_issuer", "oidc_client_id", "oidc_client_secret_encrypted", "oidc_redirect_uri"],
+)
+def test_a_half_configured_instance_is_refused_rather_than_carried_further(missing: str) -> None:
+    with pytest.raises(SsoNotConfiguredError):
+        read_sso_configuration(_configured_instance(**{missing: None}))
+
+
+def test_a_fully_configured_instance_yields_its_four_settings() -> None:
+    sso = read_sso_configuration(_configured_instance())
+
+    assert sso.issuer == "https://idp.example.com"
+    assert sso.client_id == "lumia"
+    assert sso.client_secret_encrypted == "encrypted-secret"
+    assert sso.redirect_uri == "https://lumia.example.com/auth/sso/callback"
 
 
 async def test_get_or_create_sso_user_provisions_a_new_member_on_first_login(
@@ -57,3 +86,115 @@ async def test_get_or_create_sso_user_reuses_the_existing_user_for_a_known_sub(
         session, instance, sub="sso-subject-2", email="known@example.com"
     )
     assert first.id == second.id
+
+
+async def test_a_known_email_is_linked_to_the_existing_account(session: AsyncSession) -> None:
+    """The reader signed up locally, then their administrator turned SSO on. The provider hands
+    us a subject we have never seen for an address we already know: that is the same person, and
+    the email column is unique anyway, so provisioning a second row could only fail."""
+    instance = await _create_instance(session, oidc_issuer="https://idp.example.com")
+    local = User(
+        instance_id=instance.id,
+        email="known@example.com",
+        username="known",
+        password_hash=hash_password("correct-horse-battery-staple"),
+    )
+    session.add(local)
+    await session.commit()
+
+    user = await get_or_create_sso_user(
+        session, instance, sub="sso-subject-3", email="known@example.com"
+    )
+
+    assert user.id == local.id
+    assert user.sso_subject == "sso-subject-3"
+    # Their password still works: linking a provider is not a reason to lock a way in.
+    assert user.password_hash is not None
+    assert await session.scalar(select(func.count()).select_from(User)) == 1
+
+
+async def test_a_linked_account_keeps_its_role(session: AsyncSession) -> None:
+    """Signing in through the provider must not demote the administrator to a member."""
+    instance = await _create_instance(session, oidc_issuer="https://idp.example.com")
+    admin = User(
+        instance_id=instance.id,
+        email="admin@example.com",
+        username="admin",
+        role=Role.ADMIN,
+    )
+    session.add(admin)
+    await session.commit()
+
+    user = await get_or_create_sso_user(
+        session, instance, sub="sso-subject-4", email="admin@example.com"
+    )
+
+    assert user.role == Role.ADMIN
+
+
+async def test_an_account_already_linked_to_another_subject_is_refused(
+    session: AsyncSession,
+) -> None:
+    """Two subjects claiming one address means either a provider that recycles addresses or a
+    take-over attempt. Neither is worth guessing at, and silently moving the account to the new
+    subject would hand it to whoever asked last."""
+    instance = await _create_instance(session, oidc_issuer="https://idp.example.com")
+    await get_or_create_sso_user(session, instance, sub="first-subject", email="one@example.com")
+
+    with pytest.raises(SsoSubjectMismatchError):
+        await get_or_create_sso_user(
+            session, instance, sub="second-subject", email="one@example.com"
+        )
+
+    assert await session.scalar(select(func.count()).select_from(User)) == 1
+
+
+async def test_a_known_sub_whose_address_changed_keeps_the_account(session: AsyncSession) -> None:
+    """The subject is the stable identifier; a renamed mailbox is still the same reader. The
+    address on file is left alone, because it is unique and the new one may belong elsewhere."""
+    instance = await _create_instance(session, oidc_issuer="https://idp.example.com")
+    first = await get_or_create_sso_user(
+        session, instance, sub="stable-subject", email="before@example.com"
+    )
+
+    second = await get_or_create_sso_user(
+        session, instance, sub="stable-subject", email="after@example.com"
+    )
+
+    assert second.id == first.id
+    assert second.email == "before@example.com"
+
+
+async def test_get_or_create_sso_user_stops_at_the_instance_ceiling(
+    session: AsyncSession,
+) -> None:
+    """The provider decides who is authentic, not how many seats the instance sells."""
+    instance = await _create_instance(session, oidc_issuer="https://idp.example.com")
+    instance.max_accounts = 1
+    await get_or_create_sso_user(session, instance, sub="first", email="first@example.com")
+
+    with pytest.raises(InstanceFullError):
+        await get_or_create_sso_user(session, instance, sub="second", email="second@example.com")
+
+
+async def test_linking_an_existing_account_is_allowed_on_a_full_instance(
+    session: AsyncSession,
+) -> None:
+    """Linking takes no seat, so the ceiling has nothing to say about it: refusing here would
+    lock a reader out of the account they already had."""
+    instance = await _create_instance(session, oidc_issuer="https://idp.example.com")
+    instance.max_accounts = 1
+    local = User(
+        instance_id=instance.id,
+        email="known@example.com",
+        username="known",
+        password_hash=hash_password("correct-horse-battery-staple"),
+    )
+    session.add(local)
+    await session.commit()
+
+    user = await get_or_create_sso_user(
+        session, instance, sub="a-subject", email="known@example.com"
+    )
+
+    assert user.id == local.id

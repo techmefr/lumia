@@ -14,6 +14,12 @@ from api.technical.logging.external import (
     describe_error,
     redact_url,
 )
+from api.technical.net.url_guard import (
+    BlockedUrlError,
+    Resolver,
+    ensure_public_http_url,
+    resolve_with_system,
+)
 from worker.technical.connectors.miniflux_client import (
     MinifluxApiError,
     create_category,
@@ -31,6 +37,7 @@ async def import_opml(
     xml_bytes: bytes,
     *,
     miniflux_transport: httpx.AsyncBaseTransport | None = None,
+    resolve: Resolver = resolve_with_system,
 ) -> list[Feed]:
     entries = parse_opml(xml_bytes)
 
@@ -46,6 +53,12 @@ async def import_opml(
             select(Feed).where(Feed.user_id == user.id, Feed.url == entry.url)
         )
         if existing_feed is not None:
+            continue
+
+        try:
+            ensure_public_http_url(entry.url, resolve=resolve)
+        except BlockedUrlError:
+            # One hostile or malformed entry must not abort an import of a hundred good ones.
             continue
 
         folder = await _get_or_create_folder(session, user, entry.folder_name, folder_cache)
@@ -93,7 +106,10 @@ async def add_feed(
     folder_id: UUID | None,
     *,
     miniflux_transport: httpx.AsyncBaseTransport | None = None,
+    resolve: Resolver = resolve_with_system,
 ) -> Feed:
+    ensure_public_http_url(url, resolve=resolve)
+
     folder: Folder | None = None
     if folder_id is not None:
         folder = await session.scalar(

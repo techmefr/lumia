@@ -6,6 +6,7 @@ from api.domain.feed.routes import router as feed_router
 from api.domain.playlist.routes import router as playlist_router
 from api.domain.recommendation.routes import router as recommendation_router
 from api.domain.user.routes import router as user_router
+from api.technical.health.routes import router as health_router
 from api.technical.logging.middleware import REQUEST_ID_HEADER, CorrelationIdMiddleware
 from api.technical.logging.setup import configure_logging
 from config.cors import get_cors_config
@@ -22,6 +23,8 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=[REQUEST_ID_HEADER],
 )
+app.include_router(health_router)
+
 # Added last so it wraps the CORS middleware: a preflight answer carries the id too.
 app.add_middleware(CorrelationIdMiddleware)
 app.include_router(user_router)
