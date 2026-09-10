@@ -17,7 +17,7 @@
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
-	import { SpeechReader } from '$technical/speech/speech.svelte';
+	import { SPEECH_FAILURE_MESSAGES, SpeechReader } from '$technical/speech/speech.svelte';
 	import { readableText } from '$technical/speech/readable-text';
 
 	const RATES = [0.8, 1, 1.25, 1.5];
@@ -82,6 +82,13 @@
 			onDone: () => void playFrom(index + 1)
 		});
 	}
+
+	// The chain stops on its own when a reading fails, since it advances on the done callback.
+	// Without a word on screen, the playlist would just look stuck.
+	$effect(() => {
+		const failure = speech.error;
+		if (failure) toast(t(SPEECH_FAILURE_MESSAGES[failure]));
+	});
 
 	function togglePlayback() {
 		if (!speech.speaking) {

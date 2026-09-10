@@ -412,23 +412,28 @@ describe('SpeechReader when the engine fails', () => {
 		vi.unstubAllGlobals();
 	});
 
-	// One chunk the engine refuses — an unavailable voice, a stray character — must not end the
-	// article: it skips to the next rather than stopping the reading dead.
-	it('skips the chunk it could not speak and carries on', () => {
+	// One chunk the engine refuses mid-article — a stray character, a hiccup — must not end the
+	// reading: it steps over it rather than stopping dead. The reading has to have started for
+	// that to be a hiccup rather than an engine with no voice at all.
+	it('skips a chunk it could not speak once the reading is under way', () => {
 		const reader = new SpeechReader();
-		reader.speak(`${'a'.repeat(200)}. ${'b'.repeat(200)}.`);
+		reader.speak(`${'a'.repeat(200)}. ${'b'.repeat(200)}. ${'c'.repeat(200)}.`);
 
+		engine.finish();
 		engine.fail();
 
 		expect(reader.speaking).toBe(true);
-		expect(engine.spoken).toHaveLength(2);
+		expect(engine.spoken).toHaveLength(3);
+		expect(reader.error).toBe(null);
 	});
 
 	it('reports done when the last chunk is the one that failed', () => {
 		const done = vi.fn();
 		const reader = new SpeechReader();
-		reader.speak('Un article.', { onDone: done });
+		reader.speak(`${'a'.repeat(200)}. ${'b'.repeat(200)}.`);
+		reader.speak(`${'a'.repeat(200)}. ${'b'.repeat(200)}.`, { onDone: done });
 
+		engine.finish();
 		engine.fail();
 
 		expect(done).toHaveBeenCalledTimes(1);
@@ -445,5 +450,108 @@ describe('SpeechReader when the engine fails', () => {
 
 		expect(done).not.toHaveBeenCalled();
 		expect(reader.speaking).toBe(false);
+	});
+});
+
+describe('SpeechReader when the engine produces no sound', () => {
+	let engine: FakeSynthesis;
+
+	beforeEach(() => {
+		engine = fakeSpeechSynthesis();
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	const THREE_CHUNKS = `${'a'.repeat(200)}. ${'b'.repeat(200)}. ${'c'.repeat(200)}.`;
+
+	// The engine answers `end` straight away, without ever starting, when it holds no voice for
+	// the language. Marching on through the queue on that event read the whole article in silence
+	// in one synchronous burst and reported it finished — which marks it read.
+	it('does not walk the whole queue when no chunk is ever spoken', () => {
+		const reader = new SpeechReader();
+		reader.speak(THREE_CHUNKS);
+
+		engine.finishWithoutSpeaking();
+
+		expect(engine.spoken).toHaveLength(1);
+		expect(reader.speaking).toBe(false);
+		expect(reader.progress).toBe(0);
+	});
+
+	it('does not report the article read when nothing was spoken', () => {
+		const done = vi.fn();
+		const reader = new SpeechReader();
+		reader.speak(THREE_CHUNKS, { onDone: done });
+
+		engine.finishWithoutSpeaking();
+
+		expect(done).not.toHaveBeenCalled();
+	});
+
+	it('says why it stopped, so the page can tell the reader', () => {
+		const reader = new SpeechReader();
+		reader.speak(THREE_CHUNKS);
+
+		engine.finishWithoutSpeaking();
+
+		expect(reader.error).toBe('silent');
+	});
+
+	it('gives up on an engine failure rather than skipping to the next chunk', () => {
+		const done = vi.fn();
+		const reader = new SpeechReader();
+		reader.speak(THREE_CHUNKS, { onDone: done });
+
+		engine.fail('synthesis-failed');
+
+		expect(engine.spoken).toHaveLength(1);
+		expect(reader.speaking).toBe(false);
+		expect(reader.error).toBe('engine');
+		expect(done).not.toHaveBeenCalled();
+	});
+
+	it('names a refusal for want of a gesture apart from an engine fault', () => {
+		const reader = new SpeechReader();
+		reader.speak(THREE_CHUNKS);
+
+		engine.fail('not-allowed');
+
+		expect(reader.error).toBe('not-allowed');
+	});
+
+	// pause()/stop()/setRate() cancel the current utterance, and some engines report that as an
+	// error rather than an end. Treating it as a fault would turn every pause into a failure.
+	it('does not treat its own cancel as a failure', () => {
+		const reader = new SpeechReader();
+		reader.speak(THREE_CHUNKS);
+
+		engine.fail('canceled');
+		engine.fail('interrupted');
+
+		expect(reader.error).toBe(null);
+		expect(reader.speaking).toBe(true);
+	});
+
+	it('clears the previous failure when a new reading starts', () => {
+		const reader = new SpeechReader();
+		reader.speak(THREE_CHUNKS);
+		engine.fail('synthesis-failed');
+		expect(reader.error).toBe('engine');
+
+		reader.speak('Un autre article.');
+
+		expect(reader.error).toBe(null);
+		expect(reader.speaking).toBe(true);
+	});
+
+	it('reports no failure on a reading that went through', () => {
+		const reader = new SpeechReader();
+		reader.speak('Un article court.');
+
+		engine.finish();
+
+		expect(reader.error).toBe(null);
 	});
 });

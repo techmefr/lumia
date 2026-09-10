@@ -20,6 +20,7 @@ dependencies = [
     "nltk>=3.9",
     "python-multipart>=0.0.32",
     "trafilatura>=1.12",
+    "defusedxml>=0.7",
 ]
 
 [dependency-groups]
@@ -29,6 +30,8 @@ dev = [
     "pytest-cov>=6.0",
     "ruff>=0.7",
     "mypy>=1.13",
+    "pip-audit>=2.7",
+    "types-defusedxml>=0.7",
 ]
 
 [tool.ruff]

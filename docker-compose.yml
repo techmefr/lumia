@@ -1,7 +1,15 @@
+# Images are pinned to a patch tag rather than a digest: a digest cannot be checked by hand
+# on review, and Dependabot bumps the tag anyway. A floating tag was the real problem — two
+# installs a fortnight apart did not run the same Miniflux.
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.15-alpine
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lumia -d lumia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
       POSTGRES_USER: lumia
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -12,13 +20,18 @@ services:
       - internal
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.11-alpine
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
 
   miniflux-postgres:
-    image: postgres:16-alpine
+    image: postgres:16.15-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: miniflux
@@ -30,7 +43,7 @@ services:
       - internal
 
   miniflux:
-    image: miniflux/miniflux:latest
+    image: miniflux/miniflux:2.3.3
     restart: unless-stopped
     depends_on:
       - miniflux-postgres
@@ -55,10 +68,21 @@ services:
       dockerfile: docker/lumia-backend/Dockerfile
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000
     restart: unless-stopped
+    # Conditioned rather than ordered: without this the API starts while postgres is still
+    # initialising, fails its first connections and needs a restart nobody asked for.
     depends_on:
-      - postgres
-      - redis
-      - miniflux
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      miniflux:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     environment:
       DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
@@ -75,7 +99,10 @@ services:
       MINIFLUX_PASSWORD: ${MINIFLUX_PASSWORD}
       MINIFLUX_WEBHOOK_SECRET: ${MINIFLUX_WEBHOOK_SECRET}
       DEEPL_API_KEY: ${DEEPL_API_KEY}
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://localhost:8080}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
     ports:
       - "8000:8000"
     networks:
@@ -89,12 +116,22 @@ services:
     command: arq worker.technical.queue.WorkerSettings
     restart: unless-stopped
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "arq", "--check", "worker.technical.queue.WorkerSettings"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     environment:
       DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
       DEEPL_API_KEY: ${DEEPL_API_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
     networks:
       - internal
 
@@ -104,7 +141,8 @@ services:
       dockerfile: docker/lumia-web/Dockerfile
     restart: unless-stopped
     depends_on:
-      - lumia-backend-api
+      lumia-backend-api:
+        condition: service_healthy
     ports:
       - "8080:80"
     networks:
