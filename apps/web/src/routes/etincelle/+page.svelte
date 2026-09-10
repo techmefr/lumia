@@ -48,7 +48,7 @@
 
 <div class="flex flex-col gap-6">
 	<div>
-		<h1 class="flex items-center gap-2 text-2xl font-semibold">
+		<h1 data-test-page="etincelle" class="flex items-center gap-2 text-2xl font-semibold">
 			<Sparkles class="size-6 text-primary" />
 			{t('etincelle.title')}
 		</h1>

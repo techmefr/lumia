@@ -242,7 +242,7 @@
 	/>
 
 	<div class="flex min-w-0 flex-1 flex-col gap-6">
-		<h1 class="text-2xl font-semibold">{t('feeds.title')}</h1>
+		<h1 data-test-page="feeds" class="text-2xl font-semibold">{t('feeds.title')}</h1>
 
 		{#if error}
 			<p role="alert" class="text-sm text-destructive">{t(error)}</p>

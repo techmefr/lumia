@@ -300,7 +300,7 @@
 
 	<div class="flex min-w-0 flex-1 flex-col gap-6">
 		<div class="flex flex-wrap items-center justify-between gap-3">
-			<h1 class="flex items-center gap-2 text-2xl font-semibold">
+			<h1 data-test-page="articles" class="flex items-center gap-2 text-2xl font-semibold">
 				<Newspaper class="size-6 text-primary" />
 				{t('articles.title')}
 				{#if unread.total > 0}
