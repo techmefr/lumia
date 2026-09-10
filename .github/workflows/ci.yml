@@ -61,7 +61,7 @@ jobs:
     # server-side defaults, so an in-memory stand-in would pass on code the real database rejects.
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16.15-alpine
         env:
           POSTGRES_USER: lumia
           POSTGRES_PASSWORD: lumia
@@ -74,7 +74,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
       redis:
-        image: redis:7-alpine
+        image: redis:7.4.11-alpine
         ports:
           - 6379:6379
         options: >-
@@ -129,7 +129,7 @@ jobs:
     # exactly the failure that shipped once already.
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16.15-alpine
         env:
           POSTGRES_USER: lumia
           POSTGRES_PASSWORD: lumia
@@ -190,3 +190,59 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  audit:
+    name: Dependencies — vulnerability audit
+    runs-on: ubuntu-latest
+
+    # An advisory is published without anyone pushing, so this job can go red on a commit that
+    # changed nothing. It stays out of the other jobs' way and is deliberately not a blocking
+    # check: a fresh CVE must not stop an unrelated pull request from merging.
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Low and moderate advisories on a build-time dependency are noise; high and critical are
+      # the ones worth interrupting someone for.
+      - name: Audit the workspace dependencies
+        run: pnpm audit --audit-level high
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Sync the backend dependencies
+        run: uv sync --all-groups --frozen
+        working-directory: backend
+
+      # pip-audit exposes no severity, so the gate script resolves each advisory against the
+      # GitHub advisory database; the token is only there to stay clear of the anonymous rate
+      # limit on a report with many advisories.
+      - name: Audit the backend dependencies
+        working-directory: backend
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # PYSEC-2026-3740 has no released fix and only affects nltk's model-artifact APIs
+          # (TransitionParser, PerceptronTagger, maxent); we only use SnowballStemmer, and never
+          # on a caller-supplied path. Drop the flag once nltk ships a fix.
+          uv run pip-audit \
+            --ignore-vuln PYSEC-2026-3740 \
+            --ignore-vuln GHSA-8mgp-746c-j5xp \
+            --ignore-vuln CVE-2026-81726 \
+            --format json --output pip-audit.json || true
+          python ../.github/scripts/pip_audit_gate.py pip-audit.json
+
+      - name: Upload the backend audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-backend
+          path: backend/pip-audit.json
+          if-no-files-found: warn
