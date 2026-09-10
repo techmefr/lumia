@@ -304,6 +304,8 @@ export const pt: Catalogue = {
 	'swipe.readLater': 'Ler',
 	'swipe.remaining': '{title} — faltam {count} artigo(s)',
 	'swipe.favoriteAction': 'Marcar como favorito',
+	'swipe.expand': 'Expandir',
+	'swipe.collapse': 'Recolher',
 
 	'flip.dialog': 'Folhear os artigos',
 	'flip.hint': '← → para virar páginas · Esc para sair',

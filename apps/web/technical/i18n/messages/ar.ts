@@ -292,6 +292,8 @@ export const ar: Catalogue = {
 	'swipe.readLater': 'للقراءة',
 	'swipe.remaining': '{title} — بقي {count} مقال',
 	'swipe.favoriteAction': 'الإضافة إلى المفضّلة',
+	'swipe.expand': 'توسيع',
+	'swipe.collapse': 'تصغير',
 
 	'flip.dialog': 'تقليب المقالات',
 	'flip.hint': '← → لتقليب الصفحات · Esc للخروج',

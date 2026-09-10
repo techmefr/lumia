@@ -303,6 +303,8 @@ export const es: Catalogue = {
 	'swipe.readLater': 'Leer',
 	'swipe.remaining': '{title} — quedan {count} artículo(s)',
 	'swipe.favoriteAction': 'Marcar como favorito',
+	'swipe.expand': 'Desplegar',
+	'swipe.collapse': 'Plegar',
 
 	'flip.dialog': 'Hojear los artículos',
 	'flip.hint': '← → para pasar páginas · Esc para salir',
