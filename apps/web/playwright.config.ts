@@ -30,10 +30,14 @@ export default defineConfig({
 	// The demo build is the whole point of running against it: a static SPA seeded in memory, so a
 	// journey needs no backend, no database and no fixture reset between tests.
 	webServer: {
-		command: `pnpm run build && pnpm run preview --port ${PORT} --strictPort`,
+		// `--host 127.0.0.1` rather than vite's default: it binds the name `localhost`, which on a
+		// runner where that resolves to ::1 leaves nothing listening on the address probed below.
+		command: `pnpm run build && pnpm run preview --host 127.0.0.1 --port ${PORT} --strictPort`,
 		url: `http://127.0.0.1:${PORT}/articles`,
 		env: { VITE_DEMO: 'true', BASE_PATH: '' },
 		reuseExistingServer: !isCI,
+		// Piped rather than dropped: without it a server that never comes up fails with no clue why.
+		stdout: 'pipe',
 		timeout: 240_000
 	}
 });
