@@ -32,7 +32,11 @@ from api.domain.user.schemas import (
     SsoCallbackRequest,
     TokenPairResponse,
 )
-from api.domain.user.sso_service import ensure_sso_configured, get_or_create_sso_user
+from api.domain.user.sso_service import (
+    SsoConfiguration,
+    get_or_create_sso_user,
+    read_sso_configuration,
+)
 from api.technical.auth.hashing import hash_password, verify_password
 from api.technical.auth.jwt import create_access_token
 from api.technical.auth.oidc_client import (
@@ -141,15 +145,14 @@ async def verify_magic_link(
     return await _issue_token_pair(session, user_id)
 
 
-async def _get_sso_configured_instance(session: AsyncSession) -> Instance:
+async def _read_sso_instance(session: AsyncSession) -> tuple[Instance, SsoConfiguration]:
     instance = await session.scalar(select(Instance))
     if instance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     try:
-        ensure_sso_configured(instance)
+        return instance, read_sso_configuration(instance)
     except SsoNotConfiguredError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
-    return instance
 
 
 @router.get("/auth/sso/login")
@@ -157,15 +160,12 @@ async def sso_login(
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_oidc_transport),
 ) -> RedirectResponse:
-    instance = await _get_sso_configured_instance(session)
-    assert instance.oidc_issuer is not None
-    assert instance.oidc_client_id is not None
-    assert instance.oidc_redirect_uri is not None
-    document = await discover(instance.oidc_issuer, transport=transport)
+    _, sso = await _read_sso_instance(session)
+    document = await discover(sso.issuer, transport=transport)
     authorize_url = build_authorize_url(
         document,
-        client_id=instance.oidc_client_id,
-        redirect_uri=instance.oidc_redirect_uri,
+        client_id=sso.client_id,
+        redirect_uri=sso.redirect_uri,
         state=generate_opaque_token(),
     )
     return RedirectResponse(authorize_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
@@ -177,17 +177,13 @@ async def sso_callback(
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_oidc_transport),
 ) -> TokenPairResponse:
-    instance = await _get_sso_configured_instance(session)
-    assert instance.oidc_issuer is not None
-    assert instance.oidc_client_id is not None
-    assert instance.oidc_client_secret_encrypted is not None
-    assert instance.oidc_redirect_uri is not None
-    document = await discover(instance.oidc_issuer, transport=transport)
+    instance, sso = await _read_sso_instance(session)
+    document = await discover(sso.issuer, transport=transport)
     tokens = await exchange_code_for_tokens(
         document,
-        client_id=instance.oidc_client_id,
-        client_secret=decrypt_secret(instance.oidc_client_secret_encrypted),
-        redirect_uri=instance.oidc_redirect_uri,
+        client_id=sso.client_id,
+        client_secret=decrypt_secret(sso.client_secret_encrypted),
+        redirect_uri=sso.redirect_uri,
         code=payload.code,
         transport=transport,
     )

@@ -94,6 +94,7 @@ async def _assert_article_belongs_to_user(
 async def _reload(session: AsyncSession, playlist_id: UUID) -> Playlist:
     """Re-selects so `items` reflects the deletions/insertions just committed."""
     playlist = await session.scalar(select(Playlist).where(Playlist.id == playlist_id))
-    assert playlist is not None
+    if playlist is None:
+        raise PlaylistNotFoundError
     await session.refresh(playlist, ["items"])
     return playlist
