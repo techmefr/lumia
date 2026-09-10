@@ -1,4 +1,5 @@
 import json
+import logging
 
 import httpx
 import pytest
@@ -77,3 +78,21 @@ async def test_summarize_raises_when_only_non_text_blocks_come_back() -> None:
 
     with pytest.raises(LlmApiError):
         await _summarizer(handler).summarize("texte")
+
+
+async def test_summarize_logs_the_url_and_the_status_of_a_rejected_call(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(401, text="invalid x-api-key")
+
+    summarizer = AnthropicSummarizer(
+        api_key="wrong", model="claude-test", transport=httpx.MockTransport(handler)
+    )
+    with caplog.at_level(logging.WARNING), pytest.raises(LlmApiError):
+        await summarizer.summarize("Un texte a resumer")
+
+    record = caplog.records[-1]
+    assert record.service == "anthropic"  # type: ignore[attr-defined]
+    assert record.status_code == 401  # type: ignore[attr-defined]
+    assert record.url.endswith("/messages")  # type: ignore[attr-defined]

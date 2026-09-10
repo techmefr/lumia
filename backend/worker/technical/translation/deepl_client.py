@@ -1,7 +1,14 @@
+import logging
+
 import httpx
 
+from api.technical.logging.external import log_external_failure
 from config.deepl import get_deepl_config
 from worker.technical.translation.base import TranslationApiError
+
+SERVICE_NAME = "deepl"
+
+logger = logging.getLogger(__name__)
 
 
 class DeeplApiError(TranslationApiError):
@@ -58,5 +65,12 @@ class DeeplTranslator:
                 json={"text": [text], "target_lang": code},
             )
             if response.status_code >= 400:
+                log_external_failure(
+                    logger,
+                    service=SERVICE_NAME,
+                    operation="translate",
+                    url=str(response.request.url),
+                    status_code=response.status_code,
+                )
                 raise DeeplApiError(response.text)
             return str(response.json()["translations"][0]["text"])
