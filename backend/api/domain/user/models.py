@@ -100,6 +100,20 @@ class RefreshToken(Base, TimestampMixin):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class OidcLoginAttempt(Base, TimestampMixin):
+    """One SSO login in flight, so the callback can prove it answers a login we started."""
+
+    __tablename__ = "oidc_login_attempts"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    state: Mapped[str] = mapped_column(unique=True)
+    # The nonce is kept in clear, unlike the state: it is not a credential anyone can present, it
+    # is compared against a claim inside a token the provider had to sign.
+    nonce: Mapped[str]
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+
+
 class MagicLinkToken(Base, TimestampMixin):
     __tablename__ = "magic_link_tokens"
 

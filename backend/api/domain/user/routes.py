@@ -10,10 +10,12 @@ from api.domain.user.dependencies import get_current_user
 from api.domain.user.exceptions import (
     InvalidMagicLinkTokenError,
     InvalidRefreshTokenError,
+    InvalidSsoLoginAttemptError,
     SsoNotConfiguredError,
 )
 from api.domain.user.magic_link_service import request_magic_link, verify_magic_link_token
 from api.domain.user.models import Instance, Role, User
+from api.domain.user.oidc_login_service import consume_login_attempt, start_login_attempt
 from api.domain.user.refresh_token_service import (
     get_user_id_for_refresh_token,
     issue_refresh_token,
@@ -36,13 +38,17 @@ from api.domain.user.sso_service import ensure_sso_configured, get_or_create_sso
 from api.technical.auth.hashing import hash_password, verify_password
 from api.technical.auth.jwt import create_access_token
 from api.technical.auth.oidc_client import (
+    InsecureIssuerError,
+    InvalidIdTokenError,
+    OidcDiscoveryDocument,
     build_authorize_url,
     discover,
     exchange_code_for_tokens,
+    fetch_jwks,
     fetch_userinfo,
     get_oidc_transport,
+    verify_id_token,
 )
-from api.technical.auth.tokens import generate_opaque_token
 from api.technical.crypto.secret_box import decrypt_secret, encrypt_secret
 from api.technical.db import get_db_session
 
@@ -152,6 +158,18 @@ async def _get_sso_configured_instance(session: AsyncSession) -> Instance:
     return instance
 
 
+async def _discover_or_400(
+    issuer: str, transport: httpx.AsyncBaseTransport | None
+) -> OidcDiscoveryDocument:
+    try:
+        return await discover(issuer, transport=transport)
+    except InsecureIssuerError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="the configured OIDC issuer is not an https URL",
+        ) from exc
+
+
 @router.get("/auth/sso/login")
 async def sso_login(
     session: AsyncSession = Depends(get_db_session),
@@ -161,12 +179,14 @@ async def sso_login(
     assert instance.oidc_issuer is not None
     assert instance.oidc_client_id is not None
     assert instance.oidc_redirect_uri is not None
-    document = await discover(instance.oidc_issuer, transport=transport)
+    document = await _discover_or_400(instance.oidc_issuer, transport)
+    state, nonce = await start_login_attempt(session)
     authorize_url = build_authorize_url(
         document,
         client_id=instance.oidc_client_id,
         redirect_uri=instance.oidc_redirect_uri,
-        state=generate_opaque_token(),
+        state=state,
+        nonce=nonce,
     )
     return RedirectResponse(authorize_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
@@ -182,7 +202,12 @@ async def sso_callback(
     assert instance.oidc_client_id is not None
     assert instance.oidc_client_secret_encrypted is not None
     assert instance.oidc_redirect_uri is not None
-    document = await discover(instance.oidc_issuer, transport=transport)
+    try:
+        nonce = await consume_login_attempt(session, payload.state)
+    except InvalidSsoLoginAttemptError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
+
+    document = await _discover_or_400(instance.oidc_issuer, transport)
     tokens = await exchange_code_for_tokens(
         document,
         client_id=instance.oidc_client_id,
@@ -191,12 +216,38 @@ async def sso_callback(
         code=payload.code,
         transport=transport,
     )
-    userinfo = await fetch_userinfo(
-        document, access_token=tokens["access_token"], transport=transport
-    )
-    user = await get_or_create_sso_user(
-        session, instance, sub=userinfo["sub"], email=userinfo["email"]
-    )
+    id_token = tokens.get("id_token")
+    if not isinstance(id_token, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="the provider returned no id_token",
+        )
+    try:
+        claims = verify_id_token(
+            id_token,
+            jwks=await fetch_jwks(document, transport=transport),
+            issuer=document.issuer,
+            client_id=instance.oidc_client_id,
+            nonce=nonce,
+        )
+    except InvalidIdTokenError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
+
+    email = claims.get("email")
+    if not email:
+        # Some providers keep the address out of the id_token; the subject still comes from the
+        # signed claims, so /userinfo only ever fills in the label, never the identity.
+        userinfo = await fetch_userinfo(
+            document, access_token=tokens["access_token"], transport=transport
+        )
+        email = userinfo.get("email")
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="the provider returned no email address",
+        )
+
+    user = await get_or_create_sso_user(session, instance, sub=str(claims["sub"]), email=str(email))
     return await _issue_token_pair(session, user.id)
 
 
