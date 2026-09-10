@@ -8,3 +8,7 @@ class InvalidMagicLinkTokenError(Exception):
 
 class SsoNotConfiguredError(Exception):
     pass
+
+
+class LastAdminError(Exception):
+    pass
