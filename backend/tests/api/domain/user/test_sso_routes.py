@@ -79,6 +79,34 @@ async def test_sso_callback_returns_404_when_instance_has_no_oidc_config(
     assert response.status_code == 404
 
 
+async def _clear_sso_field(field: str) -> None:
+    session_factory = async_sessionmaker(get_engine(), expire_on_commit=False)
+    async with session_factory() as session:
+        instance = (await session.scalars(select(Instance))).one()
+        setattr(instance, field, None)
+        await session.commit()
+
+
+# An instance whose SSO is half filled in used to reach the flow and blow up on an assert; it is a
+# configuration that is simply not usable, so it answers like an instance without SSO at all.
+@pytest.mark.parametrize(
+    "missing",
+    ["oidc_issuer", "oidc_client_id", "oidc_client_secret_encrypted", "oidc_redirect_uri"],
+)
+async def test_a_half_configured_instance_returns_404_rather_than_failing(
+    client: httpx.AsyncClient, missing: str
+) -> None:
+    await _onboard(client)
+    await _configure_sso()
+    await _clear_sso_field(missing)
+
+    login = await client.get("/auth/sso/login")
+    callback = await client.post("/auth/sso/callback", json={"code": "irrelevant"})
+
+    assert login.status_code == 404
+    assert callback.status_code == 404
+
+
 async def test_sso_login_redirects_to_the_authorization_endpoint(
     client: httpx.AsyncClient,
 ) -> None:
