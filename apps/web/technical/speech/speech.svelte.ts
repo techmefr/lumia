@@ -8,6 +8,8 @@
  */
 import type { MessageKey } from '$technical/i18n/i18n.svelte';
 
+import { BLOCK_SEPARATOR } from './readable-text';
+
 const MAX_CHUNK_LENGTH = 220;
 
 /**
@@ -25,6 +27,18 @@ export const SPEECH_FAILURE_MESSAGES: Record<SpeechFailure, MessageKey> = {
 };
 
 export function splitIntoChunks(text: string): string[] {
+	// No chunk may straddle a block boundary: the voice would run two paragraphs together, and the
+	// karaoke highlight looks its chunk up inside a single block of the rendered article.
+	if (text.includes(BLOCK_SEPARATOR)) {
+		return text
+			.split(BLOCK_SEPARATOR)
+			.flatMap((block) => splitIntoChunks(block))
+			.filter(Boolean);
+	}
+	return chunkOneBlock(text);
+}
+
+function chunkOneBlock(text: string): string[] {
 	const sentences = text
 		.replace(/\s+/g, ' ')
 		.trim()

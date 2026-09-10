@@ -21,6 +21,7 @@
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { SPEECH_FAILURE_MESSAGES, SpeechReader } from '$technical/speech/speech.svelte';
+	import { readableText } from '$technical/speech/readable-text';
 	import { clearKaraoke, highlightChunk } from '$technical/speech/karaoke';
 	import AddToPlaylist from '$domain/playlist/add-to-playlist.svelte';
 
@@ -99,7 +100,7 @@
 			speech.resume();
 			return;
 		}
-		const text = `${article.title}. ${contentEl?.textContent ?? ''}`;
+		const text = `${article.title}. ${contentEl ? readableText(contentEl) : ''}`;
 		speech.speak(text, { onDone: () => toast(t('article.speechDone')) });
 	}
 
