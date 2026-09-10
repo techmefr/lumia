@@ -4,6 +4,7 @@ import httpx
 import pytest
 
 from api.main import app
+from api.technical.net.url_guard import get_url_resolver
 from worker.technical.connectors.miniflux_client import get_miniflux_transport
 
 ADMIN_PAYLOAD = {
@@ -22,6 +23,10 @@ FEEDLY_OPML = b"""<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
+def _resolve_to_the_public_internet(host: str) -> list[str]:
+    return ["93.184.216.34"]
+
+
 def _miniflux_handler(request: httpx.Request) -> httpx.Response:
     if request.method == "GET" and request.url.path == "/v1/categories":
         return httpx.Response(200, json=[])
@@ -36,9 +41,11 @@ async def client(db_schema: None) -> AsyncIterator[httpx.AsyncClient]:
     app.dependency_overrides[get_miniflux_transport] = lambda: httpx.MockTransport(
         _miniflux_handler
     )
+    app.dependency_overrides[get_url_resolver] = lambda: _resolve_to_the_public_internet
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as async_client:
         yield async_client
     app.dependency_overrides.pop(get_miniflux_transport, None)
+    app.dependency_overrides.pop(get_url_resolver, None)
 
 
 async def _headers(client: httpx.AsyncClient) -> dict[str, str]:

@@ -128,7 +128,7 @@ describe('createHttpClient', () => {
 		it('refreshes and replays the request, so the reader sees no interruption', async () => {
 			const calls = scriptedFetch([
 				json({ detail: 'expired' }, 401),
-				json({ access_token: 'access-2' }),
+				json({ access_token: 'access-2', refresh_token: 'refresh-2' }),
 				json({ id: 'article-1' })
 			]);
 			const store = memoryStore({ access: 'access-1', refresh: 'refresh-1' });
@@ -137,6 +137,20 @@ describe('createHttpClient', () => {
 			await expect(client.request('/articles/article-1')).resolves.toEqual({ id: 'article-1' });
 			expect(store.getAccessToken()).toBe('access-2');
 			expect(calls[2].headers.authorization).toBe('Bearer access-2');
+		});
+
+		it('stores the rotated refresh token, so the next refresh is not refused', async () => {
+			scriptedFetch([
+				json({ detail: 'expired' }, 401),
+				json({ access_token: 'access-2', refresh_token: 'refresh-2' }),
+				json({ id: 'article-1' })
+			]);
+			const store = memoryStore({ access: 'access-1', refresh: 'refresh-1' });
+			const client = createHttpClient({ baseUrl: 'https://lumia.test', tokenStore: store });
+
+			await client.request('/articles/article-1');
+
+			expect(store.getRefreshToken()).toBe('refresh-2');
 		});
 
 		it('gives up without a refresh token instead of looping', async () => {
@@ -172,7 +186,7 @@ describe('createHttpClient', () => {
 		it('retries only once, so a server stuck on 401 does not spin', async () => {
 			const calls = scriptedFetch([
 				json({ detail: 'expired' }, 401),
-				json({ access_token: 'access-2' }),
+				json({ access_token: 'access-2', refresh_token: 'refresh-2' }),
 				json({ detail: 'expired again' }, 401)
 			]);
 			const client = createHttpClient({
