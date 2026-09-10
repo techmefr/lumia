@@ -19,6 +19,12 @@ from api.domain.article.schemas import (
     TranslateArticleRequest,
 )
 from api.domain.feed.models import Feed
+from api.domain.instance.exceptions import (
+    AccountQuotaExceededError,
+    InstanceNotProvisionedError,
+)
+from api.domain.instance.settings_service import get_instance
+from api.domain.instance.usage_service import ensure_within_disk_quota
 from api.domain.recommendation.models import FilterMode, UserArticleFeedback
 from api.domain.recommendation.read_service import ReadState, fetch_read_state
 from api.domain.recommendation.relevance import (
@@ -186,6 +192,20 @@ async def save_article_url(
     session: AsyncSession = Depends(get_db_session),
     page_extractor: PageExtractor = Depends(get_page_extractor),
 ) -> ArticleSummaryResponse:
+    try:
+        instance = await get_instance(session)
+        await ensure_within_disk_quota(session, instance, user)
+    except InstanceNotProvisionedError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
+    except AccountQuotaExceededError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=(
+                f"Votre compte occupe {exc.used_mb} Mo sur les {exc.quota_mb} Mo autorisés : "
+                "supprimez des articles avant d'en enregistrer un nouveau"
+            ),
+        ) from exc
+
     try:
         article = await save_url(session, user, payload.url, page_extractor=page_extractor)
     except PageFetchError as exc:

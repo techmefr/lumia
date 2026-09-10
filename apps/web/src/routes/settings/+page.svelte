@@ -9,6 +9,8 @@
 	import AiSettings from '$domain/settings/ai-settings.svelte';
 	import FilterRules from '$domain/settings/filter-rules.svelte';
 	import NotificationSettings from '$domain/settings/notification-settings.svelte';
+	import InstanceAdmin from '$domain/settings/instance-admin.svelte';
+	import { lumia } from '$technical/api/client';
 	import {
 		getTheme,
 		setTheme,
@@ -85,6 +87,8 @@
 	let fontScale = $state(1);
 	let fontPair = $state(FONT_PAIR_PRESETS[0].id);
 	let comfort = $state(false);
+	// The API is the real guard; hiding the section only spares a member a panel of 403s.
+	let isAdmin = $state(false);
 
 	function pickTheme(next: Theme) {
 		setTheme(next);
@@ -118,6 +122,14 @@
 		fontScale = getFontScale();
 		fontPair = getFontPair();
 		comfort = isReadingComfort();
+		void lumia.user
+			.getMe()
+			.then((me) => {
+				isAdmin = me.role === 'admin';
+			})
+			.catch(() => {
+				isAdmin = false;
+			});
 	});
 </script>
 
@@ -320,4 +332,8 @@
 	<FilterRules />
 
 	<AiSettings />
+
+	{#if isAdmin}
+		<InstanceAdmin />
+	{/if}
 </div>
