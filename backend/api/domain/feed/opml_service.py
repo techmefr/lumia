@@ -22,13 +22,42 @@ from api.technical.net.url_guard import (
 )
 from worker.technical.connectors.miniflux_client import (
     MinifluxApiError,
+    MinifluxFeedDetail,
+    MinifluxKnownFeed,
     create_category,
     create_feed,
     get_feed,
     list_categories,
+    list_feeds,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _comparable(url: str) -> str:
+    """Two spellings of one address must not read as two feeds.
+
+    Miniflux stores the URL it was handed, so an instance set up years ago may hold a spelling
+    that differs from the one a reader types today. Only differences with no effect on what is
+    fetched are flattened here.
+    """
+    scheme, _, rest = url.partition("://")
+    host, slash, path = rest.partition("/")
+    return f"{scheme.lower()}://{host.lower()}{slash}{path}".rstrip("/")
+
+
+async def find_feed_in_miniflux(
+    url: str, *, transport: httpx.AsyncBaseTransport | None
+) -> MinifluxKnownFeed | None:
+    """The feed the instance already carries for this URL, if it carries one.
+
+    Lumia is regularly pointed at a Miniflux that has been running for years. Asking it for a
+    second copy of a feed it already has is refused outright, so without this lookup the feeds
+    that matter most to such a reader are the ones they cannot add.
+    """
+    wanted = _comparable(url)
+    known = await list_feeds(transport=transport)
+    return next((feed for feed in known if _comparable(feed.feed_url) == wanted), None)
 
 
 async def import_opml(
@@ -129,10 +158,14 @@ async def add_feed(
         )
 
     try:
-        miniflux_feed = await create_feed(
-            url, category_id=category_id, transport=miniflux_transport
-        )
-        detail = await get_feed(miniflux_feed.feed_id, transport=miniflux_transport)
+        known = await find_feed_in_miniflux(url, transport=miniflux_transport)
+        if known is not None:
+            detail = MinifluxFeedDetail(feed_id=known.feed_id, title=known.title)
+        else:
+            miniflux_feed = await create_feed(
+                url, category_id=category_id, transport=miniflux_transport
+            )
+            detail = await get_feed(miniflux_feed.feed_id, transport=miniflux_transport)
     except (MinifluxApiError, httpx.HTTPError) as exc:
         raise FeedUnreachableError from exc
 
@@ -189,6 +222,10 @@ async def _register_with_miniflux(
             category = await create_category(entry.folder_name, transport=transport)
             category_id = category.category_id
             category_id_by_folder_name[entry.folder_name] = category_id
+
+    known = await find_feed_in_miniflux(entry.url, transport=transport)
+    if known is not None:
+        return str(known.feed_id)
 
     miniflux_feed = await create_feed(entry.url, category_id=category_id, transport=transport)
     return str(miniflux_feed.feed_id)
