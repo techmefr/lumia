@@ -1,3 +1,5 @@
+import logging
+
 import httpx
 import pytest
 
@@ -92,3 +94,19 @@ async def test_get_feed_raises_on_an_error_response() -> None:
 
     with pytest.raises(MinifluxApiError):
         await get_feed(7, transport=httpx.MockTransport(handler))
+
+
+async def test_create_feed_logs_the_url_and_the_status_of_a_rejected_call(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(502, text="bad gateway")
+
+    with caplog.at_level(logging.WARNING), pytest.raises(MinifluxApiError):
+        await create_feed("https://example.test/rss", transport=httpx.MockTransport(handler))
+
+    record = caplog.records[-1]
+    assert record.service == "miniflux"  # type: ignore[attr-defined]
+    assert record.operation == "create_feed"  # type: ignore[attr-defined]
+    assert record.status_code == 502  # type: ignore[attr-defined]
+    assert record.url.endswith("/v1/feeds")  # type: ignore[attr-defined]

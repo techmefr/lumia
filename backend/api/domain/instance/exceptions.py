@@ -2,10 +2,6 @@ class InstanceNotProvisionedError(Exception):
     pass
 
 
-class InstanceFullError(Exception):
-    pass
-
-
 class MaxAccountsBelowCurrentCountError(Exception):
     pass
 

@@ -271,6 +271,9 @@ export const ru: Catalogue = {
 	'article.resume': 'Продолжить',
 	'article.pause': 'Пауза',
 	'article.speechDone': 'Чтение закончено.',
+	'article.speechFailed.silent': 'На этом устройстве нет голоса для этого языка.',
+	'article.speechFailed.engine': 'Синтез речи не удался.',
+	'article.speechFailed.not-allowed': 'Браузер отказался читать. Коснитесь страницы и попробуйте снова.',
 	'article.share': 'Поделиться',
 	'article.linkCopied': 'Ссылка скопирована',
 	'article.like': 'Нравится',
@@ -301,6 +304,8 @@ export const ru: Catalogue = {
 	'swipe.readLater': 'Позже',
 	'swipe.remaining': '{title} — осталось статей: {count}',
 	'swipe.favoriteAction': 'Добавить в избранное',
+	'swipe.expand': 'Развернуть',
+	'swipe.collapse': 'Свернуть',
 
 	'flip.dialog': 'Пролистать статьи',
 	'flip.hint': '← → листать страницы · Esc выйти',

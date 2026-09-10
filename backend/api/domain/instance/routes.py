@@ -9,13 +9,11 @@ from api.domain.instance.access_request_service import (
     reject_access_request,
     request_access,
 )
-from api.domain.instance.capacity_service import count_accounts
 from api.domain.instance.exceptions import (
     AccessRequestAlreadyDecidedError,
     AccessRequestNotFoundError,
     AccessRequestsClosedError,
     EmailAlreadyRegisteredError,
-    InstanceFullError,
     InstanceNotProvisionedError,
     MaxAccountsBelowCurrentCountError,
 )
@@ -31,6 +29,8 @@ from api.domain.instance.schemas import (
 from api.domain.instance.settings_service import get_instance, update_instance_settings
 from api.domain.instance.usage_service import list_account_usages
 from api.domain.user.dependencies import require_admin
+from api.domain.user.exceptions import InstanceFullError
+from api.domain.user.invitation_service import count_accounts
 from api.domain.user.models import Instance, User
 from api.technical.db import get_db_session
 
@@ -76,7 +76,7 @@ async def read_instance_settings(
         max_accounts=instance.max_accounts,
         disk_quota_mb=instance.disk_quota_mb,
         access_mode=instance.access_mode,
-        account_count=await count_accounts(session),
+        account_count=await count_accounts(session, instance.id),
     )
 
 
@@ -104,7 +104,7 @@ async def patch_instance_settings(
         max_accounts=instance.max_accounts,
         disk_quota_mb=instance.disk_quota_mb,
         access_mode=instance.access_mode,
-        account_count=await count_accounts(session),
+        account_count=await count_accounts(session, instance.id),
     )
 
 

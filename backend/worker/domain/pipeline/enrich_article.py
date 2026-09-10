@@ -10,6 +10,7 @@ from api.domain.article.models import Article, ArticleKeyword, Author, Category,
 from api.domain.feed.models import Feed, SourceType
 from api.domain.user.models import AIProvider, ReadingLang, User
 from api.technical.crypto.secret_box import decrypt_secret
+from api.technical.logging.external import EXTERNAL_CALL_FAILED_EVENT, describe_error
 from worker.domain.extraction.stemming_en import stem_en
 from worker.domain.extraction.stemming_fr import stem_fr
 from worker.domain.extraction.tfidf import extract_keywords
@@ -124,7 +125,15 @@ async def _summarize(text: str, summarizer: Summarizer | None) -> str:
         summary = await summarizer.summarize(text)
     except (LlmApiError, httpx.HTTPError) as exc:
         # A dead provider or a rejected key must not cost the article its summary.
-        logger.warning("llm summary failed, falling back to the extractive one: %s", exc)
+        logger.warning(
+            "llm summary failed, falling back to the extractive one",
+            extra={
+                "event": EXTERNAL_CALL_FAILED_EVENT,
+                "service": "llm",
+                "operation": "summarize",
+                "error": describe_error(exc),
+            },
+        )
         return summarize_extractive(text)
     return summary.strip() or summarize_extractive(text)
 
@@ -151,7 +160,15 @@ async def _localize(
             )
         except (TranslationApiError, httpx.HTTPError) as exc:
             # A rejected key or a dead provider costs the translation, never the article.
-            logger.warning("translation failed, keeping the original text: %s", exc)
+            logger.warning(
+                "translation failed, keeping the original text",
+                extra={
+                    "event": EXTERNAL_CALL_FAILED_EVENT,
+                    "service": "translation",
+                    "operation": "translate",
+                    "error": describe_error(exc),
+                },
+            )
             return raw_article.title, raw_article.content, plain_text
         translated_cache[target_lang] = (translated_title, translated_content)
     translated_title, translated_content = translated_cache[target_lang]

@@ -255,6 +255,9 @@ export const zh: Catalogue = {
 	'article.resume': '继续',
 	'article.pause': '暂停',
 	'article.speechDone': '朗读结束。',
+	'article.speechFailed.silent': '此设备上没有该语言的语音。',
+	'article.speechFailed.engine': '语音合成失败。',
+	'article.speechFailed.not-allowed': '浏览器拒绝朗读。请轻触页面后重试。',
 	'article.share': '分享',
 	'article.linkCopied': '已复制链接',
 	'article.like': '喜欢',
@@ -285,6 +288,8 @@ export const zh: Catalogue = {
 	'swipe.readLater': '稍后读',
 	'swipe.remaining': '{title} — 还剩 {count} 篇',
 	'swipe.favoriteAction': '加入收藏',
+	'swipe.expand': '展开',
+	'swipe.collapse': '收起',
 
 	'flip.dialog': '翻阅文章',
 	'flip.hint': '← → 翻页 · Esc 退出',

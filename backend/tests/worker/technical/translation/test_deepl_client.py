@@ -1,3 +1,5 @@
+import logging
+
 import httpx
 import pytest
 
@@ -48,3 +50,19 @@ async def test_translate_raises_on_an_error_response() -> None:
     translator = DeeplTranslator(transport=httpx.MockTransport(handler))
     with pytest.raises(DeeplApiError):
         await translator.translate("Hello world", target_lang="fr")
+
+
+async def test_translate_logs_the_url_and_the_status_of_a_rejected_call(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(456, text="quota exceeded")
+
+    translator = DeeplTranslator(transport=httpx.MockTransport(handler))
+    with caplog.at_level(logging.WARNING), pytest.raises(DeeplApiError):
+        await translator.translate("Hello world", target_lang="fr")
+
+    record = caplog.records[-1]
+    assert record.service == "deepl"  # type: ignore[attr-defined]
+    assert record.status_code == 456  # type: ignore[attr-defined]
+    assert record.url.endswith("/v2/translate")  # type: ignore[attr-defined]

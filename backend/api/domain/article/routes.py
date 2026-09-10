@@ -2,7 +2,7 @@ from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import Select, or_, select
+from sqlalchemy import Select, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword
@@ -25,7 +25,6 @@ from api.domain.recommendation.models import FilterMode, UserArticleFeedback
 from api.domain.recommendation.read_service import ReadState, fetch_read_state
 from api.domain.recommendation.relevance import (
     load_rule_terms,
-    matches_any_term,
     score_articles,
     to_relevance,
 )
@@ -40,8 +39,8 @@ from worker.technical.content_extraction import (
 
 router = APIRouter()
 
-#: How many of the most recent articles are considered when the ranking or the muting has to
-#: happen in Python. Deep pagination past this is recency-ordered only, which is what the UI does.
+#: The smallest window of recent articles scored when the feed is sorted by relevance. A deeper
+#: page widens it, so pagination never stops before the feed does.
 _RANKING_POOL = 500
 
 
@@ -94,6 +93,23 @@ def apply_unread_only(query: Select[tuple[Article]], user_id: UUID) -> Select[tu
     return query.where(~read_rows.exists())
 
 
+def exclude_muted_terms(query: Select[tuple[Article]], terms: list[str]) -> Select[tuple[Article]]:
+    """Drops the articles a mute rule matches, in SQL.
+
+    Same reach as `matches_any_term` — the title and the summary, never the stored HTML — but done
+    here so the window and the offset apply to what the reader actually gets. `summary` is nullable
+    and a comparison against NULL is NULL, not false, so it is coalesced before matching: otherwise
+    every article without a summary would be filtered out by the negation.
+    """
+    patterns = [f"%{term}%" for term in terms]
+    return query.where(
+        ~or_(
+            *[Article.title.ilike(pattern) for pattern in patterns],
+            *[func.coalesce(Article.summary, "").ilike(pattern) for pattern in patterns],
+        )
+    )
+
+
 @router.get("/articles", response_model=list[ArticleSummaryResponse])
 async def list_articles(
     folder_id: UUID | None = Query(default=None),
@@ -139,16 +155,17 @@ async def list_articles(
     query = query.order_by(Article.published_at.desc())
 
     muted = await load_rule_terms(session, user.id, FilterMode.MUTE)
-    if sort == "relevance" or muted:
-        # Both the muting and the relevance order are computed in Python, so the window has to be
-        # applied after them. Bounded by the recency order above rather than left unbounded: a
-        # reader's feed is measured in thousands of rows, and the tail is what nobody scrolls to.
-        candidates = list(await session.scalars(query.limit(_RANKING_POOL)))
-        if muted:
-            candidates = [a for a in candidates if not matches_any_term(a, muted)]
-        if sort == "relevance":
-            raw = await score_articles(session, user.id, candidates)
-            candidates.sort(key=lambda a: (raw.get(a.id, 0.0), a.published_at), reverse=True)
+    if muted:
+        query = exclude_muted_terms(query, muted)
+
+    if sort == "relevance":
+        # The relevance order cannot be expressed in SQL, so a window of the most recent articles
+        # is scored in Python and sliced. The window grows with the requested page rather than
+        # being fixed: a fixed one ends the feed at its own size, which is not the end of the feed.
+        pool = max(_RANKING_POOL, offset + limit)
+        candidates = list(await session.scalars(query.limit(pool)))
+        raw = await score_articles(session, user.id, candidates)
+        candidates.sort(key=lambda a: (raw.get(a.id, 0.0), a.published_at), reverse=True)
         articles = candidates[offset : offset + limit]
     else:
         articles = list(await session.scalars(query.limit(limit).offset(offset)))

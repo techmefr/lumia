@@ -1,12 +1,12 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.domain.instance.capacity_service import count_accounts
 from api.domain.instance.exceptions import (
     InstanceNotProvisionedError,
     MaxAccountsBelowCurrentCountError,
 )
 from api.domain.instance.models import AccessMode
+from api.domain.user.invitation_service import count_accounts
 from api.domain.user.models import Instance
 
 
@@ -32,7 +32,7 @@ async def update_instance_settings(
     stored and worked around later.
     """
     if max_accounts is not None:
-        if max_accounts < await count_accounts(session):
+        if max_accounts < await count_accounts(session, instance.id):
             raise MaxAccountsBelowCurrentCountError
         instance.max_accounts = max_accounts
     if disk_quota_mb is not None:

@@ -4,8 +4,9 @@ interface FakeUtterance {
 	text: string;
 	rate: number;
 	lang: string;
+	onstart: (() => void) | null;
 	onend: (() => void) | null;
-	onerror: (() => void) | null;
+	onerror: ((event: { error: string }) => void) | null;
 }
 
 export interface FakeSynthesis {
@@ -14,16 +15,24 @@ export interface FakeSynthesis {
 	cancels: number;
 	/** What is being spoken right now, or null between utterances. */
 	current: () => FakeUtterance | null;
-	/** The engine finishes the current utterance, as a real one does when it reaches the end. */
+	/**
+	 * The engine speaks the current utterance through to its end, announcing its start on the way
+	 * as a real one does.
+	 */
 	finish: () => void;
 	/** The engine gives up on the current utterance — an unavailable voice, typically. */
-	fail: () => void;
+	fail: (error?: string) => void;
+	/**
+	 * The engine answers `end` without ever having started: no sound came out. That is what a
+	 * browser does when it holds no voice for the requested language.
+	 */
+	finishWithoutSpeaking: () => void;
 }
 
 /**
  * jsdom implements no Web Speech API at all, so a reader built on it cannot be exercised without
  * one. This stands in for the engine — the outer boundary — and lets a test say when an utterance
- * ends, which is the event the whole queue advances on.
+ * starts, ends or fails, which are the events the whole queue advances on.
  */
 export function fakeSpeechSynthesis(): FakeSynthesis {
 	const spoken: FakeUtterance[] = [];
@@ -33,8 +42,9 @@ export function fakeSpeechSynthesis(): FakeSynthesis {
 	class Utterance implements FakeUtterance {
 		rate = 1;
 		lang = '';
+		onstart: (() => void) | null = null;
 		onend: (() => void) | null = null;
-		onerror: (() => void) | null = null;
+		onerror: ((event: { error: string }) => void) | null = null;
 		constructor(public text: string) {}
 	}
 
@@ -63,12 +73,19 @@ export function fakeSpeechSynthesis(): FakeSynthesis {
 		finish() {
 			const ending = current;
 			current = null;
+			// A real engine announces the start of an utterance it speaks before announcing its end.
+			ending?.onstart?.();
 			ending?.onend?.();
 		},
-		fail() {
+		fail(error = 'synthesis-failed') {
 			const failing = current;
 			current = null;
-			failing?.onerror?.();
+			failing?.onerror?.({ error });
+		},
+		finishWithoutSpeaking() {
+			const ending = spoken[spoken.length - 1] ?? null;
+			current = null;
+			ending?.onend?.();
 		}
 	};
 }

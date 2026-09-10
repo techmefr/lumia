@@ -4,7 +4,6 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.domain.instance.capacity_service import ensure_instance_has_room
 from api.domain.instance.exceptions import (
     AccessRequestAlreadyDecidedError,
     AccessRequestNotFoundError,
@@ -13,6 +12,7 @@ from api.domain.instance.exceptions import (
 )
 from api.domain.instance.models import AccessMode, AccessRequest, AccessRequestStatus
 from api.domain.instance.settings_service import get_instance
+from api.domain.user.invitation_service import ensure_room_for_one_more_account
 from api.domain.user.models import Role, User
 
 
@@ -47,7 +47,7 @@ async def approve_access_request(session: AsyncSession, request_id: UUID, decide
     """
     access_request = await _get_pending_request(session, request_id)
     instance = await get_instance(session)
-    await ensure_instance_has_room(session, instance)
+    await ensure_room_for_one_more_account(session, instance)
 
     if await _is_email_taken(session, access_request.email, ignore_request_id=request_id):
         raise EmailAlreadyRegisteredError

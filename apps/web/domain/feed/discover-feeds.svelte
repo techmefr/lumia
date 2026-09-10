@@ -155,6 +155,7 @@
 								size="sm"
 								href={suggestion.site_url}
 								target="_blank"
+								rel="noopener noreferrer"
 							>
 								<ExternalLink class="size-4" />
 								<span class="sr-only">{t('discover.view', { title: suggestion.title })}</span>

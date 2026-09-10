@@ -273,6 +273,9 @@ export const de: Catalogue = {
 	'article.resume': 'Fortsetzen',
 	'article.pause': 'Pause',
 	'article.speechDone': 'Vorlesen beendet.',
+	'article.speechFailed.silent': 'Für diese Sprache ist auf diesem Gerät keine Stimme verfügbar.',
+	'article.speechFailed.engine': 'Die Sprachsynthese ist fehlgeschlagen.',
+	'article.speechFailed.not-allowed': 'Der Browser hat das Vorlesen abgelehnt. Tippen Sie auf die Seite und versuchen Sie es erneut.',
 	'article.share': 'Teilen',
 	'article.linkCopied': 'Link kopiert',
 	'article.like': 'Gefällt mir',
@@ -303,6 +306,8 @@ export const de: Catalogue = {
 	'swipe.readLater': 'Später',
 	'swipe.remaining': '{title} — noch {count} Artikel',
 	'swipe.favoriteAction': 'Zu den Favoriten',
+	'swipe.expand': 'Ausklappen',
+	'swipe.collapse': 'Einklappen',
 
 	'flip.dialog': 'Artikel durchblättern',
 	'flip.hint': '← → zum Blättern · Esc zum Verlassen',

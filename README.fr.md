@@ -111,6 +111,11 @@ cp .env.example .env    # puis renseigne les secrets
 docker compose up -d
 ```
 
+L'API expose `GET /health` (le process répond, aucune I/O) et `GET /ready` (PostgreSQL et Redis
+répondent, sinon `503` en disant lequel est tombé). Chaque service du compose a un healthcheck bâti
+dessus, et l'API, le worker et le conteneur web attendent que leurs dépendances soient *saines* et
+plus seulement démarrées — branchez votre supervision sur `/health`.
+
 L'app répond sur `http://localhost:8080`, l'API sur `http://localhost:8000`. Seuls ces deux-là sont
 exposés ; Miniflux, le worker, PostgreSQL et Redis restent sur le réseau interne. Le conteneur web
 sert le build statique derrière nginx et relaie `/api` vers l'API, donc l'app fonctionne depuis

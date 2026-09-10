@@ -243,3 +243,49 @@ describe('following the reading down the page', () => {
 		expect(api.painted()).not.toBeNull();
 	});
 });
+
+describe('highlightChunk against the text the voice was given', () => {
+	let api: ReturnType<typeof fakeHighlightApi>;
+
+	beforeEach(() => {
+		api = fakeHighlightApi();
+	});
+
+	afterEach(() => {
+		clearKaraoke();
+		vi.unstubAllGlobals();
+		document.body.innerHTML = '';
+	});
+
+	// `readableText` closes a block that carries no punctuation of its own, so the voice says
+	// "Un intertitre." where the article shows "Un intertitre". Looking the chunk up verbatim
+	// would leave every heading and list item unpainted.
+	it('paints a heading whose stop was added for the voice', () => {
+		const root = article('<h2>Un intertitre</h2><p>Le paragraphe.</p>');
+
+		expect(highlightChunk(root, 'Un intertitre.')).toBe(true);
+		expect(api.painted()?.toString()).toBe('Un intertitre');
+	});
+
+	it('paints a list item whose stop was added for the voice', () => {
+		const root = article('<ul><li>Premier</li><li>Deuxième</li></ul>');
+
+		expect(highlightChunk(root, 'Deuxième.')).toBe(true);
+		expect(api.painted()?.toString()).toBe('Deuxième');
+	});
+
+	it('still refuses a chunk that is not in the article at all', () => {
+		const root = article('<p>Le paragraphe.</p>');
+
+		expect(highlightChunk(root, 'Une phrase absente.')).toBe(false);
+		expect(api.painted()).toBe(null);
+	});
+
+	// The whole point of the added stop is that a chunk stays inside one block; a needle reduced
+	// to a single character would match anywhere.
+	it('refuses a needle left too short by dropping its stop', () => {
+		const root = article('<p>Le paragraphe.</p>');
+
+		expect(highlightChunk(root, 'L.')).toBe(false);
+	});
+});

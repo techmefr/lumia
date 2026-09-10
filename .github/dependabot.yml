@@ -1,0 +1,91 @@
+version: 2
+
+updates:
+  # One entry for the whole pnpm workspace: the lockfile lives at the root, so a per-package
+  # entry would open several pull requests that all rewrite the same file and conflict.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      dev-tooling:
+        patterns:
+          - "@sveltejs/*"
+          - "vite"
+          - "vitest"
+          - "@vitest/*"
+          - "typescript"
+          - "svelte-check"
+          - "eslint*"
+          - "prettier*"
+          - "@testing-library/*"
+        update-types:
+          - minor
+          - patch
+      production-minor-and-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: uv
+    directory: "/backend"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      python-dev-tooling:
+        patterns:
+          - "pytest*"
+          - "ruff"
+          - "mypy"
+          - "pip-audit"
+        update-types:
+          - minor
+          - patch
+      python-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: docker
+    directories:
+      - "/docker/lumia-backend"
+      - "/docker/lumia-web"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      base-images:
+        patterns:
+          - "*"
+
+  # The compose file pins the same images as the Dockerfiles but is a separate ecosystem for
+  # Dependabot, so without this entry postgres/redis/miniflux would never be bumped.
+  - package-ecosystem: docker-compose
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      compose-images:
+        patterns:
+          - "*"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns:
+          - "*"
