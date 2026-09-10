@@ -309,6 +309,8 @@ export const fr = {
 	'swipe.readLater': 'À lire',
 	'swipe.remaining': '{title} — {count} article(s) restant(s)',
 	'swipe.favoriteAction': 'Mettre en favoris',
+	'swipe.expand': 'Déplier',
+	'swipe.collapse': 'Replier',
 
 	'flip.dialog': 'Feuilleter les articles',
 	'flip.hint': '← → pour tourner les pages · Échap pour sortir',

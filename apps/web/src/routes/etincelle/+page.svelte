@@ -46,13 +46,13 @@
 	});
 </script>
 
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-4">
 	<div>
 		<h1 data-test-page="etincelle" class="flex items-center gap-2 text-2xl font-semibold">
 			<Sparkles class="size-6 text-primary" />
 			{t('etincelle.title')}
 		</h1>
-		<p class="text-sm text-muted-foreground">{t('etincelle.help')}</p>
+		<p class="sr-only text-sm text-muted-foreground sm:not-sr-only">{t('etincelle.help')}</p>
 	</div>
 
 	{#if error}
@@ -61,7 +61,9 @@
 
 	{#if loading}
 		<div role="status" aria-label={t('etincelle.loading')} class="flex justify-center">
-			<Skeleton class="h-96 w-full max-w-md rounded-2xl" />
+			<Skeleton
+				class="h-[calc(100dvh-22rem)] max-h-[40rem] min-h-[22rem] w-full max-w-lg rounded-3xl sm:h-[calc(100dvh-20rem)]"
+			/>
 		</div>
 	{:else if articles.length === 0}
 		<div class="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-6">

@@ -308,6 +308,8 @@ export const mg: Catalogue = {
 	'swipe.readLater': 'Hovakiana',
 	'swipe.remaining': '{title} — mbola misy lahatsoratra {count}',
 	'swipe.favoriteAction': 'Hataovy ankafiziko',
+	'swipe.expand': 'Velaro',
+	'swipe.collapse': 'Aforeto',
 
 	'flip.dialog': 'Hanao pejy ny lahatsoratra',
 	'flip.hint': '← → hanovana pejy · Esc hivoahana',

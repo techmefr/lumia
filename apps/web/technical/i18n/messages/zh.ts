@@ -288,6 +288,8 @@ export const zh: Catalogue = {
 	'swipe.readLater': '稍后读',
 	'swipe.remaining': '{title} — 还剩 {count} 篇',
 	'swipe.favoriteAction': '加入收藏',
+	'swipe.expand': '展开',
+	'swipe.collapse': '收起',
 
 	'flip.dialog': '翻阅文章',
 	'flip.hint': '← → 翻页 · Esc 退出',

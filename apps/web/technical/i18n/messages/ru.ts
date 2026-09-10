@@ -304,6 +304,8 @@ export const ru: Catalogue = {
 	'swipe.readLater': 'Позже',
 	'swipe.remaining': '{title} — осталось статей: {count}',
 	'swipe.favoriteAction': 'Добавить в избранное',
+	'swipe.expand': 'Развернуть',
+	'swipe.collapse': 'Свернуть',
 
 	'flip.dialog': 'Пролистать статьи',
 	'flip.hint': '← → листать страницы · Esc выйти',

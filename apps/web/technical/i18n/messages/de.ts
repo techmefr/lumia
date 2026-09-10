@@ -306,6 +306,8 @@ export const de: Catalogue = {
 	'swipe.readLater': 'Später',
 	'swipe.remaining': '{title} — noch {count} Artikel',
 	'swipe.favoriteAction': 'Zu den Favoriten',
+	'swipe.expand': 'Ausklappen',
+	'swipe.collapse': 'Einklappen',
 
 	'flip.dialog': 'Artikel durchblättern',
 	'flip.hint': '← → zum Blättern · Esc zum Verlassen',
