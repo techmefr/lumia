@@ -1,5 +1,8 @@
+import logging
+
 import httpx
 
+from api.technical.logging.external import log_external_failure
 from worker.technical.ai.base import (
     MAX_INPUT_CHARS,
     SUMMARY_PROMPT,
@@ -22,6 +25,10 @@ _DEFAULT_MODELS = {
     "openai": "gpt-4o-mini",
     "gemma": "gemma-3-27b-it",
 }
+
+SERVICE_NAME = "openai-compatible"
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["LlmApiError", "OpenAiCompatibleChatClient", "resolve_base_url", "resolve_model"]
 
@@ -70,6 +77,13 @@ class OpenAiCompatibleChatClient:
                 },
             )
             if response.status_code >= 400:
+                log_external_failure(
+                    logger,
+                    service=SERVICE_NAME,
+                    operation="complete",
+                    url=str(response.request.url),
+                    status_code=response.status_code,
+                )
                 raise LlmApiError(response.text)
             choices = response.json().get("choices") or []
             if not choices:

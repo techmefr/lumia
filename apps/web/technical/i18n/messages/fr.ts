@@ -282,6 +282,9 @@ export const fr = {
 	'article.resume': 'Reprendre',
 	'article.pause': 'Pause',
 	'article.speechDone': 'Lecture terminée.',
+	'article.speechFailed.silent': 'Aucune voix disponible pour cette langue sur cet appareil.',
+	'article.speechFailed.engine': 'La synthèse vocale a échoué.',
+	'article.speechFailed.not-allowed': 'Le navigateur a refusé la lecture. Touchez la page puis réessayez.',
 	'article.share': 'Partager',
 	'article.linkCopied': 'Lien copié',
 	'article.like': "J'aime",
@@ -312,6 +315,8 @@ export const fr = {
 	'swipe.readLater': 'À lire',
 	'swipe.remaining': '{title} — {count} article(s) restant(s)',
 	'swipe.favoriteAction': 'Mettre en favoris',
+	'swipe.expand': 'Déplier',
+	'swipe.collapse': 'Replier',
 
 	'flip.dialog': 'Feuilleter les articles',
 	'flip.hint': '← → pour tourner les pages · Échap pour sortir',

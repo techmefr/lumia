@@ -122,7 +122,7 @@
 </script>
 
 <div class="flex flex-col gap-6">
-	<h1 class="flex items-center gap-2 text-2xl font-semibold">
+	<h1 data-test-page="playlists" class="flex items-center gap-2 text-2xl font-semibold">
 		<ListMusic class="size-6 text-primary" />
 		{t('playlists.title')}
 	</h1>
@@ -191,7 +191,9 @@
 			<Button size="sm" href="{base}/articles">{t('common.browseArticles')}</Button>
 		</div>
 	{:else}
-		<ul class="flex flex-col gap-3">
+		<!-- Columns rather than rows stretched across the display: a playlist is a name and a count,
+		     and a wide screen has room for several of them side by side. -->
+		<ul data-test-playlist-columns class="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-3">
 			{#each playlists as playlist (playlist.id)}
 				<li>
 					<Card>

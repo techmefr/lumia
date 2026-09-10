@@ -62,7 +62,10 @@ function stack(props: Partial<Props> = {}) {
 		dislike: () => q<HTMLButtonElement>('[data-test-swipe-dislike]')!,
 		save: () => q<HTMLButtonElement>('[data-test-swipe-save]')!,
 		favorite: () => q<HTMLButtonElement>('[data-test-swipe-favorite]')!,
-		remaining: () => q('[aria-live="polite"]')
+		remaining: () => q('[aria-live="polite"]'),
+		scroll: () => q<HTMLElement>('[data-test-swipe-scroll]'),
+		expand: () => q<HTMLButtonElement>('[data-test-swipe-expand]')!,
+		heroClasses: () => q<HTMLElement>('h2')!.parentElement!.parentElement!.className
 	};
 }
 
@@ -218,5 +221,117 @@ describe('dragging the card', () => {
 		expect(view.onLike).not.toHaveBeenCalled();
 		expect(view.onDislike).not.toHaveBeenCalled();
 		expect(view.onOpen).not.toHaveBeenCalled();
+	});
+});
+
+describe('reading the article inside the card', () => {
+	const LONG = 'Paragraphe. '.repeat(80);
+	const WITH_SUMMARY = [article('long', { summary: LONG }), article('next', { summary: LONG })];
+
+	it('shows the whole summary in a scrollable region instead of truncating it', () => {
+		const view = stack({ articles: WITH_SUMMARY });
+
+		const scroll = view.scroll()!;
+		expect(scroll.textContent?.trim()).toBe(LONG.trim());
+		expect(scroll.className).toContain('overflow-y-auto');
+	});
+
+	it('keeps that region reachable with the keyboard', () => {
+		const view = stack({ articles: WITH_SUMMARY });
+
+		const scroll = view.scroll()!;
+		expect(scroll.getAttribute('tabindex')).toBe('0');
+		expect(scroll.getAttribute('aria-labelledby')).toBe('swipe-title-long');
+	});
+
+	it('gives the text more room when the reader unfolds the card', async () => {
+		const view = stack({ articles: WITH_SUMMARY });
+
+		expect(view.expand().getAttribute('aria-expanded')).toBe('false');
+		expect(view.heroClasses()).toContain('h-56');
+
+		await fireEvent.click(view.expand());
+
+		expect(view.expand().getAttribute('aria-expanded')).toBe('true');
+		expect(view.heroClasses()).toContain('h-24');
+	});
+
+	it('does not read a click on an in-card button as a tap on the card', async () => {
+		const view = stack({ articles: WITH_SUMMARY });
+
+		fireEvent.pointerDown(view.expand(), { clientX: 10, clientY: 10, button: 0 });
+		await fireEvent.pointerUp(view.expand(), { clientX: 10, clientY: 10 });
+
+		expect(view.onOpen).not.toHaveBeenCalled();
+	});
+
+	it('folds back when the stack advances to the next article', async () => {
+		const view = stack({ articles: WITH_SUMMARY });
+
+		await fireEvent.click(view.expand());
+		await fireEvent.click(view.like());
+		await settle();
+
+		expect(view.expand().getAttribute('aria-expanded')).toBe('false');
+	});
+});
+
+describe('scrolling the text rather than swiping the card', () => {
+	const LONG = 'Paragraphe. '.repeat(80);
+	const WITH_SUMMARY = [article('long', { summary: LONG }), article('next', { summary: LONG })];
+
+	function dragFrom(target: Element, from: [number, number], to: [number, number]) {
+		fireEvent.pointerDown(target, { clientX: from[0], clientY: from[1], button: 0 });
+		fireEvent.pointerMove(target, { clientX: to[0], clientY: to[1] });
+		return fireEvent.pointerUp(target, { clientX: to[0], clientY: to[1] });
+	}
+
+	it('does not favorite when the reader scrolls up inside the text', async () => {
+		const view = stack({ articles: WITH_SUMMARY });
+
+		await dragFrom(view.scroll()!, [100, 300], [100, 60]);
+		await settle();
+
+		expect(view.onFavorite).not.toHaveBeenCalled();
+		expect(view.onSave).not.toHaveBeenCalled();
+		expect(view.onOpen).not.toHaveBeenCalled();
+	});
+
+	it('does not save for later when the reader scrolls down inside the text', async () => {
+		const view = stack({ articles: WITH_SUMMARY });
+
+		await dragFrom(view.scroll()!, [100, 60], [100, 300]);
+		await settle();
+
+		expect(view.onSave).not.toHaveBeenCalled();
+		expect(view.onFavorite).not.toHaveBeenCalled();
+	});
+
+	it('leaves the card where it was after a vertical scroll gesture', async () => {
+		const view = stack({ articles: WITH_SUMMARY });
+
+		await dragFrom(view.scroll()!, [100, 300], [100, 60]);
+
+		expect(view.card()?.getAttribute('style')).toContain('translate(0px, 0px)');
+	});
+
+	it('still likes on a horizontal drag that starts inside the text', async () => {
+		const view = stack({ articles: WITH_SUMMARY });
+
+		await dragFrom(view.scroll()!, [100, 100], [320, 130]);
+		await settle();
+
+		expect(view.onLike).toHaveBeenCalledWith(WITH_SUMMARY[0]);
+	});
+
+	it('ignores a mostly vertical drag even when it drifts sideways', async () => {
+		const view = stack({ articles: WITH_SUMMARY });
+
+		await dragFrom(view.scroll()!, [100, 300], [160, 60]);
+		await settle();
+
+		expect(view.onLike).not.toHaveBeenCalled();
+		expect(view.onDislike).not.toHaveBeenCalled();
+		expect(view.onFavorite).not.toHaveBeenCalled();
 	});
 });

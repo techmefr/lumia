@@ -1,3 +1,5 @@
+import logging
+
 import httpx
 import pytest
 
@@ -92,3 +94,24 @@ def test_resolve_model_falls_back_to_the_provider_default() -> None:
 
 def test_resolve_model_has_no_default_for_a_custom_provider() -> None:
     assert resolve_model("custom", None) is None
+
+
+async def test_summarize_logs_the_url_and_the_status_of_a_rejected_call(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(429, text="rate limited")
+
+    summarizer = OpenAiCompatibleChatClient(
+        api_key="key",
+        base_url="https://provider.test/v1",
+        model="small",
+        transport=httpx.MockTransport(handler),
+    )
+    with caplog.at_level(logging.WARNING), pytest.raises(LlmApiError):
+        await summarizer.summarize("Un texte a resumer")
+
+    record = caplog.records[-1]
+    assert record.service == "openai-compatible"  # type: ignore[attr-defined]
+    assert record.status_code == 429  # type: ignore[attr-defined]
+    assert record.url == "https://provider.test/v1/chat/completions"  # type: ignore[attr-defined]

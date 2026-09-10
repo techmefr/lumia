@@ -242,7 +242,7 @@
 	/>
 
 	<div class="flex min-w-0 flex-1 flex-col gap-6">
-		<h1 class="text-2xl font-semibold">{t('feeds.title')}</h1>
+		<h1 data-test-page="feeds" class="text-2xl font-semibold">{t('feeds.title')}</h1>
 
 		{#if error}
 			<p role="alert" class="text-sm text-destructive">{t(error)}</p>
@@ -258,7 +258,7 @@
 						{selectedFeed.title}
 					</CardTitle>
 					<CardDescription>
-						<a href={selectedFeed.url} target="_blank" rel="noopener" class="hover:underline">
+						<a href={selectedFeed.url} target="_blank" rel="noopener noreferrer" class="hover:underline">
 							{selectedFeed.url}
 						</a>
 					</CardDescription>
@@ -527,7 +527,7 @@
 											<Rss class="size-4 shrink-0 text-primary" />
 											<div class="flex flex-col gap-1">
 												<span class="font-medium">{feed.title}</span>
-												<a href={feed.url} target="_blank" rel="noopener" class="text-xs text-muted-foreground hover:underline">
+												<a href={feed.url} target="_blank" rel="noopener noreferrer" class="text-xs text-muted-foreground hover:underline">
 													{feed.url}
 												</a>
 											</div>

@@ -281,6 +281,9 @@ export const mg: Catalogue = {
 	'article.resume': 'Hanohy',
 	'article.pause': 'Hiato',
 	'article.speechDone': 'Vita ny famakiana.',
+	'article.speechFailed.silent': "Tsy misy feo azo ampiasaina amin'ity fiteny ity amin'ity fitaovana ity.",
+	'article.speechFailed.engine': 'Tsy nahomby ny famoahana feo.',
+	'article.speechFailed.not-allowed': "Nolavin'ny navigateur ny famakiana. Tsindrio ny pejy avy eo andramo indray.",
 	'article.share': 'Hizara',
 	'article.linkCopied': 'Voadika ny rohy',
 	'article.like': 'Tiako',
@@ -311,6 +314,8 @@ export const mg: Catalogue = {
 	'swipe.readLater': 'Hovakiana',
 	'swipe.remaining': '{title} — mbola misy lahatsoratra {count}',
 	'swipe.favoriteAction': 'Hataovy ankafiziko',
+	'swipe.expand': 'Velaro',
+	'swipe.collapse': 'Aforeto',
 
 	'flip.dialog': 'Hanao pejy ny lahatsoratra',
 	'flip.hint': '← → hanovana pejy · Esc hivoahana',

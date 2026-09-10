@@ -1,7 +1,10 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
 
+from api.domain.feed.models import SourceType
+from api.domain.recommendation.models import FilterMode
 from api.domain.user.models import (
     AIProvider,
     OrbitPosition,
@@ -45,6 +48,7 @@ class MagicLinkVerifyRequest(BaseModel):
 
 class SsoCallbackRequest(BaseModel):
     code: str
+    state: str
 
 
 class TokenPairResponse(BaseModel):
@@ -53,9 +57,79 @@ class TokenPairResponse(BaseModel):
     token_type: str = "bearer"
 
 
-class AccessTokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class InvitationRequest(BaseModel):
+    email: EmailStr
+    role: Role = Role.MEMBER
+
+
+class InvitationResponse(BaseModel):
+    id: UUID
+    email: str
+    role: Role
+    expires_at: datetime
+    # The raw token is never returned: it only ever exists in the invitee's mailbox, so a leaked
+    # admin listing cannot be redeemed.
+
+
+class InvitationAcceptRequest(BaseModel):
+    token: str
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=8)
+
+
+class DeleteAccountRequest(BaseModel):
+    """Deleting is final and unattended, so it asks for more than a click.
+
+    The address rules out a misdirected request; the password proves it is the account holder and
+    not somebody who walked up to an unlocked screen. An account signed in through SSO or a magic
+    link has no password to give, and the address is then all there is to ask for.
+    """
+
+    confirm_email: EmailStr
+    password: str | None = None
+
+
+class ExportedAccount(BaseModel):
+    email: str
+    username: str
+    role: Role
+    theme: Theme
+    preferred_language: ReadingLang
+    font_base_size: int
+    created_at: datetime
+
+
+class ExportedFeed(BaseModel):
+    title: str
+    url: str
+    source_type: SourceType
+    folder: str | None
+
+
+class ExportedFilterRule(BaseModel):
+    term: str
+    mode: FilterMode
+
+
+class ExportedArticle(BaseModel):
+    title: str
+    url: str
+    published_at: datetime
+    source: str
+
+
+class ExportedPlaylist(BaseModel):
+    name: str
+    articles: list[ExportedArticle]
+
+
+class AccountExportResponse(BaseModel):
+    account: ExportedAccount
+    feeds: list[ExportedFeed]
+    filter_rules: list[ExportedFilterRule]
+    playlists: list[ExportedPlaylist]
+    saved: list[ExportedArticle]
+    favorites: list[ExportedArticle]
 
 
 class MeResponse(BaseModel):

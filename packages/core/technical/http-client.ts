@@ -39,8 +39,14 @@ export function createHttpClient({ baseUrl, tokenStore }: HttpClientConfig) {
 			return null;
 		}
 
-		const { access_token } = (await response.json()) as { access_token: string };
-		tokenStore.setAccessToken(access_token);
+		// The server rotates the refresh token on every use, so the answer carries its successor
+		// and the old one is already dead: storing only the access token would log the reader out
+		// at the next refresh.
+		const { access_token, refresh_token } = (await response.json()) as {
+			access_token: string;
+			refresh_token: string;
+		};
+		tokenStore.setTokens({ accessToken: access_token, refreshToken: refresh_token });
 		return access_token;
 	}
 

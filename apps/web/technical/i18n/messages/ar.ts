@@ -268,6 +268,9 @@ export const ar: Catalogue = {
 	'article.resume': 'متابعة',
 	'article.pause': 'إيقاف مؤقّت',
 	'article.speechDone': 'انتهت القراءة.',
+	'article.speechFailed.silent': 'لا يتوفر أي صوت لهذه اللغة على هذا الجهاز.',
+	'article.speechFailed.engine': 'فشل تحويل النص إلى كلام.',
+	'article.speechFailed.not-allowed': 'رفض المتصفح القراءة. المس الصفحة ثم أعد المحاولة.',
 	'article.share': 'مشاركة',
 	'article.linkCopied': 'نُسخ الرابط',
 	'article.like': 'يعجبني',
@@ -298,6 +301,8 @@ export const ar: Catalogue = {
 	'swipe.readLater': 'للقراءة',
 	'swipe.remaining': '{title} — بقي {count} مقال',
 	'swipe.favoriteAction': 'الإضافة إلى المفضّلة',
+	'swipe.expand': 'توسيع',
+	'swipe.collapse': 'تصغير',
 
 	'flip.dialog': 'تقليب المقالات',
 	'flip.hint': '← → لتقليب الصفحات · Esc للخروج',

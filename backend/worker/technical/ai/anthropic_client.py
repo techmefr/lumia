@@ -5,8 +5,11 @@ Three differences make a separate client cheaper than bending the shared one: th
 a top-level field instead of a message with `role: system`.
 """
 
+import logging
+
 import httpx
 
+from api.technical.logging.external import log_external_failure
 from worker.technical.ai.base import (
     MAX_INPUT_CHARS,
     SUMMARY_PROMPT,
@@ -22,6 +25,9 @@ API_VERSION = "2023-06-01"
 #: Sized for the longest answer this client is asked for, a whole translated article. A summary
 #: stays short because its prompt says so, not because the ceiling cuts it off.
 _MAX_OUTPUT_TOKENS = 8192
+SERVICE_NAME = "anthropic"
+
+logger = logging.getLogger(__name__)
 
 
 class AnthropicChatClient:
@@ -53,6 +59,13 @@ class AnthropicChatClient:
                 },
             )
             if response.status_code >= 400:
+                log_external_failure(
+                    logger,
+                    service=SERVICE_NAME,
+                    operation="complete",
+                    url=str(response.request.url),
+                    status_code=response.status_code,
+                )
                 raise LlmApiError(response.text)
             blocks = response.json().get("content") or []
             texts = [block.get("text", "") for block in blocks if block.get("type") == "text"]

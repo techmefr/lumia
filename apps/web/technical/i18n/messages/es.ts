@@ -279,6 +279,9 @@ export const es: Catalogue = {
 	'article.resume': 'Reanudar',
 	'article.pause': 'Pausa',
 	'article.speechDone': 'Lectura terminada.',
+	'article.speechFailed.silent': 'No hay ninguna voz disponible para este idioma en este dispositivo.',
+	'article.speechFailed.engine': 'La síntesis de voz ha fallado.',
+	'article.speechFailed.not-allowed': 'El navegador ha rechazado la lectura. Toca la página y vuelve a intentarlo.',
 	'article.share': 'Compartir',
 	'article.linkCopied': 'Enlace copiado',
 	'article.like': 'Me gusta',
@@ -309,6 +312,8 @@ export const es: Catalogue = {
 	'swipe.readLater': 'Leer',
 	'swipe.remaining': '{title} — quedan {count} artículo(s)',
 	'swipe.favoriteAction': 'Marcar como favorito',
+	'swipe.expand': 'Desplegar',
+	'swipe.collapse': 'Plegar',
 
 	'flip.dialog': 'Hojear los artículos',
 	'flip.hint': '← → para pasar páginas · Esc para salir',
