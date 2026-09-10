@@ -45,6 +45,7 @@ from api.technical.auth.oidc_client import (
 from api.technical.auth.tokens import generate_opaque_token
 from api.technical.crypto.secret_box import decrypt_secret, encrypt_secret
 from api.technical.db import get_db_session
+from config.instance import get_instance_config
 
 router = APIRouter()
 
@@ -68,7 +69,11 @@ async def onboard_admin(
     if instance_count:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT)
 
-    instance = Instance(max_accounts=payload.max_accounts, disk_quota_mb=payload.disk_quota_mb)
+    instance_config = get_instance_config()
+    instance = Instance(
+        max_accounts=payload.max_accounts or instance_config.max_accounts,
+        disk_quota_mb=payload.disk_quota_mb or instance_config.account_quota_mb,
+    )
     session.add(instance)
     await session.flush()
 

@@ -118,6 +118,15 @@ n'importe quelle adresse sans configuration ni CORS. Au premier lancement, l'app
 limites de l'instance (nombre de comptes, quota disque par utilisateur), puis tu peux importer un
 OPML ou ajouter des flux.
 
+`ADMIN_EMAIL`, `ADMIN_USERNAME` et `ADMIN_PASSWORD` court-circuitent cet écran d'onboarding : le compte
+administrateur est créé au premier démarrage qui trouve le schéma en place (donc après les migrations
+ci-dessous, au redémarrage suivant), et un redémarrage ultérieur n'en crée pas un second ni ne
+réécrit son mot de passe. `MAX_ACCOUNTS` et
+`ACCOUNT_QUOTA_MB` ne donnent que les valeurs initiales des quotas : ensuite l'administrateur est
+maître des deux nombres, depuis la section Administration des réglages, qui liste aussi chaque compte
+avec son occupation disque et porte les demandes d'accès en attente. Cette section est derrière
+`require_admin` : un membre ne la voit pas et ne peut pas appeler ses routes.
+
 `FRONTEND_URL` (par défaut `http://localhost:8080`, celui de docker-compose) ne sert qu'à construire
 le lien cliquable de l'email « se connecter sans mot de passe » ; à renseigner avec l'adresse réelle
 de l'app si elle est jointe par un domaine ou une adresse LAN.

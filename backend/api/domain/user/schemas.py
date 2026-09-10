@@ -18,8 +18,10 @@ class OnboardingAdminRequest(BaseModel):
     # The account created here has full instance-admin rights, so a short password is the one
     # place in the app that can't be left to the reader's own judgement.
     password: str = Field(min_length=8)
-    max_accounts: int = 10
-    disk_quota_mb: int = 1000
+    # Left out, the two quotas fall back to what the environment says rather than to a literal
+    # repeated on both sides of the wire.
+    max_accounts: int | None = Field(default=None, ge=1)
+    disk_quota_mb: int | None = Field(default=None, ge=1)
 
 
 class LoginRequest(BaseModel):

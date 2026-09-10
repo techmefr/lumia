@@ -109,6 +109,13 @@ serves the static build behind nginx and proxies `/api` to the API, so the app w
 with no configuration and no CORS. On first launch the app walks you through admin onboarding: admin account, instance
 limits (max accounts, per-user disk quota), then you're ready to import an OPML file or add feeds.
 
+`ADMIN_EMAIL`, `ADMIN_USERNAME` and `ADMIN_PASSWORD` skip that onboarding screen: the admin account is
+created at the first start that finds the schema in place (so after the migrations below, on the next
+restart), and a later restart neither creates a second one nor rewrites its password. `MAX_ACCOUNTS` and `ACCOUNT_QUOTA_MB` only seed the instance quotas — from then
+on the admin owns both numbers, in the Administration section of the settings, which also lists every
+account with what it stores and carries the pending access requests. That section sits behind
+`require_admin`: a member neither sees it nor can call its routes.
+
 `FRONTEND_URL` (defaults to `http://localhost:8080`, the docker-compose default) is only used to
 build the clickable link in the "sign in without a password" email; set it to the app's real address
 if it's reached from a domain or a LAN address instead.

@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
+from api.domain.instance.models import AccessMode
 from api.technical.orm import Base, TimestampMixin
 
 
@@ -61,7 +62,9 @@ class Instance(Base, TimestampMixin):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     max_accounts: Mapped[int]
+    # Per account, not for the whole instance: what it caps is how much one reader may store.
     disk_quota_mb: Mapped[int]
+    access_mode: Mapped[AccessMode] = mapped_column(default=AccessMode.CLOSED)
     oidc_issuer: Mapped[str | None] = mapped_column(default=None)
     oidc_client_id: Mapped[str | None] = mapped_column(default=None)
     oidc_client_secret_encrypted: Mapped[str | None] = mapped_column(default=None)
