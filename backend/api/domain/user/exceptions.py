@@ -10,6 +10,10 @@ class SsoNotConfiguredError(Exception):
     pass
 
 
+class InvalidSsoLoginAttemptError(Exception):
+    pass
+
+
 class InvalidInvitationError(Exception):
     pass
 

@@ -46,6 +46,7 @@ class MagicLinkVerifyRequest(BaseModel):
 
 class SsoCallbackRequest(BaseModel):
     code: str
+    state: str
 
 
 class TokenPairResponse(BaseModel):
