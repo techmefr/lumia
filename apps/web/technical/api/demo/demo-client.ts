@@ -1,4 +1,7 @@
 import type {
+	AccessRequest,
+	AccessRequestStatus,
+	AccountUsage,
 	ArticleDetail,
 	ArticleSummary,
 	DiscoverSuggestion,
@@ -8,6 +11,8 @@ import type {
 	FilterMode,
 	FilterRule,
 	Folder,
+	InstanceSettings,
+	InstanceSettingsUpdate,
 	ListArticlesParams,
 	LumiaClient,
 	MarkReadScope,
@@ -66,6 +71,8 @@ interface DemoState {
 	filterRules: FilterRule[];
 	scores: Scores;
 	me: Me;
+	instance: InstanceSettings;
+	accessRequests: AccessRequest[];
 	nextId: number;
 }
 
@@ -152,6 +159,22 @@ function initialState(): DemoState {
 			translation_provider: null,
 			translation_api_key_set: false
 		},
+		instance: {
+			max_accounts: 5,
+			disk_quota_mb: 1000,
+			access_mode: 'on_approval',
+			account_count: 1
+		},
+		accessRequests: [
+			{
+				id: 'demo-request-1',
+				email: 'nouvelle.lectrice@example.test',
+				username: 'nouvelle.lectrice',
+				status: 'pending',
+				created_at: '2026-09-01T09:00:00Z',
+				decided_at: null
+			}
+		],
 		nextId: 1
 	};
 }
@@ -325,8 +348,66 @@ export function createDemoClient(): LumiaClient {
 		clear: () => {}
 	};
 
+	function decideRequest(requestId: string, status: AccessRequestStatus): void {
+		const pending = state.accessRequests.find(
+			(request) => request.id === requestId && request.status === 'pending'
+		);
+		if (!pending) return;
+		pending.status = status;
+		pending.decided_at = new Date().toISOString();
+		if (status === 'approved') state.instance.account_count += 1;
+		persist();
+	}
+
 	return {
 		tokenStore,
+		instance: {
+			getAccessMode: async () => settle(state.instance.access_mode),
+			getSettings: async () => settle({ ...state.instance }),
+			updateSettings: async (payload: InstanceSettingsUpdate) => {
+				state.instance = { ...state.instance, ...payload };
+				persist();
+				return settle({ ...state.instance });
+			},
+			listAccounts: async (): Promise<AccountUsage[]> =>
+				settle([
+					{
+						id: state.me.id,
+						email: state.me.email,
+						username: state.me.username,
+						role: state.me.role,
+						used_mb: 12,
+						quota_mb: state.instance.disk_quota_mb
+					}
+				]),
+			requestAccess: async (email: string, username: string) => {
+				const request: AccessRequest = {
+					id: nextId('request'),
+					email,
+					username,
+					status: 'pending',
+					created_at: new Date().toISOString(),
+					decided_at: null
+				};
+				state.accessRequests = [request, ...state.accessRequests];
+				persist();
+				return settle({ ...request });
+			},
+			listAccessRequests: async (status?: AccessRequestStatus) =>
+				settle(
+					state.accessRequests
+						.filter((request) => status === undefined || request.status === status)
+						.map((request) => ({ ...request }))
+				),
+			approveAccessRequest: async (requestId: string) => {
+				decideRequest(requestId, 'approved');
+				return settle(undefined);
+			},
+			rejectAccessRequest: async (requestId: string) => {
+				decideRequest(requestId, 'rejected');
+				return settle(undefined);
+			}
+		},
 		user: {
 			onboardAdmin: async () => settle(undefined),
 			login: async () => settle(undefined),

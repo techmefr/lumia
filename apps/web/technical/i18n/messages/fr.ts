@@ -442,7 +442,32 @@ export const fr = {
 	'ai.unavailable': 'Réglages indisponibles.',
 	'ai.loading': 'Chargement des réglages…',
 	'ai.summaryKeyDeleted': 'Clé de résumé supprimée.',
-	'ai.deeplKeyDeleted': 'Clé DeepL supprimée.'
+	'ai.deeplKeyDeleted': 'Clé DeepL supprimée.',
+
+	'admin.title': 'Administration',
+	'admin.intro': "Réservé à l'administration de l'instance : quotas, comptes et demandes d'accès.",
+	'admin.loading': "Chargement de l'administration…",
+	'admin.unavailable': 'Administration indisponible.',
+	'admin.maxAccounts': 'Nombre maximum de comptes',
+	'admin.accountCount': '{count} compte(s) pour le moment',
+	'admin.accountQuota': 'Taille maximale par compte (Mo)',
+	'admin.accessMode': 'Création de comptes',
+	'admin.modeClosed': 'Sur invitation seulement',
+	'admin.modeOnApproval': 'Sur demande, validée par un administrateur',
+	'admin.modeOpen': 'Ouverte à tout le monde',
+	'admin.saved': "Réglages de l'instance enregistrés.",
+	'admin.saveFailed': 'Enregistrement impossible. Vérifie les valeurs et réessaie.',
+	'admin.decideFailed': 'Impossible de traiter cette demande.',
+	'admin.accounts': 'Comptes',
+	'admin.account': 'Compte',
+	'admin.role': 'Rôle',
+	'admin.roleAdmin': 'Administrateur',
+	'admin.roleMember': 'Membre',
+	'admin.usage': 'Occupation',
+	'admin.requests': "Demandes d'accès en attente",
+	'admin.noRequests': 'Aucune demande en attente.',
+	'admin.approve': 'Valider',
+	'admin.reject': 'Refuser'
 } as const;
 
 export type MessageKey = keyof typeof fr;
