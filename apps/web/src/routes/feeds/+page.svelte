@@ -258,7 +258,7 @@
 						{selectedFeed.title}
 					</CardTitle>
 					<CardDescription>
-						<a href={selectedFeed.url} target="_blank" rel="noopener" class="hover:underline">
+						<a href={selectedFeed.url} target="_blank" rel="noopener noreferrer" class="hover:underline">
 							{selectedFeed.url}
 						</a>
 					</CardDescription>
@@ -527,7 +527,7 @@
 											<Rss class="size-4 shrink-0 text-primary" />
 											<div class="flex flex-col gap-1">
 												<span class="font-medium">{feed.title}</span>
-												<a href={feed.url} target="_blank" rel="noopener" class="text-xs text-muted-foreground hover:underline">
+												<a href={feed.url} target="_blank" rel="noopener noreferrer" class="text-xs text-muted-foreground hover:underline">
 													{feed.url}
 												</a>
 											</div>
