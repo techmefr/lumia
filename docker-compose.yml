@@ -2,6 +2,11 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lumia -d lumia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
       POSTGRES_USER: lumia
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -14,6 +19,11 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
 
@@ -55,10 +65,21 @@ services:
       dockerfile: docker/lumia-backend/Dockerfile
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000
     restart: unless-stopped
+    # Conditioned rather than ordered: without this the API starts while postgres is still
+    # initialising, fails its first connections and needs a restart nobody asked for.
     depends_on:
-      - postgres
-      - redis
-      - miniflux
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      miniflux:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     environment:
       DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
@@ -90,8 +111,16 @@ services:
     command: arq worker.technical.queue.WorkerSettings
     restart: unless-stopped
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "arq", "--check", "worker.technical.queue.WorkerSettings"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     environment:
       DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
@@ -105,7 +134,8 @@ services:
       dockerfile: docker/lumia-web/Dockerfile
     restart: unless-stopped
     depends_on:
-      - lumia-backend-api
+      lumia-backend-api:
+        condition: service_healthy
     ports:
       - "8080:80"
     networks:

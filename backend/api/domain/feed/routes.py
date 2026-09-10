@@ -24,6 +24,7 @@ from api.domain.feed.unread_service import count_unread
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.technical.db import get_db_session
+from api.technical.net.url_guard import BlockedUrlError, Resolver, get_url_resolver
 from worker.technical.connectors.miniflux_client import (
     MinifluxApiError,
     get_feed_icon,
@@ -31,6 +32,9 @@ from worker.technical.connectors.miniflux_client import (
 )
 
 router = APIRouter()
+
+_MAX_OPML_BYTES = 2 * 1024 * 1024
+_UPLOAD_CHUNK_BYTES = 64 * 1024
 
 
 def _to_folder_response(folder: Folder) -> FolderResponse:
@@ -169,16 +173,37 @@ async def add_feed_by_url(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
+    resolve: Resolver = Depends(get_url_resolver),
 ) -> FeedResponse:
     try:
         feed = await add_feed(
-            session, user, payload.url, payload.folder_id, miniflux_transport=transport
+            session,
+            user,
+            payload.url,
+            payload.folder_id,
+            miniflux_transport=transport,
+            resolve=resolve,
         )
     except FolderNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
-    except FeedUnreachableError as exc:
+    except (FeedUnreachableError, BlockedUrlError) as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
     return _to_feed_response(feed)
+
+
+async def _read_capped(file: UploadFile) -> bytes:
+    """Reads an upload in chunks, refusing one that goes over the cap.
+
+    A subscription export is a list of URLs, so a couple of megabytes is already generous — and
+    reading first, checking after, would mean holding whatever was sent in memory before deciding
+    it was too big.
+    """
+    body = bytearray()
+    while chunk := await file.read(_UPLOAD_CHUNK_BYTES):
+        body += chunk
+        if len(body) > _MAX_OPML_BYTES:
+            raise HTTPException(status_code=status.HTTP_413_CONTENT_TOO_LARGE)
+    return bytes(body)
 
 
 @router.post("/feeds/import-opml", response_model=list[FeedResponse])
@@ -187,10 +212,13 @@ async def import_opml_feeds(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
+    resolve: Resolver = Depends(get_url_resolver),
 ) -> list[FeedResponse]:
-    xml_bytes = await file.read()
+    xml_bytes = await _read_capped(file)
     try:
-        feeds = await import_opml(session, user, xml_bytes, miniflux_transport=transport)
+        feeds = await import_opml(
+            session, user, xml_bytes, miniflux_transport=transport, resolve=resolve
+        )
     except InvalidOpmlError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
     return [_to_feed_response(feed) for feed in feeds]
