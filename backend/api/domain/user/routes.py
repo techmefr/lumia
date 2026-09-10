@@ -7,6 +7,8 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.domain.user.account_export import export_account
+from api.domain.user.account_service import delete_account
 from api.domain.user.dependencies import get_current_user, require_admin
 from api.domain.user.exceptions import (
     EmailAlreadyTakenError,
@@ -15,6 +17,7 @@ from api.domain.user.exceptions import (
     InvalidMagicLinkTokenError,
     InvalidRefreshTokenError,
     InvalidSsoLoginAttemptError,
+    LastAdminError,
     SsoNotConfiguredError,
 )
 from api.domain.user.invitation_service import (
@@ -33,6 +36,8 @@ from api.domain.user.refresh_token_service import (
     rotate_refresh_token,
 )
 from api.domain.user.schemas import (
+    AccountExportResponse,
+    DeleteAccountRequest,
     InvitationAcceptRequest,
     InvitationRequest,
     InvitationResponse,
@@ -431,6 +436,59 @@ def _to_me_response(user: User) -> MeResponse:
 @router.get("/me", response_model=MeResponse)
 async def get_me(user: User = Depends(get_current_user)) -> MeResponse:
     return _to_me_response(user)
+
+
+@router.get("/me/export", response_model=AccountExportResponse)
+async def export_me(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> AccountExportResponse:
+    return await export_account(session, user)
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_me(
+    payload: DeleteAccountRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    if payload.confirm_email.lower() != user.email.lower():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="the confirmation address does not match this account",
+        )
+    if user.password_hash is not None and not (
+        payload.password and verify_password(payload.password, user.password_hash)
+    ):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    try:
+        await delete_account(session, user.id)
+    except LastAdminError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="the last admin of the instance cannot delete their account",
+        ) from exc
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    user_id: UUID,
+    admin: User = Depends(require_admin),
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    """An admin removing somebody else's account; their own goes through DELETE /me."""
+    if user_id == admin.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="use DELETE /me to delete your own account",
+        )
+    target = await session.get(User, user_id)
+    if target is None or target.instance_id != admin.instance_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    try:
+        await delete_account(session, user_id)
+    except LastAdminError as exc:  # pragma: no cover - an admin cannot be the last one here
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT) from exc
 
 
 @router.patch("/me", response_model=MeResponse)

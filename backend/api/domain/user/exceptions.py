@@ -24,3 +24,7 @@ class InstanceFullError(Exception):
 
 class EmailAlreadyTakenError(Exception):
     pass
+
+
+class LastAdminError(Exception):
+    pass
