@@ -15,12 +15,12 @@ from api.domain.user.exceptions import (
 from api.domain.user.magic_link_service import request_magic_link, verify_magic_link_token
 from api.domain.user.models import Instance, Role, User
 from api.domain.user.refresh_token_service import (
-    get_user_id_for_refresh_token,
     issue_refresh_token,
+    revoke_all_refresh_tokens,
     revoke_refresh_token,
+    rotate_refresh_token,
 )
 from api.domain.user.schemas import (
-    AccessTokenResponse,
     LoginRequest,
     LogoutRequest,
     MagicLinkRequest,
@@ -101,16 +101,16 @@ async def login(
     return await _issue_token_pair(session, user.id)
 
 
-@router.post("/auth/refresh", response_model=AccessTokenResponse)
+@router.post("/auth/refresh", response_model=TokenPairResponse)
 async def refresh(
     payload: RefreshRequest,
     session: AsyncSession = Depends(get_db_session),
-) -> AccessTokenResponse:
+) -> TokenPairResponse:
     try:
-        user_id = await get_user_id_for_refresh_token(session, payload.refresh_token)
+        user_id, refresh_token = await rotate_refresh_token(session, payload.refresh_token)
     except InvalidRefreshTokenError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
-    return AccessTokenResponse(access_token=create_access_token(user_id))
+    return TokenPairResponse(access_token=create_access_token(user_id), refresh_token=refresh_token)
 
 
 @router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -119,6 +119,15 @@ async def logout(
     session: AsyncSession = Depends(get_db_session),
 ) -> None:
     await revoke_refresh_token(session, payload.refresh_token)
+
+
+@router.post("/auth/logout-all", status_code=status.HTTP_204_NO_CONTENT)
+async def logout_everywhere(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    """Ends every session of the account, for a device that is gone and cannot be logged out."""
+    await revoke_all_refresh_tokens(session, user.id)
 
 
 @router.post("/auth/magic-link", status_code=status.HTTP_202_ACCEPTED)
