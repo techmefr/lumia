@@ -4,7 +4,6 @@ import httpx
 import pytest
 
 from api.main import app
-from api.technical.net.url_guard import get_url_resolver
 from worker.technical.connectors.miniflux_client import get_miniflux_transport
 
 ADMIN_PAYLOAD = {
@@ -13,18 +12,17 @@ ADMIN_PAYLOAD = {
     "password": "correct-horse-battery-staple",
 }
 
-FEEDLY_OPML = b"""<?xml version="1.0" encoding="UTF-8"?>
+BILLION_LAUGHS = b"""<?xml version="1.0"?>
+<!DOCTYPE opml [
+  <!ENTITY a "dos">
+  <!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">
+  <!ENTITY c "&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;">
+  <!ENTITY d "&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;">
+]>
 <opml version="1.0">
-  <body>
-    <outline type="rss" text="Hacker News" title="Hacker News"
-             xmlUrl="https://hnrss.org/frontpage" htmlUrl="https://news.ycombinator.com"/>
-  </body>
+  <body><outline type="rss" title="&d;" xmlUrl="https://example.com/feed"/></body>
 </opml>
 """
-
-
-def _resolve_to_the_public_internet(host: str) -> list[str]:
-    return ["93.184.216.34"]
 
 
 def _miniflux_handler(request: httpx.Request) -> httpx.Response:
@@ -37,15 +35,13 @@ def _miniflux_handler(request: httpx.Request) -> httpx.Response:
 
 @pytest.fixture
 async def client(db_schema: None) -> AsyncIterator[httpx.AsyncClient]:
-    transport = httpx.ASGITransport(app=app)
     app.dependency_overrides[get_miniflux_transport] = lambda: httpx.MockTransport(
         _miniflux_handler
     )
-    app.dependency_overrides[get_url_resolver] = lambda: _resolve_to_the_public_internet
+    transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as async_client:
         yield async_client
-    app.dependency_overrides.pop(get_miniflux_transport, None)
-    app.dependency_overrides.pop(get_url_resolver, None)
+    app.dependency_overrides.clear()
 
 
 async def _headers(client: httpx.AsyncClient) -> dict[str, str]:
@@ -53,39 +49,26 @@ async def _headers(client: httpx.AsyncClient) -> dict[str, str]:
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
-async def test_import_opml_creates_feeds_from_the_uploaded_file(
-    client: httpx.AsyncClient,
-) -> None:
+async def test_an_upload_over_the_cap_is_refused(client: httpx.AsyncClient) -> None:
     headers = await _headers(client)
+    oversized = b"<opml><body>" + b"<!-- padding -->" * 200_000 + b"</body></opml>"
 
     response = await client.post(
         "/feeds/import-opml",
+        files={"file": ("big.opml", oversized, "text/xml")},
         headers=headers,
-        files={"file": ("feeds.opml", FEEDLY_OPML, "text/x-opml")},
     )
 
-    assert response.status_code == 200
-    body = response.json()
-    assert len(body) == 1
-    assert body[0]["url"] == "https://hnrss.org/frontpage"
-    assert body[0]["external_feed_id"] == "7"
+    assert response.status_code == 413
 
 
-async def test_import_opml_rejects_a_malformed_file(client: httpx.AsyncClient) -> None:
+async def test_an_entity_expansion_document_is_refused(client: httpx.AsyncClient) -> None:
     headers = await _headers(client)
 
     response = await client.post(
         "/feeds/import-opml",
+        files={"file": ("bomb.opml", BILLION_LAUGHS, "text/xml")},
         headers=headers,
-        files={"file": ("feeds.opml", b"not xml", "text/x-opml")},
     )
 
     assert response.status_code == 400
-
-
-async def test_import_opml_without_a_token_returns_401(client: httpx.AsyncClient) -> None:
-    response = await client.post(
-        "/feeds/import-opml",
-        files={"file": ("feeds.opml", FEEDLY_OPML, "text/x-opml")},
-    )
-    assert response.status_code == 401

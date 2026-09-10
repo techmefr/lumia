@@ -6,23 +6,35 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.domain.user.dependencies import get_current_user
+from api.domain.user.dependencies import get_current_user, require_admin
 from api.domain.user.exceptions import (
+    EmailAlreadyTakenError,
+    InstanceFullError,
+    InvalidInvitationError,
     InvalidMagicLinkTokenError,
     InvalidRefreshTokenError,
     InvalidSsoLoginAttemptError,
     SsoNotConfiguredError,
 )
+from api.domain.user.invitation_service import (
+    accept_invitation,
+    invite_member,
+    list_pending_invitations,
+    revoke_invitation,
+)
 from api.domain.user.magic_link_service import request_magic_link, verify_magic_link_token
-from api.domain.user.models import Instance, Role, User
+from api.domain.user.models import Instance, Invitation, Role, User
 from api.domain.user.oidc_login_service import consume_login_attempt, start_login_attempt
 from api.domain.user.refresh_token_service import (
-    get_user_id_for_refresh_token,
     issue_refresh_token,
+    revoke_all_refresh_tokens,
     revoke_refresh_token,
+    rotate_refresh_token,
 )
 from api.domain.user.schemas import (
-    AccessTokenResponse,
+    InvitationAcceptRequest,
+    InvitationRequest,
+    InvitationResponse,
     LoginRequest,
     LogoutRequest,
     MagicLinkRequest,
@@ -34,7 +46,11 @@ from api.domain.user.schemas import (
     SsoCallbackRequest,
     TokenPairResponse,
 )
-from api.domain.user.sso_service import ensure_sso_configured, get_or_create_sso_user
+from api.domain.user.sso_service import (
+    SsoConfiguration,
+    get_or_create_sso_user,
+    read_sso_configuration,
+)
 from api.technical.auth.hashing import hash_password, verify_password
 from api.technical.auth.jwt import create_access_token
 from api.technical.auth.oidc_client import (
@@ -91,6 +107,89 @@ async def onboard_admin(
     return await _issue_token_pair(session, user.id)
 
 
+def _to_invitation_response(invitation: Invitation) -> InvitationResponse:
+    return InvitationResponse(
+        id=invitation.id,
+        email=invitation.email,
+        role=invitation.role,
+        expires_at=invitation.expires_at,
+    )
+
+
+async def _current_instance(session: AsyncSession) -> Instance:
+    instance = await session.scalar(select(Instance))
+    if instance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return instance
+
+
+@router.post(
+    "/invitations",
+    response_model=InvitationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_invitation(
+    payload: InvitationRequest,
+    _admin: User = Depends(require_admin),
+    session: AsyncSession = Depends(get_db_session),
+) -> InvitationResponse:
+    instance = await _current_instance(session)
+    try:
+        invitation = await invite_member(session, instance, email=payload.email, role=payload.role)
+    except EmailAlreadyTakenError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT) from exc
+    except InstanceFullError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="the instance has no seat left",
+        ) from exc
+    return _to_invitation_response(invitation)
+
+
+@router.get("/invitations", response_model=list[InvitationResponse])
+async def list_invitations(
+    _admin: User = Depends(require_admin),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[InvitationResponse]:
+    instance = await _current_instance(session)
+    invitations = await list_pending_invitations(session, instance.id)
+    return [_to_invitation_response(invitation) for invitation in invitations]
+
+
+@router.delete("/invitations/{invitation_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_invitation(
+    invitation_id: UUID,
+    _admin: User = Depends(require_admin),
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    instance = await _current_instance(session)
+    try:
+        await revoke_invitation(session, instance.id, invitation_id)
+    except InvalidInvitationError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
+
+
+@router.post(
+    "/invitations/accept",
+    response_model=TokenPairResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def accept_invitation_route(
+    payload: InvitationAcceptRequest,
+    session: AsyncSession = Depends(get_db_session),
+) -> TokenPairResponse:
+    """Unauthenticated on purpose: the token is the only credential the invitee has yet."""
+    try:
+        user = await accept_invitation(
+            session, payload.token, username=payload.username, password=payload.password
+        )
+    except InvalidInvitationError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
+    except (EmailAlreadyTakenError, InstanceFullError) as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT) from exc
+    return await _issue_token_pair(session, user.id)
+
+
 @router.post("/auth/login", response_model=TokenPairResponse)
 async def login(
     payload: LoginRequest,
@@ -107,16 +206,16 @@ async def login(
     return await _issue_token_pair(session, user.id)
 
 
-@router.post("/auth/refresh", response_model=AccessTokenResponse)
+@router.post("/auth/refresh", response_model=TokenPairResponse)
 async def refresh(
     payload: RefreshRequest,
     session: AsyncSession = Depends(get_db_session),
-) -> AccessTokenResponse:
+) -> TokenPairResponse:
     try:
-        user_id = await get_user_id_for_refresh_token(session, payload.refresh_token)
+        user_id, refresh_token = await rotate_refresh_token(session, payload.refresh_token)
     except InvalidRefreshTokenError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
-    return AccessTokenResponse(access_token=create_access_token(user_id))
+    return TokenPairResponse(access_token=create_access_token(user_id), refresh_token=refresh_token)
 
 
 @router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -125,6 +224,15 @@ async def logout(
     session: AsyncSession = Depends(get_db_session),
 ) -> None:
     await revoke_refresh_token(session, payload.refresh_token)
+
+
+@router.post("/auth/logout-all", status_code=status.HTTP_204_NO_CONTENT)
+async def logout_everywhere(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    """Ends every session of the account, for a device that is gone and cannot be logged out."""
+    await revoke_all_refresh_tokens(session, user.id)
 
 
 @router.post("/auth/magic-link", status_code=status.HTTP_202_ACCEPTED)
@@ -147,15 +255,14 @@ async def verify_magic_link(
     return await _issue_token_pair(session, user_id)
 
 
-async def _get_sso_configured_instance(session: AsyncSession) -> Instance:
+async def _read_sso_instance(session: AsyncSession) -> tuple[Instance, SsoConfiguration]:
     instance = await session.scalar(select(Instance))
     if instance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     try:
-        ensure_sso_configured(instance)
+        return instance, read_sso_configuration(instance)
     except SsoNotConfiguredError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
-    return instance
 
 
 async def _discover_or_400(
@@ -175,16 +282,13 @@ async def sso_login(
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_oidc_transport),
 ) -> RedirectResponse:
-    instance = await _get_sso_configured_instance(session)
-    assert instance.oidc_issuer is not None
-    assert instance.oidc_client_id is not None
-    assert instance.oidc_redirect_uri is not None
-    document = await _discover_or_400(instance.oidc_issuer, transport)
+    _, sso = await _read_sso_instance(session)
+    document = await _discover_or_400(sso.issuer, transport)
     state, nonce = await start_login_attempt(session)
     authorize_url = build_authorize_url(
         document,
-        client_id=instance.oidc_client_id,
-        redirect_uri=instance.oidc_redirect_uri,
+        client_id=sso.client_id,
+        redirect_uri=sso.redirect_uri,
         state=state,
         nonce=nonce,
     )
@@ -197,22 +301,18 @@ async def sso_callback(
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_oidc_transport),
 ) -> TokenPairResponse:
-    instance = await _get_sso_configured_instance(session)
-    assert instance.oidc_issuer is not None
-    assert instance.oidc_client_id is not None
-    assert instance.oidc_client_secret_encrypted is not None
-    assert instance.oidc_redirect_uri is not None
+    instance, sso = await _read_sso_instance(session)
     try:
         nonce = await consume_login_attempt(session, payload.state)
     except InvalidSsoLoginAttemptError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
 
-    document = await _discover_or_400(instance.oidc_issuer, transport)
+    document = await _discover_or_400(sso.issuer, transport)
     tokens = await exchange_code_for_tokens(
         document,
-        client_id=instance.oidc_client_id,
-        client_secret=decrypt_secret(instance.oidc_client_secret_encrypted),
-        redirect_uri=instance.oidc_redirect_uri,
+        client_id=sso.client_id,
+        client_secret=decrypt_secret(sso.client_secret_encrypted),
+        redirect_uri=sso.redirect_uri,
         code=payload.code,
         transport=transport,
     )
@@ -227,7 +327,7 @@ async def sso_callback(
             id_token,
             jwks=await fetch_jwks(document, transport=transport),
             issuer=document.issuer,
-            client_id=instance.oidc_client_id,
+            client_id=sso.client_id,
             nonce=nonce,
         )
     except InvalidIdTokenError as exc:
@@ -247,7 +347,15 @@ async def sso_callback(
             detail="the provider returned no email address",
         )
 
-    user = await get_or_create_sso_user(session, instance, sub=str(claims["sub"]), email=str(email))
+    try:
+        user = await get_or_create_sso_user(
+            session, instance, sub=str(claims["sub"]), email=str(email)
+        )
+    except InstanceFullError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="the instance has no seat left",
+        ) from exc
     return await _issue_token_pair(session, user.id)
 
 

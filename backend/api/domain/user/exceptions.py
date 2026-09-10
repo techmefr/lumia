@@ -12,3 +12,15 @@ class SsoNotConfiguredError(Exception):
 
 class InvalidSsoLoginAttemptError(Exception):
     pass
+
+
+class InvalidInvitationError(Exception):
+    pass
+
+
+class InstanceFullError(Exception):
+    pass
+
+
+class EmailAlreadyTakenError(Exception):
+    pass

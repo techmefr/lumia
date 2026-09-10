@@ -301,8 +301,12 @@ describe('the browser permission', () => {
 describe('polling for new articles', () => {
 	let stop: (() => void) | null = null;
 
+	// Pinned to the middle of the afternoon: the default settings are quiet from 22:00 to 08:00, so
+	// on the real clock these cases pass or fail depending on what time the suite happens to run —
+	// green locally in the afternoon, red in CI at 07:30 UTC.
 	beforeEach(() => {
 		vi.useFakeTimers();
+		vi.setSystemTime(new Date('2026-09-09T15:00:00'));
 		localStorage.clear();
 	});
 
