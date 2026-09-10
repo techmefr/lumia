@@ -22,13 +22,15 @@ DEFAULT_MODEL = "claude-haiku-4-5-20251001"
 #: Pinned rather than tracking latest: a silent shape change in the response would break the
 #: pipeline for every self-hoster at once.
 API_VERSION = "2023-06-01"
-_MAX_OUTPUT_TOKENS = 512
+#: Sized for the longest answer this client is asked for, a whole translated article. A summary
+#: stays short because its prompt says so, not because the ceiling cuts it off.
+_MAX_OUTPUT_TOKENS = 8192
 SERVICE_NAME = "anthropic"
 
 logger = logging.getLogger(__name__)
 
 
-class AnthropicSummarizer:
+class AnthropicChatClient:
     def __init__(
         self,
         *,
@@ -40,7 +42,7 @@ class AnthropicSummarizer:
         self._model = model
         self._transport = transport
 
-    async def summarize(self, text: str) -> str:
+    async def complete(self, *, system: str, user: str) -> str:
         async with httpx.AsyncClient(
             base_url=BASE_URL,
             headers={"x-api-key": self._api_key, "anthropic-version": API_VERSION},
@@ -52,15 +54,15 @@ class AnthropicSummarizer:
                 json={
                     "model": self._model,
                     "max_tokens": _MAX_OUTPUT_TOKENS,
-                    "system": SUMMARY_PROMPT,
-                    "messages": [{"role": "user", "content": text[:MAX_INPUT_CHARS]}],
+                    "system": system,
+                    "messages": [{"role": "user", "content": user}],
                 },
             )
             if response.status_code >= 400:
                 log_external_failure(
                     logger,
                     service=SERVICE_NAME,
-                    operation="summarize",
+                    operation="complete",
                     url=str(response.request.url),
                     status_code=response.status_code,
                 )
@@ -70,3 +72,6 @@ class AnthropicSummarizer:
             if not texts:
                 raise LlmApiError("no text block returned")
             return "".join(texts).strip()
+
+    async def summarize(self, text: str) -> str:
+        return await self.complete(system=SUMMARY_PROMPT, user=text[:MAX_INPUT_CHARS])

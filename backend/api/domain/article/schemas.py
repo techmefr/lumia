@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from api.domain.user.models import ReadingLang
+
 
 class KeywordResponse(BaseModel):
     id: UUID
@@ -36,3 +38,15 @@ class ArticleDetailResponse(ArticleSummaryResponse):
 
 class SaveUrlRequest(BaseModel):
     url: str
+
+
+class TranslateArticleRequest(BaseModel):
+    target_lang: ReadingLang
+
+
+class ArticleTranslationResponse(BaseModel):
+    """A translation computed on demand and never stored: the article keeps its own language."""
+
+    target_lang: ReadingLang
+    title: str
+    content: str

@@ -16,3 +16,15 @@ class LlmApiError(Exception):
 
 class Summarizer(Protocol):
     async def summarize(self, text: str) -> str: ...
+
+
+class ChatClient(Protocol):
+    """A configured LLM reachable with a system prompt and a user message.
+
+    Narrower than a provider SDK on purpose: it is the only shape the callers need, so a second
+    use of the account's model — translating, for instance — costs a prompt rather than a client.
+    """
+
+    async def complete(self, *, system: str, user: str) -> str: ...
+
+    async def summarize(self, text: str) -> str: ...

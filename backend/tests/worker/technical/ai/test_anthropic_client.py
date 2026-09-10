@@ -4,12 +4,12 @@ import logging
 import httpx
 import pytest
 
-from worker.technical.ai.anthropic_client import API_VERSION, AnthropicSummarizer
+from worker.technical.ai.anthropic_client import API_VERSION, AnthropicChatClient
 from worker.technical.ai.base import LlmApiError
 
 
-def _summarizer(handler: object) -> AnthropicSummarizer:
-    return AnthropicSummarizer(
+def _summarizer(handler: object) -> AnthropicChatClient:
+    return AnthropicChatClient(
         api_key="sk-ant-test",
         model="claude-test",
         transport=httpx.MockTransport(handler),  # type: ignore[arg-type]
@@ -86,7 +86,7 @@ async def test_summarize_logs_the_url_and_the_status_of_a_rejected_call(
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(401, text="invalid x-api-key")
 
-    summarizer = AnthropicSummarizer(
+    summarizer = AnthropicChatClient(
         api_key="wrong", model="claude-test", transport=httpx.MockTransport(handler)
     )
     with caplog.at_level(logging.WARNING), pytest.raises(LlmApiError):

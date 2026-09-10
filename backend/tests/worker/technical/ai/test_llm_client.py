@@ -5,14 +5,14 @@ import pytest
 
 from worker.technical.ai.llm_client import (
     LlmApiError,
-    OpenAiCompatibleSummarizer,
+    OpenAiCompatibleChatClient,
     resolve_base_url,
     resolve_model,
 )
 
 
-def _summarizer(handler: object) -> OpenAiCompatibleSummarizer:
-    return OpenAiCompatibleSummarizer(
+def _summarizer(handler: object) -> OpenAiCompatibleChatClient:
+    return OpenAiCompatibleChatClient(
         api_key="sk-test",
         base_url="http://provider.test/v1",
         model="test-model",
@@ -102,7 +102,7 @@ async def test_summarize_logs_the_url_and_the_status_of_a_rejected_call(
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(429, text="rate limited")
 
-    summarizer = OpenAiCompatibleSummarizer(
+    summarizer = OpenAiCompatibleChatClient(
         api_key="key",
         base_url="https://provider.test/v1",
         model="small",

@@ -29,3 +29,9 @@ export interface ArticleDetail extends ArticleSummary {
 	content: string;
 	keywords: Keyword[];
 }
+
+export interface ArticleTranslation {
+	target_lang: string;
+	title: string;
+	content: string;
+}

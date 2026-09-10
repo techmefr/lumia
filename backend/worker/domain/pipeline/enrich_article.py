@@ -8,28 +8,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword, Author, Category, Keyword, Lang
 from api.domain.feed.models import Feed, SourceType
-from api.domain.user.models import AIProvider, ReadingLang, User
-from api.technical.crypto.secret_box import decrypt_secret
+from api.domain.user.models import ReadingLang, User
+from api.domain.user.providers import chat_client_for, translator_for
 from api.technical.logging.external import EXTERNAL_CALL_FAILED_EVENT, describe_error
 from worker.domain.extraction.stemming_en import stem_en
 from worker.domain.extraction.stemming_fr import stem_fr
 from worker.domain.extraction.tfidf import extract_keywords
 from worker.domain.summarizer.extractive import summarize_extractive
-from worker.technical.ai.anthropic_client import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
-from worker.technical.ai.anthropic_client import AnthropicSummarizer
 from worker.technical.ai.base import LlmApiError, Summarizer
-from worker.technical.ai.llm_client import (
-    OpenAiCompatibleSummarizer,
-    resolve_base_url,
-    resolve_model,
-)
 from worker.technical.connectors.base import RawArticle
 from worker.technical.content_extraction import ContentExtractor, TrafilaturaContentExtractor
 from worker.technical.db import worker_session
 from worker.technical.html import extract_first_image, strip_html
 from worker.technical.lang_detect import detect_lang
 from worker.technical.translation.base import TranslationApiError, Translator
-from worker.technical.translation.deepl_client import DeeplTranslator
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +61,7 @@ async def enrich_article(
                 plain_text,
                 lang,
                 target_lang,
-                translator or _translator_for(user),
+                translator if translator is not None else translator_for(user),
                 translated_cache,
             )
             await _create_article_if_new(
@@ -80,7 +72,7 @@ async def enrich_article(
                 category=category,
                 title=title,
                 content=content,
-                summary=await _summarize(summary_source, _summarizer_for(user)),
+                summary=await _summarize(summary_source, chat_client_for(user)),
                 image_url=image_url,
                 keywords=keywords,
                 original_lang=lang,
@@ -88,34 +80,6 @@ async def enrich_article(
             )
 
         await session.commit()
-
-
-def _translator_for(user: User | None) -> DeeplTranslator:
-    if user is None or user.translation_api_key_encrypted is None:
-        return DeeplTranslator()
-    return DeeplTranslator(api_key=decrypt_secret(user.translation_api_key_encrypted))
-
-
-def _summarizer_for(user: User | None) -> AnthropicSummarizer | OpenAiCompatibleSummarizer | None:
-    """The account's own LLM summarizer, or None to keep the local extractive summary.
-
-    A provider without a key, or a self-hosted endpoint with no url or model, is an incomplete
-    configuration: it falls back rather than failing the article.
-    """
-    if user is None or user.ai_provider is None or user.ai_api_key_encrypted is None:
-        return None
-    if user.ai_provider is AIProvider.ANTHROPIC:
-        return AnthropicSummarizer(
-            api_key=decrypt_secret(user.ai_api_key_encrypted),
-            model=user.ai_model or ANTHROPIC_DEFAULT_MODEL,
-        )
-    base_url = resolve_base_url(user.ai_provider.value, user.ai_endpoint_url)
-    model = resolve_model(user.ai_provider.value, user.ai_model)
-    if base_url is None or model is None:
-        return None
-    return OpenAiCompatibleSummarizer(
-        api_key=decrypt_secret(user.ai_api_key_encrypted), base_url=base_url, model=model
-    )
 
 
 async def _summarize(text: str, summarizer: Summarizer | None) -> str:
@@ -143,12 +107,16 @@ async def _localize(
     plain_text: str,
     detected_lang: Lang,
     target_lang: ReadingLang,
-    translator: Translator,
+    translator: Translator | None,
     translated_cache: dict[ReadingLang, tuple[str, str]],
 ) -> tuple[str, str, str]:
     # Compared on the code rather than the enum: the two are different types on purpose, one being
     # the language an article is in and the other one a reader's target.
-    if target_lang.value == detected_lang.value or not translator.supports(target_lang.value):
+    if (
+        target_lang.value == detected_lang.value
+        or translator is None
+        or not translator.supports(target_lang.value)
+    ):
         return raw_article.title, raw_article.content, plain_text
     if target_lang not in translated_cache:
         try:

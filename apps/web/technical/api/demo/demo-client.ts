@@ -1,6 +1,7 @@
 import type {
 	ArticleDetail,
 	ArticleSummary,
+	ArticleTranslation,
 	DiscoverSuggestion,
 	Feed,
 	FeedUpdate,
@@ -18,6 +19,7 @@ import type {
 	TokenStore,
 	UnreadCounts
 } from '@lumia/core';
+import { ApiError } from '@lumia/core';
 import {
 	SEED_ARTICLES,
 	SEED_DISCOVER,
@@ -497,6 +499,14 @@ export function createDemoClient(): LumiaClient {
 				const summary = toSummary(id);
 				if (!summary) throw new Error('article introuvable');
 				return settle(summary);
+			},
+			/**
+			 * The demo has no provider to translate with, and inventing a translation would show a
+			 * capability the reader does not have. It answers the same way a keyless install does.
+			 */
+			translateArticle: async (): Promise<ArticleTranslation> => {
+				await settle(null);
+				throw new ApiError(503, { detail: 'no_translation_provider' });
 			}
 		},
 		recommendation: {
