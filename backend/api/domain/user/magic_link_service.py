@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.user.exceptions import InvalidMagicLinkTokenError
@@ -16,6 +16,14 @@ async def request_magic_link(session: AsyncSession, email: str) -> None:
     user = await session.scalar(select(User).where(User.email == email))
     if user is None:
         return
+
+    # Asking for a new link retires the ones already sent: several live links mean several
+    # windows an old mail can still be replayed through.
+    await session.execute(
+        update(MagicLinkToken)
+        .where(MagicLinkToken.user_id == user.id, MagicLinkToken.used_at.is_(None))
+        .values(used_at=datetime.now(UTC))
+    )
 
     raw_token = generate_opaque_token()
     config = get_auth_config()

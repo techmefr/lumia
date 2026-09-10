@@ -136,3 +136,57 @@ async def test_verify_magic_link_token_can_only_be_used_once(session: AsyncSessi
     assert await verify_magic_link_token(session, "single-use-token") == user.id
     with pytest.raises(InvalidMagicLinkTokenError):
         await verify_magic_link_token(session, "single-use-token")
+
+
+async def test_asking_for_a_new_link_retires_the_previous_one(session: AsyncSession) -> None:
+    """Several live links mean several windows an old mail can still be replayed through."""
+    await _create_user(session, "user@example.com")
+    for raw_token in ("first-token", "second-token"):
+        with (
+            patch("api.domain.user.magic_link_service.send_email", new_callable=AsyncMock),
+            patch(
+                "api.domain.user.magic_link_service.generate_opaque_token",
+                return_value=raw_token,
+            ),
+        ):
+            await request_magic_link(session, "user@example.com")
+
+    with pytest.raises(InvalidMagicLinkTokenError):
+        await verify_magic_link_token(session, "first-token")
+
+
+async def test_the_newest_link_is_the_one_that_works(session: AsyncSession) -> None:
+    user = await _create_user(session, "user@example.com")
+    for raw_token in ("first-token", "second-token"):
+        with (
+            patch("api.domain.user.magic_link_service.send_email", new_callable=AsyncMock),
+            patch(
+                "api.domain.user.magic_link_service.generate_opaque_token",
+                return_value=raw_token,
+            ),
+        ):
+            await request_magic_link(session, "user@example.com")
+
+    assert await verify_magic_link_token(session, "second-token") == user.id
+
+
+async def test_asking_for_a_link_leaves_another_reader_s_link_alone(
+    session: AsyncSession,
+) -> None:
+    user = await _create_user(session, "first@example.com")
+    await _create_user(session, "second@example.com")
+    with (
+        patch("api.domain.user.magic_link_service.send_email", new_callable=AsyncMock),
+        patch(
+            "api.domain.user.magic_link_service.generate_opaque_token",
+            return_value="theirs",
+        ),
+    ):
+        await request_magic_link(session, "first@example.com")
+    with (
+        patch("api.domain.user.magic_link_service.send_email", new_callable=AsyncMock),
+        patch("api.domain.user.magic_link_service.generate_opaque_token", return_value="mine"),
+    ):
+        await request_magic_link(session, "second@example.com")
+
+    assert await verify_magic_link_token(session, "theirs") == user.id

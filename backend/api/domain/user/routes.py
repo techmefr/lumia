@@ -1,7 +1,8 @@
+from datetime import timedelta
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -67,8 +68,29 @@ from api.technical.auth.oidc_client import (
 )
 from api.technical.crypto.secret_box import decrypt_secret, encrypt_secret
 from api.technical.db import get_db_session
+from api.technical.rate_limit.dependencies import client_address, enforce
+from api.technical.rate_limit.limiter import RateLimiter, get_rate_limiter
+from config.rate_limit import get_rate_limit_config
 
 router = APIRouter()
+
+
+async def _enforce_token_guessing_limit(
+    limiter: RateLimiter, request: Request, *, scope: str
+) -> None:
+    """Caps the routes that take an opaque token.
+
+    The address is the only identifier available here: the token being tried is exactly what is
+    not to be trusted, and keying on it would give every guess its own fresh allowance.
+    """
+    config = get_rate_limit_config()
+    await enforce(
+        limiter,
+        scope=scope,
+        identifiers={"ip": client_address(request)},
+        max_attempts=config.token_max_attempts,
+        window=timedelta(minutes=config.token_window_minutes),
+    )
 
 
 async def _issue_token_pair(session: AsyncSession, user_id: UUID) -> TokenPairResponse:
@@ -193,8 +215,18 @@ async def accept_invitation_route(
 @router.post("/auth/login", response_model=TokenPairResponse)
 async def login(
     payload: LoginRequest,
+    request: Request,
     session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
 ) -> TokenPairResponse:
+    config = get_rate_limit_config()
+    await enforce(
+        limiter,
+        scope="login",
+        identifiers={"ip": client_address(request), "email": payload.email.lower()},
+        max_attempts=config.login_max_attempts,
+        window=timedelta(minutes=config.login_window_minutes),
+    )
     user = await session.scalar(select(User).where(User.email == payload.email))
     if (
         user is None
@@ -209,8 +241,11 @@ async def login(
 @router.post("/auth/refresh", response_model=TokenPairResponse)
 async def refresh(
     payload: RefreshRequest,
+    request: Request,
     session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
 ) -> TokenPairResponse:
+    await _enforce_token_guessing_limit(limiter, request, scope="refresh")
     try:
         user_id, refresh_token = await rotate_refresh_token(session, payload.refresh_token)
     except InvalidRefreshTokenError as exc:
@@ -238,16 +273,31 @@ async def logout_everywhere(
 @router.post("/auth/magic-link", status_code=status.HTTP_202_ACCEPTED)
 async def send_magic_link(
     payload: MagicLinkRequest,
+    request: Request,
     session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
 ) -> None:
+    config = get_rate_limit_config()
+    # Capped by address as well as by mailbox: this route sends a mail on every call, so without
+    # it anyone can flood a reader's inbox and fill the token table at no cost.
+    await enforce(
+        limiter,
+        scope="magic-link",
+        identifiers={"ip": client_address(request), "email": payload.email.lower()},
+        max_attempts=config.magic_link_max_attempts,
+        window=timedelta(minutes=config.magic_link_window_minutes),
+    )
     await request_magic_link(session, payload.email)
 
 
 @router.post("/auth/magic-link/verify", response_model=TokenPairResponse)
 async def verify_magic_link(
     payload: MagicLinkVerifyRequest,
+    request: Request,
     session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
 ) -> TokenPairResponse:
+    await _enforce_token_guessing_limit(limiter, request, scope="magic-link-verify")
     try:
         user_id = await verify_magic_link_token(session, payload.token)
     except InvalidMagicLinkTokenError as exc:
