@@ -10,6 +10,10 @@ class SsoNotConfiguredError(Exception):
     pass
 
 
+class SsoSubjectMismatchError(Exception):
+    pass
+
+
 class InvalidSsoLoginAttemptError(Exception):
     pass
 

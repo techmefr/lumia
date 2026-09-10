@@ -19,6 +19,7 @@ from api.domain.user.exceptions import (
     InvalidSsoLoginAttemptError,
     LastAdminError,
     SsoNotConfiguredError,
+    SsoSubjectMismatchError,
 )
 from api.domain.user.invitation_service import (
     accept_invitation,
@@ -169,6 +170,11 @@ async def create_invitation(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="the instance has no seat left",
+        ) from exc
+    except SsoSubjectMismatchError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="this address is already linked to another provider account",
         ) from exc
     return _to_invitation_response(invitation)
 
@@ -410,6 +416,11 @@ async def sso_callback(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="the instance has no seat left",
+        ) from exc
+    except SsoSubjectMismatchError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="this address is already linked to another provider account",
         ) from exc
     return await _issue_token_pair(session, user.id)
 
