@@ -98,6 +98,12 @@ class RefreshToken(Base, TimestampMixin):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
     token: Mapped[str] = mapped_column(unique=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    #: Every rotation of one login shares a family, so a replayed token can revoke its siblings
+    #: without touching the sessions the reader has on other devices.
+    family_id: Mapped[UUID] = mapped_column(default=uuid4, index=True)
+    #: Set when the token is rotated away or logged out. Kept rather than deleted: a token that
+    #: comes back after being revoked is the signal that it was stolen.
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
 
 class MagicLinkToken(Base, TimestampMixin):
