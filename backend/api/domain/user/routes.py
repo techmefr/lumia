@@ -24,12 +24,12 @@ from api.domain.user.invitation_service import (
 from api.domain.user.magic_link_service import request_magic_link, verify_magic_link_token
 from api.domain.user.models import Instance, Invitation, Role, User
 from api.domain.user.refresh_token_service import (
-    get_user_id_for_refresh_token,
     issue_refresh_token,
+    revoke_all_refresh_tokens,
     revoke_refresh_token,
+    rotate_refresh_token,
 )
 from api.domain.user.schemas import (
-    AccessTokenResponse,
     InvitationAcceptRequest,
     InvitationRequest,
     InvitationResponse,
@@ -44,7 +44,11 @@ from api.domain.user.schemas import (
     SsoCallbackRequest,
     TokenPairResponse,
 )
-from api.domain.user.sso_service import ensure_sso_configured, get_or_create_sso_user
+from api.domain.user.sso_service import (
+    SsoConfiguration,
+    get_or_create_sso_user,
+    read_sso_configuration,
+)
 from api.technical.auth.hashing import hash_password, verify_password
 from api.technical.auth.jwt import create_access_token
 from api.technical.auth.oidc_client import (
@@ -196,16 +200,16 @@ async def login(
     return await _issue_token_pair(session, user.id)
 
 
-@router.post("/auth/refresh", response_model=AccessTokenResponse)
+@router.post("/auth/refresh", response_model=TokenPairResponse)
 async def refresh(
     payload: RefreshRequest,
     session: AsyncSession = Depends(get_db_session),
-) -> AccessTokenResponse:
+) -> TokenPairResponse:
     try:
-        user_id = await get_user_id_for_refresh_token(session, payload.refresh_token)
+        user_id, refresh_token = await rotate_refresh_token(session, payload.refresh_token)
     except InvalidRefreshTokenError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
-    return AccessTokenResponse(access_token=create_access_token(user_id))
+    return TokenPairResponse(access_token=create_access_token(user_id), refresh_token=refresh_token)
 
 
 @router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -214,6 +218,15 @@ async def logout(
     session: AsyncSession = Depends(get_db_session),
 ) -> None:
     await revoke_refresh_token(session, payload.refresh_token)
+
+
+@router.post("/auth/logout-all", status_code=status.HTTP_204_NO_CONTENT)
+async def logout_everywhere(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    """Ends every session of the account, for a device that is gone and cannot be logged out."""
+    await revoke_all_refresh_tokens(session, user.id)
 
 
 @router.post("/auth/magic-link", status_code=status.HTTP_202_ACCEPTED)
@@ -236,15 +249,14 @@ async def verify_magic_link(
     return await _issue_token_pair(session, user_id)
 
 
-async def _get_sso_configured_instance(session: AsyncSession) -> Instance:
+async def _read_sso_instance(session: AsyncSession) -> tuple[Instance, SsoConfiguration]:
     instance = await session.scalar(select(Instance))
     if instance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     try:
-        ensure_sso_configured(instance)
+        return instance, read_sso_configuration(instance)
     except SsoNotConfiguredError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
-    return instance
 
 
 @router.get("/auth/sso/login")
@@ -252,15 +264,12 @@ async def sso_login(
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_oidc_transport),
 ) -> RedirectResponse:
-    instance = await _get_sso_configured_instance(session)
-    assert instance.oidc_issuer is not None
-    assert instance.oidc_client_id is not None
-    assert instance.oidc_redirect_uri is not None
-    document = await discover(instance.oidc_issuer, transport=transport)
+    _, sso = await _read_sso_instance(session)
+    document = await discover(sso.issuer, transport=transport)
     authorize_url = build_authorize_url(
         document,
-        client_id=instance.oidc_client_id,
-        redirect_uri=instance.oidc_redirect_uri,
+        client_id=sso.client_id,
+        redirect_uri=sso.redirect_uri,
         state=generate_opaque_token(),
     )
     return RedirectResponse(authorize_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
@@ -272,17 +281,13 @@ async def sso_callback(
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_oidc_transport),
 ) -> TokenPairResponse:
-    instance = await _get_sso_configured_instance(session)
-    assert instance.oidc_issuer is not None
-    assert instance.oidc_client_id is not None
-    assert instance.oidc_client_secret_encrypted is not None
-    assert instance.oidc_redirect_uri is not None
-    document = await discover(instance.oidc_issuer, transport=transport)
+    instance, sso = await _read_sso_instance(session)
+    document = await discover(sso.issuer, transport=transport)
     tokens = await exchange_code_for_tokens(
         document,
-        client_id=instance.oidc_client_id,
-        client_secret=decrypt_secret(instance.oidc_client_secret_encrypted),
-        redirect_uri=instance.oidc_redirect_uri,
+        client_id=sso.client_id,
+        client_secret=decrypt_secret(sso.client_secret_encrypted),
+        redirect_uri=sso.redirect_uri,
         code=payload.code,
         transport=transport,
     )
