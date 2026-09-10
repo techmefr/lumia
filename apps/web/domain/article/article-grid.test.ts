@@ -44,6 +44,7 @@ function grid(props: Partial<Props> = {}) {
 				node.getAttribute('data-test-article-card')
 			),
 		hero: () => container.querySelector('[data-test-article-hero]'),
+		columns: () => container.querySelector('[data-test-article-columns]'),
 		ringed: () => [...container.querySelectorAll('.ring-2')]
 	};
 }
@@ -168,5 +169,29 @@ describe('the keyboard cursor', () => {
 
 	it('rings nothing for a cursor past the end', () => {
 		expect(grid({ cursor: 99 }).ringed()).toHaveLength(0);
+	});
+});
+
+// jsdom evaluates no media query, so the ladder itself is what can be asserted here; the rendered
+// column counts at 1440, 1920 and 2560 are checked in a browser. What matters is that the ladder
+// only ever grows and that the placeholders follow the same one, so nothing reflows on load.
+describe('how many columns the grid uses', () => {
+	const LADDER = [
+		'grid-cols-1',
+		'sm:grid-cols-2',
+		'lg:grid-cols-3',
+		'xl:grid-cols-4',
+		'2xl:grid-cols-5',
+		'wide:grid-cols-6'
+	];
+
+	it('adds a column at every step up in width', () => {
+		const className = grid().columns()?.className ?? '';
+		for (const step of LADDER) expect(className.split(' ')).toContain(step);
+	});
+
+	it('lays the placeholders out on the same ladder', () => {
+		const loadingClassName = grid({ articles: [], loading: true }).columns()?.className ?? '';
+		expect(loadingClassName).toBe(grid().columns()?.className);
 	});
 });

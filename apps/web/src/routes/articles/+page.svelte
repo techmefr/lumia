@@ -17,6 +17,7 @@
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { bindShortcuts } from '$technical/keyboard/shortcuts';
+	import { watchCompactViewport } from '$technical/layout/breakpoints';
 	import ArticleGrid from '$domain/article/article-grid.svelte';
 	import SectionChips from '$domain/article/section-chips.svelte';
 	import FlipReader from '$domain/article/flip-reader.svelte';
@@ -48,6 +49,7 @@
 	let searchEl = $state<HTMLInputElement | null>(null);
 	let sort = $state<'recent' | 'relevance'>('recent');
 	let flipping = $state(false);
+	let compact = $state(false);
 
 	const filterLabel = $derived(
 		filterKind === 'author'
@@ -270,7 +272,16 @@
 		void loadArticles();
 		void refreshUnread();
 
-		return bindShortcuts({
+		// One column renders "Récents" and "Kiosque" identically, so a narrow screen offers a single
+		// mode. Handled here rather than by hiding the control in CSS: a mode chosen on a wide window
+		// would otherwise stay in effect, sorting a mobile list by relevance with nothing on screen
+		// saying so and no way left to change it.
+		const stopWatchingViewport = watchCompactViewport((isCompact) => {
+			compact = isCompact;
+			if (isCompact) setSort('recent');
+		});
+
+		const unbindShortcuts = bindShortcuts({
 			f: () => (flipping = articles.length > 0),
 			j: () => moveCursor(1),
 			k: () => moveCursor(-1),
@@ -281,6 +292,11 @@
 			u: toggleUnreadOnly,
 			'/': () => searchEl?.focus()
 		});
+
+		return () => {
+			stopWatchingViewport();
+			unbindShortcuts();
+		};
 	});
 </script>
 
@@ -310,35 +326,39 @@
 				{/if}
 			</h1>
 			<div class="flex flex-wrap items-center gap-2">
-				<div
-					class="flex overflow-hidden rounded-md border"
-					role="group"
-					aria-label={t('articles.sortGroup')}
-				>
-					<button
-						type="button"
-						onclick={() => setSort('recent')}
-						aria-pressed={sort === 'recent'}
-						class="min-h-9 px-3 text-sm font-medium transition-colors {sort === 'recent'
-							? 'bg-primary text-primary-foreground'
-							: 'hover:bg-secondary'}"
+				{#if !compact}
+					<div
+						data-test-display-mode
+						class="flex overflow-hidden rounded-md border"
+						role="group"
+						aria-label={t('articles.sortGroup')}
 					>
-						{t('articles.sortRecent')}
-					</button>
-					<button
-						type="button"
-						onclick={() => setSort('relevance')}
-						aria-pressed={sort === 'relevance'}
-						class="flex min-h-9 items-center gap-1.5 border-l px-3 text-sm font-medium transition-colors {sort ===
-						'relevance'
-							? 'bg-primary text-primary-foreground'
-							: 'hover:bg-secondary'}"
-					>
-						<LayoutTemplate class="size-4" />
-						{t('articles.sortKiosk')}
-					</button>
-				</div>
+						<button
+							type="button"
+							onclick={() => setSort('recent')}
+							aria-pressed={sort === 'recent'}
+							class="min-h-9 px-3 text-sm font-medium transition-colors {sort === 'recent'
+								? 'bg-primary text-primary-foreground'
+								: 'hover:bg-secondary'}"
+						>
+							{t('articles.sortRecent')}
+						</button>
+						<button
+							type="button"
+							onclick={() => setSort('relevance')}
+							aria-pressed={sort === 'relevance'}
+							class="flex min-h-9 items-center gap-1.5 border-l px-3 text-sm font-medium transition-colors {sort ===
+							'relevance'
+								? 'bg-primary text-primary-foreground'
+								: 'hover:bg-secondary'}"
+						>
+							<LayoutTemplate class="size-4" />
+							{t('articles.sortKiosk')}
+						</button>
+					</div>
+				{/if}
 				<Button
+					data-test-flip
 					variant="outline"
 					size="sm"
 					onclick={() => (flipping = true)}
