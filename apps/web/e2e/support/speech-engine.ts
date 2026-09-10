@@ -24,12 +24,18 @@ export async function installTestSpeechEngine(page: Page): Promise<SpeechEngineH
 		function endUtterance(utterance: SpeechSynthesisUtterance) {
 			if (current !== utterance) return;
 			current = null;
+			// A real engine announces the start of an utterance it speaks before announcing its end,
+			// and the reader treats an utterance that ended without ever starting as one no voice
+			// was found for — it stops the reading there rather than marching through the queue in
+			// silence. A test engine that skipped `start` would look exactly like that failure.
+			utterance.onstart?.(new Event('start') as SpeechSynthesisEvent);
 			utterance.onend?.(new Event('end') as SpeechSynthesisEvent);
 		}
 
 		class TestUtterance {
 			rate = 1;
 			lang = '';
+			onstart: ((event: Event) => void) | null = null;
 			onend: ((event: Event) => void) | null = null;
 			onerror: ((event: Event) => void) | null = null;
 			constructor(public text: string) {}
