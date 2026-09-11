@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -63,3 +64,7 @@ class FeedResponse(BaseModel):
     external_feed_id: str
     title: str
     url: str
+    error_count: int
+    #: A fixed category (e.g. "unreachable", "not_found"), never the provider's raw message.
+    error_reason: str | None
+    error_since: datetime | None

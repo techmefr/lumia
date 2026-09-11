@@ -10,10 +10,14 @@ async def test_get_arq_pool_returns_the_same_pool_on_repeated_calls() -> None:
     assert isinstance(first, ArqRedis)
 
 
-def test_the_worker_schedules_the_reconciliation_and_the_purge() -> None:
+def test_the_worker_schedules_the_reconciliation_the_purge_and_the_feed_status_sync() -> None:
     """A cron job written but never registered looks exactly like one that works."""
     scheduled = {job.name for job in WorkerSettings.cron_jobs}
-    assert scheduled == {"cron:reconcile_recent_articles", "cron:purge_expired_tokens"}
+    assert scheduled == {
+        "cron:reconcile_recent_articles",
+        "cron:purge_expired_tokens",
+        "cron:sync_feed_error_status",
+    }
 
 
 def test_the_reconciliation_runs_every_hour_and_the_purge_once_a_night() -> None:

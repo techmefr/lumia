@@ -8,8 +8,10 @@
 	import CheckCheck from '@lucide/svelte/icons/check-check';
 	import Star from '@lucide/svelte/icons/star';
 	import ListMusic from '@lucide/svelte/icons/list-music';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import { AnimatedList } from '@lumia/ui';
-	import { t } from '$technical/i18n/i18n.svelte';
+	import { t, getLocale, type MessageKey } from '$technical/i18n/i18n.svelte';
+	import { formatDateInUserTimezone } from '$technical/time/format-date';
 
 	interface Props {
 		folders: Folder[];
@@ -39,6 +41,15 @@
 
 	function feedsForFolder(folderId: string): Feed[] {
 		return feeds.filter((feed) => feed.folder_id === folderId);
+	}
+
+	function errorTooltip(feed: Feed): string {
+		if (!feed.error_since) return t('feeds.errorBadge');
+		const reasonKey = `feeds.errorReason.${feed.error_reason ?? 'unknown'}` as MessageKey;
+		return t('feeds.errorTooltip', {
+			reason: t(reasonKey),
+			date: formatDateInUserTimezone(feed.error_since, getLocale())
+		});
 	}
 
 	const unfiledFeeds = $derived(feeds.filter((feed) => feed.folder_id === null));
@@ -158,6 +169,17 @@
 								>
 									<Rss class="size-3.5 shrink-0" />
 									<span class="flex-1 truncate">{feed.title}</span>
+									{#if feed.error_since}
+										<span
+											data-test-feed-error={feed.id}
+											role="img"
+											aria-label={errorTooltip(feed)}
+											title={errorTooltip(feed)}
+											class="text-destructive"
+										>
+											<TriangleAlert class="size-3.5 shrink-0" />
+										</span>
+									{/if}
 									{#if feedUnread > 0}
 										<span class="text-xs font-semibold">{feedUnread}</span>
 									{/if}
@@ -198,6 +220,17 @@
 					>
 						<Rss class="size-3.5 shrink-0" />
 						<span class="flex-1 truncate">{feed.title}</span>
+						{#if feed.error_since}
+							<span
+								data-test-feed-error={feed.id}
+								role="img"
+								aria-label={errorTooltip(feed)}
+								title={errorTooltip(feed)}
+								class="text-destructive"
+							>
+								<TriangleAlert class="size-3.5 shrink-0" />
+							</span>
+						{/if}
 						{#if feedUnread > 0}
 							<span class="text-xs font-semibold">{feedUnread}</span>
 						{/if}

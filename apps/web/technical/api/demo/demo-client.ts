@@ -494,6 +494,13 @@ export function createDemoClient(): LumiaClient {
 				persist();
 				return settle({ ...feed });
 			},
+			refreshFeed: async (feedId: string) => {
+				// The static demo build has no Miniflux behind it: a feed there never actually breaks,
+				// so a refresh has nothing to fetch and simply hands the feed back unchanged.
+				const feed = state.feeds.find((candidate) => candidate.id === feedId);
+				if (!feed) throw new Error('flux introuvable');
+				return settle({ ...feed });
+			},
 			deleteFeed: async (feedId: string) => {
 				state.feeds = state.feeds.filter((feed) => feed.id !== feedId);
 				state.articleIds = state.articleIds.filter((id) => seedArticle(id)?.feed_id !== feedId);
