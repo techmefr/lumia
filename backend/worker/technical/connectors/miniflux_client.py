@@ -60,6 +60,8 @@ class MinifluxFeed:
 class MinifluxFeedDetail:
     feed_id: int
     title: str
+    parsing_error_count: int
+    parsing_error_message: str
 
 
 @dataclass(frozen=True)
@@ -67,6 +69,8 @@ class MinifluxKnownFeed:
     feed_id: int
     title: str
     feed_url: str
+    parsing_error_count: int
+    parsing_error_message: str
 
 
 @dataclass(frozen=True)
@@ -106,6 +110,8 @@ async def list_feeds(
                 feed_id=item["id"],
                 title=item.get("title") or item["feed_url"],
                 feed_url=item["feed_url"],
+                parsing_error_count=item.get("parsing_error_count") or 0,
+                parsing_error_message=item.get("parsing_error_message") or "",
             )
             for item in response.json()
         ]
@@ -202,4 +208,17 @@ async def get_feed(
         if response.status_code >= 400:
             raise _api_error("get_feed", response)
         data = response.json()
-        return MinifluxFeedDetail(feed_id=data["id"], title=data["title"])
+        return MinifluxFeedDetail(
+            feed_id=data["id"],
+            title=data["title"],
+            parsing_error_count=data.get("parsing_error_count") or 0,
+            parsing_error_message=data.get("parsing_error_message") or "",
+        )
+
+
+async def refresh_feed(feed_id: int, *, transport: httpx.AsyncBaseTransport | None = None) -> None:
+    """Asks Miniflux to fetch the feed right now, instead of waiting for its own poll cycle."""
+    async with _client(transport) as client:
+        response = await client.post(f"/v1/feeds/{feed_id}/refresh")
+        if response.status_code >= 400:
+            raise _api_error("refresh_feed", response)

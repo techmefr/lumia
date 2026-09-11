@@ -68,6 +68,12 @@ describe('feeds', () => {
 		await expect(feeds.getUnreadCounts()).resolves.toMatchObject({ total: 9 });
 		expect(last().path).toBe('/feeds/unread-counts');
 	});
+
+	it('asks for an immediate refresh of one feed', async () => {
+		const { feeds, last } = api([{ id: 'feed-1', error_count: 0 }]);
+		await expect(feeds.refreshFeed('feed-1')).resolves.toMatchObject({ error_count: 0 });
+		expect(last()).toMatchObject({ path: '/feeds/feed-1/refresh', method: 'POST' });
+	});
 });
 
 describe('addFeedByUrl', () => {

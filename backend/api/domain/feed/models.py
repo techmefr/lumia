@@ -1,7 +1,8 @@
+from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.technical.orm import Base, TimestampMixin
@@ -32,3 +33,10 @@ class Feed(Base, TimestampMixin):
     external_feed_id: Mapped[str]
     title: Mapped[str]
     url: Mapped[str]
+
+    # Miniflux's own failure counter for this feed, mirrored here so the reader can see a feed has
+    # gone silent instead of just seeing nothing arrive. error_reason is a fixed category, never the
+    # provider's raw message: that message can be arbitrarily detailed and is not for the reader.
+    error_count: Mapped[int] = mapped_column(default=0)
+    error_reason: Mapped[str | None] = mapped_column(default=None)
+    error_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)

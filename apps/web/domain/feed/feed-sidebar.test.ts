@@ -58,6 +58,7 @@ function sidebar(overrides: Partial<Props> = {}) {
 		folderMarkRead: (id: string) => q<HTMLButtonElement>(`[data-test-folder-mark-read="${id}"]`),
 		feed: (id: string) => q<HTMLButtonElement>(`[data-test-feed="${id}"]`)!,
 		feedMarkRead: (id: string) => q<HTMLButtonElement>(`[data-test-feed-mark-read="${id}"]`),
+		feedError: (id: string) => q<HTMLSpanElement>(`[data-test-feed-error="${id}"]`),
 		playlistsLink: () => q<HTMLAnchorElement>('[data-test-nav-playlists]')!,
 		favoritesLink: () => q<HTMLAnchorElement>('[data-test-nav-favorites]')!
 	};
@@ -200,6 +201,33 @@ describe('the mobile nav toggle', () => {
 
 		expect(view.mobileToggle().getAttribute('aria-expanded')).toBe('true');
 		expect(view.nav().className).not.toContain('hidden');
+	});
+});
+
+describe('a feed in error', () => {
+	const BROKEN_FEED: Feed = {
+		...BLOG_FEED,
+		id: 'feed-broken',
+		error_count: 4,
+		error_reason: 'not_found',
+		error_since: '2026-08-01T10:00:00Z'
+	};
+
+	it('shows no error indicator for a healthy feed', () => {
+		const view = sidebar();
+		expect(view.feedError(NEWS_FEED.id)).toBeNull();
+	});
+
+	it('shows an error indicator for a feed miniflux reports as broken', () => {
+		const view = sidebar({ feeds: [NEWS_FEED, BROKEN_FEED] });
+		expect(view.feedError(BROKEN_FEED.id)).not.toBeNull();
+	});
+
+	it('names the reason and the date in the tooltip, never the raw provider text', () => {
+		const view = sidebar({ feeds: [NEWS_FEED, BROKEN_FEED] });
+		const label = view.feedError(BROKEN_FEED.id)!.getAttribute('aria-label')!;
+		expect(label).toMatch(/2026/);
+		expect(label.toLowerCase()).not.toContain('miniflux');
 	});
 });
 

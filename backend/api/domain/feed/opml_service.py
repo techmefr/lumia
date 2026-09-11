@@ -160,7 +160,12 @@ async def add_feed(
     try:
         known = await find_feed_in_miniflux(url, transport=miniflux_transport)
         if known is not None:
-            detail = MinifluxFeedDetail(feed_id=known.feed_id, title=known.title)
+            detail = MinifluxFeedDetail(
+                feed_id=known.feed_id,
+                title=known.title,
+                parsing_error_count=known.parsing_error_count,
+                parsing_error_message=known.parsing_error_message,
+            )
         else:
             miniflux_feed = await create_feed(
                 url, category_id=category_id, transport=miniflux_transport

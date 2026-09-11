@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.feed.discover_service import list_suggestions
 from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError, InvalidOpmlError
+from api.domain.feed.feed_status_service import refresh_feed_now
 from api.domain.feed.models import Feed, Folder, SourceType
 from api.domain.feed.opml_service import add_feed, import_opml
 from api.domain.feed.schemas import (
@@ -105,6 +106,9 @@ def _to_feed_response(feed: Feed) -> FeedResponse:
         external_feed_id=feed.external_feed_id,
         title=feed.title,
         url=feed.url,
+        error_count=feed.error_count,
+        error_reason=feed.error_reason,
+        error_since=feed.error_since,
     )
 
 
@@ -276,6 +280,26 @@ async def update_feed(
         feed.folder_id = payload.folder_id
 
     await session.commit()
+    return _to_feed_response(feed)
+
+
+@router.post("/feeds/{feed_id}/refresh", response_model=FeedResponse)
+async def refresh_feed(
+    feed_id: UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
+) -> FeedResponse:
+    """Lets the reader force an immediate re-fetch instead of waiting on the feed's own schedule
+    or the next status sync — the escape hatch for "is it fixed yet?"."""
+    feed = await session.scalar(select(Feed).where(Feed.id == feed_id, Feed.user_id == user.id))
+    if feed is None or feed.source_type is not SourceType.MINIFLUX:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    try:
+        await refresh_feed_now(session, feed, transport=transport)
+    except (MinifluxApiError, httpx.HTTPError) as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY) from exc
     return _to_feed_response(feed)
 
 

@@ -25,11 +25,13 @@
 	import Newspaper from '@lucide/svelte/icons/newspaper';
 	import Shuffle from '@lucide/svelte/icons/shuffle';
 	import Pencil from '@lucide/svelte/icons/pencil';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { toast } from '@lumia/ui';
 	import { lumia } from '$technical/api/client';
-	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
+	import { t, getLocale, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { resolveFolderName } from '$domain/feed/resolve-folder-name';
+	import { formatDateInUserTimezone } from '$technical/time/format-date';
 	import FeedSidebar from '$domain/feed/feed-sidebar.svelte';
 	import DiscoverFeeds from '$domain/feed/discover-feeds.svelte';
 
@@ -50,6 +52,7 @@
 	let folderRenameValue = $state('');
 	let renamingFeedId = $state<string | null>(null);
 	let feedRenameValue = $state('');
+	let refreshingFeedId = $state<string | null>(null);
 
 	const selectedFolder = $derived(folders.find((f) => f.id === selectedFolderId) ?? null);
 	const selectedFeed = $derived(feeds.find((f) => f.id === selectedFeedId) ?? null);
@@ -92,6 +95,18 @@
 			addFeedError = 'feeds.addFailed';
 		} finally {
 			addingFeed = false;
+		}
+	}
+
+	async function refreshFeed(feedId: string) {
+		refreshingFeedId = feedId;
+		try {
+			await lumia.feed.refreshFeed(feedId);
+			await load();
+		} catch {
+			toast(t('feeds.refreshFailed'), { tone: 'destructive' });
+		} finally {
+			refreshingFeedId = null;
 		}
 	}
 
@@ -264,6 +279,19 @@
 					</CardDescription>
 				</CardHeader>
 				<CardContent class="flex flex-col gap-4">
+					{#if selectedFeed.error_since}
+						<p
+							data-test-feed-error-banner
+							role="alert"
+							class="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+						>
+							{t('feeds.errorTooltip', {
+								reason: t(`feeds.errorReason.${selectedFeed.error_reason ?? 'unknown'}` as MessageKey),
+								date: formatDateInUserTimezone(selectedFeed.error_since, getLocale())
+							})}
+						</p>
+					{/if}
+
 					<div class="flex flex-wrap items-center gap-2">
 						<Button onclick={viewArticles}>
 							<Newspaper class="size-4" />
@@ -273,6 +301,19 @@
 							<Shuffle class="size-4" />
 							{t('feeds.swipeMode')}
 						</Button>
+						{#if selectedFeed.source_type === 'miniflux'}
+							<Button
+								data-test-feed-refresh
+								variant="outline"
+								disabled={refreshingFeedId === selectedFeed.id}
+								onclick={() => refreshFeed(selectedFeed!.id)}
+							>
+								<RefreshCw class="size-4" />
+								{refreshingFeedId === selectedFeed.id
+									? t('feeds.refreshing')
+									: t('feeds.refreshFeed')}
+							</Button>
+						{/if}
 						<Button variant="ghost" onclick={() => removeFeed(selectedFeed!.id)}>
 							<Trash2 class="size-4" />
 							{t('feeds.removeFeed')}

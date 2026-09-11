@@ -37,6 +37,11 @@ export function createFeedApi(http: HttpClient) {
 		await http.request(`/feeds/${feedId}`, { method: 'DELETE' });
 	}
 
+	/** Asks the backend to re-fetch this feed from its provider right away. */
+	async function refreshFeed(feedId: string): Promise<Feed> {
+		return http.request<Feed>(`/feeds/${feedId}/refresh`, { method: 'POST' });
+	}
+
 	async function getUnreadCounts(): Promise<UnreadCounts> {
 		return http.request<UnreadCounts>('/feeds/unread-counts');
 	}
@@ -68,6 +73,7 @@ export function createFeedApi(http: HttpClient) {
 		listFeeds,
 		updateFeed,
 		deleteFeed,
+		refreshFeed,
 		getUnreadCounts,
 		importOpml,
 		addFeedByUrl

@@ -12,6 +12,12 @@ export interface Feed {
 	external_feed_id: string;
 	title: string;
 	url: string;
+	/** Miniflux's own failure count for this feed; 0 or absent means it is healthy. */
+	error_count?: number;
+	/** A fixed category ("unreachable", "not_found", …), never the provider's raw message. */
+	error_reason?: string | null;
+	/** ISO timestamp of when the feed started failing, null/absent while healthy. */
+	error_since?: string | null;
 }
 
 /** A source from the bundled catalogue the reader is not subscribed to yet. */
