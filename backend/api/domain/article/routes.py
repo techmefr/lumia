@@ -4,7 +4,7 @@ from uuid import UUID
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import Select, func, or_, select
+from sqlalchemy import ColumnElement, Select, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword
@@ -119,6 +119,22 @@ def exclude_muted_terms(query: Select[tuple[Article]], terms: list[str]) -> Sele
     )
 
 
+def _search_condition(q: str) -> ColumnElement[bool]:
+    """Matches the generated `search_vector` column against the reader's search text.
+
+    An article's vector is built with `french` or `english` stemming depending on its own
+    `original_lang` (see the c2a6f81e934d migration), but the reader's query language is not known
+    up front, so the query text is parsed under both configurations and either match counts. Postgres
+    tolerates a query text with nothing recognised under a given configuration (`websearch_to_tsquery`
+    then returns an empty tsquery, which simply matches nothing on that side), so this never raises —
+    it only narrows to whichever language the terms actually parse as.
+    """
+    return or_(
+        Article.search_vector.op("@@")(func.websearch_to_tsquery("french", q)),
+        Article.search_vector.op("@@")(func.websearch_to_tsquery("english", q)),
+    )
+
+
 @router.get("/articles", response_model=list[ArticleSummaryResponse])
 async def list_articles(
     folder_id: UUID | None = Query(default=None),
@@ -148,17 +164,7 @@ async def list_articles(
             ArticleKeyword.keyword_id == keyword_id
         )
     if q is not None:
-        # ILIKE over content matches the stored HTML too, so a search term that happens to be a
-        # tag or attribute name can hit. Accepted: the alternative is a tsvector column and a
-        # migration to keep it in sync, which this corpus size doesn't justify yet.
-        pattern = f"%{q}%"
-        query = query.where(
-            or_(
-                Article.title.ilike(pattern),
-                Article.summary.ilike(pattern),
-                Article.content.ilike(pattern),
-            )
-        )
+        query = query.where(_search_condition(q))
     if unread_only:
         query = apply_unread_only(query, user.id)
     query = query.order_by(Article.published_at.desc())
