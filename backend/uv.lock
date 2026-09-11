@@ -1178,7 +1178,7 @@ requires-dist = [
     { name = "pyjwt", specifier = ">=2.9" },
     { name = "python-multipart", specifier = ">=0.0.32" },
     { name = "scikit-learn", specifier = ">=1.5" },
-    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.52" },
     { name = "trafilatura", specifier = ">=1.12" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.52.4" },
 ]
