@@ -61,17 +61,32 @@ class Article(Base, TimestampMixin):
     image_url: Mapped[str | None] = mapped_column(default=None)
     original_lang: Mapped[Lang] = mapped_column(default=Lang.FR)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    # Computed by postgres itself (see migration c2a6f81e934d for the generation expression, which
+    # Computed by postgres itself (see migration 61a242bfadb8 for the generation expression, which
     # must stay in sync with this one), never written from python: a generated column rejects any
-    # explicit value on insert or update.
+    # explicit value on insert or update. zh and mg have no postgres text-search configuration, so
+    # they index under "simple" — words kept as they are — rather than under a stemmer built for
+    # another language.
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
         Computed(
             "CASE original_lang "
-            "WHEN 'EN' THEN to_tsvector('english', title || ' ' || coalesce(summary, '') "
-            "|| ' ' || content) "
-            "ELSE to_tsvector('french', title || ' ' || coalesce(summary, '') || ' ' || content) "
-            "END",
+            + " ".join(
+                f"WHEN '{lang}' THEN to_tsvector('{regconfig}', title || ' ' "
+                "|| coalesce(summary, '') || ' ' || content)"
+                for lang, regconfig in {
+                    "EN": "english",
+                    "ES": "spanish",
+                    "DE": "german",
+                    "IT": "italian",
+                    "PT": "portuguese",
+                    "RU": "russian",
+                    "AR": "arabic",
+                    "ZH": "simple",
+                    "MG": "simple",
+                }.items()
+            )
+            + " ELSE to_tsvector('french', title || ' ' || coalesce(summary, '') "
+            "|| ' ' || content) END",
             persisted=True,
         ),
     )

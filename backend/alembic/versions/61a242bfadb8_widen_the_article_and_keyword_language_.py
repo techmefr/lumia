@@ -9,6 +9,7 @@ Create Date: 2026-09-11 09:36:01.011559
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
@@ -21,6 +22,58 @@ depends_on: str | Sequence[str] | None = None
 old_lang = sa.Enum("FR", "EN", name="lang")
 new_lang = sa.Enum("FR", "EN", "ES", "DE", "IT", "PT", "RU", "AR", "ZH", "MG", name="lang_wide")
 
+# Postgres ships a text-search configuration for eight of the ten languages; zh and mg have none,
+# so they fall back to "simple", which indexes words without stemming rather than stemming them as
+# if they were French. Every branch is immutable, which a generated column requires.
+_REGCONFIG_BY_LANG = {
+    "EN": "english",
+    "ES": "spanish",
+    "DE": "german",
+    "IT": "italian",
+    "PT": "portuguese",
+    "RU": "russian",
+    "AR": "arabic",
+    "ZH": "simple",
+    "MG": "simple",
+}
+
+
+def _search_vector_expression(regconfig_by_lang: dict[str, str], *, fallback: str) -> str:
+    """The generated column's body: one branch per language, FR and the unknown sharing the last."""
+    branches = "\n    ".join(
+        f"WHEN '{lang}' THEN to_tsvector("
+        f"'{regconfig}', title || ' ' || coalesce(summary, '') || ' ' || content)"
+        for lang, regconfig in regconfig_by_lang.items()
+    )
+    return (
+        "\nCASE original_lang\n    " + branches + f"\n    ELSE to_tsvector('{fallback}', "
+        "title || ' ' || coalesce(summary, '') || ' ' || content)\nEND\n"
+    )
+
+
+def _create_search_vector(expression: str) -> None:
+    """Puts the generated column and its index back once the type it reads has changed.
+
+    Postgres refuses to alter the type of a column a generated column depends on, so the column
+    goes away for the length of the type change and comes back computed from the new type.
+    """
+    op.add_column(
+        "articles",
+        sa.Column(
+            "search_vector",
+            postgresql.TSVECTOR(),
+            sa.Computed(expression, persisted=True),
+            nullable=False,
+        ),
+    )
+    op.create_index(
+        "ix_articles_search_vector",
+        "articles",
+        ["search_vector"],
+        unique=False,
+        postgresql_using="gin",
+    )
+
 
 def upgrade() -> None:
     """Upgrade schema.
@@ -30,6 +83,8 @@ def upgrade() -> None:
     match, under a temporary name so the old two-value `lang` type can be dropped before the wide
     one takes its place.
     """
+    op.drop_index("ix_articles_search_vector", table_name="articles")
+    op.drop_column("articles", "search_vector")
     new_lang.create(op.get_bind(), checkfirst=True)
     op.execute(
         "ALTER TABLE articles ALTER COLUMN original_lang "
@@ -38,6 +93,7 @@ def upgrade() -> None:
     op.execute("ALTER TABLE keywords ALTER COLUMN lang TYPE lang_wide USING lang::text::lang_wide")
     old_lang.drop(op.get_bind(), checkfirst=True)
     op.execute("ALTER TYPE lang_wide RENAME TO lang")
+    _create_search_vector(_search_vector_expression(_REGCONFIG_BY_LANG, fallback="french"))
 
 
 def downgrade() -> None:
@@ -48,6 +104,8 @@ def downgrade() -> None:
     row pointing at the row that would collide is repointed at the surviving FR one first, the
     now-orphaned duplicate is dropped, and only then does the rest get clamped.
     """
+    op.drop_index("ix_articles_search_vector", table_name="articles")
+    op.drop_column("articles", "search_vector")
     op.execute("ALTER TYPE lang RENAME TO lang_wide")
     old_lang.create(op.get_bind(), checkfirst=True)
     op.execute(
@@ -71,3 +129,4 @@ def downgrade() -> None:
     )
     op.execute("ALTER TABLE keywords ALTER COLUMN lang TYPE lang USING lang::text::lang")
     new_lang.drop(op.get_bind(), checkfirst=True)
+    _create_search_vector(_search_vector_expression({"EN": "english"}, fallback="french"))
