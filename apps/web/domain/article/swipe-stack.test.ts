@@ -37,7 +37,7 @@ function stack(props: Partial<Props> = {}) {
 	const onSave = vi.fn();
 	const onFavorite = vi.fn();
 	const onOpen = vi.fn();
-	const { container } = render(SwipeStack, {
+	const { container, unmount } = render(SwipeStack, {
 		articles: THREE,
 		onLike,
 		onDislike,
@@ -50,6 +50,7 @@ function stack(props: Partial<Props> = {}) {
 	const q = <T extends Element>(selector: string) => container.querySelector<T>(selector);
 	return {
 		container,
+		unmount,
 		onLike,
 		onDislike,
 		onSave,
@@ -65,6 +66,7 @@ function stack(props: Partial<Props> = {}) {
 		remaining: () => q('[aria-live="polite"]'),
 		scroll: () => q<HTMLElement>('[data-test-swipe-scroll]'),
 		expand: () => q<HTMLButtonElement>('[data-test-swipe-expand]')!,
+		hint: () => q('[data-test-swipe-hint]'),
 		heroClasses: () => q<HTMLElement>('h2')!.parentElement!.parentElement!.className
 	};
 }
@@ -158,6 +160,71 @@ describe('working through the stack', () => {
 
 		expect(view.onLike).toHaveBeenCalledOnce();
 		expect(view.onDislike).not.toHaveBeenCalled();
+	});
+});
+
+describe('the keyboard alternative to swiping', () => {
+	it('likes on ArrowRight', async () => {
+		const view = stack();
+
+		await fireEvent.keyDown(document, { key: 'ArrowRight' });
+		await settle();
+
+		expect(view.onLike).toHaveBeenCalledWith(THREE[0]);
+	});
+
+	it('dislikes on ArrowLeft', async () => {
+		const view = stack();
+
+		await fireEvent.keyDown(document, { key: 'ArrowLeft' });
+		await settle();
+
+		expect(view.onDislike).toHaveBeenCalledWith(THREE[0]);
+	});
+
+	it('favorites on ArrowUp', async () => {
+		const view = stack();
+
+		await fireEvent.keyDown(document, { key: 'ArrowUp' });
+		await settle();
+
+		expect(view.onFavorite).toHaveBeenCalledWith(THREE[0]);
+	});
+
+	it('saves for later on ArrowDown', async () => {
+		const view = stack();
+
+		await fireEvent.keyDown(document, { key: 'ArrowDown' });
+		await settle();
+
+		expect(view.onSave).toHaveBeenCalledWith(THREE[0]);
+	});
+
+	it('does not act twice when the key repeats while the card is already exiting', async () => {
+		const view = stack();
+
+		await fireEvent.keyDown(document, { key: 'ArrowRight' });
+		await fireEvent.keyDown(document, { key: 'ArrowLeft' });
+		await settle();
+
+		expect(view.onLike).toHaveBeenCalledOnce();
+		expect(view.onDislike).not.toHaveBeenCalled();
+	});
+
+	it('documents the keyboard alternative on screen', () => {
+		const view = stack();
+
+		expect(view.hint()?.textContent?.trim().length).toBeGreaterThan(0);
+	});
+
+	it('stops reacting to the keyboard once the component is destroyed', async () => {
+		const view = stack();
+		view.unmount();
+
+		await fireEvent.keyDown(document, { key: 'ArrowRight' });
+		await settle();
+
+		expect(view.onLike).not.toHaveBeenCalled();
 	});
 });
 

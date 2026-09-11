@@ -9,6 +9,13 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    ignore:
+      # svelte-check cannot type-check against TypeScript 7 on its own yet: it wants both 7 and 6
+      # installed plus a --tsgo flag, so the bump only turns the frontend gate red. Drop this
+      # entry once svelte-check supports 7 directly.
+      - dependency-name: typescript
+        versions:
+          - ">=7"
     groups:
       dev-tooling:
         patterns:

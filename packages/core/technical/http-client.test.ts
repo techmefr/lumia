@@ -124,6 +124,25 @@ describe('createHttpClient', () => {
 		await expect(client.request('/articles/article-1/read')).resolves.toBeUndefined();
 	});
 
+	describe('requestBlob', () => {
+		it('returns the response body as a blob rather than parsing it as json', async () => {
+			scriptedFetch([new Response('<opml />', { headers: { 'content-type': 'text/x-opml' } })]);
+			const client = createHttpClient({ baseUrl: 'https://lumia.test', tokenStore: memoryStore() });
+			const blob = await client.requestBlob('/feeds/export-opml');
+			await expect(blob.text()).resolves.toBe('<opml />');
+		});
+
+		it('still authenticates and throws an ApiError on failure', async () => {
+			const calls = scriptedFetch([json({ detail: 'nope' }, 404)]);
+			const client = createHttpClient({
+				baseUrl: 'https://lumia.test',
+				tokenStore: memoryStore({ access: 'access-1' })
+			});
+			await expect(client.requestBlob('/feeds/export-opml')).rejects.toBeInstanceOf(ApiError);
+			expect(calls[0].headers.authorization).toBe('Bearer access-1');
+		});
+	});
+
 	describe('an expired access token', () => {
 		it('refreshes and replays the request, so the reader sees no interruption', async () => {
 			const calls = scriptedFetch([

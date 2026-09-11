@@ -132,6 +132,12 @@ export const ru: Catalogue = {
 	'feeds.importChoose': 'Выбрать файл .opml',
 	'feeds.importFailed':
 		'Импорт OPML не удался — проверь, что файл действительно выгружен из Feedly.',
+	'feeds.exportTitle': 'Экспортировать подписки',
+	'feeds.exportDescription':
+		'Скачай свои ленты и папки в формате OPML, чтобы сохранить их или импортировать в другое место.',
+	'feeds.exportButton': 'Скачать файл OPML',
+	'feeds.exporting': 'Подготовка файла…',
+	'feeds.exportFailed': 'Не удалось экспортировать OPML — попробуй позже.',
 	'feeds.newFolder': 'Новая папка',
 	'feeds.create': 'Создать',
 	'feeds.subscribed': 'Подписки',
@@ -312,9 +318,11 @@ export const ru: Catalogue = {
 	'swipe.favoriteAction': 'Добавить в избранное',
 	'swipe.expand': 'Развернуть',
 	'swipe.collapse': 'Свернуть',
+	'swipe.hint': 'Стрелки для оценки или сохранения',
 
 	'flip.dialog': 'Пролистать статьи',
 	'flip.hint': '← → листать страницы · Esc выйти',
+	'flip.announce': '{title} — страница {page} из {count}',
 	'flip.page': 'Текущая страница, смахни, чтобы листать',
 	'flip.empty': 'Здесь нечего листать.',
 

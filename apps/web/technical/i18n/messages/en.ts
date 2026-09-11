@@ -127,6 +127,12 @@ export const en: Catalogue = {
 	'feeds.importing': 'Importing…',
 	'feeds.importChoose': 'Choose an .opml file',
 	'feeds.importFailed': 'OPML import failed — check that the file really is a Feedly export.',
+	'feeds.exportTitle': 'Export your subscriptions',
+	'feeds.exportDescription':
+		'Download your feeds and folders as OPML, to keep or import elsewhere.',
+	'feeds.exportButton': 'Download the OPML file',
+	'feeds.exporting': 'Preparing the file…',
+	'feeds.exportFailed': 'OPML export failed — try again later.',
 	'feeds.newFolder': 'New folder',
 	'feeds.create': 'Create',
 	'feeds.subscribed': 'Subscribed feeds',
@@ -304,9 +310,11 @@ export const en: Catalogue = {
 	'swipe.favoriteAction': 'Add to favourites',
 	'swipe.expand': 'Expand',
 	'swipe.collapse': 'Collapse',
+	'swipe.hint': 'Arrow keys to vote or save',
 
 	'flip.dialog': 'Flip through the articles',
 	'flip.hint': '← → to turn pages · Esc to leave',
+	'flip.announce': '{title} — page {page} of {count}',
 	'flip.page': 'Current page, swipe to turn',
 	'flip.empty': 'Nothing to flip through here.',
 

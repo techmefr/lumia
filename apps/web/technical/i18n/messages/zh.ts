@@ -123,6 +123,11 @@ export const zh: Catalogue = {
 	'feeds.importing': '正在导入…',
 	'feeds.importChoose': '选择一个 .opml 文件',
 	'feeds.importFailed': 'OPML 导入失败 — 请确认文件确实是 Feedly 的导出文件。',
+	'feeds.exportTitle': '导出订阅',
+	'feeds.exportDescription': '将你的订阅源和文件夹导出为 OPML 文件，以便保存或导入到其他地方。',
+	'feeds.exportButton': '下载 OPML 文件',
+	'feeds.exporting': '正在准备文件…',
+	'feeds.exportFailed': 'OPML 导出失败 — 请稍后重试。',
 	'feeds.newFolder': '新建文件夹',
 	'feeds.create': '创建',
 	'feeds.subscribed': '已订阅的源',
@@ -296,9 +301,11 @@ export const zh: Catalogue = {
 	'swipe.favoriteAction': '加入收藏',
 	'swipe.expand': '展开',
 	'swipe.collapse': '收起',
+	'swipe.hint': '方向键投票或收藏',
 
 	'flip.dialog': '翻阅文章',
 	'flip.hint': '← → 翻页 · Esc 退出',
+	'flip.announce': '{title} — 第 {page} 页,共 {count} 页',
 	'flip.page': '当前页，滑动翻页',
 	'flip.empty': '这里没有可翻阅的内容。',
 

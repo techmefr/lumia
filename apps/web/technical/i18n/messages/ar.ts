@@ -128,6 +128,11 @@ export const ar: Catalogue = {
 	'feeds.importing': 'جارٍ الاستيراد…',
 	'feeds.importChoose': 'اختر ملف .opml',
 	'feeds.importFailed': 'تعذّر استيراد OPML — تأكّد أن الملف تصدير من Feedly فعلًا.',
+	'feeds.exportTitle': 'تصدير اشتراكاتك',
+	'feeds.exportDescription': 'نزّل خلاصاتك ومجلداتك بصيغة OPML، للاحتفاظ بها أو استيرادها في مكان آخر.',
+	'feeds.exportButton': 'تنزيل ملف OPML',
+	'feeds.exporting': 'جارٍ تجهيز الملف…',
+	'feeds.exportFailed': 'تعذّر تصدير OPML — حاول لاحقًا.',
 	'feeds.newFolder': 'مجلد جديد',
 	'feeds.create': 'إنشاء',
 	'feeds.subscribed': 'الخلاصات المشترَك بها',
@@ -303,9 +308,11 @@ export const ar: Catalogue = {
 	'swipe.favoriteAction': 'الإضافة إلى المفضّلة',
 	'swipe.expand': 'توسيع',
 	'swipe.collapse': 'تصغير',
+	'swipe.hint': 'الأسهم للتصويت أو الحفظ · Enter/Space على الأزرار',
 
 	'flip.dialog': 'تقليب المقالات',
 	'flip.hint': '← → لتقليب الصفحات · Esc للخروج',
+	'flip.announce': '{title} — الصفحة {page} من {count}',
 	'flip.page': 'الصفحة الحالية، اسحب للتقليب',
 	'flip.empty': 'لا شيء للتقليب هنا.',
 

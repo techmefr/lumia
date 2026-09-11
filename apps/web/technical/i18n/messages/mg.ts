@@ -135,6 +135,12 @@ export const mg: Catalogue = {
 	'feeds.importChoose': 'Misafidy rakitra .opml',
 	'feeds.importFailed':
 		'Tsy afaka nampiditra ny OPML — hamarino fa avy amin’ny Feedly tokoa ilay rakitra.',
+	'feeds.exportTitle': 'Hanondrana ny fahazoan-kevitrao',
+	'feeds.exportDescription':
+		'Alao ny fluxes sy ny lahatahiry ho OPML, mba hitehirizana azy na hanondranana azy any amin’ny toerana hafa.',
+	'feeds.exportButton': 'Alao ny rakitra OPML',
+	'feeds.exporting': 'Mamboatra ny rakitra…',
+	'feeds.exportFailed': 'Tsy afaka nanondrana ny OPML — andramo indray afaka kelikely.',
 	'feeds.newFolder': 'Lahatahiry vaovao',
 	'feeds.create': 'Hamorona',
 	'feeds.subscribed': 'Fantsona nisoratana',
@@ -316,9 +322,11 @@ export const mg: Catalogue = {
 	'swipe.favoriteAction': 'Hataovy ankafiziko',
 	'swipe.expand': 'Velaro',
 	'swipe.collapse': 'Aforeto',
+	'swipe.hint': 'Zana-tsipìka hifidianana na hitehirizana',
 
 	'flip.dialog': 'Hanao pejy ny lahatsoratra',
 	'flip.hint': '← → hanovana pejy · Esc hivoahana',
+	'flip.announce': "{title} — pejy {page} amin'ny {count}",
 	'flip.page': 'Pejy ankehitriny, sintomy hanovana',
 	'flip.empty': 'Tsy misy azo hovakiana eto.',
 

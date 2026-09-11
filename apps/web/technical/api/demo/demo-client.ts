@@ -340,6 +340,36 @@ export function createDemoClient(): LumiaClient {
 		return `demo-${prefix}-${state.nextId}`;
 	}
 
+	function escapeAttribute(value: string): string {
+		return value
+			.replace(/&/g, '&amp;')
+			.replace(/"/g, '&quot;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+	}
+
+	function feedOutline(feed: Feed): string {
+		const title = escapeAttribute(feed.title);
+		return `<outline type="rss" text="${title}" title="${title}" xmlUrl="${escapeAttribute(feed.url)}"/>`;
+	}
+
+	/** Mirrors the backend's own shape: one outline per folder, unfiled feeds at the root. */
+	function demoOpml(): string {
+		const outlines = state.folders.map((folder) => {
+			const name = escapeAttribute(folder.name);
+			const children = state.feeds
+				.filter((feed) => feed.folder_id === folder.id)
+				.map(feedOutline)
+				.join('');
+			return `<outline text="${name}" title="${name}">${children}</outline>`;
+		});
+		const unfiled = state.feeds.filter((feed) => feed.folder_id === null).map(feedOutline);
+		return `<?xml version="1.0" encoding="UTF-8"?><opml version="1.0"><head><title>Lumia subscriptions</title></head><body>${[
+			...outlines,
+			...unfiled
+		].join('')}</body></opml>`;
+	}
+
 	// The demo has no login, so the token store answers as if a session were open: the route
 	// guards stay untouched and behave exactly as they do against a real backend.
 	const tokenStore: TokenStore = {
@@ -500,6 +530,7 @@ export function createDemoClient(): LumiaClient {
 				return settle({ ...feed });
 			},
 			importOpml: async () => settle(state.feeds.map((feed) => ({ ...feed }))),
+			exportOpml: async () => settle(new Blob([demoOpml()], { type: 'text/x-opml' })),
 			discoverFeeds: async (limit = 6) => {
 				const subscribed = new Set(state.feeds.map((feed) => feed.url.replace(/\/$/, '')));
 				// Only positive interest counts, as on the backend: a dislike says nothing about a source

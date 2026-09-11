@@ -17,6 +17,7 @@
 		Separator
 	} from '@lumia/ui';
 	import Upload from '@lucide/svelte/icons/upload';
+	import Download from '@lucide/svelte/icons/download';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import FolderPlus from '@lucide/svelte/icons/folder-plus';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -37,6 +38,7 @@
 	let feeds = $state<Feed[]>([]);
 	let loading = $state(true);
 	let importing = $state(false);
+	let exporting = $state(false);
 	// The key rather than the sentence: an error left on screen has to follow a language change too.
 	let error = $state<MessageKey | null>(null);
 	let newFolderName = $state('');
@@ -192,6 +194,24 @@
 		} finally {
 			importing = false;
 			input.value = '';
+		}
+	}
+
+	async function exportOpml() {
+		exporting = true;
+		error = null;
+		try {
+			const blob = await lumia.feed.exportOpml();
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = 'lumia-subscriptions.opml';
+			link.click();
+			URL.revokeObjectURL(url);
+		} catch {
+			error = 'feeds.exportFailed';
+		} finally {
+			exporting = false;
 		}
 	}
 
@@ -484,6 +504,25 @@
 						</label>
 					</CardContent>
 				</Card>
+
+				<Card class="magic-bento-cell">
+					<CardHeader>
+						<CardTitle>{t('feeds.exportTitle')}</CardTitle>
+						<CardDescription>{t('feeds.exportDescription')}</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<Button
+							type="button"
+							variant="outline"
+							disabled={exporting}
+							onclick={exportOpml}
+							data-test-id="export-opml-button"
+						>
+							<Download class="size-4" />
+							{exporting ? t('feeds.exporting') : t('feeds.exportButton')}
+						</Button>
+					</CardContent>
+					</Card>
 
 				<Card class="magic-bento-cell">
 					<CardHeader>

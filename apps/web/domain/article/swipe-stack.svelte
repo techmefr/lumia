@@ -8,6 +8,7 @@
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
 	import { accentHueForFeed } from './accent-hue.js';
 	import { t } from '$technical/i18n/i18n.svelte';
+	import { bindShortcuts } from '$technical/keyboard/shortcuts';
 
 	interface Props {
 		articles: ArticleSummary[];
@@ -141,6 +142,18 @@
 		}, 250);
 	}
 
+	// Keyboard alternative to the swipe gesture: the arrow keys mirror the four drag directions
+	// (right/left/up/down = like/dislike/favorite/save), reusing the same commit() so both paths
+	// share the exit animation and the one-shot-per-article guard.
+	$effect(() =>
+		bindShortcuts({
+			arrowright: () => commit('like'),
+			arrowleft: () => commit('dislike'),
+			arrowup: () => commit('favorite'),
+			arrowdown: () => commit('save')
+		})
+	);
+
 	const rotation = $derived(dragX / 18);
 	const likeOpacity = $derived(Math.min(Math.max(dragX / SWIPE_THRESHOLD, 0), 1));
 	const dislikeOpacity = $derived(Math.min(Math.max(-dragX / SWIPE_THRESHOLD, 0), 1));
@@ -271,6 +284,10 @@
 
 		<p aria-live="polite" class="sr-only">
 			{t('swipe.remaining', { title: current.title, count: articles.length - currentIndex })}
+		</p>
+
+		<p data-test-swipe-hint class="sr-only text-xs text-muted-foreground sm:not-sr-only">
+			{t('swipe.hint')}
 		</p>
 
 		<div class="flex items-center gap-4">
