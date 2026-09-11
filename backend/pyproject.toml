@@ -21,6 +21,7 @@ dependencies = [
     "python-multipart>=0.0.32",
     "trafilatura>=1.12",
     "defusedxml>=0.7",
+    "langdetect>=1.0.9",
 ]
 
 [dependency-groups]
@@ -45,7 +46,7 @@ strict = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["sklearn.*", "nltk.*", "trafilatura.*"]
+module = ["sklearn.*", "nltk.*", "trafilatura.*", "langdetect.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -242,11 +242,12 @@ async def test_enrich_article_does_not_translate_when_language_already_matches(
     assert article.original_lang == Lang.FR
 
 
-async def test_enrich_article_translates_into_a_language_beyond_the_two_it_can_stem(
+async def test_enrich_article_translates_into_a_language_beyond_the_ones_it_can_stem(
     session: AsyncSession,
 ) -> None:
-    """A reading language is not bounded by the stemmers: German has none and is still a target."""
-    await _create_feed(session, preferred_language=ReadingLang.DE)
+    """A reading language is not bounded by the stemmers: Malagasy has none and is still a
+    target."""
+    await _create_feed(session, preferred_language=ReadingLang.MG)
 
     await enrich_article(
         {},
@@ -257,7 +258,7 @@ async def test_enrich_article_translates_into_a_language_beyond_the_two_it_can_s
 
     article = await session.scalar(select(Article))
     assert article is not None
-    assert article.title == "[de] The cat"
+    assert article.title == "[mg] The cat"
     assert article.original_lang == Lang.EN
 
 
@@ -392,3 +393,84 @@ async def test_enrich_article_translates_per_subscriber_preferred_language(
     assert en_article is not None
     assert fr_article.title == "[fr] The cat"
     assert en_article.title == "The cat"
+
+
+GERMAN_CONTENT = (
+    "<p>Die Katze sitzt im Garten mit der Maus und frisst gerne Kekse am Nachmittag. "
+    "Der Garten ist gross und die Katze spielt gerne mit der Maus im Garten. "
+    "Ein dritter Satz beschreibt die Katze und den Garten noch genauer hier.</p>"
+)
+
+CHINESE_CONTENT = "<p>这只猫在花园里和老鼠一起玩耍，它下午喜欢吃饼干，花园很大也很安静。</p>"
+
+MALAGASY_CONTENT = (
+    "<p>Ilay saka dia ao amin ny zaridaina miaraka amin ny voalavo ary nihinana mofomamy.</p>"
+)
+
+
+async def test_enrich_article_extracts_german_keywords_stemmed_with_the_german_stemmer(
+    session: AsyncSession,
+) -> None:
+    await _create_feed(session)
+
+    await enrich_article(
+        {},
+        _raw_article(title="Die Katze", content=GERMAN_CONTENT),
+        content_extractor=_FakeContentExtractor(),
+    )
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    assert article.original_lang == Lang.DE
+    keyword_ids = [
+        row.keyword_id
+        for row in await session.scalars(
+            select(ArticleKeyword).where(ArticleKeyword.article_id == article.id)
+        )
+    ]
+    keywords = await session.scalars(select(Keyword).where(Keyword.id.in_(keyword_ids)))
+    keyword_list = list(keywords)
+    assert len(keyword_list) > 0
+    assert all(keyword.lang == Lang.DE for keyword in keyword_list)
+
+
+async def test_enrich_article_skips_keyword_extraction_for_a_language_no_stemmer_covers(
+    session: AsyncSession,
+) -> None:
+    """Chinese has no stemmer: TF-IDF must not run with the wrong language's rules, it must not
+    run at all, so the article is stored without fabricated keywords."""
+    await _create_feed(session)
+
+    await enrich_article(
+        {},
+        _raw_article(title="Chinese article", content=CHINESE_CONTENT),
+        content_extractor=_FakeContentExtractor(),
+    )
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    assert article.original_lang == Lang.ZH
+    keywords = await session.scalars(
+        select(ArticleKeyword).where(ArticleKeyword.article_id == article.id)
+    )
+    assert list(keywords) == []
+
+
+async def test_enrich_article_skips_keyword_extraction_for_malagasy_content(
+    session: AsyncSession,
+) -> None:
+    await _create_feed(session)
+
+    await enrich_article(
+        {},
+        _raw_article(title="Malagasy article", content=MALAGASY_CONTENT),
+        content_extractor=_FakeContentExtractor(),
+    )
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    assert article.original_lang == Lang.MG
+    keywords = await session.scalars(
+        select(ArticleKeyword).where(ArticleKeyword.article_id == article.id)
+    )
+    assert list(keywords) == []

@@ -11,8 +11,7 @@ from api.domain.feed.models import Feed, SourceType
 from api.domain.user.models import ReadingLang, User
 from api.domain.user.providers import chat_client_for, translator_for
 from api.technical.logging.external import EXTERNAL_CALL_FAILED_EVENT, describe_error
-from worker.domain.extraction.stemming_en import stem_en
-from worker.domain.extraction.stemming_fr import stem_fr
+from worker.domain.extraction.stemming import stem_for_lang
 from worker.domain.extraction.tfidf import extract_keywords
 from worker.domain.summarizer.extractive import summarize_extractive
 from worker.technical.ai.base import LlmApiError, Summarizer
@@ -38,9 +37,11 @@ async def enrich_article(
     raw_article = replace(raw_article, content=clean_content)
     plain_text = strip_html(raw_article.content)
     image_url = extract_first_image(raw_article.content)
-    lang = Lang.FR if detect_lang(plain_text) == "fr" else Lang.EN
-    stems = stem_fr(plain_text) if lang == Lang.FR else stem_en(plain_text)
-    keywords = extract_keywords(stems)
+    lang = detect_lang(plain_text)
+    stems = stem_for_lang(lang, plain_text)
+    # No stemmer covers `lang` (currently zh and mg): running TF-IDF on unstemmed tokens, or on
+    # another language's stems, would produce keywords that only look plausible.
+    keywords = extract_keywords(stems) if stems is not None else []
     translated_cache: dict[ReadingLang, tuple[str, str]] = {}
 
     async with worker_session() as session:
