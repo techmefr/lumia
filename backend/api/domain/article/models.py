@@ -12,6 +12,14 @@ from api.technical.orm import Base, TimestampMixin
 class Lang(StrEnum):
     FR = "fr"
     EN = "en"
+    ES = "es"
+    DE = "de"
+    IT = "it"
+    PT = "pt"
+    RU = "ru"
+    AR = "ar"
+    ZH = "zh"
+    MG = "mg"
 
 
 class Author(Base):
