@@ -312,9 +312,11 @@ export const ru: Catalogue = {
 	'swipe.favoriteAction': 'Добавить в избранное',
 	'swipe.expand': 'Развернуть',
 	'swipe.collapse': 'Свернуть',
+	'swipe.hint': 'Стрелки для оценки или сохранения',
 
 	'flip.dialog': 'Пролистать статьи',
 	'flip.hint': '← → листать страницы · Esc выйти',
+	'flip.announce': '{title} — страница {page} из {count}',
 	'flip.page': 'Текущая страница, смахни, чтобы листать',
 	'flip.empty': 'Здесь нечего листать.',
 

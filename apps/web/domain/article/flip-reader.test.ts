@@ -122,6 +122,53 @@ describe('turning pages', () => {
 	});
 });
 
+describe('focus management', () => {
+	it('moves focus into the dialog when it opens', () => {
+		const trigger = document.createElement('button');
+		document.body.appendChild(trigger);
+		trigger.focus();
+
+		reader();
+
+		expect(document.activeElement?.getAttribute('data-test-flip-close')).not.toBeNull();
+		trigger.remove();
+	});
+
+	it('keeps Tab from leaving the dialog', async () => {
+		const view = reader({ startIndex: 0 });
+
+		view.close().focus();
+		await fireEvent.keyDown(view.close(), { key: 'Tab', shiftKey: true });
+
+		expect(document.activeElement).toBe(view.next());
+	});
+
+	it('returns focus to what was focused before opening, once closed', async () => {
+		const trigger = document.createElement('button');
+		document.body.appendChild(trigger);
+		trigger.focus();
+
+		const { unmount } = render(FlipReader, {
+			articles: THREE,
+			onClose: vi.fn(),
+			onPage: vi.fn()
+		} as Props);
+		unmount();
+
+		expect(document.activeElement).toBe(trigger);
+		trigger.remove();
+	});
+
+	it('announces the current page to screen readers when it changes', async () => {
+		const view = reader({ startIndex: 0 });
+		const live = view.container.querySelector('[aria-live="polite"]');
+
+		await fireEvent.click(view.next());
+
+		expect(live?.textContent).toContain('Titre b');
+	});
+});
+
 describe('closing', () => {
 	it('closes on the close button', async () => {
 		const view = reader();

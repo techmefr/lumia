@@ -314,9 +314,11 @@ export const es: Catalogue = {
 	'swipe.favoriteAction': 'Marcar como favorito',
 	'swipe.expand': 'Desplegar',
 	'swipe.collapse': 'Plegar',
+	'swipe.hint': 'Flechas para votar o guardar',
 
 	'flip.dialog': 'Hojear los artículos',
 	'flip.hint': '← → para pasar páginas · Esc para salir',
+	'flip.announce': '{title} — página {page} de {count}',
 	'flip.page': 'Página actual, desliza para pasar',
 	'flip.empty': 'Nada que hojear aquí.',
 

@@ -304,9 +304,11 @@ export const en: Catalogue = {
 	'swipe.favoriteAction': 'Add to favourites',
 	'swipe.expand': 'Expand',
 	'swipe.collapse': 'Collapse',
+	'swipe.hint': 'Arrow keys to vote or save',
 
 	'flip.dialog': 'Flip through the articles',
 	'flip.hint': '← → to turn pages · Esc to leave',
+	'flip.announce': '{title} — page {page} of {count}',
 	'flip.page': 'Current page, swipe to turn',
 	'flip.empty': 'Nothing to flip through here.',
 

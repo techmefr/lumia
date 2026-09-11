@@ -314,9 +314,11 @@ export const it: Catalogue = {
 	'swipe.favoriteAction': 'Mettere nei preferiti',
 	'swipe.expand': 'Espandi',
 	'swipe.collapse': 'Riduci',
+	'swipe.hint': 'Frecce per votare o salvare',
 
 	'flip.dialog': 'Sfogliare gli articoli',
 	'flip.hint': '← → per girare pagina · Esc per uscire',
+	'flip.announce': '{title} — pagina {page} di {count}',
 	'flip.page': 'Pagina corrente, scorri per girare',
 	'flip.empty': 'Niente da sfogliare qui.',
 
