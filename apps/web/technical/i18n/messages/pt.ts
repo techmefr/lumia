@@ -146,6 +146,12 @@ export const pt: Catalogue = {
 	'feeds.importChoose': 'Escolher um ficheiro .opml',
 	'feeds.importFailed':
 		'Importação OPML impossível — verifica se o ficheiro é mesmo uma exportação do Feedly.',
+	'feeds.exportTitle': 'Exportar as tuas subscrições',
+	'feeds.exportDescription':
+		'Descarrega os teus feeds e pastas em formato OPML, para os guardar ou importar noutro sítio.',
+	'feeds.exportButton': 'Descarregar o ficheiro OPML',
+	'feeds.exporting': 'A preparar o ficheiro…',
+	'feeds.exportFailed': 'Exportação OPML impossível — tenta mais tarde.',
 	'feeds.newFolder': 'Nova pasta',
 	'feeds.create': 'Criar',
 	'feeds.subscribed': 'Fontes subscritas',
@@ -327,9 +333,11 @@ export const pt: Catalogue = {
 	'swipe.favoriteAction': 'Marcar como favorito',
 	'swipe.expand': 'Expandir',
 	'swipe.collapse': 'Recolher',
+	'swipe.hint': 'Setas para votar ou guardar',
 
 	'flip.dialog': 'Folhear os artigos',
 	'flip.hint': '← → para virar páginas · Esc para sair',
+	'flip.announce': '{title} — página {page} de {count}',
 	'flip.page': 'Página atual, desliza para virar',
 	'flip.empty': 'Nada para folhear aqui.',
 

@@ -158,15 +158,26 @@
 		void loadArticles();
 	}
 
+	// Kept in the address bar rather than only in memory: a search result has to be shareable by
+	// link and survive the back button, per the reader-search request (#70).
+	function syncSearchToUrl(query: string) {
+		const url = new URL(page.url);
+		if (query) url.searchParams.set('q', query);
+		else url.searchParams.delete('q');
+		void goto(url, { replaceState: true, keepFocus: true, noScroll: true });
+	}
+
 	function submitSearch(event: SubmitEvent) {
 		event.preventDefault();
 		appliedQuery = searchInput.trim();
+		syncSearchToUrl(appliedQuery);
 		void loadArticles();
 	}
 
 	function clearSearch() {
 		searchInput = '';
 		appliedQuery = '';
+		syncSearchToUrl('');
 		void loadArticles();
 	}
 
@@ -264,6 +275,9 @@
 			filterKind = 'keyword';
 			filterName = search.get('keyword_term') ?? '';
 		}
+		const initialQuery = search.get('q') ?? '';
+		searchInput = initialQuery;
+		appliedQuery = initialQuery;
 
 		void Promise.all([lumia.feed.listFolders(), lumia.feed.listFeeds()]).then(([f, fe]) => {
 			folders = f;
@@ -389,18 +403,25 @@
 			<label for="article-search" class="sr-only">{t('articles.searchLabel')}</label>
 			<Input
 				id="article-search"
+				data-test-search-input
 				bind:ref={searchEl}
 				bind:value={searchInput}
 				type="search"
 				placeholder={t('articles.searchPlaceholder')}
 				class="max-w-sm"
 			/>
-			<Button type="submit" variant="secondary" size="sm">
+			<Button type="submit" variant="secondary" size="sm" data-test-search-submit>
 				<Search class="size-4" />
 				{t('articles.search')}
 			</Button>
 			{#if appliedQuery}
-				<Button type="button" variant="ghost" size="sm" onclick={clearSearch}>
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					onclick={clearSearch}
+					data-test-search-clear
+				>
 					<X class="size-4" />
 					{t('articles.clear')}
 				</Button>
@@ -408,7 +429,12 @@
 		</form>
 
 		{#if appliedQuery}
-			<p class="text-sm text-muted-foreground">
+			<p
+				class="text-sm text-muted-foreground"
+				role="status"
+				aria-live="polite"
+				data-test-search-status
+			>
 				{t('articles.results', {
 					query: appliedQuery,
 					count: `${articles.length}${hasMore ? '+' : ''}`

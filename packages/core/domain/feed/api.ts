@@ -60,6 +60,11 @@ export function createFeedApi(http: HttpClient) {
 		return http.request<Feed[]>('/feeds/import-opml', { method: 'POST', formData });
 	}
 
+	/** The reader's own folders and feeds, rebuilt as an OPML document they can take elsewhere. */
+	async function exportOpml(): Promise<Blob> {
+		return http.requestBlob('/feeds/export-opml');
+	}
+
 	async function discoverFeeds(limit = 6): Promise<DiscoverSuggestion[]> {
 		return http.request<DiscoverSuggestion[]>(`/feeds/discover?limit=${limit}`);
 	}
@@ -76,6 +81,7 @@ export function createFeedApi(http: HttpClient) {
 		refreshFeed,
 		getUnreadCounts,
 		importOpml,
+		exportOpml,
 		addFeedByUrl
 	};
 }

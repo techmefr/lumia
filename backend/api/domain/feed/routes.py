@@ -9,6 +9,7 @@ from api.domain.feed.discover_service import list_suggestions
 from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError, InvalidOpmlError
 from api.domain.feed.feed_status_service import refresh_feed_now
 from api.domain.feed.models import Feed, Folder, SourceType
+from api.domain.feed.opml_export import export_opml
 from api.domain.feed.opml_service import add_feed, import_opml
 from api.domain.feed.schemas import (
     DiscoverSuggestionResponse,
@@ -226,6 +227,19 @@ async def import_opml_feeds(
     except InvalidOpmlError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
     return [_to_feed_response(feed) for feed in feeds]
+
+
+@router.get("/feeds/export-opml")
+async def export_opml_feeds(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> Response:
+    xml_bytes = await export_opml(session, user)
+    return Response(
+        content=xml_bytes,
+        media_type="text/x-opml",
+        headers={"Content-Disposition": 'attachment; filename="lumia-subscriptions.opml"'},
+    )
 
 
 @router.get("/feeds/{feed_id}/icon")

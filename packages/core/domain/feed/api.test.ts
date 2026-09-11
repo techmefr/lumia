@@ -110,6 +110,15 @@ describe('importOpml', () => {
 	});
 });
 
+describe('exportOpml', () => {
+	it('fetches the export as a file rather than json', async () => {
+		const blob = new Blob(['<opml />'], { type: 'text/x-opml' });
+		const { feeds, last } = api([blob]);
+		await expect(feeds.exportOpml()).resolves.toBe(blob);
+		expect(last()).toMatchObject({ path: '/feeds/export-opml', method: 'GET' });
+	});
+});
+
 describe('discoverFeeds', () => {
 	it('asks for six suggestions by default', async () => {
 		const { feeds, last } = api([[]]);

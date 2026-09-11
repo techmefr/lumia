@@ -2,7 +2,8 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Computed, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from api.domain.feed.models import Feed
@@ -12,6 +13,14 @@ from api.technical.orm import Base, TimestampMixin
 class Lang(StrEnum):
     FR = "fr"
     EN = "en"
+    ES = "es"
+    DE = "de"
+    IT = "it"
+    PT = "pt"
+    RU = "ru"
+    AR = "ar"
+    ZH = "zh"
+    MG = "mg"
 
 
 class Author(Base):
@@ -52,6 +61,35 @@ class Article(Base, TimestampMixin):
     image_url: Mapped[str | None] = mapped_column(default=None)
     original_lang: Mapped[Lang] = mapped_column(default=Lang.FR)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Computed by postgres itself (see migration 61a242bfadb8 for the generation expression, which
+    # must stay in sync with this one), never written from python: a generated column rejects any
+    # explicit value on insert or update. zh and mg have no postgres text-search configuration, so
+    # they index under "simple" — words kept as they are — rather than under a stemmer built for
+    # another language.
+    search_vector: Mapped[str] = mapped_column(
+        TSVECTOR,
+        Computed(
+            "CASE original_lang "
+            + " ".join(
+                f"WHEN '{lang}' THEN to_tsvector('{regconfig}', title || ' ' "
+                "|| coalesce(summary, '') || ' ' || content)"
+                for lang, regconfig in {
+                    "EN": "english",
+                    "ES": "spanish",
+                    "DE": "german",
+                    "IT": "italian",
+                    "PT": "portuguese",
+                    "RU": "russian",
+                    "AR": "arabic",
+                    "ZH": "simple",
+                    "MG": "simple",
+                }.items()
+            )
+            + " ELSE to_tsvector('french', title || ' ' || coalesce(summary, '') "
+            "|| ' ' || content) END",
+            persisted=True,
+        ),
+    )
 
     author: Mapped[Author | None] = relationship(lazy="selectin")
     category: Mapped[Category | None] = relationship(lazy="selectin")

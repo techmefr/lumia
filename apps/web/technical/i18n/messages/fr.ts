@@ -148,6 +148,12 @@ export const fr = {
 	'feeds.importing': 'Import en cours…',
 	'feeds.importChoose': 'Choisir un fichier .opml',
 	'feeds.importFailed': 'Import OPML impossible — vérifie que le fichier est bien un export Feedly.',
+	'feeds.exportTitle': 'Exporter tes abonnements',
+	'feeds.exportDescription':
+		'Télécharge tes flux et tes dossiers au format OPML, pour les garder ou les importer ailleurs.',
+	'feeds.exportButton': 'Télécharger le fichier OPML',
+	'feeds.exporting': 'Préparation du fichier…',
+	'feeds.exportFailed': 'Export OPML impossible — réessaie plus tard.',
 	'feeds.newFolder': 'Nouveau dossier',
 	'feeds.create': 'Créer',
 	'feeds.subscribed': 'Flux abonnés',
@@ -329,9 +335,11 @@ export const fr = {
 	'swipe.favoriteAction': 'Mettre en favoris',
 	'swipe.expand': 'Déplier',
 	'swipe.collapse': 'Replier',
+	'swipe.hint': "Flèches pour voter ou garder l'article",
 
 	'flip.dialog': 'Feuilleter les articles',
 	'flip.hint': '← → pour tourner les pages · Échap pour sortir',
+	'flip.announce': '{title} — page {page} sur {count}',
 	'flip.page': 'Page courante, glisse pour tourner',
 	'flip.empty': 'Rien à feuilleter ici.',
 

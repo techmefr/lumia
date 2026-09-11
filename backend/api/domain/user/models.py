@@ -29,9 +29,10 @@ class TranslationProvider(StrEnum):
 class ReadingLang(StrEnum):
     """The language the reader wants articles in.
 
-    Deliberately not `Lang`: that one is the language an article was written in, and it only holds
-    the two the keyword extractor has a stemmer for. What a reader can ask to be translated into is
-    a wider, independent set, and merging the two would tie a translation target to a stemmer.
+    Deliberately not `Lang`: that one is the language an article was written in. The two sets of
+    values happen to line up now, but they answer different questions (what a text is written in
+    versus what a reader asked for), and a stemmer covering one of them is incidental, not
+    something either type should be defined in terms of.
     """
 
     FR = "fr"
