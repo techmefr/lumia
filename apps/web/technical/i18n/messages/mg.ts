@@ -135,6 +135,12 @@ export const mg: Catalogue = {
 	'feeds.importChoose': 'Misafidy rakitra .opml',
 	'feeds.importFailed':
 		'Tsy afaka nampiditra ny OPML — hamarino fa avy amin’ny Feedly tokoa ilay rakitra.',
+	'feeds.exportTitle': 'Hanondrana ny fahazoan-kevitrao',
+	'feeds.exportDescription':
+		'Alao ny fluxes sy ny lahatahiry ho OPML, mba hitehirizana azy na hanondranana azy any amin’ny toerana hafa.',
+	'feeds.exportButton': 'Alao ny rakitra OPML',
+	'feeds.exporting': 'Mamboatra ny rakitra…',
+	'feeds.exportFailed': 'Tsy afaka nanondrana ny OPML — andramo indray afaka kelikely.',
 	'feeds.newFolder': 'Lahatahiry vaovao',
 	'feeds.create': 'Hamorona',
 	'feeds.subscribed': 'Fantsona nisoratana',

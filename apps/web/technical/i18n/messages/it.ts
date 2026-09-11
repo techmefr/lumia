@@ -133,6 +133,12 @@ export const it: Catalogue = {
 	'feeds.importChoose': 'Scegli un file .opml',
 	'feeds.importFailed':
 		'Importazione OPML impossibile — controlla che il file sia davvero un export di Feedly.',
+	'feeds.exportTitle': 'Esporta i tuoi abbonamenti',
+	'feeds.exportDescription':
+		'Scarica i tuoi feed e le tue cartelle in formato OPML, per conservarli o importarli altrove.',
+	'feeds.exportButton': 'Scarica il file OPML',
+	'feeds.exporting': 'Preparazione del file…',
+	'feeds.exportFailed': 'Esportazione OPML impossibile — riprova più tardi.',
 	'feeds.newFolder': 'Nuova cartella',
 	'feeds.create': 'Crea',
 	'feeds.subscribed': 'Feed sottoscritti',
