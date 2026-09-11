@@ -296,9 +296,11 @@ export const zh: Catalogue = {
 	'swipe.favoriteAction': '加入收藏',
 	'swipe.expand': '展开',
 	'swipe.collapse': '收起',
+	'swipe.hint': '方向键投票或收藏',
 
 	'flip.dialog': '翻阅文章',
 	'flip.hint': '← → 翻页 · Esc 退出',
+	'flip.announce': '{title} — 第 {page} 页,共 {count} 页',
 	'flip.page': '当前页，滑动翻页',
 	'flip.empty': '这里没有可翻阅的内容。',
 

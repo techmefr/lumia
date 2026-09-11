@@ -303,9 +303,11 @@ export const ar: Catalogue = {
 	'swipe.favoriteAction': 'الإضافة إلى المفضّلة',
 	'swipe.expand': 'توسيع',
 	'swipe.collapse': 'تصغير',
+	'swipe.hint': 'الأسهم للتصويت أو الحفظ · Enter/Space على الأزرار',
 
 	'flip.dialog': 'تقليب المقالات',
 	'flip.hint': '← → لتقليب الصفحات · Esc للخروج',
+	'flip.announce': '{title} — الصفحة {page} من {count}',
 	'flip.page': 'الصفحة الحالية، اسحب للتقليب',
 	'flip.empty': 'لا شيء للتقليب هنا.',
 

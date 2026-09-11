@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { onMount } from 'svelte';
 	import type { ArticleSummary } from '@lumia/core';
 	import { Button } from '@lumia/ui';
 	import X from '@lucide/svelte/icons/x';
@@ -20,6 +21,33 @@
 	}
 
 	let { articles, startIndex = 0, onClose, onPage }: Props = $props();
+
+	let dialogEl = $state<HTMLElement>();
+
+	/** Every element a Tab press should be able to reach while the dialog is open. */
+	function focusableElements(): HTMLElement[] {
+		if (!dialogEl) return [];
+		return Array.from(
+			dialogEl.querySelectorAll<HTMLElement>(
+				'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+			)
+		);
+	}
+
+	function trapTab(event: KeyboardEvent) {
+		if (event.key !== 'Tab') return;
+		const focusable = focusableElements();
+		if (focusable.length === 0) return;
+		const first = focusable[0];
+		const last = focusable[focusable.length - 1];
+		if (event.shiftKey && document.activeElement === first) {
+			event.preventDefault();
+			last.focus();
+		} else if (!event.shiftKey && document.activeElement === last) {
+			event.preventDefault();
+			first.focus();
+		}
+	}
 
 	/** Below this, a horizontal drag is a hesitation rather than a page turn. */
 	const SWIPE_THRESHOLD_PX = 60;
@@ -58,9 +86,18 @@
 			onClose();
 			return;
 		}
+		trapTab(event);
 		if (event.key === 'ArrowRight' || event.key === 'j') go(1);
 		if (event.key === 'ArrowLeft' || event.key === 'k') go(-1);
 	}
+
+	// A modal surface must give focus back to whatever opened it and, while open, keep the keyboard
+	// from ever escaping it — otherwise Tab walks straight into the page underneath.
+	onMount(() => {
+		const previouslyFocused = document.activeElement as HTMLElement | null;
+		focusableElements()[0]?.focus();
+		return () => previouslyFocused?.focus();
+	});
 
 	function onPointerDown(event: PointerEvent) {
 		// Ignore secondary buttons and anything starting on the actions row.
@@ -88,6 +125,7 @@
 <!-- A modal surface rather than a route: feuilleter is a way of looking at the list you already
 	 loaded, so closing it must put you back exactly where you were, filters and scroll included. -->
 <div
+	bind:this={dialogEl}
 	class="fixed inset-0 z-50 flex flex-col bg-background/98 backdrop-blur"
 	role="dialog"
 	aria-modal="true"
@@ -105,6 +143,10 @@
 			{t('common.close')}
 		</Button>
 	</div>
+
+	<p aria-live="polite" class="sr-only">
+		{current ? t('flip.announce', { title: current.title, page: page + 1, count: articles.length }) : ''}
+	</p>
 
 	{#if current}
 		<div

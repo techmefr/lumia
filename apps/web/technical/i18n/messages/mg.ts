@@ -316,9 +316,11 @@ export const mg: Catalogue = {
 	'swipe.favoriteAction': 'Hataovy ankafiziko',
 	'swipe.expand': 'Velaro',
 	'swipe.collapse': 'Aforeto',
+	'swipe.hint': 'Zana-tsipìka hifidianana na hitehirizana',
 
 	'flip.dialog': 'Hanao pejy ny lahatsoratra',
 	'flip.hint': '← → hanovana pejy · Esc hivoahana',
+	'flip.announce': "{title} — pejy {page} amin'ny {count}",
 	'flip.page': 'Pejy ankehitriny, sintomy hanovana',
 	'flip.empty': 'Tsy misy azo hovakiana eto.',
 

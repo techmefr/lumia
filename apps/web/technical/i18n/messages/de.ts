@@ -314,9 +314,11 @@ export const de: Catalogue = {
 	'swipe.favoriteAction': 'Zu den Favoriten',
 	'swipe.expand': 'Ausklappen',
 	'swipe.collapse': 'Einklappen',
+	'swipe.hint': 'Pfeiltasten zum Bewerten oder Speichern',
 
 	'flip.dialog': 'Artikel durchblättern',
 	'flip.hint': '← → zum Blättern · Esc zum Verlassen',
+	'flip.announce': '{title} — Seite {page} von {count}',
 	'flip.page': 'Aktuelle Seite, zum Blättern wischen',
 	'flip.empty': 'Hier gibt es nichts zu blättern.',
 

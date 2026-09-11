@@ -317,9 +317,11 @@ export const fr = {
 	'swipe.favoriteAction': 'Mettre en favoris',
 	'swipe.expand': 'Déplier',
 	'swipe.collapse': 'Replier',
+	'swipe.hint': "Flèches pour voter ou garder l'article",
 
 	'flip.dialog': 'Feuilleter les articles',
 	'flip.hint': '← → pour tourner les pages · Échap pour sortir',
+	'flip.announce': '{title} — page {page} sur {count}',
 	'flip.page': 'Page courante, glisse pour tourner',
 	'flip.empty': 'Rien à feuilleter ici.',
 
