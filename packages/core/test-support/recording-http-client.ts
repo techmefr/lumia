@@ -19,16 +19,24 @@ export function recordingHttpClient(replies: unknown[] = []) {
 	const requests: RecordedRequest[] = [];
 	const queue = [...replies];
 
+	function record(path: string, options: RequestOptions) {
+		requests.push({
+			path,
+			method: options.method ?? 'GET',
+			body: options.body,
+			formData: options.formData,
+			auth: options.auth ?? true
+		});
+	}
+
 	const http: HttpClient = {
 		async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-			requests.push({
-				path,
-				method: options.method ?? 'GET',
-				body: options.body,
-				formData: options.formData,
-				auth: options.auth ?? true
-			});
+			record(path, options);
 			return queue.shift() as T;
+		},
+		async requestBlob(path: string, options: RequestOptions = {}): Promise<Blob> {
+			record(path, options);
+			return queue.shift() as Blob;
 		}
 	};
 

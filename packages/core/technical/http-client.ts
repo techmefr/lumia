@@ -69,7 +69,10 @@ export function createHttpClient({ baseUrl, tokenStore }: HttpClientConfig) {
 		});
 	}
 
-	async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+	async function sendAuthenticated(
+		path: string,
+		options: RequestOptions
+	): Promise<Response> {
 		const auth = options.auth ?? true;
 
 		let accessToken = auth ? tokenStore.getAccessToken() : null;
@@ -84,12 +87,22 @@ export function createHttpClient({ baseUrl, tokenStore }: HttpClientConfig) {
 			const errorBody = await response.json().catch(() => null);
 			throw new ApiError(response.status, errorBody);
 		}
+		return response;
+	}
 
+	async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+		const response = await sendAuthenticated(path, options);
 		if (response.status === 204) return undefined as T;
 		return (await response.json()) as T;
 	}
 
-	return { request };
+	/** For an endpoint that hands back a file (e.g. an OPML export) rather than JSON. */
+	async function requestBlob(path: string, options: RequestOptions = {}): Promise<Blob> {
+		const response = await sendAuthenticated(path, options);
+		return await response.blob();
+	}
+
+	return { request, requestBlob };
 }
 
 export type HttpClient = ReturnType<typeof createHttpClient>;

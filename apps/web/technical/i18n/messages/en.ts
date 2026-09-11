@@ -127,6 +127,12 @@ export const en: Catalogue = {
 	'feeds.importing': 'Importing…',
 	'feeds.importChoose': 'Choose an .opml file',
 	'feeds.importFailed': 'OPML import failed — check that the file really is a Feedly export.',
+	'feeds.exportTitle': 'Export your subscriptions',
+	'feeds.exportDescription':
+		'Download your feeds and folders as OPML, to keep or import elsewhere.',
+	'feeds.exportButton': 'Download the OPML file',
+	'feeds.exporting': 'Preparing the file…',
+	'feeds.exportFailed': 'OPML export failed — try again later.',
 	'feeds.newFolder': 'New folder',
 	'feeds.create': 'Create',
 	'feeds.subscribed': 'Subscribed feeds',

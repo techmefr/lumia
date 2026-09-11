@@ -626,4 +626,11 @@ describe('the session state', () => {
 		const file = new File(['<opml />'], 'feedly.opml');
 		await expect(demo.feed.importOpml(file)).resolves.toHaveLength(SEED_FEEDS.length);
 	});
+
+	it('exports an opml document carrying every seed feed and folder', async () => {
+		const blob = await demo.feed.exportOpml();
+		const xml = await blob.text();
+		for (const folder of SEED_FOLDERS) expect(xml).toContain(folder.name);
+		for (const feed of SEED_FEEDS) expect(xml).toContain(feed.url);
+	});
 });
