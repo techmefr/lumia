@@ -28,6 +28,8 @@ MINIFLUX_CATEGORIES = [{"id": 1, "title": "All"}]
 
 
 def _miniflux_handler(request: httpx.Request) -> httpx.Response:
+    if request.method == "GET" and request.url.path == "/v1/feeds":
+        return httpx.Response(200, json=[])
     if request.method == "GET" and request.url.path == "/v1/categories":
         return httpx.Response(200, json=MINIFLUX_CATEGORIES)
     if request.method == "POST" and request.url.path == "/v1/categories":

@@ -63,6 +63,13 @@ class MinifluxFeedDetail:
 
 
 @dataclass(frozen=True)
+class MinifluxKnownFeed:
+    feed_id: int
+    title: str
+    feed_url: str
+
+
+@dataclass(frozen=True)
 class MinifluxCategory:
     category_id: int
 
@@ -82,6 +89,24 @@ async def list_categories(
             raise _api_error("list_categories", response)
         return [
             MinifluxNamedCategory(category_id=item["id"], title=item["title"])
+            for item in response.json()
+        ]
+
+
+async def list_feeds(
+    *, transport: httpx.AsyncBaseTransport | None = None
+) -> list[MinifluxKnownFeed]:
+    """Every feed the instance carries, including the ones no Lumia reader subscribes to."""
+    async with _client(transport) as client:
+        response = await client.get("/v1/feeds")
+        if response.status_code >= 400:
+            raise _api_error("list_feeds", response)
+        return [
+            MinifluxKnownFeed(
+                feed_id=item["id"],
+                title=item.get("title") or item["feed_url"],
+                feed_url=item["feed_url"],
+            )
             for item in response.json()
         ]
 

@@ -36,6 +36,8 @@ async def miniflux_calls() -> list[str]:
 async def client(db_schema: None, miniflux_calls: list[str]) -> AsyncIterator[httpx.AsyncClient]:
     def handler(request: httpx.Request) -> httpx.Response:
         miniflux_calls.append(str(request.url))
+        if request.method == "GET" and request.url.path == "/v1/feeds":
+            return httpx.Response(200, json=[])
         if request.method == "GET" and request.url.path == "/v1/categories":
             return httpx.Response(200, json=[])
         if request.method == "POST" and request.url.path == "/v1/feeds":
