@@ -3,10 +3,11 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { ApiError, type MagicLinkPurpose } from '@lumia/core';
+	import { ApiError, secondFactorFailure, type MagicLinkPurpose, type SecondFactor } from '@lumia/core';
 	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '@lumia/ui';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import LogIn from '@lucide/svelte/icons/log-in';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Mail from '@lucide/svelte/icons/mail';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte.js';
@@ -19,6 +20,29 @@
 	// A token in the url means this page was opened from the magic-link email: verify it before
 	// showing any form, rather than making the user re-enter it anywhere.
 	let verifyingToken = $state(false);
+
+	// The second factor is a step, not a field: it is asked for only once the backend says this
+	// account has one. The first factor stays in memory for the retry — the same request carries
+	// both, so there is no half-signed-in state on the server to keep track of.
+	let challenge = $state<'none' | 'code' | 'recovery'>('none');
+	let pendingMagicToken = $state<string | null>(null);
+	let totpCode = $state('');
+	let recoveryCode = $state('');
+
+	function secondFactor(): SecondFactor {
+		return challenge === 'recovery'
+			? { recovery_code: recoveryCode.trim() }
+			: { totp_code: totpCode.trim() };
+	}
+
+	/** Returns true when the failure was the second factor, and moves the form on to asking for it. */
+	function handledAsChallenge(err: unknown): boolean {
+		const failure = secondFactorFailure(err);
+		if (failure === null) return false;
+		if (challenge === 'none') challenge = 'code';
+		error = failure === 'totp_required' ? null : t('login.totpInvalid');
+		return true;
+	}
 
 	// The same form and the same token either way; only the mail, and the screen its link opens,
 	// differ — a reader who cannot sign in has no use for a link that lands on the sign-in form.
@@ -37,9 +61,14 @@
 		error = null;
 		loading = true;
 		try {
-			await lumia.user.login(email, password);
+			if (pendingMagicToken) {
+				await lumia.user.verifyMagicLink(pendingMagicToken, secondFactor());
+			} else {
+				await lumia.user.login(email, password, challenge === 'none' ? {} : secondFactor());
+			}
 			await goto(base + '/articles');
 		} catch (err) {
+			if (handledAsChallenge(err)) return;
 			error =
 				err instanceof ApiError && err.status === 401
 					? t('login.badCredentials')
@@ -70,8 +99,15 @@
 		lumia.user
 			.verifyMagicLink(token)
 			.then(() => goto(base + '/articles'))
-			.catch(() => {
+			.catch((err: unknown) => {
 				verifyingToken = false;
+				// A magic link proves control of the mailbox, which is exactly what the second
+				// factor is there to stop being enough on its own.
+				if (secondFactorFailure(err) !== null) {
+					pendingMagicToken = token;
+					handledAsChallenge(err);
+					return;
+				}
 				error = t('login.magicLinkInvalid');
 			});
 	});
@@ -87,7 +123,59 @@
 			<CardDescription>{t('login.tagline')}</CardDescription>
 		</CardHeader>
 		<CardContent>
-			{#if verifyingToken}
+			{#if challenge !== 'none'}
+				<form data-test-totp-form class="flex flex-col gap-4" onsubmit={submit}>
+					<div class="flex items-center gap-2 text-sm font-medium">
+						<ShieldCheck class="size-4 text-primary" />
+						{t('login.totpTitle')}
+					</div>
+					{#if challenge === 'code'}
+						<div class="flex flex-col gap-1.5">
+							<Label for="totp-code">{t('login.totpCode')}</Label>
+							<Input
+								id="totp-code"
+								data-test-totp-code
+								inputmode="numeric"
+								autocomplete="one-time-code"
+								maxlength={6}
+								bind:value={totpCode}
+								required
+							/>
+							<p class="text-xs text-muted-foreground">{t('login.totpHint')}</p>
+						</div>
+					{:else}
+						<div class="flex flex-col gap-1.5">
+							<Label for="recovery-code">{t('login.recoveryCode')}</Label>
+							<Input
+								id="recovery-code"
+								data-test-recovery-code
+								autocomplete="one-time-code"
+								bind:value={recoveryCode}
+								required
+							/>
+							<p class="text-xs text-muted-foreground">{t('login.recoveryHint')}</p>
+						</div>
+					{/if}
+					{#if error}
+						<p role="alert" class="text-sm text-destructive">{error}</p>
+					{/if}
+					<Button type="submit" disabled={loading} class="mt-1">
+						<LogIn class="size-4" />
+						{loading ? t('login.submitting') : t('login.totpSubmit')}
+					</Button>
+				</form>
+				<button
+					data-test-toggle-recovery
+					type="button"
+					onclick={() => {
+						challenge = challenge === 'code' ? 'recovery' : 'code';
+						error = null;
+					}}
+					class="mt-4 block w-full text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
+				>
+					{challenge === 'code' ? t('login.useRecovery') : t('login.backToCode')}
+				</button>
+			{:else if verifyingToken}
 				<p data-test-verifying-token role="status" class="py-6 text-center text-sm text-muted-foreground">
 					{t('login.verifyingMagicLink')}
 				</p>

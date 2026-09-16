@@ -10,6 +10,22 @@ class InvalidCurrentPasswordError(Exception):
     pass
 
 
+class TotpRequiredError(Exception):
+    """The account has a second factor and the request carried none."""
+
+
+class InvalidTotpCodeError(Exception):
+    pass
+
+
+class TotpNotEnrolledError(Exception):
+    pass
+
+
+class TotpAlreadyEnabledError(Exception):
+    pass
+
+
 class SsoNotConfiguredError(Exception):
     pass
 

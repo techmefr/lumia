@@ -1,3 +1,4 @@
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import httpx
@@ -7,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.feed.discover_service import list_suggestions
 from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError, InvalidOpmlError
-from api.domain.feed.feed_status_service import refresh_feed_now
+from api.domain.feed.feed_status_service import refresh_all_feeds_now, refresh_feed_now
 from api.domain.feed.instance_feed_service import attach_instance_feeds, list_instance_feeds
 from api.domain.feed.models import Feed, Folder, SourceType
 from api.domain.feed.opml_export import export_opml
@@ -16,6 +17,7 @@ from api.domain.feed.schemas import (
     DiscoverSuggestionResponse,
     FeedAddByUrlRequest,
     FeedCreateRequest,
+    FeedRefreshAllResponse,
     FeedResponse,
     FeedUpdateRequest,
     FolderCreateRequest,
@@ -30,6 +32,9 @@ from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.technical.db import get_db_session
 from api.technical.net.url_guard import BlockedUrlError, Resolver, get_url_resolver
+from api.technical.rate_limit.dependencies import enforce
+from api.technical.rate_limit.limiter import RateLimiter, get_rate_limiter
+from config.rate_limit import get_rate_limit_config
 from worker.technical.connectors.miniflux_client import (
     MinifluxApiError,
     get_feed_icon,
@@ -113,6 +118,8 @@ def _to_feed_response(feed: Feed) -> FeedResponse:
         error_count=feed.error_count,
         error_reason=feed.error_reason,
         error_since=feed.error_since,
+        refresh_interval_minutes=feed.refresh_interval_minutes,
+        last_refreshed_at=feed.last_refreshed_at,
     )
 
 
@@ -336,9 +343,44 @@ async def update_feed(
         # The move stays local: Miniflux keeps the category it was registered under, which only
         # matters for a future re-import, never for what Lumia displays.
         feed.folder_id = payload.folder_id
+    if "refresh_interval_minutes" in payload.model_fields_set:
+        # Kept on the Lumia row rather than pushed to Miniflux, which has no per-feed interval to
+        # push to; refresh_due_feeds turns it into a nudge on Miniflux's own refresh endpoint.
+        feed.refresh_interval_minutes = payload.refresh_interval_minutes
 
     await session.commit()
     return _to_feed_response(feed)
+
+
+@router.post("/feeds/refresh", response_model=FeedRefreshAllResponse)
+async def refresh_all_feeds(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
+    transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
+) -> FeedRefreshAllResponse:
+    """Asks Miniflux to fetch every feed it polls for the account.
+
+    Declared before `/feeds/{feed_id}/refresh` so "refresh" is not swallowed as a feed id.
+
+    Capped hard, and per reader rather than per address: this one request makes the instance fetch
+    every feed it carries, including feeds belonging to other readers, so several readers leaning
+    on it would hammer every publisher behind them.
+    """
+    config = get_rate_limit_config()
+    await enforce(
+        limiter,
+        scope="feed-refresh-all",
+        identifiers={"user": str(user.id)},
+        max_attempts=config.feed_refresh_all_max_attempts,
+        window=timedelta(minutes=config.feed_refresh_all_window_minutes),
+    )
+
+    try:
+        requested = await refresh_all_feeds_now(session, user.id, transport=transport)
+    except (MinifluxApiError, httpx.HTTPError) as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY) from exc
+    return FeedRefreshAllResponse(feeds_requested=requested, requested_at=datetime.now(UTC))
 
 
 @router.post("/feeds/{feed_id}/refresh", response_model=FeedResponse)
@@ -346,10 +388,24 @@ async def refresh_feed(
     feed_id: UUID,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
     transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
 ) -> FeedResponse:
     """Lets the reader force an immediate re-fetch instead of waiting on the feed's own schedule
-    or the next status sync — the escape hatch for "is it fixed yet?"."""
+    or the next status sync — the escape hatch for "is it fixed yet?".
+
+    Limited per reader and per feed, so a page left retrying in a loop cannot keep a publisher
+    under load, while a reader chasing one broken feed never spends another feed's allowance.
+    """
+    config = get_rate_limit_config()
+    await enforce(
+        limiter,
+        scope="feed-refresh",
+        identifiers={"user": f"{user.id}:{feed_id}"},
+        max_attempts=config.feed_refresh_max_attempts,
+        window=timedelta(minutes=config.feed_refresh_window_minutes),
+    )
+
     feed = await session.scalar(select(Feed).where(Feed.id == feed_id, Feed.user_id == user.id))
     if feed is None or feed.source_type is not SourceType.MINIFLUX:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

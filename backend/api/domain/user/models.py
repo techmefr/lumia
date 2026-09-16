@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import BigInteger, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.domain.instance.models import AccessMode
@@ -104,6 +104,32 @@ class User(Base, TimestampMixin):
     orbit_position: Mapped[OrbitPosition] = mapped_column(default=OrbitPosition.RIGHT)
     font_base_size: Mapped[int] = mapped_column(default=16)
     preferred_language: Mapped[ReadingLang] = mapped_column(default=ReadingLang.FR)
+    #: Set as soon as enrolment starts, so the confirmation step has something to check against.
+    #: On its own it means nothing: only `totp_confirmed_at` turns the second factor on.
+    totp_secret_encrypted: Mapped[str | None] = mapped_column(default=None)
+    #: When the reader proved their authenticator produces the right codes. Until then the secret
+    #: is a draft, and a misconfigured app would otherwise lock the account out for good.
+    totp_confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
+    )
+    #: The last time step accepted for this account. A code stays valid for its whole window, so
+    #: without this an overheard code can be replayed until the window turns.
+    totp_last_used_step: Mapped[int | None] = mapped_column(BigInteger, default=None)
+
+
+class RecoveryCode(Base, TimestampMixin):
+    """One of the codes handed out at enrolment, the way back in when the authenticator is gone.
+
+    Stored hashed like every other credential in this schema, and spent rather than deleted: a
+    used code has to stay unusable, and a listing that shrinks tells nobody why.
+    """
+
+    __tablename__ = "recovery_codes"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    code_hash: Mapped[str] = mapped_column(unique=True)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
 
 class RefreshToken(Base, TimestampMixin):

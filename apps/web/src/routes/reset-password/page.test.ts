@@ -30,6 +30,7 @@ function resetPage() {
 		form: () => q<HTMLFormElement>('[data-test-reset-form]'),
 		missingLink: () => q('[data-test-missing-link]'),
 		error: () => q('[data-test-reset-error]'),
+		totpCode: () => q<HTMLInputElement>('[data-test-totp-code]'),
 		newPassword: () => q<HTMLInputElement>('[data-test-new-password]')!,
 		confirmation: () => q<HTMLInputElement>('[data-test-confirm-password]')!
 	};
@@ -78,7 +79,7 @@ describe('choosing the new password', () => {
 		await fireEvent.submit(view.form()!);
 		await waitFor(() => expect(goto).toHaveBeenCalled());
 
-		expect(api.resetPassword).toHaveBeenCalledWith('the-token', 'battery-staple');
+		expect(api.resetPassword).toHaveBeenCalledWith('the-token', 'battery-staple', {});
 		expect(String(vi.mocked(goto).mock.calls[0][0])).toContain('/articles');
 	});
 
@@ -123,5 +124,57 @@ describe('choosing the new password', () => {
 		await waitFor(() => expect(view.error()).not.toBeNull());
 		const button = view.form()!.querySelector('button')!;
 		expect(button.disabled).toBe(false);
+	});
+});
+
+// A reset hands back a signed-in session, so a mailbox on its own must not be a way past the
+// authenticator the reader turned on.
+describe('an account with a second factor', () => {
+	function refused(detail: string) {
+		return new ApiError(401, { detail });
+	}
+
+	it('asks for a code rather than blaming the link', async () => {
+		api.resetPassword.mockRejectedValue(refused('totp_required'));
+		const view = await filled('battery-staple');
+
+		await fireEvent.submit(view.form()!);
+
+		await waitFor(() => expect(view.totpCode()).not.toBeNull());
+		expect(view.error()).toBeNull();
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it('sends the code with the retry', async () => {
+		api.resetPassword
+			.mockRejectedValueOnce(refused('totp_required'))
+			.mockResolvedValueOnce(undefined);
+		const view = await filled('battery-staple');
+		await fireEvent.submit(view.form()!);
+		await waitFor(() => expect(view.totpCode()).not.toBeNull());
+
+		await fireEvent.input(view.totpCode()!, { target: { value: '123456' } });
+		await fireEvent.submit(view.form()!);
+		await waitFor(() => expect(goto).toHaveBeenCalled());
+
+		expect(api.resetPassword).toHaveBeenLastCalledWith('the-token', 'battery-staple', {
+			totp_code: '123456'
+		});
+	});
+
+	it('keeps asking and says so when the code is wrong', async () => {
+		api.resetPassword
+			.mockRejectedValueOnce(refused('totp_required'))
+			.mockRejectedValueOnce(refused('invalid_totp_code'));
+		const view = await filled('battery-staple');
+		await fireEvent.submit(view.form()!);
+		await waitFor(() => expect(view.totpCode()).not.toBeNull());
+
+		await fireEvent.input(view.totpCode()!, { target: { value: '000000' } });
+		await fireEvent.submit(view.form()!);
+
+		await waitFor(() => expect(view.error()).not.toBeNull());
+		expect(view.totpCode()).not.toBeNull();
+		expect(goto).not.toHaveBeenCalled();
 	});
 });

@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Button, Card, CardContent, Label } from '@lumia/ui';
+	import type { OrbitPosition } from '@lumia/core';
+	import { Button, Card, CardContent, Label, toast } from '@lumia/ui';
 	import Settings from '@lucide/svelte/icons/settings';
 	import Sun from '@lucide/svelte/icons/sun';
 	import Moon from '@lucide/svelte/icons/moon';
 	import Check from '@lucide/svelte/icons/check';
+	import Orbit from '@lucide/svelte/icons/orbit';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import AiSettings from '$domain/settings/ai-settings.svelte';
 	import PasswordSettings from '$domain/settings/password-settings.svelte';
+	import TotpSettings from '$domain/settings/totp-settings.svelte';
 	import FilterRules from '$domain/settings/filter-rules.svelte';
 	import NotificationSettings from '$domain/settings/notification-settings.svelte';
 	import InstanceAdmin from '$domain/settings/instance-admin.svelte';
@@ -28,6 +31,10 @@
 		setReadingComfort,
 		type Theme
 	} from '$technical/theme/theme-store.svelte.js';
+	import {
+		areShortcutsEnabled,
+		setShortcutsEnabled
+	} from '$technical/keyboard/shortcuts-store.svelte.js';
 	import { getLocale, setLocale, t } from '$technical/i18n/i18n.svelte.js';
 	import { LOCALES } from '$technical/i18n/locales';
 
@@ -88,8 +95,23 @@
 	let fontScale = $state(1);
 	let fontPair = $state(FONT_PAIR_PRESETS[0].id);
 	let comfort = $state(false);
+	let shortcuts = $state(true);
+	let orbitPosition = $state<OrbitPosition>('right');
 	// The API is the real guard; hiding the section only spares a member a panel of 403s.
 	let isAdmin = $state(false);
+
+	// Optimistic: the radio is already checked when the request goes out, and rolls back if the
+	// save fails, so the control never sits on a value the server did not accept.
+	async function pickOrbitPosition(next: OrbitPosition) {
+		const previous = orbitPosition;
+		orbitPosition = next;
+		try {
+			await lumia.user.updateMe({ orbit_position: next });
+		} catch {
+			orbitPosition = previous;
+			toast(t('settings.orbitFailed'), { tone: 'destructive' });
+		}
+	}
 
 	function pickTheme(next: Theme) {
 		setTheme(next);
@@ -116,6 +138,11 @@
 		setReadingComfort(comfort);
 	}
 
+	function toggleShortcuts() {
+		shortcuts = !shortcuts;
+		setShortcutsEnabled(shortcuts);
+	}
+
 	onMount(() => {
 		if (!requireAuth()) return;
 		theme = getTheme();
@@ -123,10 +150,12 @@
 		fontScale = getFontScale();
 		fontPair = getFontPair();
 		comfort = isReadingComfort();
+		shortcuts = areShortcutsEnabled();
 		void lumia.user
 			.getMe()
 			.then((me) => {
 				isAdmin = me.role === 'admin';
+				orbitPosition = me.orbit_position;
 			})
 			.catch(() => {
 				isAdmin = false;
@@ -200,6 +229,46 @@
 						</span>
 						<span class="text-sm font-medium">{t('settings.themeDark')}</span>
 					</label>
+				</div>
+			</fieldset>
+		</CardContent>
+	</Card>
+
+	<Card>
+		<CardContent class="pt-6">
+			<fieldset class="flex flex-col gap-3">
+				<legend class="text-sm font-semibold text-muted-foreground">
+					{t('settings.orbitPosition')}
+				</legend>
+				<p class="text-xs text-muted-foreground">{t('settings.orbitPositionHint')}</p>
+				<div class="flex gap-3">
+					{#each [{ value: 'left', label: t('settings.orbitLeft') }, { value: 'right', label: t('settings.orbitRight') }] as const as option (option.value)}
+						<label
+							class="flex flex-1 cursor-pointer flex-col gap-2 rounded-xl border-2 border-border p-4 transition-colors hover:border-muted-foreground has-[:checked]:border-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2"
+						>
+							<input
+								type="radio"
+								name="orbit-position"
+								value={option.value}
+								checked={orbitPosition === option.value}
+								onchange={() => pickOrbitPosition(option.value)}
+								class="sr-only"
+							/>
+							<span
+								aria-hidden="true"
+								class="flex h-12 items-end rounded-lg bg-muted/50 p-1.5 {option.value === 'left'
+									? 'justify-start'
+									: 'justify-end'}"
+							>
+								<span
+									class="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground"
+								>
+									<Orbit class="size-4" />
+								</span>
+							</span>
+							<span class="text-sm font-medium">{option.label}</span>
+						</label>
+					{/each}
 				</div>
 			</fieldset>
 		</CardContent>
@@ -319,6 +388,21 @@
 				</Button>
 			</div>
 
+			<div class="flex flex-col gap-2 border-t pt-4">
+				<span class="text-sm font-semibold text-muted-foreground">{t('settings.shortcuts')}</span>
+				<p class="text-xs text-muted-foreground">{t('settings.shortcutsHint')}</p>
+				<Button
+					data-test-shortcuts-toggle
+					variant={shortcuts ? 'secondary' : 'outline'}
+					size="sm"
+					class="self-start"
+					aria-pressed={shortcuts}
+					onclick={toggleShortcuts}
+				>
+					{shortcuts ? t('settings.shortcutsOn') : t('settings.shortcutsOff')}
+				</Button>
+			</div>
+
 			<div class="mt-2 rounded-lg border bg-muted/30 p-4">
 				<h3 class="font-serif text-xl font-semibold">{t('settings.previewTitle')}</h3>
 				<p class="prose mt-1 text-sm text-muted-foreground">{t('settings.previewBody')}</p>
@@ -330,6 +414,8 @@
 	</Card>
 
 	<PasswordSettings />
+
+	<TotpSettings />
 
 	<NotificationSettings />
 

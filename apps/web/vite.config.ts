@@ -101,7 +101,7 @@ export default defineConfig({
 			 * number can only go up; raise it with each batch of tests, never lower it to make a red
 			 * run green.
 			 */
-			thresholds: { lines: 93, functions: 92, statements: 92, branches: 78 }
+			thresholds: { lines: 93, functions: 93, statements: 93, branches: 79 }
 		}
 	}
 });

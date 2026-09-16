@@ -1,11 +1,19 @@
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { goto } from '$app/navigation';
+import { toast } from '@lumia/ui';
 import { lumia } from '$technical/api/client';
 import { feed, folder } from '../test-support/fixtures';
 import FeedsPage from './+page.svelte';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
+
+// The toast is the only place a refresh outcome is said out loud, so its wording is part of what
+// this page owes the reader rather than a detail of the design system.
+vi.mock('@lumia/ui', async () => {
+	const actual = await vi.importActual<typeof import('@lumia/ui')>('@lumia/ui');
+	return { ...actual, toast: vi.fn() };
+});
 
 vi.mock('$technical/api/client', () => ({
 	isDemo: false,
@@ -14,6 +22,8 @@ vi.mock('$technical/api/client', () => ({
 		feed: {
 			listFolders: vi.fn(),
 			listFeeds: vi.fn(),
+			getUnreadCounts: vi.fn(),
+			refreshAllFeeds: vi.fn(),
 			listInstanceFeeds: vi.fn(),
 			attachInstanceFeeds: vi.fn(),
 			discoverFeeds: vi.fn(),
@@ -69,6 +79,9 @@ function feedsPage() {
 		refresh: () => q<HTMLButtonElement>('[data-test-feed-refresh]'),
 		feedErrorBanner: () => q('[data-test-feed-error-banner]'),
 		folderPanel: () => q('[data-test-folder-panel]'),
+		refreshAll: () => q<HTMLButtonElement>('[data-test-refresh-all]')!,
+		interval: () => q<HTMLSelectElement>('[data-test-feed-interval]')!,
+		lastChecked: () => q('[data-test-feed-last-checked]'),
 		folderDelete: () => q<HTMLButtonElement>('[data-test-folder-delete]')!
 	};
 }
@@ -89,6 +102,7 @@ beforeEach(() => {
 	api.feed.listFeeds.mockResolvedValue([]);
 	api.feed.listInstanceFeeds.mockResolvedValue([]);
 	api.feed.discoverFeeds.mockResolvedValue([]);
+	api.feed.getUnreadCounts.mockResolvedValue({ total: 0, feeds: {}, folders: {} });
 });
 
 afterEach(() => {
@@ -351,5 +365,97 @@ describe('reading what a selection holds', () => {
 
 		await waitFor(() => expect(goto).toHaveBeenCalled());
 		expect(String(vi.mocked(goto).mock.calls.at(-1)?.[0])).toContain('feed_id=feed-1');
+	});
+});
+
+describe('refreshing on demand', () => {
+	const REQUESTED = { feeds_requested: 3, requested_at: '2026-09-16T12:00:00Z' };
+
+	it('offers a refresh for every feed at once', async () => {
+		const view = await withFeeds();
+
+		expect(view.refreshAll()).not.toBeNull();
+	});
+
+	it('asks the backend once when the reader refreshes everything', async () => {
+		const view = await withFeeds();
+		api.feed.refreshAllFeeds.mockResolvedValue(REQUESTED);
+
+		await fireEvent.click(view.refreshAll());
+
+		await waitFor(() => expect(api.feed.refreshAllFeeds).toHaveBeenCalledTimes(1));
+	});
+
+	it('tells the reader the articles are on their way, never that they arrived', async () => {
+		const view = await withFeeds();
+		api.feed.refreshAllFeeds.mockResolvedValue(REQUESTED);
+
+		await fireEvent.click(view.refreshAll());
+
+		await waitFor(() => expect(toast).toHaveBeenCalled());
+		// The webhook delivers the entries after this resolves, so a "done" here would be a lie.
+		const message = vi.mocked(toast).mock.calls[0][0] as string;
+		expect(message).toMatch(/instant|shortly|moment/i);
+	});
+
+	it('reports a failure instead of pretending the refresh worked', async () => {
+		const view = await withFeeds();
+		api.feed.refreshAllFeeds.mockRejectedValue(new Error('boom'));
+
+		await fireEvent.click(view.refreshAll());
+
+		await waitFor(() =>
+			expect(toast).toHaveBeenCalledWith(expect.any(String), { tone: 'destructive' })
+		);
+	});
+});
+
+describe('the per-feed refresh interval', () => {
+	it('defaults to letting the provider choose the pace', async () => {
+		const view = await withFeeds();
+		await view.selectFeed('feed-1');
+
+		await waitFor(() => expect(view.interval()).not.toBeNull());
+		expect(view.interval().value).toBe('');
+	});
+
+	it('sends the chosen interval to the backend', async () => {
+		const view = await withFeeds();
+		api.feed.updateFeed.mockResolvedValue(feed('feed-1', { refresh_interval_minutes: 60 }));
+		await view.selectFeed('feed-1');
+		await waitFor(() => expect(view.interval()).not.toBeNull());
+
+		await fireEvent.change(view.interval(), { target: { value: '60' } });
+
+		await waitFor(() =>
+			expect(api.feed.updateFeed).toHaveBeenCalledWith('feed-1', {
+				refresh_interval_minutes: 60
+			})
+		);
+	});
+
+	it('sends an explicit null when the reader hands the pace back', async () => {
+		const view = await withFeeds([feed('feed-1', { refresh_interval_minutes: 60 })]);
+		api.feed.updateFeed.mockResolvedValue(feed('feed-1', { refresh_interval_minutes: null }));
+		await view.selectFeed('feed-1');
+		await waitFor(() => expect(view.interval()).not.toBeNull());
+
+		await fireEvent.change(view.interval(), { target: { value: '' } });
+
+		await waitFor(() =>
+			expect(api.feed.updateFeed).toHaveBeenCalledWith('feed-1', {
+				refresh_interval_minutes: null
+			})
+		);
+	});
+
+	// Entries reach Lumia by webhook after a refresh returns, so an empty date beside "last checked"
+	// would read as "never fetched" for a feed that was fetched a minute ago.
+	it('says a feed has never been checked rather than showing an empty date', async () => {
+		const view = await withFeeds();
+		await view.selectFeed('feed-1');
+
+		await waitFor(() => expect(view.lastChecked()).not.toBeNull());
+		expect(view.lastChecked()?.textContent?.trim()).not.toBe('');
 	});
 });

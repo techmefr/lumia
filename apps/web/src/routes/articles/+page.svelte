@@ -17,6 +17,7 @@
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { bindShortcuts } from '$technical/keyboard/shortcuts';
+	import { READING_SHORTCUTS } from '$technical/keyboard/shortcut-catalogue';
 	import { watchCompactViewport } from '$technical/layout/breakpoints';
 	import ArticleGrid from '$domain/article/article-grid.svelte';
 	import SectionChips from '$domain/article/section-chips.svelte';
@@ -511,11 +512,15 @@
 		</ArticleGrid>
 
 		<p class="text-xs text-muted-foreground">
-			{t('articles.shortcuts')} <kbd>j</kbd>/<kbd>k</kbd> {t('articles.shortcutNavigate')} ·
-			<kbd>o</kbd>
-			{t('articles.shortcutOpen')} · <kbd>m</kbd> {t('articles.shortcutRead')} · <kbd>s</kbd>
-			{t('articles.shortcutSave')} · <kbd>u</kbd> {t('articles.shortcutUnread')} · <kbd>f</kbd>
-			{t('articles.shortcutFlip')} · <kbd>/</kbd> {t('articles.shortcutSearch')}
+			{t('articles.shortcuts')}
+			{#each READING_SHORTCUTS as entry, index (entry.id)}
+				{#if index > 0}·{/if}
+				{#each entry.keys as key, keyIndex (key)}
+					{#if keyIndex > 0}/{/if}<kbd>{key}</kbd>
+				{/each}
+				{t(entry.labelKey)}
+			{/each}
+			· <kbd>?</kbd> {t('shortcuts.help')}
 		</p>
 	</div>
 </div>

@@ -219,8 +219,23 @@ async def get_feed(
 
 
 async def refresh_feed(feed_id: int, *, transport: httpx.AsyncBaseTransport | None = None) -> None:
-    """Asks Miniflux to fetch the feed right now, instead of waiting for its own poll cycle."""
+    """Asks Miniflux to fetch the feed right now, instead of waiting for its own poll cycle.
+
+    PUT, not POST: Miniflux registers this route for PUT alone and answers 405 to anything else.
+    """
     async with _client(transport) as client:
-        response = await client.post(f"/v1/feeds/{feed_id}/refresh")
+        response = await client.put(f"/v1/feeds/{feed_id}/refresh")
         if response.status_code >= 400:
             raise _api_error("refresh_feed", response)
+
+
+async def refresh_all_feeds(*, transport: httpx.AsyncBaseTransport | None = None) -> None:
+    """Asks Miniflux to fetch every feed of the configured account.
+
+    One call for the whole account rather than a loop over feeds: Miniflux paces the batch itself,
+    where a loop would open as many simultaneous fetches as the reader has subscriptions.
+    """
+    async with _client(transport) as client:
+        response = await client.put("/v1/feeds/refresh")
+        if response.status_code >= 400:
+            raise _api_error("refresh_all_feeds", response)

@@ -52,6 +52,11 @@ export function feed(id: string, overrides: Partial<Feed> = {}): Feed {
 		external_feed_id: `ext-${id}`,
 		title: `Flux ${id}`,
 		url: `https://example.test/${id}.xml`,
+		error_count: 0,
+		error_reason: null,
+		error_since: null,
+		refresh_interval_minutes: null,
+		last_refreshed_at: null,
 		...overrides
 	};
 }

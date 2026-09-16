@@ -177,3 +177,57 @@ async def test_patch_an_unknown_feed_returns_404(client: httpx.AsyncClient) -> N
     headers = await _headers(client)
     response = await client.patch(f"/feeds/{UNKNOWN_ID}", json={"title": "X"}, headers=headers)
     assert response.status_code == 404
+
+
+async def test_setting_a_refresh_interval_stores_it_on_the_feed(client: httpx.AsyncClient) -> None:
+    headers = await _headers(client)
+    ids = await _seed()
+
+    response = await client.patch(
+        f"/feeds/{ids['feed_id']}", json={"refresh_interval_minutes": 30}, headers=headers
+    )
+
+    assert response.status_code == 200
+    assert response.json()["refresh_interval_minutes"] == 30
+
+
+async def test_clearing_the_interval_hands_the_pace_back_to_miniflux(
+    client: httpx.AsyncClient,
+) -> None:
+    headers = await _headers(client)
+    ids = await _seed()
+    await client.patch(
+        f"/feeds/{ids['feed_id']}", json={"refresh_interval_minutes": 30}, headers=headers
+    )
+
+    response = await client.patch(
+        f"/feeds/{ids['feed_id']}", json={"refresh_interval_minutes": None}, headers=headers
+    )
+
+    assert response.json()["refresh_interval_minutes"] is None
+
+
+async def test_omitting_the_interval_leaves_it_untouched(client: httpx.AsyncClient) -> None:
+    headers = await _headers(client)
+    ids = await _seed()
+    await client.patch(
+        f"/feeds/{ids['feed_id']}", json={"refresh_interval_minutes": 30}, headers=headers
+    )
+
+    response = await client.patch(
+        f"/feeds/{ids['feed_id']}", json={"title": "Autre"}, headers=headers
+    )
+
+    assert response.json()["refresh_interval_minutes"] == 30
+
+
+async def test_an_interval_below_the_floor_is_rejected(client: httpx.AsyncClient) -> None:
+    """A one-minute interval would pound the publisher without delivering anything sooner."""
+    headers = await _headers(client)
+    ids = await _seed()
+
+    response = await client.patch(
+        f"/feeds/{ids['feed_id']}", json={"refresh_interval_minutes": 1}, headers=headers
+    )
+
+    assert response.status_code == 422

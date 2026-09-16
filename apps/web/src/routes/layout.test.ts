@@ -39,6 +39,9 @@ function layout() {
 		mobileNav: () => q('nav[class*="fixed"]'),
 		main: () => q<HTMLElement>('[data-test-main]')!,
 		navLink: (href: string) => q<HTMLAnchorElement>(`[data-test-nav-link="${href}"]`),
+		help: () => q('[data-test-shortcuts-help]'),
+		helpClose: () => q<HTMLButtonElement>('[data-test-shortcuts-help-close]')!,
+		announcement: () => q('[data-test-shortcut-announcement]'),
 		activeLinks: () =>
 			[...container.querySelectorAll('[aria-current="page"]')].map(
 				(element) => element.getAttribute('href') ?? ''
@@ -158,5 +161,93 @@ describe('signing out', () => {
 
 		await waitFor(() => expect(api.user.logout).toHaveBeenCalled());
 		expect(String(vi.mocked(goto).mock.calls.at(-1)?.[0])).toContain('/login');
+	});
+});
+
+describe('jumping between sections from the keyboard', () => {
+	it('goes to the section the sequence names', async () => {
+		layout();
+
+		await fireEvent.keyDown(document, { key: 'g' });
+		await fireEvent.keyDown(document, { key: 'f' });
+
+		await waitFor(() => expect(goto).toHaveBeenCalled());
+		expect(String(vi.mocked(goto).mock.calls.at(-1)?.[0])).toContain('/feeds');
+	});
+
+	// The prefix on its own is not a command: a stray `g` must leave the next keypress alone.
+	it('goes nowhere on the prefix alone', async () => {
+		layout();
+
+		await fireEvent.keyDown(document, { key: 'g' });
+
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it('goes nowhere when the second key names no section', async () => {
+		layout();
+
+		await fireEvent.keyDown(document, { key: 'g' });
+		await fireEvent.keyDown(document, { key: 'z' });
+
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	// Jumping to the screen already open would repaint for nothing and move the focus out of
+	// whatever the reader was using.
+	it('stays put when the sequence names the section already open', async () => {
+		layout();
+
+		await fireEvent.keyDown(document, { key: 'g' });
+		await fireEvent.keyDown(document, { key: 'a' });
+
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	// Signing in is a dead end on purpose: a jump out of it would only meet the auth guard.
+	it('refuses to jump out of the sign-in screen', async () => {
+		pathname = '/login';
+		layout();
+
+		await fireEvent.keyDown(document, { key: 'g' });
+		await fireEvent.keyDown(document, { key: 'f' });
+
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	// A jump that only repaints leaves a keyboard reader where it was, so where they landed has to
+	// be said out loud.
+	it('announces the section it landed on', async () => {
+		const view = layout();
+
+		await fireEvent.keyDown(document, { key: 'g' });
+		await fireEvent.keyDown(document, { key: 'f' });
+
+		await waitFor(() => expect(view.announcement()?.textContent?.trim()).not.toBe(''));
+	});
+});
+
+describe('the shortcut help', () => {
+	it('opens on the question mark and closes again', async () => {
+		const view = layout();
+
+		await fireEvent.keyDown(document, { key: '?' });
+		await waitFor(() => expect(view.help()).not.toBeNull());
+
+		await fireEvent.click(view.helpClose());
+		await waitFor(() => expect(view.help()).toBeNull());
+	});
+
+	// The help is a dialog, and a dialog owns the keyboard: the navigation sequence behind it must
+	// not fire while it is up.
+	it('holds the navigation sequence while it is open', async () => {
+		const view = layout();
+		await fireEvent.keyDown(document, { key: '?' });
+		await waitFor(() => expect(view.help()).not.toBeNull());
+
+		await fireEvent.keyDown(document, { key: 'g' });
+		await fireEvent.keyDown(document, { key: 'f' });
+
+		expect(goto).not.toHaveBeenCalled();
 	});
 });

@@ -151,6 +151,8 @@ function initialState(): DemoState {
 			username: 'Démo',
 			role: 'admin',
 			password_set: true,
+			totp_enabled: false,
+			recovery_codes_left: 0,
 			theme: 'system',
 			orbit_position: 'right',
 			font_base_size: 16,
@@ -453,6 +455,12 @@ export function createDemoClient(): LumiaClient {
 			verifyMagicLink: async () => settle(undefined),
 			changePassword: async () => settle(undefined),
 			resetPassword: async () => settle(undefined),
+			// The demo has no backend to enrol against, so the panel simply reports the account as
+			// unprotected and every action refuses rather than pretending to have turned it on.
+			startTotpEnrolment: async () => settle({ secret: '', otpauth_uri: '' }),
+			confirmTotpEnrolment: async () => settle([]),
+			renewRecoveryCodes: async () => settle([]),
+			disableTotp: async () => settle(undefined),
 			getMe: async () => settle({ ...state.me }),
 			updateMe: async (payload: MeUpdate) => {
 				const { ai_api_key, translation_api_key, ...rest } = payload;
@@ -494,15 +502,26 @@ export function createDemoClient(): LumiaClient {
 				if (!feed) throw new Error('flux introuvable');
 				if (update.title !== undefined) feed.title = update.title;
 				if ('folder_id' in update) feed.folder_id = update.folder_id ?? null;
+				if ('refresh_interval_minutes' in update) {
+					feed.refresh_interval_minutes = update.refresh_interval_minutes ?? null;
+				}
 				persist();
 				return settle({ ...feed });
 			},
 			refreshFeed: async (feedId: string) => {
 				// The static demo build has no Miniflux behind it: a feed there never actually breaks,
-				// so a refresh has nothing to fetch and simply hands the feed back unchanged.
+				// so a refresh has nothing to fetch and only stamps the moment it was asked for.
 				const feed = state.feeds.find((candidate) => candidate.id === feedId);
 				if (!feed) throw new Error('flux introuvable');
+				feed.last_refreshed_at = new Date().toISOString();
+				persist();
 				return settle({ ...feed });
+			},
+			refreshAllFeeds: async () => {
+				const requestedAt = new Date().toISOString();
+				for (const feed of state.feeds) feed.last_refreshed_at = requestedAt;
+				persist();
+				return settle({ feeds_requested: state.feeds.length, requested_at: requestedAt });
 			},
 			deleteFeed: async (feedId: string) => {
 				state.feeds = state.feeds.filter((feed) => feed.id !== feedId);

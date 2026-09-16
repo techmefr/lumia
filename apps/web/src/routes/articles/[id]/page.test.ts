@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { goto } from '$app/navigation';
 import { lumia } from '$technical/api/client';
 import type { ArticleDetail } from '@lumia/core';
-import { articleDetail } from '../../test-support/fixtures';
+import { articleDetail, me } from '../../test-support/fixtures';
 import ArticlePage from './+page.svelte';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
@@ -20,7 +20,7 @@ vi.mock('$app/state', () => ({
 vi.mock('$technical/api/client', () => ({
 	isDemo: false,
 	lumia: {
-		user: { isAuthenticated: vi.fn(() => true) },
+		user: { isAuthenticated: vi.fn(() => true), getMe: vi.fn() },
 		article: { getArticle: vi.fn(), translateArticle: vi.fn() },
 		playlist: { listPlaylists: vi.fn(), addArticle: vi.fn(), createPlaylist: vi.fn() },
 		recommendation: { sendFeedback: vi.fn() }
@@ -40,9 +40,15 @@ function articlePage() {
 		content: () => q('[data-test-article-content]'),
 		like: () => q<HTMLButtonElement>('[data-test-like]')!,
 		dislike: () => q<HTMLButtonElement>('[data-test-dislike]')!,
-		save: () => q<HTMLButtonElement>('[data-test-save]')!,
-		favorite: () => q<HTMLButtonElement>('[data-test-favorite]')!,
-		share: () => q<HTMLButtonElement>('[data-test-share]')!,
+		orbitToggle: () => q<HTMLButtonElement>('[data-test-orbit-toggle]')!,
+		orbitAction: (id: string) => q<HTMLButtonElement>(`[data-test-orbit-action="${id}"]`),
+		// Save, favourite and share live in the orbit menu, which is a menu button: its items are
+		// only in the dom once the trigger has been opened.
+		orbit: async (id: string) => {
+			await fireEvent.click(q<HTMLButtonElement>('[data-test-orbit-toggle]')!);
+			await waitFor(() => expect(q(`[data-test-orbit-action="${id}"]`)).not.toBeNull());
+			await fireEvent.click(q<HTMLButtonElement>(`[data-test-orbit-action="${id}"]`)!);
+		},
 		filterLinks: () => [...container.querySelectorAll<HTMLAnchorElement>('a[href*="/articles?"]')]
 	};
 }
@@ -61,6 +67,7 @@ async function loaded() {
 beforeEach(() => {
 	params = { id: 'article-1' };
 	api.user.isAuthenticated.mockReturnValue(true);
+	api.user.getMe.mockResolvedValue(me());
 	api.article.getArticle.mockResolvedValue(articleDetail('article-1'));
 	api.recommendation.sendFeedback.mockResolvedValue(undefined);
 	api.playlist.listPlaylists.mockResolvedValue([]);
@@ -153,11 +160,11 @@ describe('reacting to an article', () => {
 	it('saves the article for later and unsaves it on a second press', async () => {
 		const view = await loaded();
 
-		await fireEvent.click(view.save());
+		await view.orbit('save');
 		await waitFor(() => expect(api.recommendation.sendFeedback).toHaveBeenCalledTimes(1));
 		expect(feedbackPayload(0)).toEqual({ saved: true });
 
-		await fireEvent.click(view.save());
+		await view.orbit('save');
 		await waitFor(() => expect(api.recommendation.sendFeedback).toHaveBeenCalledTimes(2));
 		expect(feedbackPayload(1)).toEqual({ saved: false });
 	});
@@ -165,10 +172,24 @@ describe('reacting to an article', () => {
 	it('marks the article as a favourite', async () => {
 		const view = await loaded();
 
-		await fireEvent.click(view.favorite());
+		await view.orbit('favorite');
 
 		await waitFor(() => expect(api.recommendation.sendFeedback).toHaveBeenCalledTimes(1));
 		expect(feedbackPayload(0)).toEqual({ favorite: true });
+	});
+
+	// The menu items that toggle are checkboxes, so the state they carry is what tells the reader
+	// the article is already saved when they come back to it.
+	it('shows the article as saved once it has been put aside', async () => {
+		const view = await loaded();
+
+		await view.orbit('save');
+		await waitFor(() => expect(api.recommendation.sendFeedback).toHaveBeenCalled());
+		await fireEvent.click(view.orbitToggle());
+
+		await waitFor(() =>
+			expect(view.orbitAction('save')?.getAttribute('aria-checked')).toBe('true')
+		);
 	});
 });
 
@@ -181,7 +202,7 @@ describe('sharing an article', () => {
 		);
 		const view = await loaded();
 
-		await fireEvent.click(view.share());
+		await view.orbit('share');
 
 		await waitFor(() => expect(share).toHaveBeenCalled());
 		expect(share.mock.calls[0][0]).toMatchObject({ url: 'https://example.test/papier' });
@@ -197,10 +218,15 @@ describe('sharing an article', () => {
 		);
 		const view = await loaded();
 
-		await fireEvent.click(view.share());
+		await view.orbit('share');
 
 		await waitFor(() => expect(writeText).toHaveBeenCalledWith('https://example.test/papier'));
-		await waitFor(() => expect(view.share().textContent?.trim()).not.toBe(''));
+		// Running an action closes the menu, so the confirmation is read where it is written: on the
+		// share item itself, the next time the menu is opened.
+		await fireEvent.click(view.orbitToggle());
+		await waitFor(() =>
+			expect(view.orbitAction('share')?.textContent).toContain('Link copied')
+		);
 	});
 });
 

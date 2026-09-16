@@ -33,7 +33,19 @@ class OnboardingAdminRequest(BaseModel):
     disk_quota_mb: int | None = Field(default=None, ge=1)
 
 
-class LoginRequest(BaseModel):
+class SecondFactorFields(BaseModel):
+    """The second factor carried by the routes that hand back a session.
+
+    Both are optional: an account without a second factor sends neither, and one that has it sends
+    whichever it can produce. Refusing the request is the backend's job, not the schema's — a 422
+    would tell an unauthenticated caller which accounts have two-factor sign-in turned on.
+    """
+
+    totp_code: str | None = None
+    recovery_code: str | None = None
+
+
+class LoginRequest(SecondFactorFields):
     email: EmailStr
     password: str
 
@@ -51,7 +63,7 @@ class MagicLinkRequest(BaseModel):
     purpose: MagicLinkPurpose = MagicLinkPurpose.SIGN_IN
 
 
-class MagicLinkVerifyRequest(BaseModel):
+class MagicLinkVerifyRequest(SecondFactorFields):
     token: str
 
 
@@ -62,9 +74,38 @@ class PasswordChangeRequest(BaseModel):
     new_password: str = Field(min_length=MIN_PASSWORD_LENGTH)
 
 
-class PasswordResetRequest(BaseModel):
+class PasswordResetRequest(SecondFactorFields):
     token: str
     new_password: str = Field(min_length=MIN_PASSWORD_LENGTH)
+
+
+class TotpEnrolmentResponse(BaseModel):
+    """The draft secret, in the two forms an authenticator accepts: scanned, or typed by hand."""
+
+    secret: str
+    otpauth_uri: str
+
+
+class TotpConfirmRequest(BaseModel):
+    code: str
+
+
+class TotpRecoveryCodesResponse(BaseModel):
+    """Shown once and never again: only their hashes are kept."""
+
+    recovery_codes: list[str]
+
+
+class TotpDisableRequest(BaseModel):
+    """Turning the second factor off is a re-authentication, not a setting.
+
+    The password when the account has one; otherwise a live code or a recovery code, since an SSO
+    or magic-link account has nothing else to offer.
+    """
+
+    password: str | None = None
+    totp_code: str | None = None
+    recovery_code: str | None = None
 
 
 class SsoCallbackRequest(BaseModel):
@@ -161,6 +202,10 @@ class MeResponse(BaseModel):
     # Whether a password can be changed or has yet to be set: an account that only ever came in
     # through SSO or a magic link has none, and asking it for the current one would trap it.
     password_set: bool
+    totp_enabled: bool
+    # How many of the codes handed out at enrolment are still good, so the settings screen can
+    # tell a reader down to their last one to ask for a new set before it is too late.
+    recovery_codes_left: int
     theme: Theme
     orbit_position: OrbitPosition
     font_base_size: int

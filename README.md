@@ -62,6 +62,9 @@ text-to-speech on a real device before installing anything.
 
 - Keyboard shortcuts: `j`/`k` to move, `o` to open, `m` read/unread, `s` save, `u` unread-only,
   `f` flip through, `/` search, always listed at the bottom of the article list.
+- Navigation shortcuts: `g` then `a` articles, `e` the Spark, `f` feeds, `l` read later,
+  `p` playlists, `v` favourites, `s` settings — the landing screen takes the focus. `?` opens the
+  full list, and every single-key shortcut can be switched off in the settings (WCAG 2.1.4).
 - Skeleton loaders, actionable empty states, and toasts with undo on destructive actions.
 - Light/dark, adjustable text size, page transitions, `prefers-reduced-motion` honoured throughout.
 - WCAG 2.2 AA: skip link, `aria-current` on navigation, live regions on async state, native radio
@@ -189,7 +192,7 @@ pnpm --filter web test:coverage           # app stores, i18n, demo client
 | `backend`        | 318   | 86%      | 80%   |
 | `packages/core`  | 108   | 100%     | 80%   |
 | `packages/ui`    | 319   | 99%      | 98%   |
-| `apps/web`       | 856   | 94%      | 93%   |
+| `apps/web`       | 960   | 93%      | 93%   |
 
 `packages/ui` covers every component and effect in the design system now, floor raised accordingly.
 Every route page under `apps/web/src/routes/` now carries a suite of its own — the reader, the

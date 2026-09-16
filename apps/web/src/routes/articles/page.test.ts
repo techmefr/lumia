@@ -3,6 +3,7 @@ import { fireEvent } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { goto } from '$app/navigation';
 import { lumia } from '$technical/api/client';
+import { setShortcutsEnabled } from '$technical/keyboard/shortcuts-store.svelte.js';
 import { articleSummary as article, feed, folder } from '../test-support/fixtures';
 import ArticlesPage from './+page.svelte';
 
@@ -101,6 +102,7 @@ afterEach(() => {
 	// `globals` is off in this project, so testing-library never registers its own cleanup: without
 	// this, a page from a previous test keeps its document-level shortcut listener bound.
 	cleanup();
+	setShortcutsEnabled(true);
 	vi.unstubAllGlobals();
 	vi.clearAllMocks();
 });
@@ -453,6 +455,33 @@ describe('driving the list from the keyboard', () => {
 		await waitFor(() => expect(view.searchInput()).not.toBeNull());
 
 		await fireEvent.keyDown(view.searchInput() as HTMLInputElement, { key: 'u' });
+
+		expect(lastRequest().unreadOnly).toBeUndefined();
+	});
+
+	// A dialog or a menu owns the keyboard while it is up: a stray `u` behind an open overlay would
+	// reorder the list the reader cannot even see.
+	it.each(['dialog', 'menu'])('stands down while a %s is open', async (role) => {
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+		const overlay = document.createElement('div');
+		overlay.setAttribute('role', role);
+		document.body.append(overlay);
+
+		await fireEvent.keyDown(document, { key: 'u' });
+
+		expect(lastRequest().unreadOnly).toBeUndefined();
+		overlay.remove();
+	});
+
+	// WCAG 2.1.4: the reader can silence single-key shortcuts from the settings, and the list has to
+	// honour that too.
+	it('does nothing once the reader has turned the shortcuts off', async () => {
+		setShortcutsEnabled(false);
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		await fireEvent.keyDown(document, { key: 'u' });
 
 		expect(lastRequest().unreadOnly).toBeUndefined();
 	});
