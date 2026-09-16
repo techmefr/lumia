@@ -316,6 +316,10 @@ export const mg: Catalogue = {
 	'articles.shortcutFlip': 'manao pejy',
 	'articles.shortcutSearch': 'mikaroka',
 
+	'orbit.open': 'Hanokatra ny orbita',
+	'orbit.close': 'Hanidy ny orbita',
+	'orbit.menuLabel': 'Hetsika haingana amin’ity lahatsoratra ity',
+
 	'article.back': 'Hiverina amin’ny lahatsoratra',
 	'article.loading': 'Mampiditra ny lahatsoratra',
 	'article.notFound': 'Tsy hita ny lahatsoratra.',
@@ -406,6 +410,11 @@ export const mg: Catalogue = {
 		'Andalana malalaka kokoa sy elanelana kely fanampiny eo anelanelan’ny teny, mba tsy hivily andalana.',
 	'settings.comfortOn': 'Mandeha',
 	'settings.comfortOff': 'Mijanona',
+	'settings.orbitPosition': 'Bokotra Orbita',
+	'settings.orbitPositionHint': 'Ny bokotra hetsika haingana eo amin’ny efijery famakiana dia apetraka amin’ny ilany misy ny ankihibenao.',
+	'settings.orbitLeft': 'Ankavia',
+	'settings.orbitRight': 'Ankavanana',
+	'settings.orbitFailed': 'Tsy voatahiry ny toeran’ny bokotra Orbita.',
 	'settings.previewTitle': 'Topi-maso amin’ny lohateny',
 	'settings.previewBody':
 		'Soratra fintina, hanamarinana fa mbola mora vakiana ny filaharana na inona na inona habe.',

@@ -304,6 +304,10 @@ export const en: Catalogue = {
 	'articles.shortcutFlip': 'flip through',
 	'articles.shortcutSearch': 'search',
 
+	'orbit.open': 'Open the orbit',
+	'orbit.close': 'Close the orbit',
+	'orbit.menuLabel': 'Quick actions on this article',
+
 	'article.back': 'Back to the articles',
 	'article.loading': 'Loading the article',
 	'article.notFound': 'Article not found.',
@@ -394,6 +398,11 @@ export const en: Catalogue = {
 		'Looser lines and a little more space between words, so you keep your place.',
 	'settings.comfortOn': 'On',
 	'settings.comfortOff': 'Off',
+	'settings.orbitPosition': 'Orbit button',
+	'settings.orbitPositionHint': 'The quick-action button on the reading screen sits on your thumb’s side.',
+	'settings.orbitLeft': 'On the left',
+	'settings.orbitRight': 'On the right',
+	'settings.orbitFailed': 'Could not save the orbit button position.',
 	'settings.previewTitle': 'Heading preview',
 	'settings.previewBody':
 		'A short summary, to check the hierarchy stays readable at every size.',

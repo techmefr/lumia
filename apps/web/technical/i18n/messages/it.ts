@@ -314,6 +314,10 @@ export const it: Catalogue = {
 	'articles.shortcutFlip': 'sfogliare',
 	'articles.shortcutSearch': 'cercare',
 
+	'orbit.open': 'Aprire l\'orbita',
+	'orbit.close': 'Chiudere l\'orbita',
+	'orbit.menuLabel': 'Azioni rapide su questo articolo',
+
 	'article.back': 'Tornare agli articoli',
 	'article.loading': "Caricamento dell'articolo",
 	'article.notFound': 'Articolo introvabile.',
@@ -404,6 +408,11 @@ export const it: Catalogue = {
 		'Righe più arieggiate e un po’ più di spazio tra le parole, per non perdere il rigo.',
 	'settings.comfortOn': 'Attivo',
 	'settings.comfortOff': 'Disattivo',
+	'settings.orbitPosition': 'Pulsante Orbita',
+	'settings.orbitPositionHint': 'Il pulsante delle azioni rapide nella schermata di lettura si colloca dal lato del pollice.',
+	'settings.orbitLeft': 'A sinistra',
+	'settings.orbitRight': 'A destra',
+	'settings.orbitFailed': 'Impossibile salvare la posizione del pulsante Orbita.',
 	'settings.previewTitle': 'Anteprima del titolo',
 	'settings.previewBody':
 		'Un testo di riepilogo, per verificare che la gerarchia resti leggibile a ogni dimensione.',

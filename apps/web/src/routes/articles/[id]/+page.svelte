@@ -2,7 +2,12 @@
 	import { base } from '$app/paths';
 	import { onMount, tick } from 'svelte';
 	import { page } from '$app/state';
-	import { sanitizeArticleHtml, type ArticleDetail, type ArticleTranslation } from '@lumia/core';
+	import {
+		sanitizeArticleHtml,
+		type ArticleDetail,
+		type ArticleTranslation,
+		type OrbitPosition
+	} from '@lumia/core';
 	import { Button, Card, CardContent, Badge, GlareHover, ReadingProgress, Skeleton, toast } from '@lumia/ui';
 	import ThumbsUp from '@lucide/svelte/icons/thumbs-up';
 	import ThumbsDown from '@lucide/svelte/icons/thumbs-down';
@@ -25,6 +30,7 @@
 	import { clearKaraoke, highlightChunk } from '$technical/speech/karaoke';
 	import AddToPlaylist from '$domain/playlist/add-to-playlist.svelte';
 	import TranslateButton from '$domain/article/translate-button.svelte';
+	import OrbitButton, { type OrbitAction } from '$domain/article/orbit-button.svelte';
 
 	/** Below this, "reading" is really just landing on the page; don't record it as progress. */
 	const MIN_TRACKED_PROGRESS = 0.02;
@@ -44,6 +50,9 @@
 	let contentEl = $state<HTMLElement | null>(null);
 	// Held here rather than written over the article, so going back to the original is free.
 	let translation = $state<ArticleTranslation | null>(null);
+	// The stored side of the orbit button. Right is the model's default, and the fallback when the
+	// preference cannot be read: the button has to appear either way.
+	let orbitPosition = $state<OrbitPosition>('right');
 
 	const speech = new SpeechReader();
 
@@ -106,6 +115,47 @@
 		const text = `${article.title}. ${contentEl ? readableText(contentEl) : ''}`;
 		speech.speak(text, { onDone: () => toast(t('article.speechDone')) });
 	}
+
+	function speechLabel(): string {
+		if (speech.speaking && !speech.paused) return t('article.pause');
+		return speech.paused ? t('article.resume') : t('article.listen');
+	}
+
+	// Derived rather than built once: the labels follow a language change, and the icons and the
+	// checked state follow the toggles.
+	const orbitActions = $derived<OrbitAction[]>([
+		{
+			id: 'favorite',
+			label: t('article.favorite'),
+			icon: Star,
+			active: favorite,
+			run: () => void toggleFavorite()
+		},
+		{
+			id: 'save',
+			label: t('article.save'),
+			icon: Bookmark,
+			active: saved,
+			run: () => void toggleSaved()
+		},
+		...(speech.supported
+			? [
+					{
+						id: 'listen',
+						label: speechLabel(),
+						icon: speech.speaking && !speech.paused ? Square : Volume2,
+						active: speech.speaking && !speech.paused,
+						run: toggleSpeech
+					}
+				]
+			: []),
+		{
+			id: 'share',
+			label: linkCopied ? t('article.linkCopied') : t('article.share'),
+			icon: linkCopied ? Check : Share2,
+			run: () => void share()
+		}
+	]);
 
 	// A reading the engine never performed used to be indistinguishable from a finished one: the
 	// button fell silent and the article was marked read. Say what went wrong instead.
@@ -183,6 +233,13 @@
 		}
 
 		window.addEventListener('scroll', onScroll, { passive: true });
+
+		void lumia.user
+			.getMe()
+			.then((me) => {
+				orbitPosition = me.orbit_position;
+			})
+			.catch(() => {});
 
 		lumia.article
 			.getArticle(articleId)
@@ -284,41 +341,11 @@
 							</span>
 						{/if}
 					</div>
-					<div class="flex items-center gap-1">
-						<TranslateButton
-							articleId={article.id}
-							{translation}
-							onchange={(next) => (translation = next)}
-						/>
-						{#if speech.supported}
-							<button
-								data-test-listen
-								onclick={toggleSpeech}
-								aria-pressed={speech.speaking && !speech.paused}
-								class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-							>
-								{#if speech.speaking && !speech.paused}
-									<Square class="size-4 text-primary" />
-									{t('article.pause')}
-								{:else}
-									<Volume2 class="size-4" />
-									{speech.paused ? t('article.resume') : t('article.listen')}
-								{/if}
-							</button>
-						{/if}
-						<button
-							onclick={share}
-							class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-						>
-							{#if linkCopied}
-								<Check class="size-4 text-primary" />
-								{t('article.linkCopied')}
-							{:else}
-								<Share2 class="size-4" />
-								{t('article.share')}
-							{/if}
-						</button>
-					</div>
+					<TranslateButton
+						articleId={article.id}
+						{translation}
+						onchange={(next) => (translation = next)}
+					/>
 				</div>
 
 				<div class="mt-3 flex flex-wrap items-center gap-1.5">
@@ -404,24 +431,10 @@
 					<ThumbsDown class="size-4 shrink-0" />
 					<span class="hidden sm:inline">{t('article.dislike')}</span>
 				</Button>
-				<Button
-					class="flex-1 gap-1.5 px-2 sm:px-4"
-					variant={saved ? 'default' : 'outline'}
-					onclick={toggleSaved}
-				>
-					<Bookmark class="size-4 shrink-0" />
-					<span class="hidden sm:inline">{t('article.save')}</span>
-				</Button>
-				<Button
-					class="flex-1 gap-1.5 px-2 sm:px-4"
-					variant={favorite ? 'default' : 'outline'}
-					onclick={toggleFavorite}
-				>
-					<Star class="size-4 shrink-0" />
-					<span class="hidden sm:inline">{t('article.favorite')}</span>
-				</Button>
 				<AddToPlaylist articleId={article.id} />
 			</div>
 		</div>
+
+		<OrbitButton position={orbitPosition} actions={orbitActions} />
 	{/if}
 </div>
