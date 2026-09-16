@@ -79,6 +79,16 @@ async def list_account_usages(session: AsyncSession) -> list[AccountUsage]:
     ]
 
 
+async def has_disk_quota_room(session: AsyncSession, instance: Instance, user_id: UUID) -> bool:
+    """Whether the account may still be given storage, for callers that skip instead of failing.
+
+    Feed ingestion runs with nobody to tell: an over-quota reader keeps its library and its feeds,
+    new entries simply stop being stored until it makes room.
+    """
+    used_bytes = await get_account_used_bytes(session, user_id)
+    return used_bytes < instance.disk_quota_mb * BYTES_PER_MB
+
+
 async def ensure_within_disk_quota(session: AsyncSession, instance: Instance, user: User) -> None:
     used_bytes = await get_account_used_bytes(session, user.id)
     quota_bytes = instance.disk_quota_mb * BYTES_PER_MB
