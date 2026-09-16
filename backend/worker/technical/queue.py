@@ -14,6 +14,7 @@ from api.technical.logging.correlation import (
 )
 from api.technical.logging.setup import configure_logging
 from config.redis import get_redis_config
+from worker.domain.digest.send_digests import send_reader_digests
 from worker.domain.maintenance.purge_tokens import purge_expired_tokens
 from worker.domain.maintenance.reconcile_articles import reconcile_recent_articles
 from worker.domain.maintenance.sync_feed_status import sync_feed_error_status
@@ -48,11 +49,14 @@ class WorkerSettings:
     functions: ClassVar[list[Callable[..., Awaitable[Any]]]] = [enrich_article]
     # Reconciliation on the hour, because a webhook lost at 14:02 should not wait for the night;
     # the purge in the small hours, where a long-running delete disturbs nobody; the feed status
-    # sync every 15 minutes, so a feed going silent surfaces well within the same reading session.
+    # sync every 15 minutes, so a feed going silent surfaces well within the same reading session;
+    # the digests once an hour, because the hour that matters is each reader's own and
+    # the job itself decides who is due.
     cron_jobs: ClassVar[list[CronJob]] = [
         cron(reconcile_recent_articles, minute=0),
         cron(purge_expired_tokens, hour=3, minute=30),
         cron(sync_feed_error_status, minute={0, 15, 30, 45}),
+        cron(send_reader_digests, minute=5),
     ]
     redis_settings = RedisSettings.from_dsn(get_redis_config().redis_url)
     max_tries: ClassVar[int] = 3

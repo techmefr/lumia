@@ -10,6 +10,7 @@
 	import PasswordSettings from '$domain/settings/password-settings.svelte';
 	import FilterRules from '$domain/settings/filter-rules.svelte';
 	import NotificationSettings from '$domain/settings/notification-settings.svelte';
+	import DigestSettings from '$domain/settings/digest-settings.svelte';
 	import InstanceAdmin from '$domain/settings/instance-admin.svelte';
 	import { lumia } from '$technical/api/client';
 	import {
@@ -331,6 +332,8 @@
 	<PasswordSettings />
 
 	<NotificationSettings />
+
+	<DigestSettings />
 
 	<FilterRules />
 

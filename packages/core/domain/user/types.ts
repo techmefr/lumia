@@ -16,6 +16,9 @@ export type PreferredLanguage =
 	| 'zh'
 	| 'mg';
 
+/** How often a reader asked to be mailed a digest; `never` is the only default we may assume. */
+export type DigestFrequency = 'never' | 'daily' | 'weekly';
+
 /** What a magic link was asked for, which decides the screen its email lands on. */
 export type MagicLinkPurpose = 'sign_in' | 'password_reset';
 
@@ -36,6 +39,11 @@ export interface Me {
 	orbit_position: OrbitPosition;
 	font_base_size: number;
 	preferred_language: PreferredLanguage;
+	digest_frequency: DigestFrequency;
+	/** Hour of the day, 0-23, read in `digest_timezone` rather than in UTC. */
+	digest_hour: number;
+	/** An IANA zone name, "Europe/Paris". */
+	digest_timezone: string;
 	ai_provider: AIProvider | null;
 	ai_endpoint_url: string | null;
 	ai_model: string | null;
@@ -50,6 +58,9 @@ export interface MeUpdate {
 	orbit_position?: OrbitPosition;
 	font_base_size?: number;
 	preferred_language?: PreferredLanguage;
+	digest_frequency?: DigestFrequency;
+	digest_hour?: number;
+	digest_timezone?: string;
 	ai_provider?: AIProvider | null;
 	/** An empty string or null removes the stored key. */
 	ai_api_key?: string | null;

@@ -58,6 +58,18 @@ class MagicLinkPurpose(StrEnum):
     PASSWORD_RESET = "password_reset"
 
 
+class DigestFrequency(StrEnum):
+    """How often the reader asked for a digest, `NEVER` being the only default we may assume.
+
+    Opting in is the reader's act: an instance that mailed everyone by default would be sending
+    to addresses that were given for signing in, not for being written to.
+    """
+
+    NEVER = "never"
+    DAILY = "daily"
+    WEEKLY = "weekly"
+
+
 class Theme(StrEnum):
     LIGHT = "light"
     DARK = "dark"
@@ -104,6 +116,18 @@ class User(Base, TimestampMixin):
     orbit_position: Mapped[OrbitPosition] = mapped_column(default=OrbitPosition.RIGHT)
     font_base_size: Mapped[int] = mapped_column(default=16)
     preferred_language: Mapped[ReadingLang] = mapped_column(default=ReadingLang.FR)
+    digest_frequency: Mapped[DigestFrequency] = mapped_column(default=DigestFrequency.NEVER)
+    #: Hour of the day, read in `digest_timezone`: "the morning digest" means the reader's morning,
+    #: and a fixed UTC hour is somebody's middle of the night nearly everywhere.
+    digest_hour: Mapped[int] = mapped_column(default=8)
+    digest_timezone: Mapped[str] = mapped_column(default="UTC")
+    #: The period the last digest covered, "2026-09-16" or "2026-W38". Comparing the current period
+    #: against it is what makes a send idempotent: a worker restart re-enters the same period and
+    #: finds it already spent, where a "sent in the last 24 hours" check drifts by an hour a day.
+    digest_last_period: Mapped[str | None] = mapped_column(default=None)
+    digest_last_sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
+    )
 
 
 class RefreshToken(Base, TimestampMixin):
