@@ -8,7 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword, Author, Category, Keyword, Lang
 from api.domain.feed.models import Feed, SourceType
-from api.domain.user.models import ReadingLang, User
+from api.domain.instance.usage_service import has_disk_quota_room
+from api.domain.user.models import Instance, ReadingLang, User
 from api.domain.user.providers import chat_client_for, translator_for
 from api.technical.logging.external import EXTERNAL_CALL_FAILED_EVENT, describe_error
 from worker.domain.extraction.stemming import stem_for_lang
@@ -54,8 +55,21 @@ async def enrich_article(
                 Feed.external_feed_id == raw_article.feed_external_id,
             )
         )
+        instance = await session.scalar(select(Instance))
         for feed in feeds:
             user = await session.get(User, feed.user_id)
+            if (
+                instance is not None
+                and user is not None
+                and not await has_disk_quota_room(session, instance, user.id)
+            ):
+                # Checked before translating and summarising: an article that will not be stored
+                # must not cost a call to a paid provider either.
+                logger.info(
+                    "skipped an article for an account over its disk quota",
+                    extra={"user_id": str(user.id), "feed_id": str(feed.id)},
+                )
+                continue
             target_lang = user.preferred_language if user is not None else ReadingLang(lang.value)
             title, content, summary_source = await _localize(
                 raw_article,

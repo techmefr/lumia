@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from api.domain.article.models import Article, ArticleKeyword, Author, Category, Keyword, Lang
 from api.domain.feed.models import Feed, SourceType
+from api.domain.instance.usage_service import BYTES_PER_MB
 from api.domain.user.models import Instance, ReadingLang, User
 from config.database import get_engine
 from worker.domain.pipeline.enrich_article import enrich_article
@@ -474,3 +475,56 @@ async def test_enrich_article_skips_keyword_extraction_for_malagasy_content(
         select(ArticleKeyword).where(ArticleKeyword.article_id == article.id)
     )
     assert list(keywords) == []
+
+
+async def test_enrich_article_stores_nothing_for_an_account_over_its_disk_quota(
+    session: AsyncSession,
+) -> None:
+    feed = await _create_feed(session)
+    instance = await session.scalar(select(Instance))
+    assert instance is not None
+    instance.disk_quota_mb = 1
+    session.add(
+        Article(
+            feed_id=feed.id,
+            external_entry_id="already-stored",
+            title="Deja la",
+            url="https://example.com/stored",
+            content="x" * BYTES_PER_MB,
+            published_at=datetime(2026, 8, 1, tzinfo=UTC),
+        )
+    )
+    await session.commit()
+
+    await enrich_article({}, _raw_article(), content_extractor=_FakeContentExtractor())
+
+    stored = list(await session.scalars(select(Article)))
+    assert [article.external_entry_id for article in stored] == ["already-stored"]
+
+
+async def test_enrich_article_stores_again_once_the_account_is_back_under_quota(
+    session: AsyncSession,
+) -> None:
+    feed = await _create_feed(session)
+    instance = await session.scalar(select(Instance))
+    assert instance is not None
+    instance.disk_quota_mb = 1
+    filler = Article(
+        feed_id=feed.id,
+        external_entry_id="already-stored",
+        title="Deja la",
+        url="https://example.com/stored",
+        content="x" * BYTES_PER_MB,
+        published_at=datetime(2026, 8, 1, tzinfo=UTC),
+    )
+    session.add(filler)
+    await session.commit()
+
+    await session.delete(filler)
+    await session.commit()
+
+    await enrich_article({}, _raw_article(), content_extractor=_FakeContentExtractor())
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    assert article.external_entry_id == "123"
