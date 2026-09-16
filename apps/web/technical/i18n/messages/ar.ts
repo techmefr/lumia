@@ -184,6 +184,18 @@ export const ar: Catalogue = {
 	'discover.failedToast': '{title} غير متاحة.',
 	'discover.view': 'عرض {title}',
 
+	'instanceFeeds.title': 'التدفقات الموجودة أصلا على الخادم',
+	'instanceFeeds.intro':
+		'ما يجمعه ميني‌فلكس الخاص بالخادم بالفعل. أشّر على ما تريد متابعته: يُربط كما هو دون إنشاء أي شيء جديد في ميني‌فلكس.',
+	'instanceFeeds.loading': 'جارٍ تحميل تدفقات الخادم',
+	'instanceFeeds.loadFailed': 'تعذّرت قراءة تدفقات الخادم.',
+	'instanceFeeds.empty': 'لا شيء لاستعادته: أنت تتابع كل ما يجمعه الخادم.',
+	'instanceFeeds.selectAll': 'تأشير الكل',
+	'instanceFeeds.noCategory': 'بدون فئة',
+	'instanceFeeds.attach': 'متابعة ({count})',
+	'instanceFeeds.attachedToast': 'تم ربط {count} تدفق.',
+	'instanceFeeds.attachFailed': 'تعذّر ربط هذه التدفقات.',
+
 	'playlists.title': 'قوائم التشغيل',
 	'playlists.intro': 'طوابير مقالات مرتَّبة، مع مدّتها الإجمالية، للقراءة أو الاستماع دفعة واحدة.',
 	'playlists.loadFailed': 'تعذّر تحميل قوائم التشغيل.',

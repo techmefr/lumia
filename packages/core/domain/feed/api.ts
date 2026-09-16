@@ -1,5 +1,5 @@
 import type { HttpClient } from '../../technical/http-client';
-import type { DiscoverSuggestion, Feed, Folder, UnreadCounts } from './types';
+import type { DiscoverSuggestion, Feed, Folder, InstanceFeed, UnreadCounts } from './types';
 
 export interface FeedUpdate {
 	title?: string;
@@ -65,6 +65,19 @@ export function createFeedApi(http: HttpClient) {
 		return http.requestBlob('/feeds/export-opml');
 	}
 
+	/** The feeds the instance's Miniflux already polls, minus the ones this reader subscribes to. */
+	async function listInstanceFeeds(): Promise<InstanceFeed[]> {
+		return http.request<InstanceFeed[]>('/feeds/instance');
+	}
+
+	/** Subscribes to feeds Miniflux already carries, reusing their id rather than creating them. */
+	async function attachInstanceFeeds(externalFeedIds: string[]): Promise<Feed[]> {
+		return http.request<Feed[]>('/feeds/instance/attach', {
+			method: 'POST',
+			body: { external_feed_ids: externalFeedIds }
+		});
+	}
+
 	async function discoverFeeds(limit = 6): Promise<DiscoverSuggestion[]> {
 		return http.request<DiscoverSuggestion[]>(`/feeds/discover?limit=${limit}`);
 	}
@@ -82,7 +95,9 @@ export function createFeedApi(http: HttpClient) {
 		getUnreadCounts,
 		importOpml,
 		exportOpml,
-		addFeedByUrl
+		addFeedByUrl,
+		listInstanceFeeds,
+		attachInstanceFeeds
 	};
 }
 

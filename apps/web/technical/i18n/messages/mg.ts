@@ -194,6 +194,18 @@ export const mg: Catalogue = {
 	'discover.failedToast': '{title} tsy azo idirana.',
 	'discover.view': 'Hijery ny {title}',
 
+	'instanceFeeds.title': 'Fantsona efa misy ao amin\'ny instance',
+	'instanceFeeds.intro':
+		'Izay efa angonin\'ny Miniflux an\'ny instance. Mariho izay tianao arahina: ampifandraisina araka izao izy ireo, tsy misy noforonina indray ao amin\'ny Miniflux.',
+	'instanceFeeds.loading': 'Mampiditra ny fantsonan\'ny instance',
+	'instanceFeeds.loadFailed': 'Tsy voavaky ny fantsonan\'ny instance.',
+	'instanceFeeds.empty': 'Tsy misy azo alaina: efa arahinao daholo izay angonin\'ny instance.',
+	'instanceFeeds.selectAll': 'Mariho daholo',
+	'instanceFeeds.noCategory': 'Tsy misy sokajy',
+	'instanceFeeds.attach': 'Hanaraka ({count})',
+	'instanceFeeds.attachedToast': 'Fantsona {count} no nampifandraisina.',
+	'instanceFeeds.attachFailed': 'Tsy afaka nampifandray ireo fantsona ireo.',
+
 	'playlists.title': 'Lisitra',
 	'playlists.intro':
 		'Filaharana lahatsoratra voalamina, miaraka amin’ny fotoana ilaina, hovakiana na hohenoina tsy an-kijanona.',

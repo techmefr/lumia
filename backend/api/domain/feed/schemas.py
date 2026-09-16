@@ -57,6 +57,20 @@ class DiscoverSuggestionResponse(BaseModel):
     affinity: float | None
 
 
+class InstanceFeedResponse(BaseModel):
+    """A feed the Miniflux instance polls that the reader has no subscription to."""
+
+    external_feed_id: str
+    title: str
+    url: str
+    #: The Miniflux category, or None for a feed filed nowhere.
+    category: str | None
+
+
+class InstanceFeedAttachRequest(BaseModel):
+    external_feed_ids: list[str]
+
+
 class FeedResponse(BaseModel):
     id: UUID
     folder_id: UUID | None
