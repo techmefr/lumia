@@ -1,10 +1,19 @@
 import type { HttpClient } from '../../technical/http-client';
-import type { DiscoverSuggestion, Feed, Folder, InstanceFeed, UnreadCounts } from './types';
+import type {
+	DiscoverSuggestion,
+	Feed,
+	FeedRefreshAll,
+	Folder,
+	InstanceFeed,
+	UnreadCounts
+} from './types';
 
 export interface FeedUpdate {
 	title?: string;
 	/** Explicit null unfiles the feed; omitting the key leaves it where it is. */
 	folder_id?: string | null;
+	/** Explicit null hands the pace back to Miniflux; omitting the key leaves it unchanged. */
+	refresh_interval_minutes?: number | null;
 }
 
 export function createFeedApi(http: HttpClient) {
@@ -37,9 +46,24 @@ export function createFeedApi(http: HttpClient) {
 		await http.request(`/feeds/${feedId}`, { method: 'DELETE' });
 	}
 
-	/** Asks the backend to re-fetch this feed from its provider right away. */
+	/**
+	 * Asks the backend to re-fetch this feed from its provider right away.
+	 *
+	 * Resolving means the fetch was requested and the feed's error status is current. It does not
+	 * mean new articles are readable yet: those arrive over the webhook shortly afterwards.
+	 */
 	async function refreshFeed(feedId: string): Promise<Feed> {
 		return http.request<Feed>(`/feeds/${feedId}/refresh`, { method: 'POST' });
+	}
+
+	/**
+	 * Asks the provider to fetch every feed it polls.
+	 *
+	 * Rate limited far more tightly than a single feed on the backend, since one call makes the
+	 * instance fetch every feed it carries.
+	 */
+	async function refreshAllFeeds(): Promise<FeedRefreshAll> {
+		return http.request<FeedRefreshAll>('/feeds/refresh', { method: 'POST' });
 	}
 
 	async function getUnreadCounts(): Promise<UnreadCounts> {
@@ -92,6 +116,7 @@ export function createFeedApi(http: HttpClient) {
 		updateFeed,
 		deleteFeed,
 		refreshFeed,
+		refreshAllFeeds,
 		getUnreadCounts,
 		importOpml,
 		exportOpml,

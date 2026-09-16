@@ -74,6 +74,28 @@ describe('feeds', () => {
 		await expect(feeds.refreshFeed('feed-1')).resolves.toMatchObject({ error_count: 0 });
 		expect(last()).toMatchObject({ path: '/feeds/feed-1/refresh', method: 'POST' });
 	});
+
+	it('asks for a refresh of every feed on its own endpoint', async () => {
+		const { feeds, last } = api([{ feeds_requested: 4, requested_at: '2026-09-16T12:00:00Z' }]);
+		await expect(feeds.refreshAllFeeds()).resolves.toMatchObject({ feeds_requested: 4 });
+		expect(last()).toMatchObject({ path: '/feeds/refresh', method: 'POST' });
+	});
+
+	it('sends a refresh interval as a plain number', async () => {
+		const { feeds, last } = api([{ id: 'feed-1', refresh_interval_minutes: 30 }]);
+		await feeds.updateFeed('feed-1', { refresh_interval_minutes: 30 });
+		expect(last()).toMatchObject({
+			path: '/feeds/feed-1',
+			method: 'PATCH',
+			body: { refresh_interval_minutes: 30 }
+		});
+	});
+
+	it('sends an explicit null to hand the pace back to the provider', async () => {
+		const { feeds, last } = api([{ id: 'feed-1', refresh_interval_minutes: null }]);
+		await feeds.updateFeed('feed-1', { refresh_interval_minutes: null });
+		expect(last().body).toMatchObject({ refresh_interval_minutes: null });
+	});
 });
 
 describe('addFeedByUrl', () => {

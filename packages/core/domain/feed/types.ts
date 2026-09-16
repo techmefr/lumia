@@ -18,6 +18,24 @@ export interface Feed {
 	error_reason?: string | null;
 	/** ISO timestamp of when the feed started failing, null/absent while healthy. */
 	error_since?: string | null;
+	/** How often this feed is fetched, in minutes; null/absent leaves the pace to Miniflux. */
+	refresh_interval_minutes?: number | null;
+	/**
+	 * ISO timestamp of when a fetch was last asked for — not when articles last arrived. Entries
+	 * reach Lumia by webhook after the refresh returns, so this must never be shown as "up to date".
+	 */
+	last_refreshed_at?: string | null;
+}
+
+/**
+ * The outcome of asking the provider to fetch everything.
+ *
+ * It counts feeds a refresh was requested for, deliberately not articles: none have been ingested
+ * by the time this returns.
+ */
+export interface FeedRefreshAll {
+	feeds_requested: number;
+	requested_at: string;
 }
 
 /** A feed the Miniflux instance already polls, which this reader has no subscription to. */
