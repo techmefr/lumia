@@ -14,13 +14,28 @@
 		cursor?: number;
 		/** Kiosque layout: the first article becomes a full-width lead, the rest keep the grid. */
 		hero?: boolean;
+		/** Selection mode: a checkbox appears on every card. Off, the list stays free of chrome. */
+		selectable?: boolean;
+		selectedIds?: string[];
+		/** Index into `articles`. `extend` carries a shift-click, which takes the whole range. */
+		onToggleSelect?: (index: number, options: { extend: boolean }) => void;
 		/** Shown when there is nothing to display; put the next action in here, not a dead end. */
 		empty?: import('svelte').Snippet;
 		/** Rendered under the grid — typically the "load more" button. */
 		footer?: import('svelte').Snippet;
 	}
 
-	let { articles, loading, cursor = -1, hero = false, empty, footer }: Props = $props();
+	let {
+		articles,
+		loading,
+		cursor = -1,
+		hero = false,
+		selectable = false,
+		selectedIds = [],
+		onToggleSelect,
+		empty,
+		footer
+	}: Props = $props();
 
 	// Written once for the grid and its placeholders so a wide screen cannot show one column count
 	// while loading and another once loaded. Past `lg` the room goes into columns rather than into
@@ -37,6 +52,13 @@
 
 	// The cards live in the design system, which knows nothing of the app's i18n: their text and the
 	// locale their dates are formatted in are handed over as props.
+	// The native default would toggle on its own and then be told a different answer by the state,
+	// which shows as a flicker on a shift-click that extends a range rather than inverting it.
+	function toggle(index: number, event: MouseEvent) {
+		event.preventDefault();
+		onToggleSelect?.(index, { extend: event.shiftKey });
+	}
+
 	const cardLabels = $derived({
 		locale: getLocale(),
 		readLabel: t('article.read'),
@@ -74,44 +96,25 @@
 {:else}
 	<div data-test-article-grid class="relative flex flex-col gap-4">
 		{#if lead}
-			<ArticleHero
-				id={lead.id}
-				href="{base}/articles/{lead.id}"
-				title={lead.title}
-				summary={lead.summary}
-				imageUrl={lead.image_url}
-				sourceLabel={lead.source_label}
-				publishedAt={lead.published_at}
-				accentHue={accentHueForFeed(lead.feed_id)}
-				readingMinutes={lead.reading_minutes}
-				read={lead.read}
-				iconUrl={feedIcons.get(lead.feed_id)}
-				relevanceScore={lead.relevance_score}
-				{...cardLabels}
-				ctaLabel={t('article.heroCta')}
-				class={cursor === 0 ? 'ring-2 ring-ring ring-offset-2 ring-offset-background' : ''}
-			/>
+			{#if selectable}
+				<div class="relative">
+					{@render selectBox(lead, 0)}
+					{@render heroCard(lead)}
+				</div>
+			{:else}
+				{@render heroCard(lead)}
+			{/if}
 		{/if}
 		<div data-test-article-columns class={GRID_COLUMNS}>
 			{#each rest as article, index (article.id)}
-				<ArticleCard
-					id={article.id}
-					href="{base}/articles/{article.id}"
-					title={article.title}
-					summary={article.summary}
-					imageUrl={article.image_url}
-					sourceLabel={article.source_label}
-					publishedAt={article.published_at}
-					accentHue={accentHueForFeed(article.feed_id)}
-					featured={!lead && index === 0}
-					readingMinutes={article.reading_minutes}
-					read={article.read}
-					scrollProgress={article.scroll_progress}
-					iconUrl={feedIcons.get(article.feed_id)}
-					relevanceScore={article.relevance_score}
-					{...cardLabels}
-					class={index === gridCursor ? 'ring-2 ring-ring ring-offset-2 ring-offset-background' : ''}
-				/>
+				{#if selectable}
+					<div class="relative">
+						{@render selectBox(article, lead ? index + 1 : index)}
+						{@render card(article, index)}
+					</div>
+				{:else}
+					{@render card(article, index)}
+				{/if}
 			{/each}
 		</div>
 		<GradualBlur position="bottom" height="3rem" strength={1.5} target="parent" />
@@ -120,3 +123,58 @@
 		{@render footer()}
 	{/if}
 {/if}
+
+{#snippet heroCard(article: ArticleSummary)}
+	<ArticleHero
+		id={article.id}
+		href="{base}/articles/{article.id}"
+		title={article.title}
+		summary={article.summary}
+		imageUrl={article.image_url}
+		sourceLabel={article.source_label}
+		publishedAt={article.published_at}
+		accentHue={accentHueForFeed(article.feed_id)}
+		readingMinutes={article.reading_minutes}
+		read={article.read}
+		iconUrl={feedIcons.get(article.feed_id)}
+		relevanceScore={article.relevance_score}
+		{...cardLabels}
+		ctaLabel={t('article.heroCta')}
+		class={cursor === 0 ? 'ring-2 ring-ring ring-offset-2 ring-offset-background' : ''}
+	/>
+{/snippet}
+
+{#snippet card(article: ArticleSummary, index: number)}
+	<ArticleCard
+		id={article.id}
+		href="{base}/articles/{article.id}"
+		title={article.title}
+		summary={article.summary}
+		imageUrl={article.image_url}
+		sourceLabel={article.source_label}
+		publishedAt={article.published_at}
+		accentHue={accentHueForFeed(article.feed_id)}
+		featured={!lead && index === 0}
+		readingMinutes={article.reading_minutes}
+		read={article.read}
+		scrollProgress={article.scroll_progress}
+		iconUrl={feedIcons.get(article.feed_id)}
+		relevanceScore={article.relevance_score}
+		{...cardLabels}
+		class={index === gridCursor ? 'ring-2 ring-ring ring-offset-2 ring-offset-background' : ''}
+	/>
+{/snippet}
+
+<!-- Rendered before the card so the keyboard reaches the checkbox first: a reader tabbing through
+	 a selection is choosing articles, not opening them. It sits over the card rather than inside it: the cards belong to the design system,
+	 which has no notion of a selection, and a list at rest keeps no trace of the feature. -->
+{#snippet selectBox(article: ArticleSummary, position: number)}
+	<input
+		type="checkbox"
+		data-test-select-article={article.id}
+		class="absolute left-3 top-3 z-10 size-5 cursor-pointer accent-primary"
+		checked={selectedIds.includes(article.id)}
+		aria-label={t('selection.selectArticle', { title: article.title })}
+		onclick={(event) => toggle(position, event)}
+	/>
+{/snippet}

@@ -50,7 +50,10 @@ export const READING_SHORTCUTS: ShortcutEntry[] = [
 	{ id: 'save', keys: ['s'], labelKey: 'articles.shortcutSave' },
 	{ id: 'unread', keys: ['u'], labelKey: 'articles.shortcutUnread' },
 	{ id: 'flip', keys: ['f'], labelKey: 'articles.shortcutFlip' },
-	{ id: 'search', keys: ['/'], labelKey: 'articles.shortcutSearch' }
+	{ id: 'search', keys: ['/'], labelKey: 'articles.shortcutSearch' },
+	{ id: 'select', keys: ['x'], labelKey: 'articles.shortcutSelect' },
+	{ id: 'extend', keys: ['shift+j', 'shift+k'], labelKey: 'articles.shortcutExtend' },
+	{ id: 'select-all', keys: ['shift+a'], labelKey: 'articles.shortcutSelectAll' }
 ];
 
 export const HELP_SHORTCUTS: ShortcutEntry[] = [

@@ -6,13 +6,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.domain.article.models import Article
 from api.domain.article.routes import to_summaries
 from api.domain.article.schemas import ArticleSummaryResponse
+from api.domain.article.scope import resolve_scope_article_ids
+from api.domain.recommendation.bulk_feedback_service import set_feedback_axis
 from api.domain.recommendation.etincelle_service import list_etincelle
+from api.domain.recommendation.exceptions import BulkFeedbackFailedError
 from api.domain.recommendation.favorite_service import list_favorites
 from api.domain.recommendation.feedback_service import apply_feedback
 from api.domain.recommendation.filter_rule_service import add_rule, delete_rule, list_rules
-from api.domain.recommendation.read_service import mark_articles_read, resolve_scope_article_ids
+from api.domain.recommendation.read_service import mark_articles_read
 from api.domain.recommendation.saved_service import list_saved
 from api.domain.recommendation.schemas import (
+    BulkFeedbackRequest,
+    BulkFeedbackResponse,
     FeedbackRequest,
     FilterRuleCreateRequest,
     FilterRuleResponse,
@@ -74,6 +79,31 @@ async def mark_read(
     )
     updated = await mark_articles_read(session, user.id, article_ids, read=payload.read)
     return MarkReadResponse(updated=updated)
+
+
+@router.post("/articles/bulk-feedback", response_model=BulkFeedbackResponse)
+async def bulk_feedback(
+    payload: BulkFeedbackRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> BulkFeedbackResponse:
+    """Applies one feedback axis over one scope, all of it or none of it."""
+    article_ids = await resolve_scope_article_ids(
+        session,
+        user.id,
+        article_ids=payload.article_ids,
+        feed_id=payload.feed_id,
+        folder_id=payload.folder_id,
+    )
+    try:
+        changed = await set_feedback_axis(
+            session, user.id, article_ids, axis=payload.axis, value=payload.value
+        )
+    except BulkFeedbackFailedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="bulk_feedback_failed"
+        ) from exc
+    return BulkFeedbackResponse(updated=len(article_ids), changed_article_ids=changed)
 
 
 @router.post("/articles/{article_id}/feedback", status_code=status.HTTP_204_NO_CONTENT)

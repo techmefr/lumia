@@ -1,5 +1,6 @@
 import type { HttpClient } from '../../technical/http-client';
-import type { PlaylistDetail, PlaylistSummary } from './types';
+import type { ArticleScope } from '../article/types';
+import type { PlaylistBulkItemsResult, PlaylistDetail, PlaylistSummary } from './types';
 
 export function createPlaylistApi(http: HttpClient) {
 	async function listPlaylists(): Promise<PlaylistSummary[]> {
@@ -46,6 +47,21 @@ export function createPlaylistApi(http: HttpClient) {
 		});
 	}
 
+	/**
+	 * Puts a whole scope of articles in or out of the playlist, in one request. `present` false is
+	 * what an undo sends back, carrying the ids the add actually moved.
+	 */
+	async function bulkSetItems(
+		playlistId: string,
+		scope: ArticleScope,
+		present = true
+	): Promise<PlaylistBulkItemsResult> {
+		return http.request<PlaylistBulkItemsResult>(`/playlists/${playlistId}/items/bulk`, {
+			method: 'POST',
+			body: { ...scope, present }
+		});
+	}
+
 	/** Sends the full desired order; ids left out keep their relative place at the end. */
 	async function reorder(playlistId: string, articleIds: string[]): Promise<PlaylistDetail> {
 		return http.request<PlaylistDetail>(`/playlists/${playlistId}/order`, {
@@ -63,6 +79,7 @@ export function createPlaylistApi(http: HttpClient) {
 		deletePlaylist,
 		addArticle,
 		removeArticle,
+		bulkSetItems,
 		reorder
 	};
 }

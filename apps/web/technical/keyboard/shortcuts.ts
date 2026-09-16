@@ -30,13 +30,17 @@ function isIgnored(event: KeyboardEvent): boolean {
 
 /**
  * Binds single-key shortcuts on the document. Keys are matched on `event.key`, lowercased.
+ * A handler registered under `shift+j` takes the shifted press, and the unshifted entry still
+ * answers when there is no shifted one: `/` needs shift on most layouts, so falling back is what
+ * keeps those keys working rather than a list of exceptions.
  * Returns the teardown function, so it can be returned straight from an $effect or onMount.
  */
 export function bindShortcuts(handlers: ShortcutHandlers): () => void {
 	function onKeydown(event: KeyboardEvent) {
 		if (isIgnored(event)) return;
 
-		const handler = handlers[event.key.toLowerCase()];
+		const key = event.key.toLowerCase();
+		const handler = (event.shiftKey ? handlers[`shift+${key}`] : undefined) ?? handlers[key];
 		if (!handler) return;
 		event.preventDefault();
 		handler();
