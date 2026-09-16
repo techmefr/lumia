@@ -1,12 +1,14 @@
 from datetime import datetime
 from uuid import UUID
+from zoneinfo import available_timezones
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from api.domain.feed.models import SourceType
 from api.domain.recommendation.models import FilterMode
 from api.domain.user.models import (
     AIProvider,
+    DigestFrequency,
     MagicLinkPurpose,
     OrbitPosition,
     ReadingLang,
@@ -210,6 +212,9 @@ class MeResponse(BaseModel):
     orbit_position: OrbitPosition
     font_base_size: int
     preferred_language: ReadingLang
+    digest_frequency: DigestFrequency
+    digest_hour: int
+    digest_timezone: str
     ai_provider: AIProvider | None
     ai_endpoint_url: str | None
     ai_model: str | None
@@ -225,9 +230,22 @@ class MeUpdateRequest(BaseModel):
     orbit_position: OrbitPosition | None = None
     font_base_size: int | None = None
     preferred_language: ReadingLang | None = None
+    digest_frequency: DigestFrequency | None = None
+    # Bounded here rather than trusted from the form: an out-of-range hour would simply never
+    # match and the reader would be left waiting for a mail that cannot come.
+    digest_hour: int | None = Field(default=None, ge=0, le=23)
+    digest_timezone: str | None = None
     ai_provider: AIProvider | None = None
     ai_api_key: str | None = None
     ai_endpoint_url: str | None = None
     ai_model: str | None = None
     translation_provider: TranslationProvider | None = None
     translation_api_key: str | None = None
+
+    @field_validator("digest_timezone")
+    @classmethod
+    def _known_timezone(cls, value: str | None) -> str | None:
+        """Rejects a zone the server cannot resolve, rather than storing a name that never fires."""
+        if value is not None and value not in available_timezones():
+            raise ValueError("unknown timezone")
+        return value

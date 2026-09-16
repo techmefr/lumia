@@ -14,6 +14,7 @@ from api.technical.logging.correlation import (
 )
 from api.technical.logging.setup import configure_logging
 from config.redis import get_redis_config
+from worker.domain.digest.send_digests import send_reader_digests
 from worker.domain.maintenance.purge_tokens import purge_expired_tokens
 from worker.domain.maintenance.reconcile_articles import reconcile_recent_articles
 from worker.domain.maintenance.refresh_due_feeds import refresh_due_feeds
@@ -51,12 +52,14 @@ class WorkerSettings:
     # the purge in the small hours, where a long-running delete disturbs nobody; the feed status
     # sync every 15 minutes, so a feed going silent surfaces well within the same reading session;
     # the scheduled refresh every 5 minutes, which is the shortest interval a feed can be given and
-    # therefore the resolution the whole per-feed schedule is capable of.
+    # therefore the resolution the whole per-feed schedule is capable of; the digests once an hour,
+    # because the hour that matters is each reader's own and the job itself decides who is due.
     cron_jobs: ClassVar[list[CronJob]] = [
         cron(reconcile_recent_articles, minute=0),
         cron(purge_expired_tokens, hour=3, minute=30),
         cron(sync_feed_error_status, minute={0, 15, 30, 45}),
         cron(refresh_due_feeds, minute=set(range(0, 60, 5))),
+        cron(send_reader_digests, minute=5),
     ]
     redis_settings = RedisSettings.from_dsn(get_redis_config().redis_url)
     max_tries: ClassVar[int] = 3

@@ -152,6 +152,14 @@ services:
       MINIFLUX_PASSWORD: ${MINIFLUX_PASSWORD}
       MINIFLUX_WEBHOOK_SECRET: ${MINIFLUX_WEBHOOK_SECRET}
       DEEPL_API_KEY: ${DEEPL_API_KEY}
+      # The digest cron mails readers from the worker, so it needs the same SMTP credentials as
+      # the API, and the public address the articles link back to.
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       LOG_FORMAT: ${LOG_FORMAT:-json}
     networks:
