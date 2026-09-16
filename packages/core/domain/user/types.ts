@@ -16,6 +16,9 @@ export type PreferredLanguage =
 	| 'zh'
 	| 'mg';
 
+/** What a magic link was asked for, which decides the screen its email lands on. */
+export type MagicLinkPurpose = 'sign_in' | 'password_reset';
+
 export interface TokenPair {
 	access_token: string;
 	refresh_token: string;
@@ -27,6 +30,8 @@ export interface Me {
 	email: string;
 	username: string;
 	role: Role;
+	/** Whether a password can be changed or has yet to be set: SSO accounts have none. */
+	password_set: boolean;
 	theme: Theme;
 	orbit_position: OrbitPosition;
 	font_base_size: number;

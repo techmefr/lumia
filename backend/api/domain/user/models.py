@@ -47,6 +47,17 @@ class ReadingLang(StrEnum):
     MG = "mg"
 
 
+class MagicLinkPurpose(StrEnum):
+    """What the reader asked the link for, which decides where in the app it lands them.
+
+    The token itself is the same either way: both purposes prove the same thing, control of the
+    mailbox, and a reader who can sign in can already set a new password from the settings.
+    """
+
+    SIGN_IN = "sign_in"
+    PASSWORD_RESET = "password_reset"
+
+
 class Theme(StrEnum):
     LIGHT = "light"
     DARK = "dark"

@@ -57,6 +57,28 @@ export const it: Catalogue = {
 	'login.backToPassword': 'Torna alla password',
 	'login.verifyingMagicLink': 'Accesso in corso…',
 	'login.magicLinkInvalid': 'Questo link non è più valido, richiedine uno nuovo.',
+	'login.forgotPassword': 'Password dimenticata?',
+	'login.resetHint': 'Ti inviamo un link per scegliere una nuova password.',
+	'login.resetSent': 'Se esiste un account per questo indirizzo, è appena stato inviato un link di reimpostazione.',
+
+	'password.title': 'Password',
+	'password.intro': 'Cambia la tua password. Gli altri dispositivi verranno disconnessi.',
+	'password.setIntro': 'Il tuo account non ha ancora una password. Impostarne una ti permette di accedere senza link.',
+	'password.current': 'Password attuale',
+	'password.new': 'Nuova password',
+	'password.confirm': 'Conferma la nuova password',
+	'password.submit': 'Cambia la password',
+	'password.submitting': 'Salvataggio…',
+	'password.mismatch': 'Le due password non coincidono.',
+	'password.tooShort': 'La password deve avere almeno {count} caratteri.',
+	'password.wrongCurrent': 'Password attuale errata.',
+	'password.failed': 'Modifica non riuscita.',
+	'password.changed': 'Password modificata.',
+	'reset.title': 'Scegli una nuova password',
+	'reset.intro': 'Questo link ti permette di impostare una nuova password.',
+	'reset.submit': 'Salva la password',
+	'reset.invalidLink': 'Questo link non è più valido, richiedine uno nuovo.',
+	'reset.missingLink': 'Apri il link ricevuto per email per reimpostare la password.',
 
 	'onboarding.title': 'Benvenuto su Lumia',
 	'onboarding.description':
@@ -191,6 +213,18 @@ export const it: Catalogue = {
 	'discover.addedToast': '{title} aggiunto.',
 	'discover.failedToast': '{title} è irraggiungibile.',
 	'discover.view': 'Vedere {title}',
+
+	'instanceFeeds.title': 'Flussi già presenti sull\'istanza',
+	'instanceFeeds.intro':
+		'Ciò che il Miniflux dell\'istanza raccoglie già. Spunta quelli che vuoi seguire: vengono collegati così come sono, senza ricreare nulla in Miniflux.',
+	'instanceFeeds.loading': 'Caricamento dei flussi dell\'istanza',
+	'instanceFeeds.loadFailed': 'Impossibile leggere i flussi dell\'istanza.',
+	'instanceFeeds.empty': 'Niente da recuperare: segui già tutto ciò che raccoglie l\'istanza.',
+	'instanceFeeds.selectAll': 'Spunta tutto',
+	'instanceFeeds.noCategory': 'Senza categoria',
+	'instanceFeeds.attach': 'Seguire ({count})',
+	'instanceFeeds.attachedToast': '{count} flusso/i collegato/i.',
+	'instanceFeeds.attachFailed': 'Impossibile collegare questi flussi.',
 
 	'playlists.title': 'Playlist',
 	'playlists.intro':

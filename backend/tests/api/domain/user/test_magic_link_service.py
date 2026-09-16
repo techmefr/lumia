@@ -7,7 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from api.domain.user.exceptions import InvalidMagicLinkTokenError
 from api.domain.user.magic_link_service import request_magic_link, verify_magic_link_token
-from api.domain.user.models import Instance, MagicLinkToken, ReadingLang, User
+from api.domain.user.models import (
+    Instance,
+    MagicLinkPurpose,
+    MagicLinkToken,
+    ReadingLang,
+    User,
+)
 from api.technical.auth.tokens import hash_token
 from config.database import get_engine
 
@@ -67,6 +73,25 @@ async def test_request_magic_link_email_contains_a_clickable_login_url(
     assert mock_send.await_args is not None
     body = mock_send.await_args.kwargs["body"]
     assert "http://localhost:8080/login?magic_token=the-raw-token" in body
+
+
+async def test_a_reset_link_lands_on_the_screen_that_asks_for_a_new_password(
+    session: AsyncSession,
+) -> None:
+    await _create_user(session, "known@example.com", ReadingLang.EN)
+    with (
+        patch("api.domain.user.magic_link_service.send_email", new_callable=AsyncMock) as mock_send,
+        patch(
+            "api.domain.user.magic_link_service.generate_opaque_token",
+            return_value="the-raw-token",
+        ),
+    ):
+        await request_magic_link(session, "known@example.com", MagicLinkPurpose.PASSWORD_RESET)
+
+    assert mock_send.await_args is not None
+    body = mock_send.await_args.kwargs["body"]
+    assert "http://localhost:8080/reset-password?magic_token=the-raw-token" in body
+    assert mock_send.await_args.kwargs["subject"] == "Reset your Lumia password"
 
 
 async def _send_magic_link(session: AsyncSession, email: str) -> AsyncMock:

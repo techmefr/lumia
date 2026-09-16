@@ -57,6 +57,28 @@ export const pt: Catalogue = {
 	'login.backToPassword': 'Voltar à palavra-passe',
 	'login.verifyingMagicLink': 'A iniciar sessão…',
 	'login.magicLinkInvalid': 'Esta ligação já não é válida, pede uma nova.',
+	'login.forgotPassword': 'Esqueceu-se da palavra-passe?',
+	'login.resetHint': 'Enviamos-lhe um link para escolher uma nova palavra-passe.',
+	'login.resetSent': 'Se existir uma conta com esse endereço, foi enviado um link de redefinição.',
+
+	'password.title': 'Palavra-passe',
+	'password.intro': 'Altere a sua palavra-passe. Os seus outros dispositivos serão desligados.',
+	'password.setIntro': 'A sua conta ainda não tem palavra-passe. Definir uma permite entrar sem link.',
+	'password.current': 'Palavra-passe atual',
+	'password.new': 'Nova palavra-passe',
+	'password.confirm': 'Confirmar a nova palavra-passe',
+	'password.submit': 'Alterar a palavra-passe',
+	'password.submitting': 'A guardar…',
+	'password.mismatch': 'As duas palavras-passe não coincidem.',
+	'password.tooShort': 'A palavra-passe deve ter pelo menos {count} caracteres.',
+	'password.wrongCurrent': 'Palavra-passe atual incorreta.',
+	'password.failed': 'Não foi possível alterar.',
+	'password.changed': 'Palavra-passe alterada.',
+	'reset.title': 'Escolher uma nova palavra-passe',
+	'reset.intro': 'Este link permite-lhe definir uma nova palavra-passe.',
+	'reset.submit': 'Guardar a palavra-passe',
+	'reset.invalidLink': 'Este link já não é válido, peça um novo.',
+	'reset.missingLink': 'Abra o link recebido por email para redefinir a sua palavra-passe.',
 
 	'onboarding.title': 'Bem-vindo ao Lumia',
 	'onboarding.description':
@@ -192,6 +214,18 @@ export const pt: Catalogue = {
 	'discover.addedToast': '{title} adicionada.',
 	'discover.failedToast': '{title} está inacessível.',
 	'discover.view': 'Ver {title}',
+
+	'instanceFeeds.title': 'Fontes já presentes na instância',
+	'instanceFeeds.intro':
+		'O que o Miniflux da instância já recolhe. Marca as que queres seguir: são ligadas tal como estão, sem recriar nada no Miniflux.',
+	'instanceFeeds.loading': 'A carregar as fontes da instância',
+	'instanceFeeds.loadFailed': 'Não foi possível ler as fontes da instância.',
+	'instanceFeeds.empty': 'Nada a recuperar: já segues tudo o que a instância recolhe.',
+	'instanceFeeds.selectAll': 'Marcar tudo',
+	'instanceFeeds.noCategory': 'Sem categoria',
+	'instanceFeeds.attach': 'Seguir ({count})',
+	'instanceFeeds.attachedToast': '{count} fonte(s) ligada(s).',
+	'instanceFeeds.attachFailed': 'Não foi possível ligar essas fontes.',
 
 	'playlists.title': 'Listas',
 	'playlists.intro':

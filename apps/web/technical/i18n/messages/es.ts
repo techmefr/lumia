@@ -57,6 +57,28 @@ export const es: Catalogue = {
 	'login.backToPassword': 'Volver a la contraseña',
 	'login.verifyingMagicLink': 'Iniciando sesión…',
 	'login.magicLinkInvalid': 'Este enlace ya no es válido, solicita uno nuevo.',
+	'login.forgotPassword': '¿Has olvidado tu contraseña?',
+	'login.resetHint': 'Te enviamos un enlace para elegir una nueva contraseña.',
+	'login.resetSent': 'Si existe una cuenta con esa dirección, se acaba de enviar un enlace de restablecimiento.',
+
+	'password.title': 'Contraseña',
+	'password.intro': 'Cambia tu contraseña. Se cerrará la sesión en tus otros dispositivos.',
+	'password.setIntro': 'Tu cuenta aún no tiene contraseña. Definir una te permite acceder sin enlace.',
+	'password.current': 'Contraseña actual',
+	'password.new': 'Nueva contraseña',
+	'password.confirm': 'Confirmar la nueva contraseña',
+	'password.submit': 'Cambiar la contraseña',
+	'password.submitting': 'Guardando…',
+	'password.mismatch': 'Las dos contraseñas no coinciden.',
+	'password.tooShort': 'La contraseña debe tener al menos {count} caracteres.',
+	'password.wrongCurrent': 'Contraseña actual incorrecta.',
+	'password.failed': 'No se pudo cambiar.',
+	'password.changed': 'Contraseña cambiada.',
+	'reset.title': 'Elige una nueva contraseña',
+	'reset.intro': 'Este enlace te permite definir una nueva contraseña.',
+	'reset.submit': 'Guardar la contraseña',
+	'reset.invalidLink': 'Este enlace ya no es válido, solicita uno nuevo.',
+	'reset.missingLink': 'Abre el enlace que recibiste por correo para restablecer tu contraseña.',
 
 	'onboarding.title': 'Bienvenido a Lumia',
 	'onboarding.description':
@@ -191,6 +213,18 @@ export const es: Catalogue = {
 	'discover.addedToast': '{title} añadida.',
 	'discover.failedToast': '{title} no es accesible.',
 	'discover.view': 'Ver {title}',
+
+	'instanceFeeds.title': 'Fuentes ya presentes en la instancia',
+	'instanceFeeds.intro':
+		'Lo que el Miniflux de la instancia ya recopila. Marca las que quieras seguir: se vinculan tal cual, sin crear nada nuevo en Miniflux.',
+	'instanceFeeds.loading': 'Cargando las fuentes de la instancia',
+	'instanceFeeds.loadFailed': 'No se han podido leer las fuentes de la instancia.',
+	'instanceFeeds.empty': 'Nada que recuperar: ya sigues todo lo que recopila la instancia.',
+	'instanceFeeds.selectAll': 'Marcar todo',
+	'instanceFeeds.noCategory': 'Sin categoría',
+	'instanceFeeds.attach': 'Seguir ({count})',
+	'instanceFeeds.attachedToast': '{count} fuente(s) vinculada(s).',
+	'instanceFeeds.attachFailed': 'No se han podido vincular esas fuentes.',
 
 	'playlists.title': 'Listas',
 	'playlists.intro':

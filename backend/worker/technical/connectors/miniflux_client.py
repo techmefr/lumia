@@ -71,6 +71,7 @@ class MinifluxKnownFeed:
     feed_url: str
     parsing_error_count: int
     parsing_error_message: str
+    category_title: str | None
 
 
 @dataclass(frozen=True)
@@ -112,6 +113,7 @@ async def list_feeds(
                 feed_url=item["feed_url"],
                 parsing_error_count=item.get("parsing_error_count") or 0,
                 parsing_error_message=item.get("parsing_error_message") or "",
+                category_title=(item.get("category") or {}).get("title"),
             )
             for item in response.json()
         ]

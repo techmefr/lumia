@@ -57,6 +57,28 @@ export const ru: Catalogue = {
 	'login.backToPassword': 'Вернуться к паролю',
 	'login.verifyingMagicLink': 'Вход…',
 	'login.magicLinkInvalid': 'Эта ссылка больше не действительна, запросите новую.',
+	'login.forgotPassword': 'Забыли пароль?',
+	'login.resetHint': 'Мы отправим ссылку для выбора нового пароля.',
+	'login.resetSent': 'Если аккаунт с этим адресом существует, ссылка для сброса только что отправлена.',
+
+	'password.title': 'Пароль',
+	'password.intro': 'Измените пароль. На остальных устройствах сеанс будет завершён.',
+	'password.setIntro': 'У вашего аккаунта ещё нет пароля. С паролем можно входить без ссылки.',
+	'password.current': 'Текущий пароль',
+	'password.new': 'Новый пароль',
+	'password.confirm': 'Подтвердите новый пароль',
+	'password.submit': 'Изменить пароль',
+	'password.submitting': 'Сохранение…',
+	'password.mismatch': 'Пароли не совпадают.',
+	'password.tooShort': 'Пароль должен содержать не менее {count} символов.',
+	'password.wrongCurrent': 'Неверный текущий пароль.',
+	'password.failed': 'Не удалось изменить пароль.',
+	'password.changed': 'Пароль изменён.',
+	'reset.title': 'Выберите новый пароль',
+	'reset.intro': 'По этой ссылке можно задать новый пароль.',
+	'reset.submit': 'Сохранить пароль',
+	'reset.invalidLink': 'Эта ссылка больше не действительна, запросите новую.',
+	'reset.missingLink': 'Откройте ссылку из письма, чтобы сбросить пароль.',
 
 	'onboarding.title': 'Добро пожаловать в Lumia',
 	'onboarding.description':
@@ -189,6 +211,18 @@ export const ru: Catalogue = {
 	'discover.addedToast': '{title} добавлена.',
 	'discover.failedToast': '{title} недоступна.',
 	'discover.view': 'Открыть {title}',
+
+	'instanceFeeds.title': 'Ленты, уже подключённые к инстансу',
+	'instanceFeeds.intro':
+		'То, что Miniflux инстанса уже собирает. Отметь нужные: они подключаются как есть, в Miniflux ничего не создаётся заново.',
+	'instanceFeeds.loading': 'Загрузка лент инстанса',
+	'instanceFeeds.loadFailed': 'Не удалось прочитать ленты инстанса.',
+	'instanceFeeds.empty': 'Подключать нечего: ты уже читаешь всё, что собирает инстанс.',
+	'instanceFeeds.selectAll': 'Отметить все',
+	'instanceFeeds.noCategory': 'Без категории',
+	'instanceFeeds.attach': 'Читать ({count})',
+	'instanceFeeds.attachedToast': 'Подключено лент: {count}.',
+	'instanceFeeds.attachFailed': 'Не удалось подключить эти ленты.',
 
 	'playlists.title': 'Подборки',
 	'playlists.intro':

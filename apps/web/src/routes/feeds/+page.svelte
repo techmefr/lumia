@@ -35,6 +35,7 @@
 	import { formatDateInUserTimezone } from '$technical/time/format-date';
 	import FeedSidebar from '$domain/feed/feed-sidebar.svelte';
 	import DiscoverFeeds from '$domain/feed/discover-feeds.svelte';
+	import InstanceFeeds from '$domain/feed/instance-feeds.svelte';
 
 	let folders = $state<Folder[]>([]);
 	let feeds = $state<Feed[]>([]);
@@ -282,6 +283,8 @@
 		{#if error}
 			<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 		{/if}
+
+		<InstanceFeeds onAttached={load} />
 
 		<DiscoverFeeds {folders} onSubscribed={load} />
 

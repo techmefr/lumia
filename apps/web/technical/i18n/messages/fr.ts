@@ -61,6 +61,28 @@ export const fr = {
 	'login.backToPassword': 'Revenir au mot de passe',
 	'login.verifyingMagicLink': 'Connexion en cours…',
 	'login.magicLinkInvalid': 'Ce lien n’est plus valide, demandes-en un nouveau.',
+	'login.forgotPassword': 'Mot de passe oublié ?',
+	'login.resetHint': 'Nous t’envoyons un lien pour choisir un nouveau mot de passe.',
+	'login.resetSent': 'Si un compte existe pour cette adresse, un lien de réinitialisation vient d’être envoyé.',
+
+	'password.title': 'Mot de passe',
+	'password.intro': 'Change ton mot de passe. Tes autres appareils seront déconnectés.',
+	'password.setIntro': 'Ton compte n’a pas encore de mot de passe. En définir un te permet de te connecter sans lien.',
+	'password.current': 'Mot de passe actuel',
+	'password.new': 'Nouveau mot de passe',
+	'password.confirm': 'Confirmer le nouveau mot de passe',
+	'password.submit': 'Changer le mot de passe',
+	'password.submitting': 'Enregistrement…',
+	'password.mismatch': 'Les deux mots de passe ne correspondent pas.',
+	'password.tooShort': 'Le mot de passe doit faire au moins {count} caractères.',
+	'password.wrongCurrent': 'Mot de passe actuel incorrect.',
+	'password.failed': 'Le changement a échoué.',
+	'password.changed': 'Mot de passe modifié.',
+	'reset.title': 'Choisir un nouveau mot de passe',
+	'reset.intro': 'Ce lien te permet de définir un nouveau mot de passe.',
+	'reset.submit': 'Enregistrer le mot de passe',
+	'reset.invalidLink': 'Ce lien n’est plus valide, demandes-en un nouveau.',
+	'reset.missingLink': 'Ouvre le lien reçu par email pour réinitialiser ton mot de passe.',
 
 	'onboarding.title': 'Bienvenue sur Lumia',
 	'onboarding.description':
@@ -194,6 +216,18 @@ export const fr = {
 	'discover.addedToast': '{title} ajouté.',
 	'discover.failedToast': '{title} est injoignable.',
 	'discover.view': 'Voir {title}',
+
+	'instanceFeeds.title': "Flux déjà présents sur l'instance",
+	'instanceFeeds.intro':
+		"Ce que le Miniflux de l'instance collecte déjà. Coche ceux que tu veux suivre : ils sont rattachés tels quels, sans rien recréer côté Miniflux.",
+	'instanceFeeds.loading': 'Chargement des flux de l\'instance',
+	'instanceFeeds.loadFailed': "Impossible de lire les flux de l'instance.",
+	'instanceFeeds.empty': "Aucun flux à récupérer : tu suis déjà tout ce que l'instance collecte.",
+	'instanceFeeds.selectAll': 'Tout cocher',
+	'instanceFeeds.noCategory': 'Sans catégorie',
+	'instanceFeeds.attach': 'Suivre ({count})',
+	'instanceFeeds.attachedToast': '{count} flux rattaché(s).',
+	'instanceFeeds.attachFailed': 'Impossible de rattacher ces flux.',
 
 	'playlists.title': 'Playlists',
 	'playlists.intro':

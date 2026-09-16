@@ -57,6 +57,28 @@ export const mg: Catalogue = {
 	'login.backToPassword': "Miverina amin'ny teny miafina",
 	'login.verifyingMagicLink': 'Miditra…',
 	'login.magicLinkInvalid': 'Tsy manan-kery intsony ity rohy ity, mangataha iray vaovao.',
+	'login.forgotPassword': 'Hadino ny teny miafina?',
+	'login.resetHint': 'Alefanay aminao ny rohy hisafidianana teny miafina vaovao.',
+	'login.resetSent': 'Raha misy kaonty amin’io adiresy io, dia vao nalefa ny rohy famerenana.',
+
+	'password.title': 'Teny miafina',
+	'password.intro': 'Ovay ny teny miafinao. Hivoaka ny fidirana amin’ny fitaovanao hafa.',
+	'password.setIntro': 'Mbola tsy manana teny miafina ny kaontinao. Rehefa misy dia afaka miditra tsy misy rohy ianao.',
+	'password.current': 'Teny miafina ankehitriny',
+	'password.new': 'Teny miafina vaovao',
+	'password.confirm': 'Hamafiso ny teny miafina vaovao',
+	'password.submit': 'Ovay ny teny miafina',
+	'password.submitting': 'Tehirizina…',
+	'password.mismatch': 'Tsy mitovy ireo teny miafina roa.',
+	'password.tooShort': 'Tokony hisy litera {count} farafahakeliny ny teny miafina.',
+	'password.wrongCurrent': 'Diso ny teny miafina ankehitriny.',
+	'password.failed': 'Tsy tanteraka ny fanovana.',
+	'password.changed': 'Novaina ny teny miafina.',
+	'reset.title': 'Misafidiana teny miafina vaovao',
+	'reset.intro': 'Ity rohy ity dia ahafahanao mametraka teny miafina vaovao.',
+	'reset.submit': 'Tehirizo ny teny miafina',
+	'reset.invalidLink': 'Tsy manan-kery intsony ity rohy ity, mangataha iray vaovao.',
+	'reset.missingLink': 'Sokafy ny rohy noraisinao tamin’ny mailaka mba hamerenana ny teny miafina.',
 
 	'onboarding.title': 'Tongasoa eto amin’ny Lumia',
 	'onboarding.description':
@@ -193,6 +215,18 @@ export const mg: Catalogue = {
 	'discover.addedToast': '{title} nampiana.',
 	'discover.failedToast': '{title} tsy azo idirana.',
 	'discover.view': 'Hijery ny {title}',
+
+	'instanceFeeds.title': 'Fantsona efa misy ao amin\'ny instance',
+	'instanceFeeds.intro':
+		'Izay efa angonin\'ny Miniflux an\'ny instance. Mariho izay tianao arahina: ampifandraisina araka izao izy ireo, tsy misy noforonina indray ao amin\'ny Miniflux.',
+	'instanceFeeds.loading': 'Mampiditra ny fantsonan\'ny instance',
+	'instanceFeeds.loadFailed': 'Tsy voavaky ny fantsonan\'ny instance.',
+	'instanceFeeds.empty': 'Tsy misy azo alaina: efa arahinao daholo izay angonin\'ny instance.',
+	'instanceFeeds.selectAll': 'Mariho daholo',
+	'instanceFeeds.noCategory': 'Tsy misy sokajy',
+	'instanceFeeds.attach': 'Hanaraka ({count})',
+	'instanceFeeds.attachedToast': 'Fantsona {count} no nampifandraisina.',
+	'instanceFeeds.attachFailed': 'Tsy afaka nampifandray ireo fantsona ireo.',
 
 	'playlists.title': 'Lisitra',
 	'playlists.intro':

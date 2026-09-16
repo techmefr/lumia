@@ -1,5 +1,5 @@
 server {
-	listen 80;
+	listen 8080;
 	server_name _;
 	root /usr/share/nginx/html;
 	index index.html;
@@ -12,8 +12,11 @@ server {
 	# Same-origin API. The app is opened from a phone or a tablet by the machine's LAN
 	# address, so a backend host baked into the bundle would break the moment that address
 	# changes. Proxying keeps one single origin and removes CORS from the picture.
+	#
+	# The upstream is substituted at startup from LUMIA_BACKEND_URL. Only variables prefixed
+	# LUMIA_ are substituted (NGINX_ENVSUBST_FILTER), so nginx's own $host and $uri survive.
 	location /api/ {
-		proxy_pass http://lumia-backend-api:8000/;
+		proxy_pass ${LUMIA_BACKEND_URL}/;
 		proxy_set_header Host $host;
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 		proxy_set_header X-Forwarded-Proto $scheme;

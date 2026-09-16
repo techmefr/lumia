@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { ApiError } from '@lumia/core';
+	import { ApiError, type MagicLinkPurpose } from '@lumia/core';
 	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '@lumia/ui';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import LogIn from '@lucide/svelte/icons/log-in';
@@ -20,10 +20,17 @@
 	// showing any form, rather than making the user re-enter it anywhere.
 	let verifyingToken = $state(false);
 
-	let magicMode = $state(false);
+	// The same form and the same token either way; only the mail, and the screen its link opens,
+	// differ — a reader who cannot sign in has no use for a link that lands on the sign-in form.
+	let magicMode = $state<MagicLinkPurpose | null>(null);
 	let magicEmail = $state('');
 	let magicLoading = $state(false);
 	let magicSent = $state(false);
+
+	function askFor(purpose: MagicLinkPurpose) {
+		magicMode = purpose;
+		magicSent = false;
+	}
 
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
@@ -44,11 +51,12 @@
 
 	async function submitMagicLink(event: SubmitEvent) {
 		event.preventDefault();
+		if (magicMode === null) return;
 		magicLoading = true;
 		try {
 			// The endpoint never reveals whether the address exists, so the message is the same
 			// either way and there is nothing to branch on here.
-			await lumia.user.requestMagicLink(magicEmail.trim());
+			await lumia.user.requestMagicLink(magicEmail.trim(), magicMode);
 			magicSent = true;
 		} finally {
 			magicLoading = false;
@@ -83,13 +91,18 @@
 				<p data-test-verifying-token role="status" class="py-6 text-center text-sm text-muted-foreground">
 					{t('login.verifyingMagicLink')}
 				</p>
-			{:else if magicMode}
+			{:else if magicMode !== null}
 				{#if magicSent}
 					<p data-test-magic-sent role="status" class="text-sm text-muted-foreground">
-						{t('login.magicLinkSent')}
+						{magicMode === 'password_reset' ? t('login.resetSent') : t('login.magicLinkSent')}
 					</p>
 				{:else}
 					<form data-test-magic-form class="flex flex-col gap-4" onsubmit={submitMagicLink}>
+						{#if magicMode === 'password_reset'}
+							<p data-test-reset-hint class="text-sm text-muted-foreground">
+								{t('login.resetHint')}
+							</p>
+						{/if}
 						<div class="flex flex-col gap-1.5">
 							<Label for="magic-email">{t('login.email')}</Label>
 							<Input
@@ -110,7 +123,7 @@
 					data-test-back-to-password
 					type="button"
 					onclick={() => {
-						magicMode = false;
+						magicMode = null;
 						magicSent = false;
 					}}
 					class="mt-4 text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
@@ -144,10 +157,18 @@
 				<button
 					data-test-magic-toggle
 					type="button"
-					onclick={() => (magicMode = true)}
+					onclick={() => askFor('sign_in')}
 					class="mt-4 block w-full text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
 				>
 					{t('login.magicLinkToggle')}
+				</button>
+				<button
+					data-test-forgot-password
+					type="button"
+					onclick={() => askFor('password_reset')}
+					class="mt-2 block w-full text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
+				>
+					{t('login.forgotPassword')}
 				</button>
 				<p class="mt-4 text-center text-sm text-muted-foreground">
 					{t('login.firstRun')}
