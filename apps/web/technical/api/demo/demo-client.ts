@@ -3,8 +3,10 @@ import type {
 	AccessRequestStatus,
 	AccountUsage,
 	ArticleDetail,
+	ArticleScope,
 	ArticleSummary,
 	ArticleTranslation,
+	BulkFeedbackRequest,
 	DiscoverSuggestion,
 	Feed,
 	FeedUpdate,
@@ -157,6 +159,9 @@ function initialState(): DemoState {
 			orbit_position: 'right',
 			font_base_size: 16,
 			preferred_language: 'fr',
+			digest_frequency: 'never',
+			digest_hour: 8,
+			digest_timezone: 'Europe/Paris',
 			ai_provider: null,
 			ai_endpoint_url: null,
 			ai_model: null,
@@ -223,6 +228,24 @@ export function createDemoClient(): LumiaClient {
 	function feedbackFor(articleId: string): Feedback {
 		state.feedback[articleId] ??= emptyFeedback();
 		return state.feedback[articleId];
+	}
+
+	/** The demo's copy of the backend's scope rule: one scope, expanded to the ids it covers. */
+	function articleIdsInScope(scope: ArticleScope): string[] {
+		if (scope.article_ids) return scope.article_ids;
+		if (scope.feed_id) {
+			return state.articleIds.filter((id) => seedArticle(id)?.feed_id === scope.feed_id);
+		}
+		if (scope.folder_id) {
+			const feedIds = state.feeds
+				.filter((feed) => feed.folder_id === scope.folder_id)
+				.map((feed) => feed.id);
+			return state.articleIds.filter((id) => {
+				const feedId = seedArticle(id)?.feed_id;
+				return feedId !== undefined && feedIds.includes(feedId);
+			});
+		}
+		return scope.all ? [...state.articleIds] : [];
 	}
 
 	function ruleTerms(mode: FilterMode): string[] {
@@ -691,31 +714,32 @@ export function createDemoClient(): LumiaClient {
 				persist();
 				return settle(undefined);
 			},
-			markRead: async (scope: MarkReadScope) => {
-				const read = scope.read ?? true;
-				let ids: string[] = [];
-				if (scope.article_ids) ids = scope.article_ids;
-				else if (scope.feed_id) {
-					ids = state.articleIds.filter((id) => seedArticle(id)?.feed_id === scope.feed_id);
-				} else if (scope.folder_id) {
-					const feedIds = state.feeds
-						.filter((feed) => feed.folder_id === scope.folder_id)
-						.map((feed) => feed.id);
-					ids = state.articleIds.filter((id) => {
-						const feedId = seedArticle(id)?.feed_id;
-						return feedId !== undefined && feedIds.includes(feedId);
-					});
-				}
-				let updated = 0;
-				for (const id of ids) {
-					const feedback = feedbackFor(id);
-					if (feedback.read === read) continue;
-					feedback.read = read;
-					updated += 1;
-				}
-				persist();
-				return settle({ updated });
-			},
+				markRead: async (scope: MarkReadScope) => {
+					const read = scope.read ?? true;
+					const ids = articleIdsInScope(scope);
+					let updated = 0;
+					for (const id of ids) {
+						const feedback = feedbackFor(id);
+						if (feedback.read === read) continue;
+						feedback.read = read;
+						updated += 1;
+					}
+					persist();
+					return settle({ updated });
+				},
+				bulkFeedback: async (request: BulkFeedbackRequest) => {
+					const value = request.value ?? true;
+					const ids = articleIdsInScope(request);
+					const changed: string[] = [];
+					for (const id of ids) {
+						const feedback = feedbackFor(id);
+						if (feedback[request.axis] === value) continue;
+						feedback[request.axis] = value;
+						changed.push(id);
+					}
+					persist();
+					return settle({ updated: ids.length, changed_article_ids: changed });
+				},
 			listFilterRules: async () => settle(state.filterRules.map((rule) => ({ ...rule }))),
 			addFilterRule: async (term: string, mode: FilterMode) => {
 				const normalized = term.trim().toLowerCase();
@@ -806,6 +830,17 @@ export function createDemoClient(): LumiaClient {
 				persist();
 				return settle(playlistDetail(playlistId));
 			},
+				bulkSetItems: async (playlistId: string, scope: ArticleScope, present = true) => {
+					const playlist = state.playlists.find((candidate) => candidate.id === playlistId);
+					if (!playlist) throw new Error('playlist introuvable');
+					const ids = articleIdsInScope(scope);
+					const moved = ids.filter((id) => playlist.article_ids.includes(id) !== present);
+					playlist.article_ids = present
+						? [...playlist.article_ids, ...moved]
+						: playlist.article_ids.filter((id) => !moved.includes(id));
+					persist();
+					return settle({ moved: moved.length, article_ids: moved });
+				},
 			reorder: async (playlistId: string, articleIds: string[]) => {
 				const playlist = state.playlists.find((candidate) => candidate.id === playlistId);
 				if (!playlist) throw new Error('playlist introuvable');

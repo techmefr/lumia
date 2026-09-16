@@ -78,6 +78,23 @@ describe('the items', () => {
 		});
 	});
 
+	it('adds a whole scope in one request, defaulting to putting them in', async () => {
+		const { playlists, last } = api([{ moved: 2, article_ids: ['a', 'b'] }]);
+		await playlists.bulkSetItems('playlist-1', { article_ids: ['a', 'b'] });
+		expect(last()).toMatchObject({
+			path: '/playlists/playlist-1/items/bulk',
+			method: 'POST',
+			body: { article_ids: ['a', 'b'], present: true }
+		});
+	});
+
+	// How the undo of a bulk add is expressed: the same call, present false, only the ids that moved.
+	it('takes a scope back out when asked not to keep it present', async () => {
+		const { playlists, last } = api([{ moved: 2, article_ids: ['a', 'b'] }]);
+		await playlists.bulkSetItems('playlist-1', { article_ids: ['a', 'b'] }, false);
+		expect(last().body).toEqual({ article_ids: ['a', 'b'], present: false });
+	});
+
 	it('replaces the whole order with a put, order preserved', async () => {
 		const { playlists, last } = api([{ id: 'playlist-1' }]);
 		await playlists.reorder('playlist-1', ['article-3', 'article-1', 'article-2']);

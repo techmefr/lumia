@@ -192,7 +192,7 @@ pnpm --filter web test:coverage           # app stores, i18n, demo client
 | `backend`        | 318   | 86%      | 80%   |
 | `packages/core`  | 108   | 100%     | 80%   |
 | `packages/ui`    | 319   | 99%      | 98%   |
-| `apps/web`       | 960   | 93%      | 93%   |
+| `apps/web`       | 1011  | 93%      | 92%   |
 
 `packages/ui` covers every component and effect in the design system now, floor raised accordingly.
 Every route page under `apps/web/src/routes/` now carries a suite of its own — the reader, the

@@ -2,12 +2,17 @@ from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article
 from api.domain.article.reading_time import estimate_reading_minutes
 from api.domain.feed.models import Feed
-from api.domain.playlist.exceptions import ArticleNotFoundError, PlaylistNotFoundError
+from api.domain.playlist.exceptions import (
+    ArticleNotFoundError,
+    BulkItemsFailedError,
+    PlaylistNotFoundError,
+)
 from api.domain.playlist.models import Playlist, PlaylistItem
 
 
@@ -37,6 +42,55 @@ async def add_article(
     )
     await session.commit()
     return await _reload(session, playlist.id)
+
+
+async def set_articles_present(
+    session: AsyncSession,
+    user_id: UUID,
+    playlist_id: UUID,
+    article_ids: Sequence[UUID],
+    *,
+    present: bool,
+) -> list[UUID]:
+    """Adds or removes a whole selection at once, returning the ids that actually moved.
+
+    Staged then committed once, so a selection is never half-added. Ids already in the wanted state
+    are skipped rather than raising: adding an article twice is a slip, and the undo of a bulk add
+    must not remove what was already there before it.
+    """
+    playlist = await get_playlist(session, user_id, playlist_id)
+    if not article_ids:
+        return []
+
+    by_article = {item.article_id: item for item in playlist.items}
+    moved: list[UUID] = []
+
+    try:
+        if present:
+            next_position = max((item.position for item in playlist.items), default=-1) + 1
+            for article_id in article_ids:
+                if article_id in by_article:
+                    continue
+                session.add(
+                    PlaylistItem(
+                        playlist_id=playlist.id, article_id=article_id, position=next_position
+                    )
+                )
+                next_position += 1
+                moved.append(article_id)
+        else:
+            removed = set(article_ids) & by_article.keys()
+            for article_id in removed:
+                await session.delete(by_article[article_id])
+            _renumber([item for item in playlist.items if item.article_id not in removed])
+            moved = [article_id for article_id in article_ids if article_id in removed]
+
+        await session.commit()
+    except SQLAlchemyError as exc:
+        await session.rollback()
+        raise BulkItemsFailedError from exc
+
+    return moved
 
 
 async def remove_article(

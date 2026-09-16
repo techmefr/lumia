@@ -3,7 +3,14 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import type { ArticleSummary, Feed, Folder, UnreadCounts } from '@lumia/core';
+	import type {
+		ArticleSummary,
+		Feed,
+		FeedbackAxis,
+		Folder,
+		PlaylistSummary,
+		UnreadCounts
+	} from '@lumia/core';
 	import { Button, Input, toast } from '@lumia/ui';
 	import Newspaper from '@lucide/svelte/icons/newspaper';
 	import Inbox from '@lucide/svelte/icons/inbox';
@@ -13,6 +20,7 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import LayoutTemplate from '@lucide/svelte/icons/layout-template';
+	import ListChecks from '@lucide/svelte/icons/list-checks';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
@@ -20,6 +28,8 @@
 	import { READING_SHORTCUTS } from '$technical/keyboard/shortcut-catalogue';
 	import { watchCompactViewport } from '$technical/layout/breakpoints';
 	import ArticleGrid from '$domain/article/article-grid.svelte';
+	import SelectionBar from '$domain/article/selection-bar.svelte';
+	import { ArticleSelection } from '$domain/article/article-selection.svelte';
 	import SectionChips from '$domain/article/section-chips.svelte';
 	import FlipReader from '$domain/article/flip-reader.svelte';
 	import FeedSidebar from '$domain/feed/feed-sidebar.svelte';
@@ -51,6 +61,11 @@
 	let sort = $state<'recent' | 'relevance'>('recent');
 	let flipping = $state(false);
 	let compact = $state(false);
+	let playlists = $state<PlaylistSummary[]>([]);
+	let bulkRunning = $state(false);
+	const selection = new ArticleSelection();
+
+	const loadedIds = $derived(articles.map((article) => article.id));
 
 	const filterLabel = $derived(
 		filterKind === 'author'
@@ -95,6 +110,9 @@
 		loading = true;
 		error = null;
 		cursor = -1;
+		// Every reload is a different list. Carrying the selection over would arm a bulk action on
+		// articles the reader can no longer see, which is how people modify things they never read.
+		selection.clear();
 		try {
 			const loaded = await lumia.article.listArticles(params(0));
 			articles = loaded;
@@ -231,6 +249,94 @@
 		await markScopeRead({ folder_id: folderId });
 	}
 
+	function applyReadLocally(ids: string[], read: boolean) {
+		const touched = new Set(ids);
+		articles = articles.map((article) =>
+			touched.has(article.id) ? { ...article, read } : article
+		);
+	}
+
+	/**
+	 * Runs one bulk action over the current selection, on one axis.
+	 *
+	 * The scope sent is the explicit list of selected ids and nothing else: the endpoint takes
+	 * exactly one scope, so a filter left on screen can never widen the action to a feed or to the
+	 * whole library. The undo reverts only the ids the backend says it changed, which leaves the
+	 * articles that already held the value where the reader put them.
+	 */
+	async function runBulkFeedback(axis: FeedbackAxis, value: boolean, message: MessageKey) {
+		const ids = [...selection.ids];
+		if (ids.length === 0 || bulkRunning) return;
+		bulkRunning = true;
+		try {
+			const { changed_article_ids } = await lumia.recommendation.bulkFeedback({
+				article_ids: ids,
+				axis,
+				value
+			});
+			if (axis === 'read') applyReadLocally(changed_article_ids, value);
+			await refreshUnread();
+			toast(t(message, { count: ids.length }), {
+				action: {
+					label: t('common.undo'),
+					run: async () => {
+						await lumia.recommendation.bulkFeedback({
+							article_ids: changed_article_ids,
+							axis,
+							value: !value
+						});
+						if (axis === 'read') applyReadLocally(changed_article_ids, !value);
+						await refreshUnread();
+					}
+				}
+			});
+			if (unreadOnly && axis === 'read') void loadArticles();
+		} catch {
+			toast(t('selection.actionFailed'), { tone: 'destructive' });
+		} finally {
+			bulkRunning = false;
+		}
+	}
+
+	async function addSelectionToPlaylist(playlistId: string) {
+		const ids = [...selection.ids];
+		if (ids.length === 0 || bulkRunning) return;
+		bulkRunning = true;
+		try {
+			const { moved, article_ids } = await lumia.playlist.bulkSetItems(playlistId, {
+				article_ids: ids
+			});
+			toast(t('selection.addedToPlaylist', { count: moved }), {
+				action: {
+					label: t('common.undo'),
+					run: async () => {
+						await lumia.playlist.bulkSetItems(playlistId, { article_ids }, false);
+					}
+				}
+			});
+		} catch {
+			toast(t('selection.actionFailed'), { tone: 'destructive' });
+		} finally {
+			bulkRunning = false;
+		}
+	}
+
+	function toggleSelection(index: number, options: { extend: boolean }) {
+		selection.toggle(index, loadedIds, options);
+	}
+
+	function toggleCursorSelection() {
+		if (cursor < 0) return;
+		selection.toggle(cursor, loadedIds);
+	}
+
+	/** Shift + j/k walks the list and takes everything it walks over, mouse-free. */
+	function extendSelection(delta: number) {
+		if (cursor < 0) selection.toggle(0, loadedIds);
+		moveCursor(delta);
+		selection.toggle(cursor, loadedIds, { extend: true });
+	}
+
 	function moveCursor(delta: number) {
 		if (articles.length === 0) return;
 		const next = cursor + delta;
@@ -284,6 +390,9 @@
 			folders = f;
 			feeds = fe;
 		});
+		void lumia.playlist.listPlaylists().then((loaded) => {
+			playlists = loaded;
+		});
 		void loadArticles();
 		void refreshUnread();
 
@@ -305,6 +414,11 @@
 			m: () => void markCursorRead(),
 			s: () => void saveCursor(),
 			u: toggleUnreadOnly,
+			x: toggleCursorSelection,
+			'shift+j': () => extendSelection(1),
+			'shift+k': () => extendSelection(-1),
+			'shift+a': () => selection.selectAll(loadedIds),
+			escape: () => selection.close(),
 			'/': () => searchEl?.focus()
 		});
 
@@ -381,6 +495,16 @@
 				>
 					<BookOpen class="size-4" />
 					{t('articles.flip')}
+				</Button>
+				<Button
+					data-test-selection-toggle
+					variant={selection.isActive ? 'default' : 'outline'}
+					size="sm"
+					aria-pressed={selection.isActive}
+					onclick={() => (selection.isActive ? selection.close() : selection.open())}
+				>
+					<ListChecks class="size-4" />
+					{t('selection.mode')}
 				</Button>
 				<Button
 					data-test-unread-only
@@ -468,7 +592,36 @@
 			<p data-test-articles-error role="alert" class="text-sm text-destructive">{t(error)}</p>
 		{/if}
 
-		<ArticleGrid {articles} {loading} {cursor} hero={sort === 'relevance'}>
+		{#if selection.isActive}
+			<SelectionBar
+				count={selection.count}
+				loadedCount={articles.length}
+				{playlists}
+				busy={bulkRunning}
+				onMarkRead={() => void runBulkFeedback('read', true, 'selection.markedRead')}
+				onMarkUnread={() => void runBulkFeedback('read', false, 'selection.markedUnread')}
+				onSave={() => void runBulkFeedback('saved', true, 'selection.saved')}
+				onUnsave={() => void runBulkFeedback('saved', false, 'selection.unsaved')}
+				onFavorite={() => void runBulkFeedback('favorite', true, 'selection.favorited')}
+				onUnfavorite={() => void runBulkFeedback('favorite', false, 'selection.unfavorited')}
+				onAddToPlaylist={(playlistId) => void addSelectionToPlaylist(playlistId)}
+				onSelectAll={() => selection.selectAll(loadedIds)}
+				onClose={() => selection.close()}
+			/>
+			<!-- Said out loud rather than implied: a selection covers the articles loaded here, and
+				 changing feed, filter or search starts a new one. -->
+			<p class="text-xs text-muted-foreground">{t('selection.scopeNotice')}</p>
+		{/if}
+
+		<ArticleGrid
+			{articles}
+			{loading}
+			{cursor}
+			hero={sort === 'relevance'}
+			selectable={selection.isActive}
+			selectedIds={selection.ids}
+			onToggleSelect={toggleSelection}
+		>
 			{#snippet empty()}
 				<div class="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-6">
 					<p class="flex items-center gap-2 text-sm text-muted-foreground">

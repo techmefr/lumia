@@ -5,17 +5,25 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.routes import to_summaries
+from api.domain.article.scope import resolve_scope_article_ids
 from api.domain.playlist.duration_service import build_for_duration
-from api.domain.playlist.exceptions import ArticleNotFoundError, PlaylistNotFoundError
+from api.domain.playlist.exceptions import (
+    ArticleNotFoundError,
+    BulkItemsFailedError,
+    PlaylistNotFoundError,
+)
 from api.domain.playlist.models import Playlist
 from api.domain.playlist.playlist_service import (
     add_article,
     get_playlist,
     remove_article,
     reorder,
+    set_articles_present,
     total_reading_minutes,
 )
 from api.domain.playlist.schemas import (
+    PlaylistBulkItemsRequest,
+    PlaylistBulkItemsResponse,
     PlaylistCreateRequest,
     PlaylistDetailResponse,
     PlaylistForDurationRequest,
@@ -141,6 +149,34 @@ async def add_playlist_item(
     except (PlaylistNotFoundError, ArticleNotFoundError) as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
     return await _to_detail(session, user.id, playlist)
+
+
+@router.post("/playlists/{playlist_id}/items/bulk", response_model=PlaylistBulkItemsResponse)
+async def bulk_playlist_items(
+    playlist_id: UUID,
+    payload: PlaylistBulkItemsRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> PlaylistBulkItemsResponse:
+    """Adds or removes a whole scope of articles, all of it or none of it."""
+    article_ids = await resolve_scope_article_ids(
+        session,
+        user.id,
+        article_ids=payload.article_ids,
+        feed_id=payload.feed_id,
+        folder_id=payload.folder_id,
+    )
+    try:
+        moved = await set_articles_present(
+            session, user.id, playlist_id, article_ids, present=payload.present
+        )
+    except PlaylistNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
+    except BulkItemsFailedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="bulk_items_failed"
+        ) from exc
+    return PlaylistBulkItemsResponse(moved=len(moved), article_ids=moved)
 
 
 @router.delete("/playlists/{playlist_id}/items/{article_id}", response_model=PlaylistDetailResponse)

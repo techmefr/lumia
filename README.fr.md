@@ -205,7 +205,7 @@ pnpm --filter web test:coverage           # stores de l'app, i18n, client de dé
 | `backend`        | 318   | 86 %       | 80 %     |
 | `packages/core`  | 108   | 100 %      | 80 %     |
 | `packages/ui`    | 319   | 99 %       | 98 %     |
-| `apps/web`       | 960   | 93 %       | 93 %     |
+| `apps/web`       | 1011  | 93 %       | 92 %     |
 
 `packages/ui` couvre désormais chaque composant et effet du design system, plancher relevé en
 conséquence. Chaque page de route sous `apps/web/src/routes/` porte maintenant sa propre suite — le

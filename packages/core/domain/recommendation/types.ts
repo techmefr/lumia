@@ -1,3 +1,5 @@
+import type { ArticleScope } from '../article/types';
+
 export type Vote = 'like' | 'dislike';
 
 export interface FeedbackUpdate {
@@ -19,11 +21,24 @@ export interface FilterRule {
 }
 
 /** Exactly one scope must be set: the backend rejects zero or several with a 422. */
-export interface MarkReadScope {
-	article_ids?: string[];
-	feed_id?: string;
-	folder_id?: string;
-	/** Every article across every feed, not just the ones currently loaded on screen. */
-	all?: boolean;
+export interface MarkReadScope extends ArticleScope {
 	read?: boolean;
+}
+
+/**
+ * The feedback axes a bulk action can touch. One per call: they are independent, and favouriting
+ * a selection says nothing about having read it.
+ */
+export type FeedbackAxis = 'read' | 'saved' | 'favorite';
+
+export interface BulkFeedbackRequest extends ArticleScope {
+	axis: FeedbackAxis;
+	value?: boolean;
+}
+
+export interface BulkFeedbackResult {
+	/** How many articles the scope covered. */
+	updated: number;
+	/** Only those that did not already hold the value — exactly what an undo has to revert. */
+	changed_article_ids: string[];
 }

@@ -1,6 +1,6 @@
 import type { ArticleSummary } from '@lumia/core';
-import { render } from '@testing-library/svelte';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render } from '@testing-library/svelte';
+import { describe, expect, it, vi } from 'vitest';
 import ArticleGrid from './article-grid.svelte';
 
 type Props = Parameters<typeof ArticleGrid>[1];
@@ -193,5 +193,54 @@ describe('how many columns the grid uses', () => {
 	it('lays the placeholders out on the same ladder', () => {
 		const loadingClassName = grid({ articles: [], loading: true }).columns()?.className ?? '';
 		expect(loadingClassName).toBe(grid().columns()?.className);
+	});
+});
+
+describe('selecting cards', () => {
+	function selectable(props: Partial<Props> = {}) {
+		const view = grid({ selectable: true, ...props });
+		return {
+			...view,
+			boxes: () => [...view.container.querySelectorAll<HTMLInputElement>('input[type=checkbox]')],
+			box: (id: string) =>
+				view.container.querySelector<HTMLInputElement>(`[data-test-select-article="${id}"]`)
+		};
+	}
+
+	// A list at rest carries no trace of the feature, which is the whole point of a mode.
+	it('shows no checkbox until selection mode is on', () => {
+		expect(grid().container.querySelectorAll('input[type=checkbox]')).toHaveLength(0);
+	});
+
+	it('puts one checkbox on every card once the mode is on', () => {
+		expect(selectable().boxes()).toHaveLength(3);
+	});
+
+	it('ticks the boxes the selection holds and no others', () => {
+		const view = selectable({ selectedIds: ['b'] });
+		expect(view.box('a')?.checked).toBe(false);
+		expect(view.box('b')?.checked).toBe(true);
+	});
+
+	it('names each checkbox after its article, so a screen reader knows what it ticks', () => {
+		expect(selectable().box('a')?.getAttribute('aria-label')).toBe('Select “Titre a”');
+	});
+
+	it('reports the index of the card and whether the click extends a range', async () => {
+		const onToggleSelect = vi.fn();
+		const view = selectable({ onToggleSelect });
+
+		await fireEvent.click(view.box('b') as HTMLInputElement, { shiftKey: true });
+
+		expect(onToggleSelect).toHaveBeenCalledWith(1, { extend: true });
+	});
+
+	it('counts the lead of the kiosque layout as the first article', async () => {
+		const onToggleSelect = vi.fn();
+		const view = selectable({ hero: true, onToggleSelect });
+
+		await fireEvent.click(view.box('c') as HTMLInputElement);
+
+		expect(onToggleSelect).toHaveBeenCalledWith(2, { extend: false });
 	});
 });

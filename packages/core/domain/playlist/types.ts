@@ -12,3 +12,9 @@ export interface PlaylistDetail {
 	name: string;
 	articles: ArticleSummary[];
 }
+
+export interface PlaylistBulkItemsResult {
+	moved: number;
+	/** Only the articles that actually moved, which is what an undo must revert. */
+	article_ids: string[];
+}
