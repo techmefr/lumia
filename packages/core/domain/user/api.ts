@@ -1,6 +1,27 @@
-import type { HttpClient } from '../../technical/http-client';
+import { ApiError, type HttpClient } from '../../technical/http-client';
 import type { TokenStore } from '../../technical/token-store';
-import type { MagicLinkPurpose, Me, MeUpdate, TokenPair } from './types';
+import type {
+	MagicLinkPurpose,
+	Me,
+	MeUpdate,
+	SecondFactor,
+	SecondFactorFailure,
+	TokenPair,
+	TotpEnrolment,
+	TotpRecoveryCodes
+} from './types';
+
+/**
+ * Reads why a 401 refused a sign-in, when it was the second factor and not the first.
+ *
+ * The backend answers `totp_required` apart from `invalid_totp_code` so the form knows whether to
+ * ask for a code or to say the one it got is wrong. Anything else is a plain wrong credential.
+ */
+export function secondFactorFailure(error: unknown): SecondFactorFailure | null {
+	if (!(error instanceof ApiError) || error.status !== 401) return null;
+	const detail = (error.body as { detail?: unknown } | null)?.detail;
+	return detail === 'totp_required' || detail === 'invalid_totp_code' ? detail : null;
+}
 
 export interface OnboardAdminPayload {
 	email: string;
@@ -21,11 +42,20 @@ export function createUserApi(http: HttpClient, tokenStore: TokenStore) {
 		);
 	}
 
-	async function login(email: string, password: string): Promise<void> {
+	/**
+	 * `secondFactor` is left out on the first try: the form has no way of knowing whether the
+	 * account asks for one until the backend says so, and asking everybody up front would tell an
+	 * unauthenticated caller which accounts have it turned on.
+	 */
+	async function login(
+		email: string,
+		password: string,
+		secondFactor: SecondFactor = {}
+	): Promise<void> {
 		storeTokens(
 			await http.request<TokenPair>('/auth/login', {
 				method: 'POST',
-				body: { email, password },
+				body: { email, password, ...secondFactor },
 				auth: false
 			})
 		);
@@ -59,11 +89,15 @@ export function createUserApi(http: HttpClient, tokenStore: TokenStore) {
 		});
 	}
 
-	async function verifyMagicLink(token: string): Promise<void> {
+	/**
+	 * A magic link proves control of the mailbox, which is exactly what the second factor is there
+	 * to stop being enough, so an account that has one is challenged here too.
+	 */
+	async function verifyMagicLink(token: string, secondFactor: SecondFactor = {}): Promise<void> {
 		storeTokens(
 			await http.request<TokenPair>('/auth/magic-link/verify', {
 				method: 'POST',
-				body: { token },
+				body: { token, ...secondFactor },
 				auth: false
 			})
 		);
@@ -85,14 +119,49 @@ export function createUserApi(http: HttpClient, tokenStore: TokenStore) {
 		);
 	}
 
-	async function resetPassword(token: string, newPassword: string): Promise<void> {
+	async function resetPassword(
+		token: string,
+		newPassword: string,
+		secondFactor: SecondFactor = {}
+	): Promise<void> {
 		storeTokens(
 			await http.request<TokenPair>('/auth/password-reset', {
 				method: 'POST',
-				body: { token, new_password: newPassword },
+				body: { token, new_password: newPassword, ...secondFactor },
 				auth: false
 			})
 		);
+	}
+
+	/** Draws a secret for an authenticator. Nothing is switched on until it is confirmed. */
+	async function startTotpEnrolment(): Promise<TotpEnrolment> {
+		return http.request<TotpEnrolment>('/me/totp/enrolment', { method: 'POST' });
+	}
+
+	/** Turns the second factor on, and hands back the recovery codes for the only time. */
+	async function confirmTotpEnrolment(code: string): Promise<string[]> {
+		const { recovery_codes } = await http.request<TotpRecoveryCodes>('/me/totp', {
+			method: 'POST',
+			body: { code }
+		});
+		return recovery_codes;
+	}
+
+	/** Replaces the whole set; the previous codes stop working straight away. */
+	async function renewRecoveryCodes(code: string): Promise<string[]> {
+		const { recovery_codes } = await http.request<TotpRecoveryCodes>('/me/totp/recovery-codes', {
+			method: 'POST',
+			body: { code }
+		});
+		return recovery_codes;
+	}
+
+	/** Re-authentication, not a setting: an access token alone must not undo the second factor. */
+	async function disableTotp(password: string | null, secondFactor: SecondFactor = {}): Promise<void> {
+		await http.request('/me/totp', {
+			method: 'DELETE',
+			body: { password, ...secondFactor }
+		});
 	}
 
 	async function getMe(): Promise<Me> {
@@ -115,6 +184,10 @@ export function createUserApi(http: HttpClient, tokenStore: TokenStore) {
 		verifyMagicLink,
 		changePassword,
 		resetPassword,
+		startTotpEnrolment,
+		confirmTotpEnrolment,
+		renewRecoveryCodes,
+		disableTotp,
 		getMe,
 		updateMe,
 		isAuthenticated

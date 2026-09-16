@@ -8,6 +8,7 @@
 	import { requireAuth } from '$technical/auth/require-auth';
 	import AiSettings from '$domain/settings/ai-settings.svelte';
 	import PasswordSettings from '$domain/settings/password-settings.svelte';
+	import TotpSettings from '$domain/settings/totp-settings.svelte';
 	import FilterRules from '$domain/settings/filter-rules.svelte';
 	import NotificationSettings from '$domain/settings/notification-settings.svelte';
 	import InstanceAdmin from '$domain/settings/instance-admin.svelte';
@@ -329,6 +330,8 @@
 	</Card>
 
 	<PasswordSettings />
+
+	<TotpSettings />
 
 	<NotificationSettings />
 

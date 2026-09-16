@@ -15,7 +15,7 @@ from api.domain.recommendation.models import (
     UserKeywordScore,
 )
 from api.domain.user.exceptions import LastAdminError
-from api.domain.user.models import MagicLinkToken, RefreshToken, Role, User
+from api.domain.user.models import MagicLinkToken, RecoveryCode, RefreshToken, Role, User
 
 
 async def delete_account(session: AsyncSession, user_id: UUID) -> None:
@@ -60,6 +60,7 @@ async def delete_account(session: AsyncSession, user_id: UUID) -> None:
     await session.execute(delete(Feed).where(Feed.id.in_(feed_ids)))
     await session.execute(delete(Folder).where(Folder.user_id == user_id))
 
+    await session.execute(delete(RecoveryCode).where(RecoveryCode.user_id == user_id))
     await session.execute(delete(RefreshToken).where(RefreshToken.user_id == user_id))
     await session.execute(delete(MagicLinkToken).where(MagicLinkToken.user_id == user_id))
     await session.execute(delete(User).where(User.id == user_id))

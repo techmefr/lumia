@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { ApiError } from '@lumia/core';
+	import { ApiError, secondFactorFailure } from '@lumia/core';
 	import {
 		Button,
 		Card,
@@ -24,6 +24,10 @@
 	let confirmation = $state('');
 	let saving = $state(false);
 	let error = $state<string | null>(null);
+	// The reset hands back a signed-in session, so an account with a second factor is challenged
+	// here too: a mailbox on its own must not be a way past the authenticator.
+	let needsCode = $state(false);
+	let totpCode = $state('');
 
 	function validate(): string | null {
 		if (newPassword.length < MIN_PASSWORD_LENGTH) {
@@ -41,9 +45,19 @@
 
 		saving = true;
 		try {
-			await lumia.user.resetPassword(token, newPassword);
+			await lumia.user.resetPassword(
+				token,
+				newPassword,
+				needsCode ? { totp_code: totpCode.trim() } : {}
+			);
 			await goto(base + '/articles');
 		} catch (err) {
+			const failure = secondFactorFailure(err);
+			if (failure !== null) {
+				needsCode = true;
+				error = failure === 'totp_required' ? null : t('login.totpInvalid');
+				return;
+			}
 			// The token is single-use and short-lived, so a refusal is the link being spent or
 			// stale rather than anything the reader typed in the form.
 			error =
@@ -107,6 +121,21 @@
 							required
 						/>
 					</div>
+					{#if needsCode}
+						<div class="flex flex-col gap-1.5">
+							<Label for="totp-code">{t('login.totpCode')}</Label>
+							<Input
+								id="totp-code"
+								data-test-totp-code
+								inputmode="numeric"
+								autocomplete="one-time-code"
+								maxlength={6}
+								bind:value={totpCode}
+								required
+							/>
+							<p class="text-xs text-muted-foreground">{t('login.totpHint')}</p>
+						</div>
+					{/if}
 					{#if error}
 						<p data-test-reset-error role="alert" class="text-sm text-destructive">{error}</p>
 					{/if}

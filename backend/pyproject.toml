@@ -12,6 +12,7 @@ dependencies = [
     "pydantic-settings>=2.6",
     "argon2-cffi>=23.1",
     "pyjwt>=2.9",
+    "pyotp>=2.9",
     "httpx>=0.27",
     "aiosmtplib>=5.1.3",
     "cryptography>=50.0.1",
