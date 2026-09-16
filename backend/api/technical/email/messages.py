@@ -63,8 +63,69 @@ _MAGIC_LINK_STRINGS: dict[str, _MagicLinkStrings] = {
 }
 
 
-def render_magic_link_email(*, language: str, magic_link_url: str) -> EmailContent:
-    strings = _MAGIC_LINK_STRINGS.get(language, _MAGIC_LINK_STRINGS[FALLBACK_LANGUAGE])
+_PASSWORD_RESET_STRINGS: dict[str, _MagicLinkStrings] = {
+    "en": _MagicLinkStrings(
+        subject="Reset your Lumia password",
+        intro="Use the link below to choose a new Lumia password.",
+        call_to_action="Choose a new password",
+        ignore_notice=(
+            "If you did not ask to change your password, you can ignore this message: "
+            "it stays unchanged."
+        ),
+    ),
+    "fr": _MagicLinkStrings(
+        subject="Réinitialiser votre mot de passe Lumia",
+        intro="Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe Lumia.",
+        call_to_action="Choisir un nouveau mot de passe",
+        ignore_notice=(
+            "Si vous n'avez pas demandé à changer de mot de passe, ignorez ce message : "
+            "le vôtre reste inchangé."
+        ),
+    ),
+    "es": _MagicLinkStrings(
+        subject="Restablece tu contraseña de Lumia",
+        intro="Usa el siguiente enlace para elegir una nueva contraseña de Lumia.",
+        call_to_action="Elegir una nueva contraseña",
+        ignore_notice=(
+            "Si no has solicitado cambiar tu contraseña, puedes ignorar este mensaje: "
+            "la tuya no cambia."
+        ),
+    ),
+    "de": _MagicLinkStrings(
+        subject="Ihr Lumia-Passwort zurücksetzen",
+        intro="Wählen Sie über den folgenden Link ein neues Lumia-Passwort.",
+        call_to_action="Neues Passwort wählen",
+        ignore_notice=(
+            "Wenn Sie keine Passwortänderung angefordert haben, können Sie diese Nachricht "
+            "ignorieren: Ihr Passwort bleibt unverändert."
+        ),
+    ),
+    "it": _MagicLinkStrings(
+        subject="Reimposta la tua password Lumia",
+        intro="Usa il link qui sotto per scegliere una nuova password Lumia.",
+        call_to_action="Scegli una nuova password",
+        ignore_notice=(
+            "Se non hai richiesto di cambiare la password, puoi ignorare questo messaggio: "
+            "la tua resta invariata."
+        ),
+    ),
+    "pt": _MagicLinkStrings(
+        subject="Redefinir a sua palavra-passe do Lumia",
+        intro="Utilize o link abaixo para escolher uma nova palavra-passe do Lumia.",
+        call_to_action="Escolher uma nova palavra-passe",
+        ignore_notice=(
+            "Se não pediu para alterar a sua palavra-passe, pode ignorar esta mensagem: "
+            "a sua permanece inalterada."
+        ),
+    ),
+}
+
+
+def render_magic_link_email(
+    *, language: str, magic_link_url: str, password_reset: bool = False
+) -> EmailContent:
+    catalogue = _PASSWORD_RESET_STRINGS if password_reset else _MAGIC_LINK_STRINGS
+    strings = catalogue.get(language, catalogue[FALLBACK_LANGUAGE])
     safe_url = escape(magic_link_url, quote=True)
     return EmailContent(
         subject=strings.subject,

@@ -13,6 +13,7 @@ from api.domain.user.dependencies import get_current_user, require_admin
 from api.domain.user.exceptions import (
     EmailAlreadyTakenError,
     InstanceFullError,
+    InvalidCurrentPasswordError,
     InvalidInvitationError,
     InvalidMagicLinkTokenError,
     InvalidRefreshTokenError,
@@ -30,6 +31,7 @@ from api.domain.user.invitation_service import (
 from api.domain.user.magic_link_service import request_magic_link, verify_magic_link_token
 from api.domain.user.models import Instance, Invitation, Role, User
 from api.domain.user.oidc_login_service import consume_login_attempt, start_login_attempt
+from api.domain.user.password_service import change_password, reset_password
 from api.domain.user.refresh_token_service import (
     issue_refresh_token,
     revoke_all_refresh_tokens,
@@ -49,6 +51,8 @@ from api.domain.user.schemas import (
     MeResponse,
     MeUpdateRequest,
     OnboardingAdminRequest,
+    PasswordChangeRequest,
+    PasswordResetRequest,
     RefreshRequest,
     SsoCallbackRequest,
     TokenPairResponse,
@@ -303,7 +307,7 @@ async def send_magic_link(
         max_attempts=config.magic_link_max_attempts,
         window=timedelta(minutes=config.magic_link_window_minutes),
     )
-    await request_magic_link(session, payload.email)
+    await request_magic_link(session, payload.email, payload.purpose)
 
 
 @router.post("/auth/magic-link/verify", response_model=TokenPairResponse)
@@ -316,6 +320,22 @@ async def verify_magic_link(
     await _enforce_token_guessing_limit(limiter, request, scope="magic-link-verify")
     try:
         user_id = await verify_magic_link_token(session, payload.token)
+    except InvalidMagicLinkTokenError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
+    return await _issue_token_pair(session, user_id)
+
+
+@router.post("/auth/password-reset", response_model=TokenPairResponse)
+async def reset_forgotten_password(
+    payload: PasswordResetRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
+) -> TokenPairResponse:
+    """Unauthenticated on purpose: the magic-link token is the credential of a reader locked out."""
+    await _enforce_token_guessing_limit(limiter, request, scope="password-reset")
+    try:
+        user_id = await reset_password(session, payload.token, payload.new_password)
     except InvalidMagicLinkTokenError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
     return await _issue_token_pair(session, user_id)
@@ -436,6 +456,7 @@ def _to_me_response(user: User) -> MeResponse:
         email=user.email,
         username=user.username,
         role=user.role,
+        password_set=user.password_hash is not None,
         theme=user.theme,
         orbit_position=user.orbit_position,
         font_base_size=user.font_base_size,
@@ -460,6 +481,39 @@ async def export_me(
     session: AsyncSession = Depends(get_db_session),
 ) -> AccountExportResponse:
     return await export_account(session, user)
+
+
+@router.post("/me/password", response_model=TokenPairResponse)
+async def change_my_password(
+    payload: PasswordChangeRequest,
+    request: Request,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
+) -> TokenPairResponse:
+    """Changes the password and hands back a fresh pair, the old sessions having just been ended.
+
+    Capped like a sign-in: a stolen access token expires on its own, but guessing the password
+    behind it turns a window of minutes into a lasting hold on the account.
+    """
+    config = get_rate_limit_config()
+    await enforce(
+        limiter,
+        scope="password-change",
+        identifiers={"ip": client_address(request), "user": str(user.id)},
+        max_attempts=config.login_max_attempts,
+        window=timedelta(minutes=config.login_window_minutes),
+    )
+    try:
+        await change_password(
+            session,
+            user,
+            current_password=payload.current_password,
+            new_password=payload.new_password,
+        )
+    except InvalidCurrentPasswordError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
+    return await _issue_token_pair(session, user.id)
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)

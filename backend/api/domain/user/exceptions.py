@@ -6,6 +6,10 @@ class InvalidMagicLinkTokenError(Exception):
     pass
 
 
+class InvalidCurrentPasswordError(Exception):
+    pass
+
+
 class SsoNotConfiguredError(Exception):
     pass
 

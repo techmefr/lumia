@@ -5,15 +5,24 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.user.exceptions import InvalidMagicLinkTokenError
-from api.domain.user.models import MagicLinkToken, User
+from api.domain.user.models import MagicLinkPurpose, MagicLinkToken, User
 from api.technical.auth.tokens import generate_opaque_token, hash_token
 from api.technical.email.messages import render_magic_link_email
 from api.technical.email.smtp import send_email
 from config.auth import get_auth_config
 from config.email import get_email_config
 
+_LANDING_PATHS = {
+    MagicLinkPurpose.SIGN_IN: "/login",
+    MagicLinkPurpose.PASSWORD_RESET: "/reset-password",
+}
 
-async def request_magic_link(session: AsyncSession, email: str) -> None:
+
+async def request_magic_link(
+    session: AsyncSession,
+    email: str,
+    purpose: MagicLinkPurpose = MagicLinkPurpose.SIGN_IN,
+) -> None:
     user = await session.scalar(select(User).where(User.email == email))
     if user is None:
         return
@@ -38,9 +47,11 @@ async def request_magic_link(session: AsyncSession, email: str) -> None:
     await session.commit()
 
     frontend_url = get_email_config().frontend_url.rstrip("/")
-    magic_link_url = f"{frontend_url}/login?magic_token={raw_token}"
+    magic_link_url = f"{frontend_url}{_LANDING_PATHS[purpose]}?magic_token={raw_token}"
     content = render_magic_link_email(
-        language=user.preferred_language, magic_link_url=magic_link_url
+        language=user.preferred_language,
+        magic_link_url=magic_link_url,
+        password_reset=purpose is MagicLinkPurpose.PASSWORD_RESET,
     )
     await send_email(
         to=user.email,

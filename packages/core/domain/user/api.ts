@@ -1,6 +1,6 @@
 import type { HttpClient } from '../../technical/http-client';
 import type { TokenStore } from '../../technical/token-store';
-import type { Me, MeUpdate, TokenPair } from './types';
+import type { MagicLinkPurpose, Me, MeUpdate, TokenPair } from './types';
 
 export interface OnboardAdminPayload {
 	email: string;
@@ -48,8 +48,15 @@ export function createUserApi(http: HttpClient, tokenStore: TokenStore) {
 		}
 	}
 
-	async function requestMagicLink(email: string): Promise<void> {
-		await http.request('/auth/magic-link', { method: 'POST', body: { email }, auth: false });
+	async function requestMagicLink(
+		email: string,
+		purpose: MagicLinkPurpose = 'sign_in'
+	): Promise<void> {
+		await http.request('/auth/magic-link', {
+			method: 'POST',
+			body: { email, purpose },
+			auth: false
+		});
 	}
 
 	async function verifyMagicLink(token: string): Promise<void> {
@@ -57,6 +64,32 @@ export function createUserApi(http: HttpClient, tokenStore: TokenStore) {
 			await http.request<TokenPair>('/auth/magic-link/verify', {
 				method: 'POST',
 				body: { token },
+				auth: false
+			})
+		);
+	}
+
+	/**
+	 * The change ends every session, so the pair it returns is what keeps this device signed in.
+	 * `currentPassword` is null only for an account that has never had one — SSO or magic link.
+	 */
+	async function changePassword(
+		currentPassword: string | null,
+		newPassword: string
+	): Promise<void> {
+		storeTokens(
+			await http.request<TokenPair>('/me/password', {
+				method: 'POST',
+				body: { current_password: currentPassword, new_password: newPassword }
+			})
+		);
+	}
+
+	async function resetPassword(token: string, newPassword: string): Promise<void> {
+		storeTokens(
+			await http.request<TokenPair>('/auth/password-reset', {
+				method: 'POST',
+				body: { token, new_password: newPassword },
 				auth: false
 			})
 		);
@@ -74,7 +107,18 @@ export function createUserApi(http: HttpClient, tokenStore: TokenStore) {
 		return tokenStore.getAccessToken() !== null;
 	}
 
-	return { onboardAdmin, login, logout, requestMagicLink, verifyMagicLink, getMe, updateMe, isAuthenticated };
+	return {
+		onboardAdmin,
+		login,
+		logout,
+		requestMagicLink,
+		verifyMagicLink,
+		changePassword,
+		resetPassword,
+		getMe,
+		updateMe,
+		isAuthenticated
+	};
 }
 
 export type UserApi = ReturnType<typeof createUserApi>;
