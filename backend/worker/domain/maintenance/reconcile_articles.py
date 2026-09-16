@@ -1,7 +1,9 @@
 import logging
+from collections import defaultdict
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from uuid import UUID
 
 import httpx
 from arq import ArqRedis
@@ -10,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article
 from api.domain.feed.models import Feed, SourceType
+from api.technical.net.canonical_url import canonical_url
 from config.maintenance import get_maintenance_config
 from worker.technical.connectors.base import RawArticle
 from worker.technical.connectors.miniflux_client import list_recent_entries
@@ -62,26 +65,36 @@ async def _missing_articles(
 
     # Only entries of a feed somebody subscribes to: enrichment resolves the feed rows itself and
     # does nothing when there are none, so queueing the rest would be an hourly no-op forever.
-    subscribed = set(
-        await session.scalars(
-            select(Feed.external_feed_id).where(
-                Feed.source_type == SourceType.MINIFLUX,
-                Feed.external_feed_id.in_({entry.feed_external_id for entry in entries}),
-            )
+    subscribers: dict[str, set[UUID]] = defaultdict(set)
+    for external_feed_id, user_id in await session.execute(
+        select(Feed.external_feed_id, Feed.user_id).where(
+            Feed.source_type == SourceType.MINIFLUX,
+            Feed.external_feed_id.in_({entry.feed_external_id for entry in entries}),
         )
-    )
-    stored = set(
-        await session.scalars(
-            select(Article.external_entry_id)
+    ):
+        subscribers[external_feed_id].add(user_id)
+
+    # Presence is judged per reader and per canonical URL, the way enrichment decides to insert:
+    # an entry another feed already brought the reader is not missing, and re-queueing it would
+    # make every deduplicated article an hourly no-op job.
+    canonical_urls = {canonical_url(entry.url) for entry in entries}
+    stored = {
+        (user_id, url)
+        for user_id, url in await session.execute(
+            select(Feed.user_id, Article.canonical_url)
             .join(Feed, Article.feed_id == Feed.id)
-            .where(
-                Feed.source_type == SourceType.MINIFLUX,
-                Article.external_entry_id.in_({entry.external_entry_id for entry in entries}),
-            )
+            .where(Article.canonical_url.in_(canonical_urls))
         )
-    )
+    }
     return [
         entry
         for entry in entries
-        if entry.feed_external_id in subscribed and entry.external_entry_id not in stored
+        if _readers_missing_it(entry, subscribers[entry.feed_external_id], stored)
     ]
+
+
+def _readers_missing_it(
+    entry: RawArticle, readers: set[UUID], stored: set[tuple[UUID, str]]
+) -> bool:
+    url = canonical_url(entry.url)
+    return any((reader, url) not in stored for reader in readers)

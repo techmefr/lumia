@@ -474,3 +474,93 @@ async def test_enrich_article_skips_keyword_extraction_for_malagasy_content(
         select(ArticleKeyword).where(ArticleKeyword.article_id == article.id)
     )
     assert list(keywords) == []
+
+
+async def _add_feed_for_the_same_user(
+    session: AsyncSession, feed: Feed, *, external_feed_id: str
+) -> Feed:
+    other_feed = Feed(
+        user_id=feed.user_id,
+        source_type=SourceType.MINIFLUX,
+        external_feed_id=external_feed_id,
+        title="Mirror",
+        url="https://mirror.example.com/feed",
+    )
+    session.add(other_feed)
+    await session.commit()
+    return other_feed
+
+
+async def test_enrich_article_keeps_one_copy_when_two_feeds_republish_the_same_url(
+    session: AsyncSession,
+) -> None:
+    feed = await _create_feed(session, external_feed_id="40")
+    await _add_feed_for_the_same_user(session, feed, external_feed_id="41")
+
+    await enrich_article(
+        {},
+        _raw_article(feed_external_id="40", external_entry_id="1", url="https://example.com/a"),
+        content_extractor=_FakeContentExtractor(),
+    )
+    await enrich_article(
+        {},
+        _raw_article(
+            feed_external_id="41",
+            external_entry_id="2",
+            url="http://www.example.com/a/?utm_source=mirror",
+        ),
+        content_extractor=_FakeContentExtractor(),
+    )
+
+    articles = list(await session.scalars(select(Article)))
+    assert len(articles) == 1
+    assert articles[0].feed_id == feed.id
+
+
+async def test_enrich_article_keeps_the_earliest_publication_date_of_the_two_copies(
+    session: AsyncSession,
+) -> None:
+    feed = await _create_feed(session, external_feed_id="50")
+    await _add_feed_for_the_same_user(session, feed, external_feed_id="51")
+    original_date = datetime(2026, 1, 5, 8, 0, tzinfo=UTC)
+
+    await enrich_article(
+        {},
+        _raw_article(
+            feed_external_id="50",
+            external_entry_id="1",
+            published_at=datetime(2026, 8, 30, 9, 0, tzinfo=UTC),
+        ),
+        content_extractor=_FakeContentExtractor(),
+    )
+    await enrich_article(
+        {},
+        _raw_article(feed_external_id="51", external_entry_id="2", published_at=original_date),
+        content_extractor=_FakeContentExtractor(),
+    )
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    await session.refresh(article)
+    assert article.published_at == original_date
+
+
+async def test_enrich_article_keeps_two_articles_that_only_share_a_tracking_free_prefix(
+    session: AsyncSession,
+) -> None:
+    feed = await _create_feed(session, external_feed_id="60")
+    await _add_feed_for_the_same_user(session, feed, external_feed_id="61")
+
+    await enrich_article(
+        {},
+        _raw_article(feed_external_id="60", external_entry_id="1", url="https://example.com/?p=1"),
+        content_extractor=_FakeContentExtractor(),
+    )
+    await enrich_article(
+        {},
+        _raw_article(feed_external_id="61", external_entry_id="2", url="https://example.com/?p=2"),
+        content_extractor=_FakeContentExtractor(),
+    )
+
+    articles = list(await session.scalars(select(Article)))
+    assert len(articles) == 2
