@@ -68,7 +68,7 @@ async def _store_article(session: AsyncSession, feed: Feed, external_entry_id: s
             feed_id=feed.id,
             external_entry_id=external_entry_id,
             title="Already here",
-            url="https://blog.test/already",
+            url=f"https://blog.test/{external_entry_id}",
             content="<p>Body</p>",
             published_at=datetime.now(UTC),
         )
@@ -174,3 +174,43 @@ async def test_the_window_asked_of_miniflux_is_bounded(session: AsyncSession) ->
     published_after = datetime.fromtimestamp(int(asked["published_after"]), tz=UTC)
     assert timedelta(hours=23) < datetime.now(UTC) - published_after < timedelta(hours=25)
     assert int(asked["limit"]) > 0
+
+
+async def test_an_entry_the_reader_already_holds_under_another_id_is_left_alone(
+    session: AsyncSession,
+) -> None:
+    """Deduplication drops the second copy on ingestion, so its entry id is nowhere to be found;
+    judging presence on the entry id alone would re-queue it every hour, forever."""
+    feed = await _subscribe(session, "11")
+    session.add(
+        Article(
+            feed_id=feed.id,
+            external_entry_id="mirror-101",
+            title="Already here",
+            url="https://blog.test/101?utm_source=mirror",
+            content="<p>Body</p>",
+            published_at=datetime.now(UTC),
+        )
+    )
+    await session.commit()
+    pool = AsyncMock()
+
+    queued = await reconcile_recent_articles(
+        {"redis": pool}, transport=_miniflux_serving(_entry("101"))
+    )
+
+    assert queued == 0
+    pool.enqueue_job.assert_not_awaited()
+
+
+async def test_an_entry_only_one_of_two_readers_has_is_queued(session: AsyncSession) -> None:
+    feed = await _subscribe(session, "11")
+    await _subscribe(session, "11")
+    await _store_article(session, feed, "101")
+    pool = AsyncMock()
+
+    queued = await reconcile_recent_articles(
+        {"redis": pool}, transport=_miniflux_serving(_entry("101"))
+    )
+
+    assert queued == 1

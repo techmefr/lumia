@@ -4,9 +4,10 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import Computed, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import TSVECTOR
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from api.domain.feed.models import Feed
+from api.technical.net.canonical_url import canonical_url
 from api.technical.orm import Base, TimestampMixin
 
 
@@ -56,6 +57,10 @@ class Article(Base, TimestampMixin):
     external_entry_id: Mapped[str]
     title: Mapped[str]
     url: Mapped[str]
+    # Two feeds republishing the same piece give it two external_entry_id values, so this is what
+    # says the rows are the same article. Derived from `url` by the validator below rather than by
+    # each caller: a write path that forgot to set it would reintroduce the duplicates.
+    canonical_url: Mapped[str] = mapped_column(index=True)
     content: Mapped[str]
     summary: Mapped[str | None] = mapped_column(default=None)
     image_url: Mapped[str | None] = mapped_column(default=None)
@@ -90,6 +95,11 @@ class Article(Base, TimestampMixin):
             persisted=True,
         ),
     )
+
+    @validates("url")
+    def _derive_canonical_url(self, _key: str, url: str) -> str:
+        self.canonical_url = canonical_url(url)
+        return url
 
     author: Mapped[Author | None] = relationship(lazy="selectin")
     category: Mapped[Category | None] = relationship(lazy="selectin")

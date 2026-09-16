@@ -12,6 +12,7 @@ from api.domain.instance.usage_service import has_disk_quota_room
 from api.domain.user.models import Instance, ReadingLang, User
 from api.domain.user.providers import chat_client_for, translator_for
 from api.technical.logging.external import EXTERNAL_CALL_FAILED_EVENT, describe_error
+from api.technical.net.canonical_url import canonical_url
 from worker.domain.extraction.stemming import stem_for_lang
 from worker.domain.extraction.tfidf import extract_keywords
 from worker.domain.summarizer.extractive import summarize_extractive
@@ -174,12 +175,19 @@ async def _create_article_if_new(
     keyword_lang: Lang,
 ) -> None:
     existing = await session.scalar(
-        select(Article).where(
-            Article.feed_id == feed.id,
-            Article.external_entry_id == raw_article.external_entry_id,
+        select(Article)
+        .join(Feed, Article.feed_id == Feed.id)
+        .where(
+            Feed.user_id == feed.user_id,
+            Article.canonical_url == canonical_url(raw_article.url),
         )
+        .order_by(Article.published_at)
+        .limit(1)
     )
     if existing is not None:
+        # A mirror or an aggregator often reposts an old piece with today's date; the reader
+        # should keep seeing it where the original landed.
+        existing.published_at = min(existing.published_at, raw_article.published_at)
         return
 
     article = Article(

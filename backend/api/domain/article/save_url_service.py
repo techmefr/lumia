@@ -8,6 +8,7 @@ from api.domain.article.models import Article, Author
 from api.domain.feed.models import Feed, SourceType
 from api.domain.recommendation.models import UserArticleFeedback
 from api.domain.user.models import User
+from api.technical.net.canonical_url import canonical_url
 from worker.technical.content_extraction import PageExtractor, TrafilaturaPageExtractor
 
 MANUAL_FEED_TITLE = "Enregistrés"
@@ -29,7 +30,9 @@ async def save_url(
     feed = await _get_or_create_manual_feed(session, user)
 
     existing = await session.scalar(
-        select(Article).where(Article.feed_id == feed.id, Article.url == url)
+        select(Article).where(
+            Article.feed_id == feed.id, Article.canonical_url == canonical_url(url)
+        )
     )
     if existing is not None:
         await _mark_saved(session, user, existing)
