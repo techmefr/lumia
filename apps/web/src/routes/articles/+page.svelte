@@ -381,10 +381,20 @@
 					<BookOpen class="size-4" />
 					{t('articles.flip')}
 				</Button>
-				<Button variant={unreadOnly ? 'default' : 'outline'} size="sm" onclick={toggleUnreadOnly}>
+				<Button
+					data-test-unread-only
+					variant={unreadOnly ? 'default' : 'outline'}
+					size="sm"
+					onclick={toggleUnreadOnly}
+				>
 					{t('articles.unreadOnly')}
 				</Button>
-				<Button variant="outline" size="sm" onclick={() => markScopeRead(currentScope)}>
+				<Button
+					data-test-mark-all-read
+					variant="outline"
+					size="sm"
+					onclick={() => markScopeRead(currentScope)}
+				>
 					<CheckCheck class="size-4" />
 					{t('feeds.markAllRead')}
 				</Button>
@@ -444,6 +454,7 @@
 
 		{#if filterLabel}
 			<button
+				data-test-clear-tag-filter
 				onclick={clearTagFilter}
 				class="flex w-fit items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm text-secondary-foreground transition-colors hover:bg-secondary/70"
 			>
@@ -453,7 +464,7 @@
 		{/if}
 
 		{#if error}
-			<p role="alert" class="text-sm text-destructive">{t(error)}</p>
+			<p data-test-articles-error role="alert" class="text-sm text-destructive">{t(error)}</p>
 		{/if}
 
 		<ArticleGrid {articles} {loading} {cursor} hero={sort === 'relevance'}>
@@ -491,7 +502,7 @@
 			{#snippet footer()}
 				{#if hasMore}
 					<div class="mt-6 flex justify-center">
-						<Button variant="outline" onclick={loadMore} disabled={loadingMore}>
+						<Button data-test-load-more variant="outline" onclick={loadMore} disabled={loadingMore}>
 							{loadingMore ? t('common.loading') : t('common.loadMore')}
 						</Button>
 					</div>

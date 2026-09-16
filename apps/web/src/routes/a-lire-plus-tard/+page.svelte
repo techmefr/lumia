@@ -90,9 +90,9 @@
 		</CardHeader>
 		<CardContent>
 			{#if saveError}
-				<p role="alert" class="mb-2 text-sm text-destructive">{t(saveError)}</p>
+				<p data-test-save-error role="alert" class="mb-2 text-sm text-destructive">{t(saveError)}</p>
 			{/if}
-			<form class="flex flex-wrap items-end gap-2" onsubmit={saveUrl}>
+			<form data-test-save-url-form class="flex flex-wrap items-end gap-2" onsubmit={saveUrl}>
 				<div class="flex max-w-sm flex-1 flex-col gap-1.5">
 					<Label for="save-url">{t('readLater.urlLabel')}</Label>
 					<Input
@@ -113,7 +113,7 @@
 	</Card>
 
 	{#if error}
-		<p role="alert" class="text-sm text-destructive">{t(error)}</p>
+		<p data-test-list-error role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{/if}
 
 	<ArticleGrid {articles} {loading}>
@@ -127,7 +127,7 @@
 		{#snippet footer()}
 			{#if hasMore}
 				<div class="mt-6 flex justify-center">
-					<Button variant="outline" onclick={loadMore} disabled={loadingMore}>
+					<Button data-test-load-more variant="outline" onclick={loadMore} disabled={loadingMore}>
 						{loadingMore ? t('common.loading') : t('common.loadMore')}
 					</Button>
 				</div>

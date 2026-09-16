@@ -75,7 +75,7 @@
 		{#snippet footer()}
 			{#if hasMore}
 				<div class="mt-6 flex justify-center">
-					<Button variant="outline" onclick={loadMore} disabled={loadingMore}>
+					<Button data-test-load-more variant="outline" onclick={loadMore} disabled={loadingMore}>
 						{loadingMore ? t('common.loading') : t('common.loadMore')}
 					</Button>
 				</div>

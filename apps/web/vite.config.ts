@@ -88,17 +88,20 @@ export default defineConfig({
 				// The demo fixtures are data too, read by the demo client the tests do cover.
 				'technical/api/demo/seed.ts',
 				'**/*.test.ts',
+				// Fixtures and fakes the suites build their subjects from: exercised by every run,
+				// so counting them would report coverage the production code never earned.
+				'**/test-support/**',
 				'**/index.ts'
 			],
 			reporter: ['text', 'lcov'],
 			/**
-			 * A ratchet, not the target. 80 is the target and the shared core already sits at 100,
-			 * but this project also carries every screen and every route page — roughly 5700 lines
-			 * of svelte with no test yet. Floored just under what the suite covers today so the
-			 * number can only go up; raise it with each batch of component tests, never lower it to
-			 * make a red run green.
+			 * A ratchet, not the target. 80 is the target and the shared core already sits at 100.
+			 * Every route page under src/routes/ now carries a suite of its own, which is what took
+			 * this from the 50s to the 90s. Floored just under what the suite covers today so the
+			 * number can only go up; raise it with each batch of tests, never lower it to make a red
+			 * run green.
 			 */
-			thresholds: { lines: 56, functions: 51, statements: 55, branches: 53 }
+			thresholds: { lines: 93, functions: 92, statements: 92, branches: 78 }
 		}
 	}
 });

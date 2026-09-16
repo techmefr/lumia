@@ -130,7 +130,7 @@
 	<p class="text-sm text-muted-foreground">{t('playlists.intro')}</p>
 
 	{#if error}
-		<p role="alert" class="text-sm text-destructive">{t(error)}</p>
+		<p data-test-playlists-error role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{/if}
 
 	<Card>
@@ -142,6 +142,7 @@
 			<div class="flex flex-wrap gap-2">
 				{#each TIME_OPTIONS as minutes (minutes)}
 					<Button
+						data-test-fill-duration={minutes}
 						variant="secondary"
 						onclick={() => fillForDuration(minutes)}
 						disabled={filling !== null}
@@ -161,7 +162,7 @@
 			<CardTitle>{t('playlists.newTitle')}</CardTitle>
 		</CardHeader>
 		<CardContent>
-			<form class="flex items-end gap-2" onsubmit={create}>
+			<form data-test-new-playlist-form class="flex items-end gap-2" onsubmit={create}>
 				<div class="flex max-w-xs flex-1 flex-col gap-1.5">
 					<Label for="new-playlist">{t('playlists.nameLabel')}</Label>
 					<Input
@@ -195,11 +196,11 @@
 		     and a wide screen has room for several of them side by side. -->
 		<ul data-test-playlist-columns class="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-3">
 			{#each playlists as playlist (playlist.id)}
-				<li>
+				<li data-test-playlist={playlist.id}>
 					<Card>
 						<CardContent class="flex flex-wrap items-center justify-between gap-3 py-4">
 							{#if renamingId === playlist.id}
-								<form class="flex flex-1 items-end gap-2" onsubmit={confirmRename}>
+								<form data-test-rename-form class="flex flex-1 items-end gap-2" onsubmit={confirmRename}>
 									<div class="flex max-w-xs flex-1 flex-col gap-1.5">
 										<Label for="rename-{playlist.id}">{t('playlists.newName')}</Label>
 										<Input id="rename-{playlist.id}" bind:value={renameValue} required />
@@ -230,11 +231,21 @@
 									</span>
 								</a>
 								<div class="flex items-center gap-1">
-									<Button size="sm" variant="ghost" onclick={() => startRename(playlist)}>
+									<Button
+										data-test-rename={playlist.id}
+										size="sm"
+										variant="ghost"
+										onclick={() => startRename(playlist)}
+									>
 										<Pencil class="size-4" />
 										<span class="sr-only">{t('playlists.renameOne', { name: playlist.name })}</span>
 									</Button>
-									<Button size="sm" variant="ghost" onclick={() => remove(playlist)}>
+									<Button
+										data-test-delete={playlist.id}
+										size="sm"
+										variant="ghost"
+										onclick={() => remove(playlist)}
+									>
 										<Trash2 class="size-4" />
 										<span class="sr-only">{t('playlists.deleteOne', { name: playlist.name })}</span>
 									</Button>

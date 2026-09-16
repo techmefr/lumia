@@ -281,7 +281,7 @@
 		<h1 data-test-page="feeds" class="text-2xl font-semibold">{t('feeds.title')}</h1>
 
 		{#if error}
-			<p role="alert" class="text-sm text-destructive">{t(error)}</p>
+			<p data-test-feeds-error role="alert" class="text-sm text-destructive">{t(error)}</p>
 		{/if}
 
 		<InstanceFeeds onAttached={load} />
@@ -316,11 +316,11 @@
 					{/if}
 
 					<div class="flex flex-wrap items-center gap-2">
-						<Button onclick={viewArticles}>
+						<Button data-test-view-articles onclick={viewArticles}>
 							<Newspaper class="size-4" />
 							{t('feeds.viewArticles')}
 						</Button>
-						<Button variant="secondary" onclick={readInSwipeMode}>
+						<Button data-test-swipe-mode variant="secondary" onclick={readInSwipeMode}>
 							<Shuffle class="size-4" />
 							{t('feeds.swipeMode')}
 						</Button>
@@ -337,7 +337,7 @@
 									: t('feeds.refreshFeed')}
 							</Button>
 						{/if}
-						<Button variant="ghost" onclick={() => removeFeed(selectedFeed!.id)}>
+						<Button data-test-feed-remove variant="ghost" onclick={() => removeFeed(selectedFeed!.id)}>
 							<Trash2 class="size-4" />
 							{t('feeds.removeFeed')}
 						</Button>
@@ -347,7 +347,7 @@
 
 					<div class="flex flex-wrap items-end gap-4">
 						{#if renamingFeedId === selectedFeed.id}
-							<form class="flex items-end gap-2" onsubmit={retitleFeed}>
+							<form data-test-feed-rename-form class="flex items-end gap-2" onsubmit={retitleFeed}>
 								<div class="flex flex-col gap-1.5">
 									<Label for="feed-title">{t('feeds.feedName')}</Label>
 									<Input id="feed-title" bind:value={feedRenameValue} required />
@@ -364,6 +364,7 @@
 							</form>
 						{:else}
 							<Button
+								data-test-feed-rename
 								size="sm"
 								variant="outline"
 								onclick={() => {
@@ -379,6 +380,7 @@
 						<div class="flex flex-col gap-1.5">
 							<Label for="feed-folder">{t('feeds.folder')}</Label>
 							<select
+								data-test-feed-folder
 								id="feed-folder"
 								value={selectedFeed.folder_id ?? ''}
 								onchange={(event) => moveFeed(selectedFeed!.id, event.currentTarget.value)}
@@ -394,7 +396,7 @@
 				</CardContent>
 			</Card>
 		{:else if selectedFolder}
-			<Card>
+			<Card data-test-folder-panel>
 				<CardHeader>
 					<CardTitle>{selectedFolder.name}</CardTitle>
 					<CardDescription>
@@ -403,11 +405,11 @@
 				</CardHeader>
 				<CardContent class="flex flex-col gap-4">
 					<div class="flex flex-wrap items-center gap-2">
-						<Button onclick={viewArticles}>
+						<Button data-test-view-articles onclick={viewArticles}>
 							<Newspaper class="size-4" />
 							{t('feeds.viewFolderArticles')}
 						</Button>
-						<Button variant="secondary" onclick={readInSwipeMode}>
+						<Button data-test-swipe-mode variant="secondary" onclick={readInSwipeMode}>
 							<Shuffle class="size-4" />
 							{t('feeds.swipeMode')}
 						</Button>
@@ -444,7 +446,7 @@
 								<Pencil class="size-4" />
 								{t('feeds.renameFolder')}
 							</Button>
-							<Button size="sm" variant="ghost" onclick={() => removeFolder(selectedFolder!)}>
+							<Button data-test-folder-delete size="sm" variant="ghost" onclick={() => removeFolder(selectedFolder!)}>
 								<Trash2 class="size-4" />
 								{t('feeds.deleteFolder')}
 							</Button>
@@ -491,9 +493,9 @@
 					</CardHeader>
 					<CardContent>
 						{#if addFeedError}
-							<p role="alert" class="mb-2 text-sm text-destructive">{t(addFeedError)}</p>
+							<p data-test-add-feed-error role="alert" class="mb-2 text-sm text-destructive">{t(addFeedError)}</p>
 						{/if}
-						<form class="flex flex-wrap items-end gap-2" onsubmit={addFeed}>
+						<form data-test-add-feed-form class="flex flex-wrap items-end gap-2" onsubmit={addFeed}>
 							<div class="flex max-w-sm flex-1 flex-col gap-1.5">
 								<Label for="new-feed-url">{t('feeds.urlLabel')}</Label>
 								<Input
@@ -539,6 +541,7 @@
 							<Upload class="size-4" />
 							{importing ? t('feeds.importing') : t('feeds.importChoose')}
 							<input
+								data-test-opml-input
 								type="file"
 								accept=".opml,.xml,text/xml"
 								disabled={importing}
@@ -573,7 +576,7 @@
 						<CardTitle>{t('feeds.newFolder')}</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<form class="flex items-end gap-2" onsubmit={createFolder}>
+						<form data-test-new-folder-form class="flex items-end gap-2" onsubmit={createFolder}>
 							<div class="flex max-w-xs flex-1 flex-col gap-1.5">
 								<Label for="new-folder-name">{t('feeds.folderName')}</Label>
 								<Input id="new-folder-name" type="text" bind:value={newFolderName} required />
@@ -594,7 +597,7 @@
 						{#if loading}
 							<p role="status" class="text-sm text-muted-foreground">{t('common.loading')}</p>
 						{:else if feeds.length === 0}
-							<p class="flex items-center gap-2 text-sm text-muted-foreground">
+							<p data-test-feeds-empty class="flex items-center gap-2 text-sm text-muted-foreground">
 								<Inbox class="size-4" />
 								{t('feeds.empty')}
 							</p>
@@ -603,6 +606,7 @@
 								{#each feeds as feed, index (feed.id)}
 									{#if index > 0}<Separator />{/if}
 									<div
+										data-test-subscribed-feed={feed.id}
 										class="flex animate-in items-center justify-between gap-4 py-3 fade-in slide-in-from-left-1 duration-300"
 										style={`animation-delay: ${index * 40}ms`}
 									>

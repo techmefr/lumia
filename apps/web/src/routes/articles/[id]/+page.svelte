@@ -307,6 +307,7 @@
 							</button>
 						{/if}
 						<button
+							data-test-share
 							onclick={share}
 							class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 						>
@@ -389,6 +390,7 @@
 		>
 			<div class="flex w-full max-w-3xl gap-1.5 sm:gap-2">
 				<Button
+					data-test-like
 					class="flex-1 gap-1.5 px-2 sm:px-4"
 					variant={sentiment === 'like' ? 'default' : 'outline'}
 					onclick={() => toggleSentiment('like')}
@@ -397,6 +399,7 @@
 					<span class="hidden sm:inline">{t('article.like')}</span>
 				</Button>
 				<Button
+					data-test-dislike
 					class="flex-1 gap-1.5 px-2 sm:px-4"
 					variant={sentiment === 'dislike' ? 'default' : 'outline'}
 					onclick={() => toggleSentiment('dislike')}
@@ -405,6 +408,7 @@
 					<span class="hidden sm:inline">{t('article.dislike')}</span>
 				</Button>
 				<Button
+					data-test-save
 					class="flex-1 gap-1.5 px-2 sm:px-4"
 					variant={saved ? 'default' : 'outline'}
 					onclick={toggleSaved}
@@ -413,6 +417,7 @@
 					<span class="hidden sm:inline">{t('article.save')}</span>
 				</Button>
 				<Button
+					data-test-favorite
 					class="flex-1 gap-1.5 px-2 sm:px-4"
 					variant={favorite ? 'default' : 'outline'}
 					onclick={toggleFavorite}
