@@ -6,6 +6,7 @@ from sqlalchemy import Computed, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
+from api.domain.article.search_config import search_vector_expression
 from api.domain.feed.models import Feed
 from api.technical.net.canonical_url import canonical_url
 from api.technical.orm import Base, TimestampMixin
@@ -66,34 +67,12 @@ class Article(Base, TimestampMixin):
     image_url: Mapped[str | None] = mapped_column(default=None)
     original_lang: Mapped[Lang] = mapped_column(default=Lang.FR)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    # Computed by postgres itself (see migration 61a242bfadb8 for the generation expression, which
-    # must stay in sync with this one), never written from python: a generated column rejects any
-    # explicit value on insert or update. zh and mg have no postgres text-search configuration, so
-    # they index under "simple" — words kept as they are — rather than under a stemmer built for
-    # another language.
+    # Computed by postgres itself, never written from python: a generated column rejects any
+    # explicit value on insert or update. The expression is shared with the query side so the two
+    # cannot drift apart.
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
-        Computed(
-            "CASE original_lang "
-            + " ".join(
-                f"WHEN '{lang}' THEN to_tsvector('{regconfig}', title || ' ' "
-                "|| coalesce(summary, '') || ' ' || content)"
-                for lang, regconfig in {
-                    "EN": "english",
-                    "ES": "spanish",
-                    "DE": "german",
-                    "IT": "italian",
-                    "PT": "portuguese",
-                    "RU": "russian",
-                    "AR": "arabic",
-                    "ZH": "simple",
-                    "MG": "simple",
-                }.items()
-            )
-            + " ELSE to_tsvector('french', title || ' ' || coalesce(summary, '') "
-            "|| ' ' || content) END",
-            persisted=True,
-        ),
+        Computed(search_vector_expression(), persisted=True),
     )
 
     @validates("url")
