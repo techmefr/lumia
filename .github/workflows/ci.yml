@@ -230,17 +230,26 @@ jobs:
   docker:
     name: Docker images build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image: lumia-backend
+            file: docker/lumia-backend/Dockerfile
+          - image: lumia-web
+            file: docker/lumia-web/Dockerfile
     steps:
       - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v4
-      - name: Build the backend image
+      # Only the backend image used to be built here, so a Dockerfile change on the web side
+      # reached main without anyone knowing whether it still built.
+      - name: Build the ${{ matrix.image }} image
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: docker/lumia-backend/Dockerfile
+          file: ${{ matrix.file }}
           push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 
   audit:
     name: Dependencies — vulnerability audit

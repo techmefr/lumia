@@ -21,4 +21,13 @@ RUN uv sync
 # Kept last so a build without an explicit target produces the runtime image, not the dev one.
 FROM base AS runtime
 
+# The image is published, so it has to be useful without the compose file that used to carry
+# every command. This one serves the API; the worker overrides it with the arq command.
+RUN useradd --system --no-create-home --uid 10001 lumia \
+    && chown -R lumia:lumia /app
+
+USER lumia
+
 EXPOSE 8000
+
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
