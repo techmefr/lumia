@@ -56,6 +56,10 @@
 	let renamingFeedId = $state<string | null>(null);
 	let feedRenameValue = $state('');
 	let refreshingFeedId = $state<string | null>(null);
+	let refreshingAll = $state(false);
+	// The intervals a reader can pick, in minutes. Coarse on purpose: the value of the setting is
+	// "this one publishes constantly" versus "this one is a monthly newsletter", not fine tuning.
+	const REFRESH_INTERVAL_CHOICES = [15, 30, 60, 180, 360, 720, 1440] as const;
 
 	const selectedFolder = $derived(folders.find((f) => f.id === selectedFolderId) ?? null);
 	const selectedFeed = $derived(feeds.find((f) => f.id === selectedFeedId) ?? null);
@@ -106,10 +110,36 @@
 		try {
 			await lumia.feed.refreshFeed(feedId);
 			await load();
+			// Deliberately "on its way", not "done": the fetch has been made, but the articles reach
+			// Lumia over the webhook after this resolves, so the list on screen is not updated yet.
+			toast(t('feeds.refreshRequested'));
 		} catch {
 			toast(t('feeds.refreshFailed'), { tone: 'destructive' });
 		} finally {
 			refreshingFeedId = null;
+		}
+	}
+
+	async function refreshEverything() {
+		refreshingAll = true;
+		try {
+			const outcome = await lumia.feed.refreshAllFeeds();
+			await load();
+			toast(t('feeds.refreshAllRequested', { count: String(outcome.feeds_requested) }));
+		} catch {
+			toast(t('feeds.refreshAllFailed'), { tone: 'destructive' });
+		} finally {
+			refreshingAll = false;
+		}
+	}
+
+	async function setRefreshInterval(feedId: string, raw: string) {
+		const interval = raw === '' ? null : Number(raw);
+		try {
+			await lumia.feed.updateFeed(feedId, { refresh_interval_minutes: interval });
+			await load();
+		} catch {
+			toast(t('feeds.intervalFailed'), { tone: 'destructive' });
 		}
 	}
 
@@ -278,7 +308,19 @@
 	/>
 
 	<div class="flex min-w-0 flex-1 flex-col gap-6">
-		<h1 data-test-page="feeds" class="text-2xl font-semibold">{t('feeds.title')}</h1>
+		<div class="flex flex-wrap items-center justify-between gap-3">
+			<h1 data-test-page="feeds" class="text-2xl font-semibold">{t('feeds.title')}</h1>
+			<Button
+				data-test-refresh-all
+				variant="outline"
+				size="sm"
+				disabled={refreshingAll}
+				onclick={refreshEverything}
+			>
+				<RefreshCw class="size-4" />
+				{refreshingAll ? t('feeds.refreshingAll') : t('feeds.refreshAll')}
+			</Button>
+		</div>
 
 		{#if error}
 			<p role="alert" class="text-sm text-destructive">{t(error)}</p>
@@ -344,6 +386,41 @@
 					</div>
 
 					<Separator />
+
+					{#if selectedFeed.source_type === 'miniflux'}
+						<div class="flex flex-wrap items-end gap-4">
+							<label class="flex flex-col gap-1 text-sm sm:max-w-xs">
+								<span class="font-medium">{t('feeds.refreshInterval')}</span>
+								<select
+									data-test-feed-interval
+									value={selectedFeed.refresh_interval_minutes ?? ''}
+									onchange={(event) =>
+										setRefreshInterval(selectedFeed!.id, event.currentTarget.value)}
+									class="min-h-9 rounded-md border border-input bg-background px-3 text-sm"
+								>
+									<option value="">{t('feeds.intervalAutomatic')}</option>
+									{#each REFRESH_INTERVAL_CHOICES as minutes (minutes)}
+										<option value={minutes}>
+											{t(`feeds.interval.${minutes}` as MessageKey)}
+										</option>
+									{/each}
+								</select>
+							</label>
+							<p data-test-feed-last-checked class="text-sm text-muted-foreground">
+								{selectedFeed.last_refreshed_at
+									? t('feeds.lastChecked', {
+											date: formatDateInUserTimezone(
+												selectedFeed.last_refreshed_at,
+												getLocale()
+											)
+										})
+									: t('feeds.neverChecked')}
+							</p>
+						</div>
+						<p class="text-xs text-muted-foreground">{t('feeds.intervalHint')}</p>
+
+						<Separator />
+					{/if}
 
 					<div class="flex flex-wrap items-end gap-4">
 						{#if renamingFeedId === selectedFeed.id}

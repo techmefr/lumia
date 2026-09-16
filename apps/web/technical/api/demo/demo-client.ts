@@ -502,15 +502,26 @@ export function createDemoClient(): LumiaClient {
 				if (!feed) throw new Error('flux introuvable');
 				if (update.title !== undefined) feed.title = update.title;
 				if ('folder_id' in update) feed.folder_id = update.folder_id ?? null;
+				if ('refresh_interval_minutes' in update) {
+					feed.refresh_interval_minutes = update.refresh_interval_minutes ?? null;
+				}
 				persist();
 				return settle({ ...feed });
 			},
 			refreshFeed: async (feedId: string) => {
 				// The static demo build has no Miniflux behind it: a feed there never actually breaks,
-				// so a refresh has nothing to fetch and simply hands the feed back unchanged.
+				// so a refresh has nothing to fetch and only stamps the moment it was asked for.
 				const feed = state.feeds.find((candidate) => candidate.id === feedId);
 				if (!feed) throw new Error('flux introuvable');
+				feed.last_refreshed_at = new Date().toISOString();
+				persist();
 				return settle({ ...feed });
+			},
+			refreshAllFeeds: async () => {
+				const requestedAt = new Date().toISOString();
+				for (const feed of state.feeds) feed.last_refreshed_at = requestedAt;
+				persist();
+				return settle({ feeds_requested: state.feeds.length, requested_at: requestedAt });
 			},
 			deleteFeed: async (feedId: string) => {
 				state.feeds = state.feeds.filter((feed) => feed.id !== feedId);
