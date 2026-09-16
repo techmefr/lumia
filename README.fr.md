@@ -66,6 +66,9 @@ lecture et la synthèse vocale sur un vrai appareil avant d'installer quoi que c
 
 - Raccourcis clavier : `j`/`k` naviguer, `o` ouvrir, `m` lu/non lu, `s` à lire, `u` non lus,
   `f` feuilleter, `/` rechercher, toujours listés en bas de la liste d'articles.
+- Raccourcis de navigation : `g` puis `a` articles, `e` l'Étincelle, `f` flux, `l` à lire,
+  `p` playlists, `v` favoris, `s` réglages — l'écran d'arrivée prend le focus. `?` ouvre la liste
+  complète, et toute touche unique se désactive dans les réglages (WCAG 2.1.4).
 - Squelettes de chargement, états vides qui proposent l'action suivante, et notifications avec
   annulation sur les actions destructives.
 - Clair/sombre, taille de texte réglable, transitions de page, `prefers-reduced-motion` respecté

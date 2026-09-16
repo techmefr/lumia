@@ -359,6 +359,18 @@ export const ru: Catalogue = {
 	'orbit.close': 'Закрыть орбиту',
 	'orbit.menuLabel': 'Быстрые действия с этой статьёй',
 
+	'shortcuts.title': 'Горячие клавиши',
+	'shortcuts.navigation': 'Перемещение по приложению',
+	'shortcuts.reading': 'Чтение списка статей',
+	'shortcuts.general': 'Общее',
+	'shortcuts.help': 'показать эту справку',
+	'shortcuts.offHint': 'Одноклавишные сочетания отключаются в разделе',
+	'shortcuts.arrived': '{section} — содержимое открыто',
+	'settings.shortcuts': 'Горячие клавиши',
+	'settings.shortcutsHint': 'Отдельные клавиши вроде j, k или ? управляют чтением и переходами. Отключите их, если диктуете текст голосом.',
+	'settings.shortcutsOn': 'Включены',
+	'settings.shortcutsOff': 'Отключены',
+
 	'article.back': 'Назад к статьям',
 	'article.loading': 'Загрузка статьи',
 	'article.notFound': 'Статья не найдена.',

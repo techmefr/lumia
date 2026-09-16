@@ -349,6 +349,18 @@ export const ar: Catalogue = {
 	'orbit.close': 'إغلاق المدار',
 	'orbit.menuLabel': 'إجراءات سريعة على هذا المقال',
 
+	'shortcuts.title': 'اختصارات لوحة المفاتيح',
+	'shortcuts.navigation': 'التنقّل في التطبيق',
+	'shortcuts.reading': 'قراءة قائمة المقالات',
+	'shortcuts.general': 'عام',
+	'shortcuts.help': 'عرض هذه المساعدة',
+	'shortcuts.offHint': 'يمكن تعطيل اختصارات الحرف الواحد من',
+	'shortcuts.arrived': '{section} — تم عرض المحتوى',
+	'settings.shortcuts': 'اختصارات لوحة المفاتيح',
+	'settings.shortcutsHint': 'تتحكّم مفاتيح مفردة مثل j وk و? في القراءة والتنقّل. عطّلها إن كنت تملي النص صوتيًا.',
+	'settings.shortcutsOn': 'مفعّلة',
+	'settings.shortcutsOff': 'معطّلة',
+
 	'article.back': 'العودة إلى المقالات',
 	'article.loading': 'جارٍ تحميل المقال',
 	'article.notFound': 'المقال غير موجود.',

@@ -361,6 +361,18 @@ export const it: Catalogue = {
 	'orbit.close': 'Chiudere l\'orbita',
 	'orbit.menuLabel': 'Azioni rapide su questo articolo',
 
+	'shortcuts.title': 'Scorciatoie da tastiera',
+	'shortcuts.navigation': 'Spostarsi nell’applicazione',
+	'shortcuts.reading': 'Leggere l’elenco degli articoli',
+	'shortcuts.general': 'Generale',
+	'shortcuts.help': 'mostra questa guida',
+	'shortcuts.offHint': 'Le scorciatoie a tasto singolo si disattivano in',
+	'shortcuts.arrived': '{section} — contenuto mostrato',
+	'settings.shortcuts': 'Scorciatoie da tastiera',
+	'settings.shortcutsHint': 'Tasti singoli come j, k o ? guidano lettura e navigazione. Disattivali se detti il testo a voce.',
+	'settings.shortcutsOn': 'Attive',
+	'settings.shortcutsOff': 'Disattivate',
+
 	'article.back': 'Tornare agli articoli',
 	'article.loading': "Caricamento dell'articolo",
 	'article.notFound': 'Articolo introvabile.',

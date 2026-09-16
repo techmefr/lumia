@@ -361,6 +361,18 @@ export const de: Catalogue = {
 	'orbit.close': 'Orbit schließen',
 	'orbit.menuLabel': 'Schnellaktionen für diesen Artikel',
 
+	'shortcuts.title': 'Tastenkürzel',
+	'shortcuts.navigation': 'In der App navigieren',
+	'shortcuts.reading': 'Artikelliste lesen',
+	'shortcuts.general': 'Allgemein',
+	'shortcuts.help': 'diese Hilfe anzeigen',
+	'shortcuts.offHint': 'Kürzel mit einer einzelnen Taste lassen sich abschalten unter',
+	'shortcuts.arrived': '{section} — Inhalt angezeigt',
+	'settings.shortcuts': 'Tastenkürzel',
+	'settings.shortcutsHint': 'Einzelne Tasten wie j, k oder ? steuern Lesen und Navigation. Abschalten, wenn Sie Text per Sprache diktieren.',
+	'settings.shortcutsOn': 'Ein',
+	'settings.shortcutsOff': 'Aus',
+
 	'article.back': 'Zurück zu den Artikeln',
 	'article.loading': 'Artikel wird geladen',
 	'article.notFound': 'Artikel nicht gefunden.',

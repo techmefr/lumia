@@ -342,6 +342,18 @@ export const zh: Catalogue = {
 	'orbit.close': '关闭轨道',
 	'orbit.menuLabel': '本文的快捷操作',
 
+	'shortcuts.title': '键盘快捷键',
+	'shortcuts.navigation': '在应用内跳转',
+	'shortcuts.reading': '阅读文章列表',
+	'shortcuts.general': '通用',
+	'shortcuts.help': '显示本帮助',
+	'shortcuts.offHint': '单键快捷键可在此关闭：',
+	'shortcuts.arrived': '{section} — 已显示内容',
+	'settings.shortcuts': '键盘快捷键',
+	'settings.shortcutsHint': 'j、k、? 等单个按键用于阅读和跳转。如果你使用语音输入，可以关闭它们。',
+	'settings.shortcutsOn': '已启用',
+	'settings.shortcutsOff': '已关闭',
+
 	'article.back': '返回文章列表',
 	'article.loading': '正在加载文章',
 	'article.notFound': '找不到该文章。',

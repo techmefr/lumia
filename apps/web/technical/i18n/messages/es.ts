@@ -361,6 +361,18 @@ export const es: Catalogue = {
 	'orbit.close': 'Cerrar la órbita',
 	'orbit.menuLabel': 'Acciones rápidas sobre este artículo',
 
+	'shortcuts.title': 'Atajos de teclado',
+	'shortcuts.navigation': 'Moverse por la aplicación',
+	'shortcuts.reading': 'Leer la lista de artículos',
+	'shortcuts.general': 'General',
+	'shortcuts.help': 'mostrar esta ayuda',
+	'shortcuts.offHint': 'Los atajos de una sola tecla se desactivan en',
+	'shortcuts.arrived': '{section} — contenido mostrado',
+	'settings.shortcuts': 'Atajos de teclado',
+	'settings.shortcutsHint': 'Teclas sueltas como j, k o ? controlan la lectura y la navegación. Desactívalas si dictas el texto por voz.',
+	'settings.shortcutsOn': 'Activados',
+	'settings.shortcutsOff': 'Desactivados',
+
 	'article.back': 'Volver a los artículos',
 	'article.loading': 'Cargando el artículo',
 	'article.notFound': 'Artículo no encontrado.',
