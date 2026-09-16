@@ -124,15 +124,68 @@ describe('the magic link', () => {
 		expect(last()).toMatchObject({
 			path: '/auth/magic-link',
 			method: 'POST',
-			body: { email: 'lena@lumia.test' },
+			body: { email: 'lena@lumia.test', purpose: 'sign_in' },
 			auth: false
 		});
+	});
+
+	// The purpose decides which screen the email lands on, so a reset link that says nothing
+	// would drop a locked-out reader back on the form they cannot fill.
+	it('says when the link is for a forgotten password', async () => {
+		const { user, last } = api([undefined]);
+		await user.requestMagicLink('lena@lumia.test', 'password_reset');
+		expect(last()).toMatchObject({ body: { purpose: 'password_reset' } });
 	});
 
 	it('opens the session when the token checks out', async () => {
 		const { user, last } = api([TOKENS]);
 		await user.verifyMagicLink('token-abc');
 		expect(last()).toMatchObject({ path: '/auth/magic-link/verify', auth: false });
+		expect(user.isAuthenticated()).toBe(true);
+	});
+});
+
+describe('changing the password', () => {
+	it('posts both passwords to the account route', async () => {
+		const { user, last } = api([TOKENS], { access: 'access-0', refresh: 'refresh-0' });
+		await user.changePassword('correct horse', 'battery staple');
+		expect(last()).toMatchObject({
+			path: '/me/password',
+			method: 'POST',
+			body: { current_password: 'correct horse', new_password: 'battery staple' }
+		});
+	});
+
+	// The server ends every session on a change, including this one: without keeping the pair it
+	// answers with, a reader is signed out of the device they just used to change it.
+	it('keeps the device signed in with the pair that comes back', async () => {
+		const { user, store } = api([TOKENS], { access: 'access-0', refresh: 'refresh-0' });
+		await user.changePassword('correct horse', 'battery staple');
+		expect(store.getRefreshToken()).toBe('refresh-1');
+	});
+
+	it('sends no current password for an account that has never had one', async () => {
+		const { user, last } = api([TOKENS], { access: 'access-0', refresh: 'refresh-0' });
+		await user.changePassword(null, 'battery staple');
+		expect(last()).toMatchObject({ body: { current_password: null } });
+	});
+});
+
+describe('resetting a forgotten password', () => {
+	it('posts the magic-link token unauthenticated, the reader being locked out', async () => {
+		const { user, last } = api([TOKENS]);
+		await user.resetPassword('token-abc', 'battery staple');
+		expect(last()).toMatchObject({
+			path: '/auth/password-reset',
+			method: 'POST',
+			body: { token: 'token-abc', new_password: 'battery staple' },
+			auth: false
+		});
+	});
+
+	it('opens the session, so the reset lands on a signed-in app', async () => {
+		const { user } = api([TOKENS]);
+		await user.resetPassword('token-abc', 'battery staple');
 		expect(user.isAuthenticated()).toBe(true);
 	});
 });

@@ -7,6 +7,7 @@ from api.domain.feed.models import SourceType
 from api.domain.recommendation.models import FilterMode
 from api.domain.user.models import (
     AIProvider,
+    MagicLinkPurpose,
     OrbitPosition,
     ReadingLang,
     Role,
@@ -14,13 +15,18 @@ from api.domain.user.models import (
     TranslationProvider,
 )
 
+# Every path that writes a password holds to the same floor: onboarding, an accepted invitation,
+# a change from the settings and a reset from a magic link. A route that asked for less would be
+# the one an attacker picks.
+MIN_PASSWORD_LENGTH = 8
+
 
 class OnboardingAdminRequest(BaseModel):
     email: EmailStr
     username: str
     # The account created here has full instance-admin rights, so a short password is the one
     # place in the app that can't be left to the reader's own judgement.
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=MIN_PASSWORD_LENGTH)
     # Left out, the two quotas fall back to what the environment says rather than to a literal
     # repeated on both sides of the wire.
     max_accounts: int | None = Field(default=None, ge=1)
@@ -42,10 +48,23 @@ class LogoutRequest(BaseModel):
 
 class MagicLinkRequest(BaseModel):
     email: EmailStr
+    purpose: MagicLinkPurpose = MagicLinkPurpose.SIGN_IN
 
 
 class MagicLinkVerifyRequest(BaseModel):
     token: str
+
+
+class PasswordChangeRequest(BaseModel):
+    """The current password is optional only for an account that has none to give yet."""
+
+    current_password: str | None = None
+    new_password: str = Field(min_length=MIN_PASSWORD_LENGTH)
+
+
+class PasswordResetRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=MIN_PASSWORD_LENGTH)
 
 
 class SsoCallbackRequest(BaseModel):
@@ -76,7 +95,7 @@ class InvitationResponse(BaseModel):
 class InvitationAcceptRequest(BaseModel):
     token: str
     username: str = Field(min_length=1)
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=MIN_PASSWORD_LENGTH)
 
 
 class DeleteAccountRequest(BaseModel):
@@ -139,6 +158,9 @@ class MeResponse(BaseModel):
     email: str
     username: str
     role: Role
+    # Whether a password can be changed or has yet to be set: an account that only ever came in
+    # through SSO or a magic link has none, and asking it for the current one would trap it.
+    password_set: bool
     theme: Theme
     orbit_position: OrbitPosition
     font_base_size: int

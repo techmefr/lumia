@@ -41,6 +41,8 @@ function loginPage() {
 		container,
 		loginForm: () => q<HTMLFormElement>('[data-test-login-form]'),
 		magicToggle: () => q<HTMLButtonElement>('[data-test-magic-toggle]')!,
+		forgotPassword: () => q<HTMLButtonElement>('[data-test-forgot-password]')!,
+		resetHint: () => q('[data-test-reset-hint]'),
 		magicForm: () => q<HTMLFormElement>('[data-test-magic-form]'),
 		magicSent: () => q('[data-test-magic-sent]'),
 		backToPassword: () => q<HTMLButtonElement>('[data-test-back-to-password]'),
@@ -107,7 +109,7 @@ describe('switching to the passwordless flow', () => {
 		await fireEvent.submit(view.magicForm()!);
 		await waitFor(() => expect(view.magicSent()).not.toBeNull());
 
-		expect(api.requestMagicLink).toHaveBeenCalledWith('reader@example.test');
+		expect(api.requestMagicLink).toHaveBeenCalledWith('reader@example.test', 'sign_in');
 	});
 
 	it('returns to the password form on request', async () => {
@@ -118,6 +120,39 @@ describe('switching to the passwordless flow', () => {
 
 		expect(view.loginForm()).not.toBeNull();
 		expect(view.magicForm()).toBeNull();
+	});
+});
+
+describe('asking for a password reset', () => {
+	it('reuses the magic-link form and says what the link is for', async () => {
+		const view = loginPage();
+
+		await fireEvent.click(view.forgotPassword());
+
+		expect(view.magicForm()).not.toBeNull();
+		expect(view.resetHint()).not.toBeNull();
+	});
+
+	// The purpose is what makes the emailed link land on the screen that asks for a new password
+	// rather than on the sign-in form the reader cannot get past.
+	it('asks for a link that opens the reset screen', async () => {
+		api.requestMagicLink.mockResolvedValue(undefined);
+		const view = loginPage();
+		await fireEvent.click(view.forgotPassword());
+
+		await fireEvent.input(view.magicEmail(), { target: { value: 'reader@example.test' } });
+		await fireEvent.submit(view.magicForm()!);
+		await waitFor(() => expect(view.magicSent()).not.toBeNull());
+
+		expect(api.requestMagicLink).toHaveBeenCalledWith('reader@example.test', 'password_reset');
+	});
+
+	it('says nothing about the reset while signing in without a password', async () => {
+		const view = loginPage();
+
+		await fireEvent.click(view.magicToggle());
+
+		expect(view.resetHint()).toBeNull();
 	});
 });
 

@@ -150,6 +150,7 @@ function initialState(): DemoState {
 			email: 'demo@lumia.local',
 			username: 'Démo',
 			role: 'admin',
+			password_set: true,
 			theme: 'system',
 			orbit_position: 'right',
 			font_base_size: 16,
@@ -450,6 +451,8 @@ export function createDemoClient(): LumiaClient {
 			},
 			requestMagicLink: async () => settle(undefined),
 			verifyMagicLink: async () => settle(undefined),
+			changePassword: async () => settle(undefined),
+			resetPassword: async () => settle(undefined),
 			getMe: async () => settle({ ...state.me }),
 			updateMe: async (payload: MeUpdate) => {
 				const { ai_api_key, translation_api_key, ...rest } = payload;

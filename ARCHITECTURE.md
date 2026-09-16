@@ -66,11 +66,21 @@ the stdlib XML parser expands entities, so a few kilobytes of nested ones are ot
 exhaust the API process.
 
 Passwordless sign-in (`api/domain/user/magic_link_service.py`) issues an opaque token, stores only
-its hash (`MagicLinkToken`, single-use, TTL-bound), and emails a clickable
-`{FRONTEND_URL}/login?magic_token=...` link built from `EmailConfig.frontend_url`. `/login` reads
-that query param on mount and calls `verifyMagicLink` before showing any form — this is also the
-app's only account-recovery path, there being no separate forgot-password flow. Asking for a new
-link retires the ones already sent, so only one live link exists per reader at any time.
+its hash (`MagicLinkToken`, single-use, TTL-bound), and emails a clickable link built from
+`EmailConfig.frontend_url`. `/login` reads that query param on mount and calls `verifyMagicLink`
+before showing any form. Asking for a new link retires the ones already sent, so only one live link
+exists per reader at any time.
+
+Forgetting a password reuses that same token rather than a second one: the request carries a
+`MagicLinkPurpose`, which only decides where the emailed link lands — `/login` to sign in,
+`/reset-password?magic_token=...` to choose a new password through `POST /auth/password-reset`.
+Both purposes prove the same thing, control of the mailbox, and a reader who can sign in can
+already set a password from the settings. A reader who knows theirs changes it at `POST
+/me/password`, which asks for the current one — except on an account that has never had one, SSO
+or magic link only, where requiring it would leave no way to set a first. Either route revokes
+every refresh token of the account (see ADR-0006): the tokens issued under the old password would
+otherwise outlive it by a month. Both hold to `MIN_PASSWORD_LENGTH`, the floor onboarding and
+invitations already enforce.
 
 The authentication routes are rate limited (`api/technical/rate_limit/`) with a fixed-window
 counter in Redis, keyed on two identifiers at once: the caller's address and the account being
