@@ -145,6 +145,12 @@ services:
       # enrich_article reads the account's own provider key through decrypt_secret, so the worker
       # needs the same Fernet key as the API. Without it every enrichment job dies on startup.
       SECRET_ENCRYPTION_KEY: ${SECRET_ENCRYPTION_KEY}
+      # The sync_feed_error_status cron calls Miniflux from the worker, so it needs the same
+      # credentials as the API. Without them the cron raises on every run.
+      MINIFLUX_BASE_URL: http://miniflux:8080
+      MINIFLUX_USERNAME: ${MINIFLUX_USERNAME}
+      MINIFLUX_PASSWORD: ${MINIFLUX_PASSWORD}
+      MINIFLUX_WEBHOOK_SECRET: ${MINIFLUX_WEBHOOK_SECRET}
       DEEPL_API_KEY: ${DEEPL_API_KEY}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       LOG_FORMAT: ${LOG_FORMAT:-json}
