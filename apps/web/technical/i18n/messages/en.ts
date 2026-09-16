@@ -351,6 +351,18 @@ export const en: Catalogue = {
 	'orbit.close': 'Close the orbit',
 	'orbit.menuLabel': 'Quick actions on this article',
 
+	'shortcuts.title': 'Keyboard shortcuts',
+	'shortcuts.navigation': 'Move around the app',
+	'shortcuts.reading': 'Read the article list',
+	'shortcuts.general': 'General',
+	'shortcuts.help': 'show this help',
+	'shortcuts.offHint': 'Single-key shortcuts can be turned off in',
+	'shortcuts.arrived': '{section} — now showing',
+	'settings.shortcuts': 'Keyboard shortcuts',
+	'settings.shortcutsHint': 'Single keys such as j, k or ? drive reading and navigation. Turn them off if you dictate text by voice.',
+	'settings.shortcutsOn': 'On',
+	'settings.shortcutsOff': 'Off',
+
 	'article.back': 'Back to the articles',
 	'article.loading': 'Loading the article',
 	'article.notFound': 'Article not found.',

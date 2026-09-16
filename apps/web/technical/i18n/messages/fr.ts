@@ -364,6 +364,18 @@ export const fr = {
 	'orbit.close': 'Fermer l\'orbite',
 	'orbit.menuLabel': 'Actions rapides sur cet article',
 
+	'shortcuts.title': 'Raccourcis clavier',
+	'shortcuts.navigation': 'Naviguer dans l’application',
+	'shortcuts.reading': 'Lire la liste d’articles',
+	'shortcuts.general': 'Général',
+	'shortcuts.help': 'afficher cette aide',
+	'shortcuts.offHint': 'Les raccourcis d’une seule touche se désactivent dans les',
+	'shortcuts.arrived': '{section} — contenu affiché',
+	'settings.shortcuts': 'Raccourcis clavier',
+	'settings.shortcutsHint': 'Les touches uniques comme j, k ou ? pilotent la lecture et la navigation. À couper si vous dictez votre texte à la voix.',
+	'settings.shortcutsOn': 'Activés',
+	'settings.shortcutsOff': 'Désactivés',
+
 	'article.back': 'Retour aux articles',
 	'article.loading': "Chargement de l'article",
 	'article.notFound': 'Article introuvable.',

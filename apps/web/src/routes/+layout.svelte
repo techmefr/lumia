@@ -2,7 +2,7 @@
 	import { base } from '$app/paths';
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { goto, onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
@@ -16,12 +16,17 @@
 	import { isDemo, lumia } from '$technical/api/client';
 	import SettingsMenu from '$domain/navigation/settings-menu.svelte';
 	import DemoBanner from '$domain/navigation/demo-banner.svelte';
+	import ShortcutsHelp from '$domain/navigation/shortcuts-help.svelte';
 	import { watchUnread } from '$technical/notifications/notification-store.svelte.js';
+	import { bindSequenceShortcuts, bindShortcuts } from '$technical/keyboard/shortcuts';
+	import { NAVIGATION_PREFIX, NAVIGATION_SHORTCUTS } from '$technical/keyboard/shortcut-catalogue';
 	import { initLocale, t } from '$technical/i18n/i18n.svelte.js';
 
 	let { children } = $props();
 
 	let bottomNavEl = $state<HTMLElement | null>(null);
+	let helpOpen = $state(false);
+	let arrivalAnnouncement = $state('');
 
 	const authRoutes = ['/login', '/onboarding'];
 
@@ -65,6 +70,32 @@
 		{ label: t('nav.playlists'), href: `${base}/playlists` },
 		{ label: t('nav.logout'), run: logout }
 	]);
+
+	// A jump that only repaints leaves a keyboard reader where it was, still inside the header. The
+	// landing screen takes the focus, and the live region says out loud where the focus went.
+	async function jumpTo(href: string, label: string) {
+		// Signing in is a dead end on purpose: jumping out of it would only meet the auth guard.
+		if (isAuthRoute(page.url.pathname) || isActive(href)) return;
+		await goto(base + href);
+		await tick();
+		document.querySelector<HTMLElement>('#main-content')?.focus();
+		arrivalAnnouncement = t('shortcuts.arrived', { section: label });
+	}
+
+	onMount(() => {
+		const navigationHandlers = Object.fromEntries(
+			NAVIGATION_SHORTCUTS.map((shortcut) => [
+				shortcut.key,
+				() => void jumpTo(shortcut.href, t(shortcut.labelKey))
+			])
+		);
+		const unbindNavigation = bindSequenceShortcuts(NAVIGATION_PREFIX, navigationHandlers);
+		const unbindHelp = bindShortcuts({ '?': () => (helpOpen = true) });
+		return () => {
+			unbindNavigation();
+			unbindHelp();
+		};
+	});
 
 	onMount(() => {
 		initLocale();
@@ -158,7 +189,8 @@
 	<main
 		id="main-content"
 		data-test-main
-		class="mx-auto w-full {mainWidth} px-4 py-6 sm:px-6 {mainPadding}"
+		tabindex="-1"
+		class="mx-auto w-full {mainWidth} px-4 py-6 outline-none sm:px-6 {mainPadding}"
 		in:fly={{ y: 16, duration: 260, delay: 120 }}
 		out:fade={{ duration: 120 }}
 	>
@@ -187,6 +219,12 @@
 			</a>
 		{/each}
 	</nav>
+{/if}
+
+<p data-test-shortcut-announcement aria-live="polite" class="sr-only">{arrivalAnnouncement}</p>
+
+{#if helpOpen}
+	<ShortcutsHelp onClose={() => (helpOpen = false)} />
 {/if}
 
 <Toaster closeLabel={t('common.dismissNotification')} />

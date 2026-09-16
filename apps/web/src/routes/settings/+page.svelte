@@ -31,6 +31,10 @@
 		setReadingComfort,
 		type Theme
 	} from '$technical/theme/theme-store.svelte.js';
+	import {
+		areShortcutsEnabled,
+		setShortcutsEnabled
+	} from '$technical/keyboard/shortcuts-store.svelte.js';
 	import { getLocale, setLocale, t } from '$technical/i18n/i18n.svelte.js';
 	import { LOCALES } from '$technical/i18n/locales';
 
@@ -91,6 +95,7 @@
 	let fontScale = $state(1);
 	let fontPair = $state(FONT_PAIR_PRESETS[0].id);
 	let comfort = $state(false);
+	let shortcuts = $state(true);
 	let orbitPosition = $state<OrbitPosition>('right');
 	// The API is the real guard; hiding the section only spares a member a panel of 403s.
 	let isAdmin = $state(false);
@@ -133,6 +138,11 @@
 		setReadingComfort(comfort);
 	}
 
+	function toggleShortcuts() {
+		shortcuts = !shortcuts;
+		setShortcutsEnabled(shortcuts);
+	}
+
 	onMount(() => {
 		if (!requireAuth()) return;
 		theme = getTheme();
@@ -140,6 +150,7 @@
 		fontScale = getFontScale();
 		fontPair = getFontPair();
 		comfort = isReadingComfort();
+		shortcuts = areShortcutsEnabled();
 		void lumia.user
 			.getMe()
 			.then((me) => {
@@ -373,6 +384,21 @@
 					onclick={toggleComfort}
 				>
 					{comfort ? t('settings.comfortOn') : t('settings.comfortOff')}
+				</Button>
+			</div>
+
+			<div class="flex flex-col gap-2 border-t pt-4">
+				<span class="text-sm font-semibold text-muted-foreground">{t('settings.shortcuts')}</span>
+				<p class="text-xs text-muted-foreground">{t('settings.shortcutsHint')}</p>
+				<Button
+					data-test-shortcuts-toggle
+					variant={shortcuts ? 'secondary' : 'outline'}
+					size="sm"
+					class="self-start"
+					aria-pressed={shortcuts}
+					onclick={toggleShortcuts}
+				>
+					{shortcuts ? t('settings.shortcutsOn') : t('settings.shortcutsOff')}
 				</Button>
 			</div>
 

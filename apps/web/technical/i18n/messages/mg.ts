@@ -363,6 +363,18 @@ export const mg: Catalogue = {
 	'orbit.close': 'Hanidy ny orbita',
 	'orbit.menuLabel': 'Hetsika haingana amin’ity lahatsoratra ity',
 
+	'shortcuts.title': 'Hitsin-dàlana amin’ny kitendry',
+	'shortcuts.navigation': 'Mifindra ao anatin’ny fampiharana',
+	'shortcuts.reading': 'Mamaky ny lisitry ny lahatsoratra',
+	'shortcuts.general': 'Ankapobeny',
+	'shortcuts.help': 'asehoy ity fanampiana ity',
+	'shortcuts.offHint': 'Azo atsahatra ny hitsin-dàlana kitendry tokana ao amin’ny',
+	'shortcuts.arrived': '{section} — voaseho ny votoaty',
+	'settings.shortcuts': 'Hitsin-dàlana amin’ny kitendry',
+	'settings.shortcutsHint': 'Kitendry tokana toy ny j, k na ? no mitantana ny famakiana sy ny fifindrana. Atsaharo raha manonona ny soratra am-peo ianao.',
+	'settings.shortcutsOn': 'Mandeha',
+	'settings.shortcutsOff': 'Mijanona',
+
 	'article.back': 'Hiverina amin’ny lahatsoratra',
 	'article.loading': 'Mampiditra ny lahatsoratra',
 	'article.notFound': 'Tsy hita ny lahatsoratra.',
