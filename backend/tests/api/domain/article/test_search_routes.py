@@ -196,3 +196,120 @@ async def test_search_stems_english_articles_under_the_english_configuration(
     assert [article["title"] for article in response.json()] == [
         "Serverless databases are changing"
     ]
+
+
+# An inflected word per language, alongside the other form of the same word a reader would type.
+# Every pair here is one the french and english stemmers both get wrong — they leave the term on a
+# stem the article was never indexed under — so each case only passes because the query is parsed
+# under the article's own configuration. Roots are unique across the set, so a hit can only come
+# from the article it was seeded in.
+MULTILINGUAL_ARTICLES = [
+    (Lang.ES, "Los ninos hablaban mucho", "hablar"),
+    (Lang.DE, "Die Bäckereien verkauften frisches Brot", "Bäckerei"),
+    (Lang.IT, "I ragazzi parlavano insieme", "parlare"),
+    (Lang.PT, "Os meninos falavam alto", "falar"),
+    (Lang.RU, "Новые книги выходят каждый месяц", "книга"),
+    (Lang.AR, "المكتبات الجديدة مفتوحة", "المكتبة"),
+]
+
+
+async def _seed_multilingual_articles() -> None:
+    session_factory = async_sessionmaker(get_engine(), expire_on_commit=False)
+    async with session_factory() as session:
+        user = (await session.scalars(select(User))).one()
+        feed = Feed(
+            user_id=user.id,
+            source_type=SourceType.MINIFLUX,
+            external_feed_id="multi",
+            title="Feed",
+            url="https://example.com/feed-multi",
+        )
+        session.add(feed)
+        await session.flush()
+        session.add_all(
+            [
+                Article(
+                    feed_id=feed.id,
+                    external_entry_id=f"multi-{lang.value}",
+                    title=title,
+                    url=f"https://example.com/multi-{lang.value}",
+                    content=title,
+                    original_lang=lang,
+                    published_at=datetime(2026, 8, 14, tzinfo=UTC),
+                )
+                for lang, title, _ in MULTILINGUAL_ARTICLES
+            ]
+        )
+        await session.commit()
+
+
+@pytest.mark.parametrize(("lang", "title", "term"), MULTILINGUAL_ARTICLES)
+async def test_search_reaches_articles_in_every_stemmed_language(
+    client: httpx.AsyncClient, lang: Lang, title: str, term: str
+) -> None:
+    """The reader's text is parsed under every configuration the index uses, so an inflected term
+    in spanish, german, italian, portuguese or russian reaches the article stored under that
+    language's stemmer instead of silently returning nothing."""
+    headers = await _headers(client)
+    await _seed_multilingual_articles()
+
+    response = await client.get("/articles", params={"q": term}, headers=headers)
+    assert [article["title"] for article in response.json()] == [title], lang
+
+
+async def test_search_reaches_a_language_without_a_postgres_configuration(
+    client: httpx.AsyncClient,
+) -> None:
+    """zh and mg index under "simple", which stems nothing; the word still has to be findable."""
+    headers = await _headers(client)
+    session_factory = async_sessionmaker(get_engine(), expire_on_commit=False)
+    async with session_factory() as session:
+        user = (await session.scalars(select(User))).one()
+        feed = Feed(
+            user_id=user.id,
+            source_type=SourceType.MINIFLUX,
+            external_feed_id="zh",
+            title="Feed",
+            url="https://example.com/feed-zh",
+        )
+        session.add(feed)
+        await session.flush()
+        session.add(
+            Article(
+                feed_id=feed.id,
+                external_entry_id="zh-1",
+                title="Fandroana malagasy",
+                url="https://example.com/zh-1",
+                content="Fandroana malagasy",
+                original_lang=Lang.MG,
+                published_at=datetime(2026, 8, 15, tzinfo=UTC),
+            )
+        )
+        await session.commit()
+
+    response = await client.get("/articles?q=fandroana", headers=headers)
+    assert [article["title"] for article in response.json()] == ["Fandroana malagasy"]
+
+
+async def test_one_search_spans_a_library_that_mixes_languages(
+    client: httpx.AsyncClient,
+) -> None:
+    """A reader's library is not in a single language: one query has to be able to bring back
+    articles stored under different configurations at once."""
+    headers = await _headers(client)
+    await _seed_multilingual_articles()
+
+    response = await client.get("/articles", params={"q": "hablar OR Bäckerei"}, headers=headers)
+    assert {article["title"] for article in response.json()} == {
+        "Los ninos hablaban mucho",
+        "Die Bäckereien verkauften frisches Brot",
+    }
+
+
+async def test_search_still_finds_nothing_for_an_absent_term(client: httpx.AsyncClient) -> None:
+    """Widening the parsed configurations must not turn the search into a match-everything."""
+    headers = await _headers(client)
+    await _seed_multilingual_articles()
+
+    response = await client.get("/articles?q=helicoptere", headers=headers)
+    assert response.json() == []
