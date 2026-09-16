@@ -16,33 +16,92 @@ permissions:
   contents: read
   packages: write
 
+env:
+  REGISTRY: ghcr.io
+
 jobs:
-  publish:
-    name: Publish ${{ matrix.image }}
-    runs-on: ubuntu-latest
+  # One job per image *and* per architecture, each on a runner of that architecture. Building
+  # arm64 under QEMU on an amd64 runner works for the backend but not for the web image: the
+  # emulated Vite build ran for over an hour without finishing, while the same build takes
+  # minutes natively. Each job pushes an untagged digest; merge-manifest turns the pair into
+  # one multi-arch tag.
+  build:
+    name: Build ${{ matrix.image }} (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
     strategy:
+      fail-fast: false
       matrix:
+        image: [lumia-backend, lumia-web]
+        platform: [linux/amd64, linux/arm64]
+        # Keyed on platform, so each entry merges into both image combinations rather than
+        # adding jobs of its own.
         include:
-          - image: lumia-backend
-            file: docker/lumia-backend/Dockerfile
-          - image: lumia-web
-            file: docker/lumia-web/Dockerfile
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            suffix: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            suffix: arm64
     steps:
       - uses: actions/checkout@v7
 
-      - uses: docker/setup-qemu-action@v4
       - uses: docker/setup-buildx-action@v4
 
       - uses: docker/login-action@v4
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/${{ matrix.image }}/Dockerfile
+          platforms: ${{ matrix.platform }}
+          # By digest only: the human-readable tags are attached to the manifest list below,
+          # so a half-finished release never leaves "latest" pointing at one architecture.
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.image }}-${{ matrix.suffix }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}-${{ matrix.suffix }}
+
+      - name: Export the digest
+        run: |
+          mkdir -p /tmp/digests
+          echo "${{ steps.build.outputs.digest }}" > "/tmp/digests/${{ matrix.image }}-${{ matrix.suffix }}"
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: digest-${{ matrix.image }}-${{ matrix.suffix }}
+          path: /tmp/digests/${{ matrix.image }}-${{ matrix.suffix }}
+          retention-days: 1
+
+  merge-manifest:
+    name: Tag ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        image: [lumia-backend, lumia-web]
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          pattern: digest-${{ matrix.image }}-*
+          path: /tmp/digests
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image }}
           # edge follows main; the semver tags only appear on a v* tag, so "latest" always
           # means the newest release rather than the newest commit.
           tags: |
@@ -52,15 +111,22 @@ jobs:
             type=semver,pattern={{major}}
             type=sha,format=short
 
-      # arm64 as well as amd64: a large share of self-hosting happens on a Raspberry Pi or an
-      # ARM NAS, and an amd64-only image is simply unusable there.
-      - uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: ${{ matrix.file }}
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ matrix.image }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+      - name: Create the manifest list
+        run: |
+          set -euo pipefail
+          image="${REGISTRY}/${{ github.repository_owner }}/${{ matrix.image }}"
+          sources=""
+          for file in /tmp/digests/*; do
+            sources="${sources} ${image}@$(cat "${file}")"
+          done
+          # shellcheck disable=SC2086
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "${DOCKER_METADATA_OUTPUT_JSON}") \
+            ${sources}
+        env:
+          DOCKER_METADATA_OUTPUT_JSON: ${{ steps.meta.outputs.json }}
+
+      - name: Show what was published
+        run: |
+          docker buildx imagetools inspect \
+            "${REGISTRY}/${{ github.repository_owner }}/${{ matrix.image }}:${{ steps.meta.outputs.version }}"
