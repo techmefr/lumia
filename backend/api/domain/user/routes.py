@@ -18,9 +18,13 @@ from api.domain.user.exceptions import (
     InvalidMagicLinkTokenError,
     InvalidRefreshTokenError,
     InvalidSsoLoginAttemptError,
+    InvalidTotpCodeError,
     LastAdminError,
     SsoNotConfiguredError,
     SsoSubjectMismatchError,
+    TotpAlreadyEnabledError,
+    TotpNotEnrolledError,
+    TotpRequiredError,
 )
 from api.domain.user.invitation_service import (
     accept_invitation,
@@ -54,13 +58,28 @@ from api.domain.user.schemas import (
     PasswordChangeRequest,
     PasswordResetRequest,
     RefreshRequest,
+    SecondFactorFields,
     SsoCallbackRequest,
     TokenPairResponse,
+    TotpConfirmRequest,
+    TotpDisableRequest,
+    TotpEnrolmentResponse,
+    TotpRecoveryCodesResponse,
 )
 from api.domain.user.sso_service import (
     SsoConfiguration,
     get_or_create_sso_user,
     read_sso_configuration,
+)
+from api.domain.user.totp_service import (
+    SecondFactor,
+    begin_enrolment,
+    confirm_enrolment,
+    count_unused_recovery_codes,
+    disable_totp,
+    is_totp_enabled,
+    regenerate_recovery_codes,
+    verify_second_factor,
 )
 from api.technical.auth.hashing import hash_password, verify_password
 from api.technical.auth.jwt import create_access_token
@@ -102,6 +121,40 @@ async def _enforce_token_guessing_limit(
         max_attempts=config.token_max_attempts,
         window=timedelta(minutes=config.token_window_minutes),
     )
+
+
+#: Told apart from a wrong code so the sign-in form knows to ask for one. It says only that the
+#: account has a second factor, which the caller has already proved the first factor of.
+TOTP_REQUIRED_DETAIL = "totp_required"
+INVALID_TOTP_DETAIL = "invalid_totp_code"
+
+
+async def _enforce_totp_limit(
+    limiter: RateLimiter, request: Request, *, account: str, scope: str = "totp"
+) -> None:
+    """Caps the routes that check a six-digit code.
+
+    Each of them counts against its own scope: a reader setting an authenticator up types the
+    wrong code often enough, and spending the sign-in allowance on it would lock them out of the
+    account they are in the middle of protecting.
+    """
+    config = get_rate_limit_config()
+    await enforce(
+        limiter,
+        scope=scope,
+        identifiers={"ip": client_address(request), "account": account},
+        max_attempts=config.totp_max_attempts,
+        window=timedelta(minutes=config.totp_window_minutes),
+    )
+
+
+def _second_factor(payload: SecondFactorFields) -> SecondFactor:
+    return SecondFactor(code=payload.totp_code, recovery_code=payload.recovery_code)
+
+
+def _totp_failure(exc: Exception) -> HTTPException:
+    detail = TOTP_REQUIRED_DETAIL if isinstance(exc, TotpRequiredError) else INVALID_TOTP_DETAIL
+    return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
 
 
 async def _issue_token_pair(session: AsyncSession, user_id: UUID) -> TokenPairResponse:
@@ -255,6 +308,13 @@ async def login(
     ):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
+    if is_totp_enabled(user):
+        await _enforce_totp_limit(limiter, request, account=str(user.id))
+        try:
+            await verify_second_factor(session, user, _second_factor(payload))
+        except (TotpRequiredError, InvalidTotpCodeError) as exc:
+            raise _totp_failure(exc) from exc
+
     return await _issue_token_pair(session, user.id)
 
 
@@ -319,9 +379,13 @@ async def verify_magic_link(
 ) -> TokenPairResponse:
     await _enforce_token_guessing_limit(limiter, request, scope="magic-link-verify")
     try:
-        user_id = await verify_magic_link_token(session, payload.token)
+        user_id = await verify_magic_link_token(
+            session, payload.token, second_factor=_second_factor(payload)
+        )
     except InvalidMagicLinkTokenError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
+    except (TotpRequiredError, InvalidTotpCodeError) as exc:
+        raise _totp_failure(exc) from exc
     return await _issue_token_pair(session, user_id)
 
 
@@ -335,9 +399,16 @@ async def reset_forgotten_password(
     """Unauthenticated on purpose: the magic-link token is the credential of a reader locked out."""
     await _enforce_token_guessing_limit(limiter, request, scope="password-reset")
     try:
-        user_id = await reset_password(session, payload.token, payload.new_password)
+        user_id = await reset_password(
+            session,
+            payload.token,
+            payload.new_password,
+            second_factor=_second_factor(payload),
+        )
     except InvalidMagicLinkTokenError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
+    except (TotpRequiredError, InvalidTotpCodeError) as exc:
+        raise _totp_failure(exc) from exc
     return await _issue_token_pair(session, user_id)
 
 
@@ -450,13 +521,15 @@ async def sso_callback(
     return await _issue_token_pair(session, user.id)
 
 
-def _to_me_response(user: User) -> MeResponse:
+async def _to_me_response(session: AsyncSession, user: User) -> MeResponse:
     return MeResponse(
         id=user.id,
         email=user.email,
         username=user.username,
         role=user.role,
         password_set=user.password_hash is not None,
+        totp_enabled=is_totp_enabled(user),
+        recovery_codes_left=await count_unused_recovery_codes(session, user),
         theme=user.theme,
         orbit_position=user.orbit_position,
         font_base_size=user.font_base_size,
@@ -474,8 +547,11 @@ def _to_me_response(user: User) -> MeResponse:
 
 
 @router.get("/me", response_model=MeResponse)
-async def get_me(user: User = Depends(get_current_user)) -> MeResponse:
-    return _to_me_response(user)
+async def get_me(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> MeResponse:
+    return await _to_me_response(session, user)
 
 
 @router.get("/me/export", response_model=AccountExportResponse)
@@ -517,6 +593,110 @@ async def change_my_password(
     except InvalidCurrentPasswordError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
     return await _issue_token_pair(session, user.id)
+
+
+@router.post(
+    "/me/totp/enrolment",
+    response_model=TotpEnrolmentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def start_totp_enrolment(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> TotpEnrolmentResponse:
+    """Draws a secret for an authenticator to store; nothing is switched on until it is confirmed."""
+    try:
+        enrolment = await begin_enrolment(session, user)
+    except TotpAlreadyEnabledError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="two-factor sign-in is already on for this account",
+        ) from exc
+    return TotpEnrolmentResponse(secret=enrolment.secret, otpauth_uri=enrolment.otpauth_uri)
+
+
+@router.post("/me/totp", response_model=TotpRecoveryCodesResponse)
+async def confirm_totp_enrolment(
+    payload: TotpConfirmRequest,
+    request: Request,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
+) -> TotpRecoveryCodesResponse:
+    """Turns the second factor on, against a code the authenticator has just produced.
+
+    The recovery codes come back here and nowhere else. Without this confirmation step an
+    authenticator set up against the wrong secret would lock the account out with no way back.
+    """
+    await _enforce_totp_limit(limiter, request, account=str(user.id), scope="totp-enrolment")
+    try:
+        codes = await confirm_enrolment(session, user, payload.code)
+    except TotpAlreadyEnabledError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT) from exc
+    except TotpNotEnrolledError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="start an enrolment before confirming it",
+        ) from exc
+    except InvalidTotpCodeError as exc:
+        raise _totp_failure(exc) from exc
+    return TotpRecoveryCodesResponse(recovery_codes=codes)
+
+
+@router.post("/me/totp/recovery-codes", response_model=TotpRecoveryCodesResponse)
+async def renew_recovery_codes(
+    payload: TotpConfirmRequest,
+    request: Request,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
+) -> TotpRecoveryCodesResponse:
+    """Replaces the whole set, against a live code: the old ones stop working straight away."""
+    await _enforce_totp_limit(limiter, request, account=str(user.id), scope="totp-enrolment")
+    try:
+        await verify_second_factor(session, user, SecondFactor(code=payload.code))
+        codes = await regenerate_recovery_codes(session, user)
+    except TotpNotEnrolledError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT) from exc
+    except (TotpRequiredError, InvalidTotpCodeError) as exc:
+        raise _totp_failure(exc) from exc
+    return TotpRecoveryCodesResponse(recovery_codes=codes)
+
+
+@router.delete("/me/totp", status_code=status.HTTP_204_NO_CONTENT)
+async def disable_my_totp(
+    payload: TotpDisableRequest,
+    request: Request,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
+) -> None:
+    """Turns the second factor off, and asks the reader to prove themselves again first.
+
+    An access token alone must not be enough: it is exactly what someone who walked up to an
+    unlocked screen has, and removing the second factor is the one action that undoes the
+    protection for every sign-in afterwards.
+    """
+    if not is_totp_enabled(user):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT)
+
+    await _enforce_totp_limit(limiter, request, account=str(user.id), scope="totp-disable")
+    if user.password_hash is not None:
+        if not (payload.password and verify_password(payload.password, user.password_hash)):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    else:
+        # An SSO or magic-link account has no password to give; the authenticator it is about to
+        # give up is the only thing left to prove with.
+        try:
+            await verify_second_factor(
+                session,
+                user,
+                SecondFactor(code=payload.totp_code, recovery_code=payload.recovery_code),
+            )
+        except (TotpRequiredError, InvalidTotpCodeError) as exc:
+            raise _totp_failure(exc) from exc
+
+    await disable_totp(session, user)
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
@@ -587,4 +767,4 @@ async def update_me(
         )
 
     await session.commit()
-    return _to_me_response(user)
+    return await _to_me_response(session, user)

@@ -1,5 +1,6 @@
 from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime
+from uuid import UUID
 
 import httpx
 from sqlalchemy import select
@@ -9,6 +10,7 @@ from api.domain.feed.models import Feed, SourceType
 from worker.technical.connectors.miniflux_client import (
     MinifluxKnownFeed,
     get_feed,
+    refresh_all_feeds,
     refresh_feed,
 )
 
@@ -107,13 +109,45 @@ async def refresh_feed_now(
 
     A refresh Miniflux runs synchronously updates its own record immediately, so re-reading the
     feed straight after is enough — no need to wait for the next scheduled sync.
+
+    What this does not do is produce articles: Miniflux hands new entries to Lumia over the
+    webhook, which lands after this call has already returned. last_refreshed_at therefore records
+    that a fetch was asked for, and the caller must not present it as articles having arrived.
     """
+    now = datetime.now(UTC)
     await refresh_feed(int(feed.external_feed_id), transport=transport)
     detail = await get_feed(int(feed.external_feed_id), transport=transport)
     apply_feed_status(
         feed,
         error_count=detail.parsing_error_count,
         error_message=detail.parsing_error_message,
-        now=datetime.now(UTC),
+        now=now,
     )
+    feed.last_refreshed_at = now
     await session.commit()
+
+
+async def refresh_all_feeds_now(
+    session: AsyncSession, user_id: UUID, *, transport: httpx.AsyncBaseTransport | None
+) -> int:
+    """Asks Miniflux to fetch everything it polls, and stamps this reader's feeds as requested.
+
+    Miniflux refreshes per account, not per Lumia reader, so this is deliberately coarse: on a
+    shared instance one reader's "refresh everything" fetches feeds that belong to others too.
+    That is the reason the route above it is rate limited far more tightly than the single-feed one.
+
+    No error status is re-read here. Miniflux queues this batch and returns before the fetches
+    finish, so anything read straight after would be the state from before the refresh; the
+    15-minute sync_feed_error_status cron is what settles it.
+    """
+    await refresh_all_feeds(transport=transport)
+    now = datetime.now(UTC)
+    feeds: Sequence[Feed] = (
+        await session.scalars(
+            select(Feed).where(Feed.user_id == user_id, Feed.source_type == SourceType.MINIFLUX)
+        )
+    ).all()
+    for feed in feeds:
+        feed.last_refreshed_at = now
+    await session.commit()
+    return len(feeds)

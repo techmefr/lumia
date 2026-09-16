@@ -17,8 +17,15 @@ def test_the_worker_schedules_every_pass_it_defines() -> None:
         "cron:reconcile_recent_articles",
         "cron:purge_expired_tokens",
         "cron:sync_feed_error_status",
+        "cron:refresh_due_feeds",
         "cron:send_reader_digests",
     }
+
+
+def test_the_scheduled_refresh_ticks_at_the_shortest_interval_a_feed_can_be_given() -> None:
+    """At a coarser tick, a feed set to the 5-minute minimum would silently get a slower pace."""
+    by_name = {job.name: job for job in WorkerSettings.cron_jobs}
+    assert by_name["cron:refresh_due_feeds"].minute == set(range(0, 60, 5))
 
 
 def test_the_reconciliation_runs_every_hour_and_the_purge_once_a_night() -> None:

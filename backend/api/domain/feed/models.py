@@ -40,3 +40,16 @@ class Feed(Base, TimestampMixin):
     error_count: Mapped[int] = mapped_column(default=0)
     error_reason: Mapped[str | None] = mapped_column(default=None)
     error_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+
+    # How often this feed should be fetched, in minutes, or None to leave it to whatever pace
+    # Miniflux picks. It is held here rather than pushed to Miniflux because Miniflux has no
+    # per-feed interval to push to: its FeedModificationRequest carries no such field, and
+    # next_check_at is computed from instance-wide POLLING_SCHEDULER settings. A cron job turns
+    # this into a refresh nudge, so Miniflux still does every fetch and parse.
+    refresh_interval_minutes: Mapped[int | None] = mapped_column(default=None)
+    # When a refresh was last asked for, whoever asked. Drives both the interval scheduler and the
+    # "last checked" the reader sees; it is not a promise that articles arrived, only that a fetch
+    # was requested, since entries reach Lumia by webhook moments later.
+    last_refreshed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
+    )

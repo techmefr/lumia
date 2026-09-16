@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.user.exceptions import InvalidMagicLinkTokenError
 from api.domain.user.models import MagicLinkPurpose, MagicLinkToken, User
+from api.domain.user.totp_service import SecondFactor, verify_second_factor
 from api.technical.auth.tokens import generate_opaque_token, hash_token
 from api.technical.email.messages import render_magic_link_email
 from api.technical.email.smtp import send_email
@@ -61,12 +62,24 @@ async def request_magic_link(
     )
 
 
-async def verify_magic_link_token(session: AsyncSession, raw_token: str) -> UUID:
+async def verify_magic_link_token(
+    session: AsyncSession, raw_token: str, *, second_factor: SecondFactor | None = None
+) -> UUID:
+    """Spends a magic-link token, and the second factor with it when the account has one.
+
+    The token is only marked used once the second factor has passed: a reader whose authenticator
+    is out of sync would otherwise burn their link on a failed attempt and have to ask for another.
+    """
     stored = await session.scalar(
         select(MagicLinkToken).where(MagicLinkToken.token == hash_token(raw_token))
     )
     if stored is None or stored.used_at is not None or stored.expires_at < datetime.now(UTC):
         raise InvalidMagicLinkTokenError
+
+    user = await session.get(User, stored.user_id)
+    if user is None:  # pragma: no cover - a token cannot outlive the account it belongs to
+        raise InvalidMagicLinkTokenError
+    await verify_second_factor(session, user, second_factor)
 
     stored.used_at = datetime.now(UTC)
     await session.commit()

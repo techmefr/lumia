@@ -1,4 +1,5 @@
 import { goto } from '$app/navigation';
+import { ApiError } from '@lumia/core';
 import { render, waitFor } from '@testing-library/svelte';
 import { fireEvent } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -40,6 +41,10 @@ function loginPage() {
 	return {
 		container,
 		loginForm: () => q<HTMLFormElement>('[data-test-login-form]'),
+		totpForm: () => q<HTMLFormElement>('[data-test-totp-form]'),
+		totpCode: () => q<HTMLInputElement>('[data-test-totp-code]'),
+		recoveryCode: () => q<HTMLInputElement>('[data-test-recovery-code]'),
+		toggleRecovery: () => q<HTMLButtonElement>('[data-test-toggle-recovery]'),
 		magicToggle: () => q<HTMLButtonElement>('[data-test-magic-toggle]')!,
 		forgotPassword: () => q<HTMLButtonElement>('[data-test-forgot-password]')!,
 		resetHint: () => q('[data-test-reset-hint]'),
@@ -75,7 +80,7 @@ describe('signing in with a password', () => {
 		await fireEvent.submit(view.loginForm()!);
 		await waitFor(() => expect(goto).toHaveBeenCalled());
 
-		expect(api.login).toHaveBeenCalledWith('reader@example.test', 'hunter2');
+		expect(api.login).toHaveBeenCalledWith('reader@example.test', 'hunter2', {});
 		expect(String(vi.mocked(goto).mock.calls[0][0])).toContain('/articles');
 	});
 
@@ -176,5 +181,110 @@ describe('opening the page from the emailed link', () => {
 		await waitFor(() => expect(view.loginForm()).not.toBeNull());
 
 		expect(goto).not.toHaveBeenCalled();
+	});
+});
+
+describe('the second factor', () => {
+	async function signIn(view: ReturnType<typeof loginPage>) {
+		await fireEvent.input(view.email(), { target: { value: 'reader@example.test' } });
+		await fireEvent.input(view.password(), { target: { value: 'hunter2' } });
+		await fireEvent.submit(view.loginForm()!);
+	}
+
+	function refused(detail: string) {
+		return new ApiError(401, { detail });
+	}
+
+	it('asks for a code once the backend says the account has one', async () => {
+		api.login.mockRejectedValue(refused('totp_required'));
+		const view = loginPage();
+
+		await signIn(view);
+		await waitFor(() => expect(view.totpForm()).not.toBeNull());
+
+		expect(view.loginForm()).toBeNull();
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it('says nothing about a second factor before the backend brings it up', async () => {
+		api.login.mockResolvedValue(undefined);
+		const view = loginPage();
+
+		await signIn(view);
+
+		expect(view.totpForm()).toBeNull();
+	});
+
+	it('sends the code along with the first factor', async () => {
+		api.login.mockRejectedValueOnce(refused('totp_required')).mockResolvedValueOnce(undefined);
+		const view = loginPage();
+		await signIn(view);
+		await waitFor(() => expect(view.totpCode()).not.toBeNull());
+
+		await fireEvent.input(view.totpCode()!, { target: { value: '123456' } });
+		await fireEvent.submit(view.totpForm()!);
+		await waitFor(() => expect(goto).toHaveBeenCalled());
+
+		expect(api.login).toHaveBeenLastCalledWith('reader@example.test', 'hunter2', {
+			totp_code: '123456'
+		});
+	});
+
+	it('keeps asking and says so when the code is wrong', async () => {
+		api.login.mockRejectedValue(refused('invalid_totp_code'));
+		const view = loginPage();
+		await signIn(view);
+		await waitFor(() => expect(view.totpCode()).not.toBeNull());
+
+		await fireEvent.input(view.totpCode()!, { target: { value: '000000' } });
+		await fireEvent.submit(view.totpForm()!);
+		await waitFor(() => expect(view.error()).not.toBeNull());
+
+		expect(view.totpForm()).not.toBeNull();
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it('offers a recovery code for a reader without their authenticator', async () => {
+		api.login.mockRejectedValueOnce(refused('totp_required')).mockResolvedValueOnce(undefined);
+		const view = loginPage();
+		await signIn(view);
+		await waitFor(() => expect(view.toggleRecovery()).not.toBeNull());
+
+		await fireEvent.click(view.toggleRecovery()!);
+		await fireEvent.input(view.recoveryCode()!, { target: { value: 'aaaa-bbbb' } });
+		await fireEvent.submit(view.totpForm()!);
+		await waitFor(() => expect(goto).toHaveBeenCalled());
+
+		expect(api.login).toHaveBeenLastCalledWith('reader@example.test', 'hunter2', {
+			recovery_code: 'aaaa-bbbb'
+		});
+	});
+
+	// A magic link proves control of the mailbox, which is what the second factor is there to stop
+	// being enough on its own.
+	it('challenges a magic link that lands on an account with a second factor', async () => {
+		searchParams = new URLSearchParams({ magic_token: 'the-token' });
+		api.verifyMagicLink.mockRejectedValueOnce(refused('totp_required'));
+		const view = loginPage();
+
+		await waitFor(() => expect(view.totpForm()).not.toBeNull());
+
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it('retries the same magic link with the code rather than asking for the password', async () => {
+		searchParams = new URLSearchParams({ magic_token: 'the-token' });
+		api.verifyMagicLink
+			.mockRejectedValueOnce(refused('totp_required'))
+			.mockResolvedValueOnce(undefined);
+		const view = loginPage();
+		await waitFor(() => expect(view.totpCode()).not.toBeNull());
+
+		await fireEvent.input(view.totpCode()!, { target: { value: '123456' } });
+		await fireEvent.submit(view.totpForm()!);
+		await waitFor(() => expect(goto).toHaveBeenCalled());
+
+		expect(api.verifyMagicLink).toHaveBeenLastCalledWith('the-token', { totp_code: '123456' });
+		expect(api.login).not.toHaveBeenCalled();
 	});
 });
