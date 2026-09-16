@@ -19,6 +19,28 @@ export type PreferredLanguage =
 /** What a magic link was asked for, which decides the screen its email lands on. */
 export type MagicLinkPurpose = 'sign_in' | 'password_reset';
 
+/**
+ * What a reader offers when their account asks for a second factor: a six-digit code from the
+ * authenticator, or one of the recovery codes handed out at enrolment. Never both.
+ */
+export interface SecondFactor {
+	totp_code?: string;
+	recovery_code?: string;
+}
+
+/** The draft secret, in the two forms an authenticator takes: scanned, or typed by hand. */
+export interface TotpEnrolment {
+	secret: string;
+	otpauth_uri: string;
+}
+
+export interface TotpRecoveryCodes {
+	recovery_codes: string[];
+}
+
+/** Why a sign-in was refused, when it was refused for the second factor rather than the first. */
+export type SecondFactorFailure = 'totp_required' | 'invalid_totp_code';
+
 export interface TokenPair {
 	access_token: string;
 	refresh_token: string;
@@ -32,6 +54,9 @@ export interface Me {
 	role: Role;
 	/** Whether a password can be changed or has yet to be set: SSO accounts have none. */
 	password_set: boolean;
+	totp_enabled: boolean;
+	/** How many recovery codes are still good, so a reader down to their last can be warned. */
+	recovery_codes_left: number;
 	theme: Theme;
 	orbit_position: OrbitPosition;
 	font_base_size: number;

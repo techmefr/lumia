@@ -16,6 +16,10 @@ class RateLimitConfig(BaseSettings):
     magic_link_window_minutes: int = 15
     token_max_attempts: int = 30
     token_window_minutes: int = 15
+    # Tighter than a password: six digits is a million guesses, and the reader trying them already
+    # holds the first factor, so every allowed attempt is one an attacker has bought.
+    totp_max_attempts: int = 5
+    totp_window_minutes: int = 15
     # The shipped nginx sets X-Forwarded-For; a deployment that exposes the API directly must turn
     # this off, or a caller can pick their own address by sending the header themselves.
     trust_proxy_headers: bool = True

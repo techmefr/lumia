@@ -151,6 +151,8 @@ function initialState(): DemoState {
 			username: 'Démo',
 			role: 'admin',
 			password_set: true,
+			totp_enabled: false,
+			recovery_codes_left: 0,
 			theme: 'system',
 			orbit_position: 'right',
 			font_base_size: 16,
@@ -453,6 +455,12 @@ export function createDemoClient(): LumiaClient {
 			verifyMagicLink: async () => settle(undefined),
 			changePassword: async () => settle(undefined),
 			resetPassword: async () => settle(undefined),
+			// The demo has no backend to enrol against, so the panel simply reports the account as
+			// unprotected and every action refuses rather than pretending to have turned it on.
+			startTotpEnrolment: async () => settle({ secret: '', otpauth_uri: '' }),
+			confirmTotpEnrolment: async () => settle([]),
+			renewRecoveryCodes: async () => settle([]),
+			disableTotp: async () => settle(undefined),
 			getMe: async () => settle({ ...state.me }),
 			updateMe: async (payload: MeUpdate) => {
 				const { ai_api_key, translation_api_key, ...rest } = payload;
