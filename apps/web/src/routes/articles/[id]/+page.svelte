@@ -346,6 +346,24 @@
 						{translation}
 						onchange={(next) => (translation = next)}
 					/>
+					<!-- Also in the orbit menu, deliberately. The orbit button is a thumb-zone
+					     affordance; reading aloud is a headline feature and should not cost an
+					     extra tap on a pointer device. -->
+					{#if speech.supported}
+						<button
+							data-test-listen
+							onclick={toggleSpeech}
+							aria-pressed={speech.speaking && !speech.paused}
+							class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+						>
+							{#if speech.speaking && !speech.paused}
+								<Square class="size-3.5" />
+							{:else}
+								<Volume2 class="size-3.5" />
+							{/if}
+							{speechLabel()}
+						</button>
+					{/if}
 				</div>
 
 				<div class="mt-3 flex flex-wrap items-center gap-1.5">
