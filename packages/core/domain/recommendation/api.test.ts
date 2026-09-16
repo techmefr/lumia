@@ -66,6 +66,32 @@ describe('markRead', () => {
 	});
 });
 
+describe('bulkFeedback', () => {
+	it('posts the axis, the value and the scope in one request', async () => {
+		const { recommendation, last } = api([{ updated: 3, changed_article_ids: ['a'] }]);
+		await recommendation.bulkFeedback({ article_ids: ['a', 'b', 'c'], axis: 'saved', value: true });
+		expect(last()).toMatchObject({
+			path: '/articles/bulk-feedback',
+			method: 'POST',
+			body: { article_ids: ['a', 'b', 'c'], axis: 'saved', value: true }
+		});
+	});
+
+	// The undo reverts exactly what moved, so the changed ids have to come back untouched.
+	it('returns the ids the backend says it changed', async () => {
+		const { recommendation } = api([{ updated: 3, changed_article_ids: ['a', 'c'] }]);
+		await expect(
+			recommendation.bulkFeedback({ article_ids: ['a', 'b', 'c'], axis: 'read' })
+		).resolves.toEqual({ updated: 3, changed_article_ids: ['a', 'c'] });
+	});
+
+	it('sends a wider scope as given, so the backend decides what it covers', async () => {
+		const { recommendation, last } = api([{ updated: 40, changed_article_ids: [] }]);
+		await recommendation.bulkFeedback({ feed_id: 'feed-1', axis: 'favorite', value: false });
+		expect(last().body).toEqual({ feed_id: 'feed-1', axis: 'favorite', value: false });
+	});
+});
+
 describe('the filter rules', () => {
 	it('lists them', async () => {
 		const { recommendation, last } = api([[]]);

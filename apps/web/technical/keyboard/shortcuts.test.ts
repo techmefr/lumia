@@ -237,3 +237,28 @@ describe('bindSequenceShortcuts', () => {
 		expect(seen).toEqual([]);
 	});
 });
+
+describe('shifted shortcuts', () => {
+	it('prefers the shifted handler when shift is held', () => {
+		const seen: string[] = [];
+		bind({ j: () => seen.push('move'), 'shift+j': () => seen.push('extend') });
+		press('J', { shiftKey: true });
+		expect(seen).toEqual(['extend']);
+	});
+
+	it('leaves the unshifted handler alone when shift is not held', () => {
+		const seen: string[] = [];
+		bind({ j: () => seen.push('move'), 'shift+j': () => seen.push('extend') });
+		press('j');
+		expect(seen).toEqual(['move']);
+	});
+
+	// `/` and `?` need shift on most layouts, so a shifted press still falls back to the plain
+	// entry rather than being swallowed.
+	it('falls back to the plain handler when there is no shifted one', () => {
+		const seen: string[] = [];
+		bind({ '/': () => seen.push('search') });
+		press('/', { shiftKey: true });
+		expect(seen).toEqual(['search']);
+	});
+});

@@ -1,6 +1,13 @@
 import type { HttpClient } from '../../technical/http-client';
 import type { ArticleSummary } from '../article/types';
-import type { FeedbackUpdate, FilterMode, FilterRule, MarkReadScope } from './types';
+import type {
+	BulkFeedbackRequest,
+	BulkFeedbackResult,
+	FeedbackUpdate,
+	FilterMode,
+	FilterRule,
+	MarkReadScope
+} from './types';
 
 export function createRecommendationApi(http: HttpClient) {
 	async function getEtincelle(limit = 20, offset = 0): Promise<ArticleSummary[]> {
@@ -26,6 +33,14 @@ export function createRecommendationApi(http: HttpClient) {
 		});
 	}
 
+	/** Applies one feedback axis over one scope. The backend takes it whole or not at all. */
+	async function bulkFeedback(request: BulkFeedbackRequest): Promise<BulkFeedbackResult> {
+		return http.request<BulkFeedbackResult>('/articles/bulk-feedback', {
+			method: 'POST',
+			body: request
+		});
+	}
+
 	async function listFilterRules(): Promise<FilterRule[]> {
 		return http.request<FilterRule[]>('/filter-rules');
 	}
@@ -44,6 +59,7 @@ export function createRecommendationApi(http: HttpClient) {
 		getFavorites,
 		sendFeedback,
 		markRead,
+		bulkFeedback,
 		listFilterRules,
 		addFilterRule,
 		deleteFilterRule

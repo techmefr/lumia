@@ -20,6 +20,18 @@ export interface ArticleSummary {
 	relevance_score: number;
 }
 
+/**
+ * What a bulk action applies to. Exactly one of the four must be set: the backend answers 422
+ * otherwise, so a forgotten filter can never widen an action to the whole library.
+ */
+export interface ArticleScope {
+	article_ids?: string[];
+	feed_id?: string;
+	folder_id?: string;
+	/** Every article across every feed, not just the ones currently loaded on screen. */
+	all?: boolean;
+}
+
 export interface Keyword {
 	id: string;
 	term: string;

@@ -3,6 +3,7 @@ import { render, waitFor } from '@testing-library/svelte';
 import { fireEvent } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { goto } from '$app/navigation';
+import { toasts } from '@lumia/ui';
 import { lumia } from '$technical/api/client';
 import ArticlesPage from './+page.svelte';
 
@@ -24,7 +25,8 @@ vi.mock('$technical/api/client', () => ({
 		user: { isAuthenticated: () => true },
 		article: { listArticles: vi.fn() },
 		feed: { listFolders: vi.fn(), listFeeds: vi.fn(), getUnreadCounts: vi.fn() },
-		recommendation: { markRead: vi.fn(), sendFeedback: vi.fn() }
+		recommendation: { markRead: vi.fn(), sendFeedback: vi.fn(), bulkFeedback: vi.fn() },
+		playlist: { listPlaylists: vi.fn(), bulkSetItems: vi.fn() }
 	}
 }));
 
@@ -87,7 +89,13 @@ function articlesPage() {
 		searchClear: () => q<HTMLButtonElement>('[data-test-search-clear]'),
 		searchStatus: () => q('[data-test-search-status]'),
 		kioskButton: () =>
-			[...container.querySelectorAll<HTMLButtonElement>('[data-test-display-mode] button')][1]
+			[...container.querySelectorAll<HTMLButtonElement>('[data-test-display-mode] button')][1],
+		selectionToggle: () => q<HTMLButtonElement>('[data-test-selection-toggle]'),
+		selectionBar: () => q('[data-test-selection-bar]'),
+		selectionCount: () => q('[data-test-selection-count]'),
+		checkbox: (id: string) => q<HTMLInputElement>(`[data-test-select-article="${id}"]`),
+		bulkMarkRead: () => q<HTMLButtonElement>('[data-test-selection-read]'),
+		bulkSave: () => q<HTMLButtonElement>('[data-test-selection-save]')
 	};
 }
 
@@ -104,6 +112,12 @@ beforeEach(() => {
 	vi.mocked(api.feed.listFolders).mockResolvedValue([]);
 	vi.mocked(api.feed.listFeeds).mockResolvedValue([]);
 	vi.mocked(api.feed.getUnreadCounts).mockResolvedValue({ total: 0, feeds: {}, folders: {} });
+	vi.mocked(api.playlist.listPlaylists).mockResolvedValue([]);
+	vi.mocked(api.recommendation.bulkFeedback).mockResolvedValue({
+		updated: 1,
+		changed_article_ids: ['a']
+	});
+	toasts.toasts = [];
 });
 
 afterEach(() => {
@@ -234,5 +248,111 @@ describe('searching articles', () => {
 			expect((calls.at(0)?.[0] as { query?: string }).query).toBe('borrow');
 		});
 		expect(view.searchInput()?.value).toBe('borrow');
+	});
+});
+
+describe('acting on a selection of articles', () => {
+	beforeEach(() => stubViewport(false));
+
+	async function withSelection() {
+		const view = articlesPage();
+		await waitFor(() => expect(view.selectionToggle()).not.toBeNull());
+		await fireEvent.click(view.selectionToggle() as HTMLButtonElement);
+		await waitFor(() => expect(view.checkbox('a')).not.toBeNull());
+		await fireEvent.click(view.checkbox('a') as HTMLInputElement);
+		await waitFor(() => expect(view.selectionCount()?.textContent?.trim()).toBe(
+			'1 article(s) selected'
+		));
+		return view;
+	}
+
+	// At rest the list carries no checkbox and no bar: the feature costs nothing to a reader who
+	// never uses it.
+	it('shows neither the bar nor the checkboxes until selection mode is on', async () => {
+		const view = articlesPage();
+		await waitFor(() => expect(api.article.listArticles).toHaveBeenCalled());
+
+		expect(view.selectionBar()).toBeNull();
+		expect(view.checkbox('a')).toBeNull();
+	});
+
+	it('counts what is selected out loud', async () => {
+		const view = await withSelection();
+		await fireEvent.click(view.checkbox('b') as HTMLInputElement);
+
+		await waitFor(() =>
+			expect(view.selectionCount()?.textContent?.trim()).toBe('2 article(s) selected')
+		);
+	});
+
+	// The endpoint takes exactly one scope. Sending the ids and only the ids is what keeps a filter
+	// left on screen from widening the action to a feed, or to the whole library.
+	it('sends the selected ids as the only scope of the action', async () => {
+		const view = await withSelection();
+
+		await fireEvent.click(view.bulkMarkRead() as HTMLButtonElement);
+
+		await waitFor(() => expect(api.recommendation.bulkFeedback).toHaveBeenCalled());
+		expect(api.recommendation.bulkFeedback).toHaveBeenCalledWith({
+			article_ids: ['a'],
+			axis: 'read',
+			value: true
+		});
+	});
+
+	it('touches one axis per action, never the others', async () => {
+		const view = await withSelection();
+
+		await fireEvent.click(view.bulkSave() as HTMLButtonElement);
+
+		await waitFor(() => expect(api.recommendation.bulkFeedback).toHaveBeenCalled());
+		expect(api.recommendation.bulkFeedback).toHaveBeenCalledWith({
+			article_ids: ['a'],
+			axis: 'saved',
+			value: true
+		});
+	});
+
+	it('offers an undo that puts back exactly what the backend says it changed', async () => {
+		vi.mocked(api.recommendation.bulkFeedback).mockResolvedValue({
+			updated: 2,
+			changed_article_ids: ['b']
+		});
+		const view = await withSelection();
+		await fireEvent.click(view.bulkMarkRead() as HTMLButtonElement);
+		await waitFor(() => expect(toasts.toasts.at(-1)?.action).toBeDefined());
+
+		await toasts.toasts.at(-1)?.action?.run();
+
+		expect(api.recommendation.bulkFeedback).toHaveBeenLastCalledWith({
+			article_ids: ['b'],
+			axis: 'read',
+			value: false
+		});
+	});
+
+	it('says the action failed and offers no undo when the call did not go through', async () => {
+		vi.mocked(api.recommendation.bulkFeedback).mockRejectedValue(new Error('down'));
+		const view = await withSelection();
+
+		await fireEvent.click(view.bulkMarkRead() as HTMLButtonElement);
+
+		await waitFor(() => expect(toasts.toasts.at(-1)?.tone).toBe('destructive'));
+		expect(toasts.toasts.at(-1)?.action).toBeUndefined();
+	});
+
+	// A selection that silently survived a change of feed or search would arm a bulk action on
+	// articles the reader never saw.
+	it('empties the selection when the list is reloaded under a new search', async () => {
+		const view = await withSelection();
+
+		await fireEvent.input(view.searchInput() as HTMLInputElement, {
+			target: { value: 'kubernetes' }
+		});
+		await fireEvent.click(view.searchSubmit() as HTMLButtonElement);
+
+		await waitFor(() =>
+			expect(view.selectionCount()?.textContent?.trim()).toBe('No article selected')
+		);
 	});
 });
