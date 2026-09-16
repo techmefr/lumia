@@ -54,6 +54,10 @@ services:
       RUN_MIGRATIONS: 1
       WEBHOOK_URL: http://lumia-backend-api:8000/webhooks/miniflux
       WEBHOOK_SECRET: ${MINIFLUX_WEBHOOK_SECRET}
+      # lumia-backend-api resolves to a compose-internal address, and Miniflux refuses to call
+      # a private IP from an integration unless told to. Without this every webhook is dropped
+      # before it leaves Miniflux and no article ever reaches the reader.
+      INTEGRATION_ALLOW_PRIVATE_NETWORKS: 1
       ADMIN_USERNAME: ${MINIFLUX_USERNAME}
       ADMIN_PASSWORD: ${MINIFLUX_PASSWORD}
       CREATE_ADMIN: 1
@@ -135,6 +139,9 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://lumia:${POSTGRES_PASSWORD}@postgres/lumia
       REDIS_URL: redis://redis:6379
+      # enrich_article reads the account's own provider key through decrypt_secret, so the worker
+      # needs the same Fernet key as the API. Without it every enrichment job dies on startup.
+      SECRET_ENCRYPTION_KEY: ${SECRET_ENCRYPTION_KEY}
       DEEPL_API_KEY: ${DEEPL_API_KEY}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       LOG_FORMAT: ${LOG_FORMAT:-json}
