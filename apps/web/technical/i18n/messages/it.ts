@@ -192,6 +192,18 @@ export const it: Catalogue = {
 	'discover.failedToast': '{title} è irraggiungibile.',
 	'discover.view': 'Vedere {title}',
 
+	'instanceFeeds.title': 'Flussi già presenti sull\'istanza',
+	'instanceFeeds.intro':
+		'Ciò che il Miniflux dell\'istanza raccoglie già. Spunta quelli che vuoi seguire: vengono collegati così come sono, senza ricreare nulla in Miniflux.',
+	'instanceFeeds.loading': 'Caricamento dei flussi dell\'istanza',
+	'instanceFeeds.loadFailed': 'Impossibile leggere i flussi dell\'istanza.',
+	'instanceFeeds.empty': 'Niente da recuperare: segui già tutto ciò che raccoglie l\'istanza.',
+	'instanceFeeds.selectAll': 'Spunta tutto',
+	'instanceFeeds.noCategory': 'Senza categoria',
+	'instanceFeeds.attach': 'Seguire ({count})',
+	'instanceFeeds.attachedToast': '{count} flusso/i collegato/i.',
+	'instanceFeeds.attachFailed': 'Impossibile collegare questi flussi.',
+
 	'playlists.title': 'Playlist',
 	'playlists.intro':
 		'File di articoli ordinate, con la loro durata totale, da leggere o ascoltare di seguito.',

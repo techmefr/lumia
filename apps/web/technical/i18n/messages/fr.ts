@@ -195,6 +195,18 @@ export const fr = {
 	'discover.failedToast': '{title} est injoignable.',
 	'discover.view': 'Voir {title}',
 
+	'instanceFeeds.title': "Flux déjà présents sur l'instance",
+	'instanceFeeds.intro':
+		"Ce que le Miniflux de l'instance collecte déjà. Coche ceux que tu veux suivre : ils sont rattachés tels quels, sans rien recréer côté Miniflux.",
+	'instanceFeeds.loading': 'Chargement des flux de l\'instance',
+	'instanceFeeds.loadFailed': "Impossible de lire les flux de l'instance.",
+	'instanceFeeds.empty': "Aucun flux à récupérer : tu suis déjà tout ce que l'instance collecte.",
+	'instanceFeeds.selectAll': 'Tout cocher',
+	'instanceFeeds.noCategory': 'Sans catégorie',
+	'instanceFeeds.attach': 'Suivre ({count})',
+	'instanceFeeds.attachedToast': '{count} flux rattaché(s).',
+	'instanceFeeds.attachFailed': 'Impossible de rattacher ces flux.',
+
 	'playlists.title': 'Playlists',
 	'playlists.intro':
 		"Des files d'articles ordonnées, avec leur durée totale, à lire ou à écouter d'affilée.",

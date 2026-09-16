@@ -185,6 +185,18 @@ export const en: Catalogue = {
 	'discover.failedToast': '{title} is unreachable.',
 	'discover.view': 'View {title}',
 
+	'instanceFeeds.title': 'Feeds already on this instance',
+	'instanceFeeds.intro':
+		'What the instance\'s Miniflux already polls. Tick the ones you want: they are attached as they are, nothing is recreated in Miniflux.',
+	'instanceFeeds.loading': 'Loading the instance feeds',
+	'instanceFeeds.loadFailed': 'The instance feeds could not be read.',
+	'instanceFeeds.empty': 'Nothing to pick up: you already follow everything the instance polls.',
+	'instanceFeeds.selectAll': 'Tick all',
+	'instanceFeeds.noCategory': 'No category',
+	'instanceFeeds.attach': 'Follow ({count})',
+	'instanceFeeds.attachedToast': '{count} feed(s) attached.',
+	'instanceFeeds.attachFailed': 'Those feeds could not be attached.',
+
 	'playlists.title': 'Playlists',
 	'playlists.intro':
 		'Ordered queues of articles, with their total length, to read or listen to in one go.',

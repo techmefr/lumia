@@ -190,6 +190,18 @@ export const ru: Catalogue = {
 	'discover.failedToast': '{title} недоступна.',
 	'discover.view': 'Открыть {title}',
 
+	'instanceFeeds.title': 'Ленты, уже подключённые к инстансу',
+	'instanceFeeds.intro':
+		'То, что Miniflux инстанса уже собирает. Отметь нужные: они подключаются как есть, в Miniflux ничего не создаётся заново.',
+	'instanceFeeds.loading': 'Загрузка лент инстанса',
+	'instanceFeeds.loadFailed': 'Не удалось прочитать ленты инстанса.',
+	'instanceFeeds.empty': 'Подключать нечего: ты уже читаешь всё, что собирает инстанс.',
+	'instanceFeeds.selectAll': 'Отметить все',
+	'instanceFeeds.noCategory': 'Без категории',
+	'instanceFeeds.attach': 'Читать ({count})',
+	'instanceFeeds.attachedToast': 'Подключено лент: {count}.',
+	'instanceFeeds.attachFailed': 'Не удалось подключить эти ленты.',
+
 	'playlists.title': 'Подборки',
 	'playlists.intro':
 		'Упорядоченные очереди статей с общей длительностью — читать или слушать подряд.',

@@ -90,7 +90,7 @@ async def import_opml(
             # One hostile or malformed entry must not abort an import of a hundred good ones.
             continue
 
-        folder = await _get_or_create_folder(session, user, entry.folder_name, folder_cache)
+        folder = await get_or_create_folder(session, user, entry.folder_name, folder_cache)
         try:
             external_feed_id = await _register_with_miniflux(
                 session,
@@ -187,7 +187,7 @@ async def add_feed(
     return feed
 
 
-async def _get_or_create_folder(
+async def get_or_create_folder(
     session: AsyncSession,
     user: User,
     folder_name: str | None,

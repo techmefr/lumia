@@ -192,6 +192,18 @@ export const es: Catalogue = {
 	'discover.failedToast': '{title} no es accesible.',
 	'discover.view': 'Ver {title}',
 
+	'instanceFeeds.title': 'Fuentes ya presentes en la instancia',
+	'instanceFeeds.intro':
+		'Lo que el Miniflux de la instancia ya recopila. Marca las que quieras seguir: se vinculan tal cual, sin crear nada nuevo en Miniflux.',
+	'instanceFeeds.loading': 'Cargando las fuentes de la instancia',
+	'instanceFeeds.loadFailed': 'No se han podido leer las fuentes de la instancia.',
+	'instanceFeeds.empty': 'Nada que recuperar: ya sigues todo lo que recopila la instancia.',
+	'instanceFeeds.selectAll': 'Marcar todo',
+	'instanceFeeds.noCategory': 'Sin categoría',
+	'instanceFeeds.attach': 'Seguir ({count})',
+	'instanceFeeds.attachedToast': '{count} fuente(s) vinculada(s).',
+	'instanceFeeds.attachFailed': 'No se han podido vincular esas fuentes.',
+
 	'playlists.title': 'Listas',
 	'playlists.intro':
 		'Colas de artículos ordenadas, con su duración total, para leer o escuchar del tirón.',

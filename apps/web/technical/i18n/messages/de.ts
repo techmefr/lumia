@@ -192,6 +192,18 @@ export const de: Catalogue = {
 	'discover.failedToast': '{title} ist nicht erreichbar.',
 	'discover.view': '{title} ansehen',
 
+	'instanceFeeds.title': 'Feeds, die es auf der Instanz schon gibt',
+	'instanceFeeds.intro':
+		'Was das Miniflux der Instanz bereits abruft. Hake an, was du lesen willst: die Feeds werden so übernommen, in Miniflux entsteht nichts Neues.',
+	'instanceFeeds.loading': 'Feeds der Instanz werden geladen',
+	'instanceFeeds.loadFailed': 'Die Feeds der Instanz konnten nicht gelesen werden.',
+	'instanceFeeds.empty': 'Nichts zu übernehmen: du folgst bereits allem, was die Instanz abruft.',
+	'instanceFeeds.selectAll': 'Alle anhaken',
+	'instanceFeeds.noCategory': 'Ohne Kategorie',
+	'instanceFeeds.attach': 'Folgen ({count})',
+	'instanceFeeds.attachedToast': '{count} Feed(s) übernommen.',
+	'instanceFeeds.attachFailed': 'Diese Feeds konnten nicht übernommen werden.',
+
 	'playlists.title': 'Playlists',
 	'playlists.intro':
 		'Geordnete Artikelfolgen mit ihrer Gesamtdauer, zum Lesen oder Hören in einem Zug.',

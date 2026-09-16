@@ -20,6 +20,15 @@ export interface Feed {
 	error_since?: string | null;
 }
 
+/** A feed the Miniflux instance already polls, which this reader has no subscription to. */
+export interface InstanceFeed {
+	external_feed_id: string;
+	title: string;
+	url: string;
+	/** The Miniflux category, which becomes the folder once attached; null for a feed filed nowhere. */
+	category: string | null;
+}
+
 /** A source from the bundled catalogue the reader is not subscribed to yet. */
 export interface DiscoverSuggestion {
 	title: string;

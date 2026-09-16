@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.domain.feed.discover_service import list_suggestions
 from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError, InvalidOpmlError
 from api.domain.feed.feed_status_service import refresh_feed_now
+from api.domain.feed.instance_feed_service import attach_instance_feeds, list_instance_feeds
 from api.domain.feed.models import Feed, Folder, SourceType
 from api.domain.feed.opml_export import export_opml
 from api.domain.feed.opml_service import add_feed, import_opml
@@ -20,6 +21,8 @@ from api.domain.feed.schemas import (
     FolderCreateRequest,
     FolderResponse,
     FolderUpdateRequest,
+    InstanceFeedAttachRequest,
+    InstanceFeedResponse,
     UnreadCountsResponse,
 )
 from api.domain.feed.unread_service import count_unread
@@ -151,6 +154,47 @@ async def discover_feeds(
         )
         for entry, affinity in ranked
     ]
+
+
+@router.get("/feeds/instance", response_model=list[InstanceFeedResponse])
+async def list_instance_feeds_route(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
+) -> list[InstanceFeedResponse]:
+    try:
+        candidates = await list_instance_feeds(session, user, miniflux_transport=transport)
+    except FeedUnreachableError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY) from exc
+    return [
+        InstanceFeedResponse(
+            external_feed_id=candidate.external_feed_id,
+            title=candidate.title,
+            url=candidate.url,
+            category=candidate.category,
+        )
+        for candidate in candidates
+    ]
+
+
+@router.post(
+    "/feeds/instance/attach",
+    response_model=list[FeedResponse],
+    status_code=status.HTTP_201_CREATED,
+)
+async def attach_instance_feeds_route(
+    payload: InstanceFeedAttachRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
+) -> list[FeedResponse]:
+    try:
+        feeds = await attach_instance_feeds(
+            session, user, payload.external_feed_ids, miniflux_transport=transport
+        )
+    except FeedUnreachableError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY) from exc
+    return [_to_feed_response(feed) for feed in feeds]
 
 
 @router.post("/feeds", response_model=FeedResponse, status_code=status.HTTP_201_CREATED)

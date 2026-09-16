@@ -119,6 +119,26 @@ describe('exportOpml', () => {
 	});
 });
 
+describe('the feeds the instance already carries', () => {
+	it('asks for the ones this reader has no subscription to', async () => {
+		const { feeds, last } = api([[]]);
+		await feeds.listInstanceFeeds();
+		expect(last()).toMatchObject({ path: '/feeds/instance', method: 'GET' });
+	});
+
+	// One request for the whole selection: a request per ticked feed would have the backend
+	// re-list the instance each time, and leave a half-done selection on the first failure.
+	it('attaches a whole selection in one request', async () => {
+		const { feeds, last } = api([[]]);
+		await feeds.attachInstanceFeeds(['42', '43']);
+		expect(last()).toMatchObject({
+			path: '/feeds/instance/attach',
+			method: 'POST',
+			body: { external_feed_ids: ['42', '43'] }
+		});
+	});
+});
+
 describe('discoverFeeds', () => {
 	it('asks for six suggestions by default', async () => {
 		const { feeds, last } = api([[]]);

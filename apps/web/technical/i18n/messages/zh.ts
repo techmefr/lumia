@@ -179,6 +179,18 @@ export const zh: Catalogue = {
 	'discover.failedToast': '{title} 无法访问。',
 	'discover.view': '查看 {title}',
 
+	'instanceFeeds.title': '实例上已有的订阅源',
+	'instanceFeeds.intro':
+		'实例的 Miniflux 已经在抓取的内容。勾选你想订阅的：直接沿用原有订阅源，不会在 Miniflux 里重复创建。',
+	'instanceFeeds.loading': '正在加载实例的订阅源',
+	'instanceFeeds.loadFailed': '无法读取实例的订阅源。',
+	'instanceFeeds.empty': '没有可接入的订阅源：实例抓取的内容你都已经订阅了。',
+	'instanceFeeds.selectAll': '全选',
+	'instanceFeeds.noCategory': '无分类',
+	'instanceFeeds.attach': '订阅（{count}）',
+	'instanceFeeds.attachedToast': '已接入 {count} 个订阅源。',
+	'instanceFeeds.attachFailed': '无法接入这些订阅源。',
+
 	'playlists.title': '播放列表',
 	'playlists.intro': '有序的文章队列，附带总时长，可一口气读完或听完。',
 	'playlists.loadFailed': '无法加载播放列表。',
