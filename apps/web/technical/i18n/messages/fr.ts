@@ -360,6 +360,10 @@ export const fr = {
 	'articles.shortcutFlip': 'feuilleter',
 	'articles.shortcutSearch': 'rechercher',
 
+	'orbit.open': 'Ouvrir l\'orbite',
+	'orbit.close': 'Fermer l\'orbite',
+	'orbit.menuLabel': 'Actions rapides sur cet article',
+
 	'article.back': 'Retour aux articles',
 	'article.loading': "Chargement de l'article",
 	'article.notFound': 'Article introuvable.',
@@ -450,6 +454,11 @@ export const fr = {
 		"Des lignes plus aérées et un peu plus d'espace entre les mots, pour ne pas perdre sa ligne.",
 	'settings.comfortOn': 'Activé',
 	'settings.comfortOff': 'Désactivé',
+	'settings.orbitPosition': 'Bouton Orbite',
+	'settings.orbitPositionHint': 'Le bouton d\'actions rapides de l\'écran de lecture se place du côté de votre pouce.',
+	'settings.orbitLeft': 'À gauche',
+	'settings.orbitRight': 'À droite',
+	'settings.orbitFailed': 'Impossible d\'enregistrer la position du bouton Orbite.',
 	'settings.previewTitle': 'Aperçu du titre',
 	'settings.previewBody':
 		'Un texte de résumé, pour vérifier que la hiérarchie reste lisible à toutes les tailles.',

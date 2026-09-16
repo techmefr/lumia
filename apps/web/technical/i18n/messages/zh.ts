@@ -338,6 +338,10 @@ export const zh: Catalogue = {
 	'articles.shortcutFlip': '翻阅',
 	'articles.shortcutSearch': '搜索',
 
+	'orbit.open': '打开轨道',
+	'orbit.close': '关闭轨道',
+	'orbit.menuLabel': '本文的快捷操作',
+
 	'article.back': '返回文章列表',
 	'article.loading': '正在加载文章',
 	'article.notFound': '找不到该文章。',
@@ -425,6 +429,11 @@ export const zh: Catalogue = {
 	'settings.comfortHint': '行距更宽松，词间距略大，读到行末不会串行。',
 	'settings.comfortOn': '已开启',
 	'settings.comfortOff': '已关闭',
+	'settings.orbitPosition': '轨道按钮',
+	'settings.orbitPositionHint': '阅读页面的快捷操作按钮会放在你拇指所在的一侧。',
+	'settings.orbitLeft': '靠左',
+	'settings.orbitRight': '靠右',
+	'settings.orbitFailed': '无法保存轨道按钮的位置。',
 	'settings.previewTitle': '标题预览',
 	'settings.previewBody': '一段摘要文字，用来确认各种大小下层次依然清晰。',
 	'settings.previewCaption': '轻量图注',

@@ -357,6 +357,10 @@ export const es: Catalogue = {
 	'articles.shortcutFlip': 'hojear',
 	'articles.shortcutSearch': 'buscar',
 
+	'orbit.open': 'Abrir la órbita',
+	'orbit.close': 'Cerrar la órbita',
+	'orbit.menuLabel': 'Acciones rápidas sobre este artículo',
+
 	'article.back': 'Volver a los artículos',
 	'article.loading': 'Cargando el artículo',
 	'article.notFound': 'Artículo no encontrado.',
@@ -447,6 +451,11 @@ export const es: Catalogue = {
 		'Líneas más airadas y algo más de espacio entre palabras, para no perder el renglón.',
 	'settings.comfortOn': 'Activado',
 	'settings.comfortOff': 'Desactivado',
+	'settings.orbitPosition': 'Botón Órbita',
+	'settings.orbitPositionHint': 'El botón de acciones rápidas de la pantalla de lectura se coloca del lado de tu pulgar.',
+	'settings.orbitLeft': 'A la izquierda',
+	'settings.orbitRight': 'A la derecha',
+	'settings.orbitFailed': 'No se pudo guardar la posición del botón Órbita.',
 	'settings.previewTitle': 'Vista previa del título',
 	'settings.previewBody':
 		'Un texto de resumen, para comprobar que la jerarquía sigue siendo legible en todos los tamaños.',

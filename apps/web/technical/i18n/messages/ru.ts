@@ -355,6 +355,10 @@ export const ru: Catalogue = {
 	'articles.shortcutFlip': 'пролистать',
 	'articles.shortcutSearch': 'поиск',
 
+	'orbit.open': 'Открыть орбиту',
+	'orbit.close': 'Закрыть орбиту',
+	'orbit.menuLabel': 'Быстрые действия с этой статьёй',
+
 	'article.back': 'Назад к статьям',
 	'article.loading': 'Загрузка статьи',
 	'article.notFound': 'Статья не найдена.',
@@ -445,6 +449,11 @@ export const ru: Catalogue = {
 		'Более свободные строки и чуть больше пространства между словами, чтобы не терять строку.',
 	'settings.comfortOn': 'Включено',
 	'settings.comfortOff': 'Выключено',
+	'settings.orbitPosition': 'Кнопка «Орбита»',
+	'settings.orbitPositionHint': 'Кнопка быстрых действий на экране чтения располагается со стороны большого пальца.',
+	'settings.orbitLeft': 'Слева',
+	'settings.orbitRight': 'Справа',
+	'settings.orbitFailed': 'Не удалось сохранить положение кнопки «Орбита».',
 	'settings.previewTitle': 'Пример заголовка',
 	'settings.previewBody':
 		'Текст-резюме, чтобы проверить, что иерархия остаётся читаемой при любом размере.',

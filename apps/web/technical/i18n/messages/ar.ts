@@ -345,6 +345,10 @@ export const ar: Catalogue = {
 	'articles.shortcutFlip': 'التقليب',
 	'articles.shortcutSearch': 'البحث',
 
+	'orbit.open': 'فتح المدار',
+	'orbit.close': 'إغلاق المدار',
+	'orbit.menuLabel': 'إجراءات سريعة على هذا المقال',
+
 	'article.back': 'العودة إلى المقالات',
 	'article.loading': 'جارٍ تحميل المقال',
 	'article.notFound': 'المقال غير موجود.',
@@ -434,6 +438,11 @@ export const ar: Catalogue = {
 	'settings.comfortHint': 'أسطر أكثر تباعدًا ومسافات أوسع بين الكلمات، حتى لا تفقد سطرك.',
 	'settings.comfortOn': 'مُشغَّل',
 	'settings.comfortOff': 'مُوقَف',
+	'settings.orbitPosition': 'زر المدار',
+	'settings.orbitPositionHint': 'يوضع زر الإجراءات السريعة في شاشة القراءة على جهة إبهامك.',
+	'settings.orbitLeft': 'على اليسار',
+	'settings.orbitRight': 'على اليمين',
+	'settings.orbitFailed': 'تعذّر حفظ موضع زر المدار.',
 	'settings.previewTitle': 'معاينة العنوان',
 	'settings.previewBody': 'نص موجز، للتحقّق من أن التسلسل يبقى مقروءًا في كل الأحجام.',
 	'settings.previewCaption': 'تسمية خفيفة',

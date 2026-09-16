@@ -357,6 +357,10 @@ export const de: Catalogue = {
 	'articles.shortcutFlip': 'durchblättern',
 	'articles.shortcutSearch': 'suchen',
 
+	'orbit.open': 'Orbit öffnen',
+	'orbit.close': 'Orbit schließen',
+	'orbit.menuLabel': 'Schnellaktionen für diesen Artikel',
+
 	'article.back': 'Zurück zu den Artikeln',
 	'article.loading': 'Artikel wird geladen',
 	'article.notFound': 'Artikel nicht gefunden.',
@@ -447,6 +451,11 @@ export const de: Catalogue = {
 		'Luftigere Zeilen und etwas mehr Abstand zwischen den Wörtern, damit man die Zeile nicht verliert.',
 	'settings.comfortOn': 'Ein',
 	'settings.comfortOff': 'Aus',
+	'settings.orbitPosition': 'Orbit-Schaltfläche',
+	'settings.orbitPositionHint': 'Die Schaltfläche für Schnellaktionen auf der Leseansicht liegt auf der Seite Ihres Daumens.',
+	'settings.orbitLeft': 'Links',
+	'settings.orbitRight': 'Rechts',
+	'settings.orbitFailed': 'Die Position der Orbit-Schaltfläche konnte nicht gespeichert werden.',
 	'settings.previewTitle': 'Vorschau der Überschrift',
 	'settings.previewBody':
 		'Ein kurzer Zusammenfassungstext, um zu prüfen, ob die Hierarchie in jeder Größe lesbar bleibt.',
