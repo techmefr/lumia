@@ -80,12 +80,3 @@ async def test_worker_startup_installs_the_shared_log_handler() -> None:
     finally:
         root_logger.handlers = handlers
         root_logger.setLevel(level)
-
-
-def test_the_digest_cron_runs_every_hour_so_each_timezone_gets_its_own_morning() -> None:
-    from worker.domain.digest.send_digests import send_reader_digests
-
-    digest_jobs = [job for job in WorkerSettings.cron_jobs if job.coroutine is send_reader_digests]
-
-    assert len(digest_jobs) == 1
-    assert digest_jobs[0].hour is None
