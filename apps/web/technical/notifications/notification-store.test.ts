@@ -84,26 +84,34 @@ describe('isQuietHour', () => {
 		});
 
 		it('is awake in Tokyo in the morning while Paris is still in its quiet window', () => {
-			// 22:00 UTC = 07:00 next day in Tokyo = 00:00 in Paris (summer).
-			const lateEvening = instant('2026-09-09T22:00:00Z');
+			// 23:00 UTC = 08:00 next day in Tokyo (quiet window closes at 8, exclusive) = 01:00 in
+			// Paris (summer), still deep in the quiet window.
+			const lateEvening = instant('2026-09-09T23:00:00Z');
 			expect(isQuietHour(lateEvening, 22, 8, TOKYO)).toBe(false);
 			expect(isQuietHour(lateEvening, 22, 8, PARIS)).toBe(true);
 		});
 	});
 
-	// Paris switches from CEST (UTC+2) to CET (UTC+1) at 2026-10-25T01:00:00Z. A naive offset
-	// computed once, rather than resolved per-instant, would misjudge the hour on the other side.
+	// Paris falls back from CEST (UTC+2) to CET (UTC+1) at 2026-10-25T01:00:00Z, local clocks going
+	// from 03:00 to 02:00. A fixed +2 offset computed once — rather than resolved per instant from
+	// the IANA zone — would misread the hour on the winter side of that instant.
 	describe('across a DST transition in Paris', () => {
-		it('reads 23:30 local just before the clocks fall back, in summer time', () => {
-			const beforeFallback = instant('2026-10-24T21:30:00Z');
-			expect(isQuietHour(beforeFallback, 22, 8, PARIS)).toBe(false);
-			expect(beforeFallback.toZonedDateTimeISO(PARIS).hour).toBe(23);
+		it('reads 02:00 local right at the fall-back instant, already on winter time', () => {
+			const atFallback = instant('2026-10-25T01:00:00Z');
+			expect(atFallback.toZonedDateTimeISO(PARIS).hour).toBe(2);
+			// A fixed +2 (summer) offset would have read this as 03:00 and called it quiet.
+			expect(isQuietHour(atFallback, 3, 8, PARIS)).toBe(false);
 		});
 
-		it('reads 00:30 local just after the clocks fall back, in winter time', () => {
-			const afterFallback = instant('2026-10-24T23:30:00Z');
-			expect(isQuietHour(afterFallback, 22, 8, PARIS)).toBe(true);
-			expect(afterFallback.toZonedDateTimeISO(PARIS).hour).toBe(0);
+		it('reads 03:00 local an hour later, once winter time is unambiguous', () => {
+			const afterFallback = instant('2026-10-25T02:00:00Z');
+			expect(afterFallback.toZonedDateTimeISO(PARIS).hour).toBe(3);
+			expect(isQuietHour(afterFallback, 3, 8, PARIS)).toBe(true);
+		});
+
+		it('reads 02:59 local a minute before the fall-back, still on summer time', () => {
+			const beforeFallback = instant('2026-10-25T00:59:00Z');
+			expect(beforeFallback.toZonedDateTimeISO(PARIS).hour).toBe(2);
 		});
 	});
 });
