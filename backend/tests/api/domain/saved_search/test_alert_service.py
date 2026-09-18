@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator, Iterator, Mapping
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
@@ -73,6 +74,7 @@ async def _article(
         url=f"https://blog.test/{uuid4()}",
         content=content,
         summary=None,
+        published_at=datetime.now(UTC),
     )
     session.add(article)
     await session.flush()

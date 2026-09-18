@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -55,6 +56,7 @@ async def _article(session: AsyncSession, feed: Feed, *, title: str) -> Article:
         url=f"https://blog.test/{uuid4()}",
         content="<p>x</p>",
         summary=None,
+        published_at=datetime.now(UTC),
     )
     session.add(article)
     await session.commit()
