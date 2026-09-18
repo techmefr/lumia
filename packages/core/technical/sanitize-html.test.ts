@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sanitizeArticleHtml } from './sanitize-html';
+import { sanitizeArticleHtml, sanitizeArticleHtmlForOffline } from './sanitize-html';
 
 // Article bodies come from third-party feeds. Everything below is what a hostile or compromised
 // source can put in one, so these are the cases that decide whether {@html} is safe.
@@ -56,6 +56,23 @@ describe('sanitizeArticleHtml', () => {
 
 	it('closes markup the source left open rather than passing it through', () => {
 		expect(sanitizeArticleHtml('<p>coupé')).toBe('<p>coupé</p>');
+	});
+});
+
+describe('sanitizeArticleHtmlForOffline', () => {
+	it('strips an image, which an offline copy stores as text only', () => {
+		const cleaned = sanitizeArticleHtmlForOffline('<p>Un pont.</p><img src="https://cdn.test/pont.jpg" alt="">');
+		expect(cleaned).not.toContain('<img');
+		expect(cleaned).toContain('<p>Un pont.</p>');
+	});
+
+	it('still strips a script tag, same as the online variant', () => {
+		expect(sanitizeArticleHtmlForOffline('<p>ok</p><script>fetch("/steal")</script>')).toBe('<p>ok</p>');
+	});
+
+	it('keeps the online variant images intact', () => {
+		const html = '<p>ok</p><img src="https://cdn.test/pont.jpg" alt="">';
+		expect(sanitizeArticleHtml(html)).toContain('<img');
 	});
 });
 

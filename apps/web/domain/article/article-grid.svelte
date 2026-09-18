@@ -6,6 +6,7 @@
 	import { accentHueForFeed } from './accent-hue';
 	import { feedIcons } from '$technical/api/feed-icons.svelte';
 	import { getLocale, t } from '$technical/i18n/i18n.svelte';
+	import OfflineToggle from '$domain/offline/offline-toggle.svelte';
 
 	interface Props {
 		articles: ArticleSummary[];
@@ -19,6 +20,13 @@
 		selectedIds?: string[];
 		/** Index into `articles`. `extend` carries a shift-click, which takes the whole range. */
 		onToggleSelect?: (index: number, options: { extend: boolean }) => void;
+		/** Offline toggle mode: a per-card badge/button appears, showing and controlling whether an
+		 *  article is available offline. Off by default, like `selectable`: only the saved list opts
+		 *  into offline reading, so every other grid stays free of that chrome too. */
+		offlineControl?: boolean;
+		offlineIds?: string[];
+		offlinePendingIds?: string[];
+		onToggleOffline?: (articleId: string) => void;
 		/** Shown when there is nothing to display; put the next action in here, not a dead end. */
 		empty?: import('svelte').Snippet;
 		/** Rendered under the grid — typically the "load more" button. */
@@ -33,6 +41,10 @@
 		selectable = false,
 		selectedIds = [],
 		onToggleSelect,
+		offlineControl = false,
+		offlineIds = [],
+		offlinePendingIds = [],
+		onToggleOffline,
 		empty,
 		footer
 	}: Props = $props();
@@ -96,9 +108,14 @@
 {:else}
 	<div data-test-article-grid class="relative flex flex-col gap-4">
 		{#if lead}
-			{#if selectable}
+			{#if selectable || offlineControl}
 				<div class="relative">
-					{@render selectBox(lead, 0)}
+					{#if selectable}
+						{@render selectBox(lead, 0)}
+					{/if}
+					{#if offlineControl}
+						{@render offlineBox(lead)}
+					{/if}
 					{@render heroCard(lead)}
 				</div>
 			{:else}
@@ -107,9 +124,14 @@
 		{/if}
 		<div data-test-article-columns class={GRID_COLUMNS}>
 			{#each rest as article, index (article.id)}
-				{#if selectable}
+				{#if selectable || offlineControl}
 					<div class="relative">
-						{@render selectBox(article, lead ? index + 1 : index)}
+						{#if selectable}
+							{@render selectBox(article, lead ? index + 1 : index)}
+						{/if}
+						{#if offlineControl}
+							{@render offlineBox(article)}
+						{/if}
 						{@render card(article, index)}
 					</div>
 				{:else}
@@ -177,4 +199,17 @@
 		aria-label={t('selection.selectArticle', { title: article.title })}
 		onclick={(event) => toggle(position, event)}
 	/>
+{/snippet}
+
+<!-- Sits over the card like the selection checkbox above, for the same reason: the design system
+	 has no notion of offline availability, and a grid at rest keeps no trace of the feature. -->
+{#snippet offlineBox(article: ArticleSummary)}
+	<div class="absolute right-3 top-3 z-10 rounded-full bg-card/90 backdrop-blur">
+		<OfflineToggle
+			articleId={article.id}
+			offline={offlineIds.includes(article.id)}
+			pending={offlinePendingIds.includes(article.id)}
+			onToggle={() => onToggleOffline?.(article.id)}
+		/>
+	</div>
 {/snippet}

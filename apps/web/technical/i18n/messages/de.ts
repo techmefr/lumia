@@ -166,6 +166,26 @@ export const de: Catalogue = {
 	'readLater.saveFailed':
 		'Diese Seite konnte nicht gespeichert werden — sie ist vielleicht nicht erreichbar oder hat keinen lesbaren Inhalt.',
 
+	'offline.banner': 'Offline — nicht offline verfügbare Artikel lassen sich nicht öffnen.',
+	'offline.title': 'Offline-Lesen',
+	'offline.description':
+		'Wähle, welche Artikel dieser Liste ohne Netzwerk lesbar bleiben. Der Text wird gespeichert, Bilder nicht.',
+	'offline.storageUsed': '{used} von {cap} belegt',
+	'offline.articleCount': '{count} Artikel offline',
+	'offline.makeAllAvailable': 'Ganze Liste offline verfügbar machen',
+	'offline.makingAllAvailable': 'Wird zwischengespeichert…',
+	'offline.makeAllDone': '{count} Artikel jetzt offline verfügbar.',
+	'offline.makeAllPartial':
+		'{cached} Artikel zwischengespeichert, {skipped} übersprungen — Speichergrenze erreicht.',
+	'offline.addedToast': 'Offline verfügbar.',
+	'offline.removedToast': 'Aus dem Offline-Speicher entfernt.',
+	'offline.addFailedToast': 'Dieser Artikel konnte nicht offline verfügbar gemacht werden.',
+	'offline.quotaExceededToast':
+		'Offline-Speichergrenze erreicht — entferne einen Artikel, um einen weiteren hinzuzufügen.',
+	'offline.removeTitle': 'Aus dem Offline-Speicher entfernen',
+	'offline.makeAvailableTitle': 'Offline verfügbar machen',
+	'offline.readingOfflineCopy': 'Offline-Kopie — gespeichert, bevor die Verbindung abbrach.',
+
 	'read.title': 'Lesen',
 	'read.titleWithLabel': 'Lesen — {label}',
 	'read.help':

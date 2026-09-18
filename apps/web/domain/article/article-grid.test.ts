@@ -244,3 +244,43 @@ describe('selecting cards', () => {
 		expect(onToggleSelect).toHaveBeenCalledWith(2, { extend: false });
 	});
 });
+
+describe('offline availability', () => {
+	function offlineGrid(props: Partial<Props> = {}) {
+		const view = grid({ offlineControl: true, ...props });
+		return {
+			...view,
+			toggles: () => [...view.container.querySelectorAll('[data-test-offline-toggle]')],
+			toggle: (id: string) => view.container.querySelector(`[data-test-offline-toggle="${id}"]`)
+		};
+	}
+
+	it('shows no offline control until the mode is on, same as selection', () => {
+		expect(grid().container.querySelectorAll('[data-test-offline-toggle]')).toHaveLength(0);
+	});
+
+	it('puts one offline toggle on every card once the mode is on', () => {
+		expect(offlineGrid().toggles()).toHaveLength(3);
+	});
+
+	it('marks the toggle pressed only for articles the offline list holds', () => {
+		const view = offlineGrid({ offlineIds: ['b'] });
+		expect(view.toggle('a')?.getAttribute('aria-pressed')).toBe('false');
+		expect(view.toggle('b')?.getAttribute('aria-pressed')).toBe('true');
+	});
+
+	it('reports which article was toggled', async () => {
+		const onToggleOffline = vi.fn();
+		const view = offlineGrid({ onToggleOffline });
+
+		await fireEvent.click(view.toggle('b') as Element);
+
+		expect(onToggleOffline).toHaveBeenCalledWith('b');
+	});
+
+	it('can run alongside selection mode without either control disappearing', () => {
+		const view = offlineGrid({ selectable: true });
+		expect(view.toggles()).toHaveLength(3);
+		expect(view.container.querySelectorAll('input[type=checkbox]')).toHaveLength(3);
+	});
+});
