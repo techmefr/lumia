@@ -28,6 +28,7 @@ from api.domain.instance.settings_service import get_instance
 from api.domain.instance.usage_service import ensure_within_disk_quota
 from api.domain.recommendation.models import FilterMode, UserArticleFeedback
 from api.domain.recommendation.read_service import ReadState, fetch_read_state
+from api.domain.recommendation.related_service import fetch_related
 from api.domain.recommendation.relevance import (
     load_rule_terms,
     score_articles,
@@ -260,6 +261,33 @@ async def get_article(
         content=article.content,
         keywords=keywords,
     )
+
+
+#: How many stored neighbours are considered before already-read ones are filtered out.
+_RELATED_POOL = 10
+#: How many related articles the article page ever shows.
+_RELATED_LIMIT = 5
+
+
+@router.get("/articles/{article_id}/related", response_model=list[ArticleSummaryResponse])
+async def get_related_articles(
+    article_id: UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[ArticleSummaryResponse]:
+    """Up to five articles the reader hasn't read yet, related by content to this one.
+
+    Precomputed at enrichment time (see `refresh_related_articles`), so this only reads a small,
+    already-scored candidate pool and filters it — no scoring work happens on this request path.
+    A reader with nothing related enough gets an empty list rather than weak matches padded in to
+    fill the slot count.
+    """
+    article = await _load_own_article(session, article_id, user)
+    candidates = await fetch_related(session, user.id, article.id, limit=_RELATED_POOL)
+
+    states = await fetch_read_state(session, user.id, [candidate.id for candidate in candidates])
+    unread = [c for c in candidates if not states.get(c.id, ReadState()).read][:_RELATED_LIMIT]
+    return await to_summaries(session, user.id, unread)
 
 
 @router.post("/articles/{article_id}/translate", response_model=ArticleTranslationResponse)

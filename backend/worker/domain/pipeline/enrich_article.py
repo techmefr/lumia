@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.domain.article.models import Article, ArticleKeyword, Author, Category, Keyword, Lang
 from api.domain.feed.models import Feed, SourceType
 from api.domain.instance.usage_service import has_disk_quota_room
+from api.domain.recommendation.related_service import refresh_related_articles
 from api.domain.user.models import Instance, ReadingLang, User
 from api.domain.user.providers import chat_client_for, translator_for
 from api.technical.logging.external import EXTERNAL_CALL_FAILED_EVENT, describe_error
@@ -80,7 +81,7 @@ async def enrich_article(
                 translator if translator is not None else translator_for(user),
                 translated_cache,
             )
-            await _create_article_if_new(
+            new_article = await _create_article_if_new(
                 session,
                 feed=feed,
                 raw_article=raw_article,
@@ -94,6 +95,8 @@ async def enrich_article(
                 original_lang=lang,
                 keyword_lang=lang,
             )
+            if new_article is not None:
+                await refresh_related_articles(session, new_article, feed.user_id)
 
         await session.commit()
 
@@ -173,7 +176,7 @@ async def _create_article_if_new(
     keywords: list[tuple[str, float]],
     original_lang: Lang,
     keyword_lang: Lang,
-) -> None:
+) -> Article | None:
     existing = await session.scalar(
         select(Article)
         .join(Feed, Article.feed_id == Feed.id)
@@ -188,7 +191,7 @@ async def _create_article_if_new(
         # A mirror or an aggregator often reposts an old piece with today's date; the reader
         # should keep seeing it where the original landed.
         existing.published_at = min(existing.published_at, raw_article.published_at)
-        return
+        return None
 
     article = Article(
         feed_id=feed.id,
@@ -209,6 +212,8 @@ async def _create_article_if_new(
     for term, weight in keywords:
         keyword = await _get_or_create_keyword(session, term, keyword_lang)
         session.add(ArticleKeyword(article_id=article.id, keyword_id=keyword.id, weight=weight))
+    await session.flush()
+    return article
 
 
 async def _get_or_create_author(session: AsyncSession, name: str | None) -> Author | None:

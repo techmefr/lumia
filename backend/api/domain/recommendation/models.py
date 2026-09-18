@@ -80,3 +80,18 @@ class UserCategoryScore(Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     category_id: Mapped[UUID] = mapped_column(ForeignKey("categories.id"), primary_key=True)
     score: Mapped[float] = mapped_column(default=0.0)
+
+
+class RelatedArticle(Base):
+    """A precomputed neighbour of an article, content-scored rather than affinity-scored.
+
+    An article's row already belongs to a single user through its feed, so no `user_id` is needed
+    here to keep readers from seeing each other's articles: joining back through `articles` and
+    `feeds` is enough. Computed at enrichment time rather than on every article page view.
+    """
+
+    __tablename__ = "related_articles"
+
+    article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"), primary_key=True)
+    related_article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"), primary_key=True)
+    score: Mapped[float]

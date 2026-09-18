@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from api.domain.article.models import Article, ArticleKeyword, Author, Category, Keyword, Lang
 from api.domain.feed.models import Feed, SourceType
 from api.domain.instance.usage_service import BYTES_PER_MB
+from api.domain.recommendation.models import RelatedArticle
 from api.domain.user.models import Instance, ReadingLang, User
 from config.database import get_engine
 from worker.domain.pipeline.enrich_article import enrich_article
@@ -618,3 +619,23 @@ async def test_enrich_article_stores_again_once_the_account_is_back_under_quota(
     article = await session.scalar(select(Article))
     assert article is not None
     assert article.external_entry_id == "123"
+
+
+async def test_enrich_article_precomputes_related_articles_at_ingestion(
+    session: AsyncSession,
+) -> None:
+    feed = await _create_feed(session)
+    await enrich_article({}, _raw_article(), content_extractor=_FakeContentExtractor())
+    first = await session.scalar(select(Article).where(Article.feed_id == feed.id))
+    assert first is not None
+
+    await enrich_article(
+        {},
+        _raw_article(external_entry_id="456", url="https://example.com/b"),
+        content_extractor=_FakeContentExtractor(),
+    )
+
+    related = await session.scalars(
+        select(RelatedArticle).where(RelatedArticle.article_id == first.id)
+    )
+    assert len(list(related)) > 0
