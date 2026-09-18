@@ -22,8 +22,8 @@ _ALERT_STRINGS: dict[str, _AlertStrings] = {
         settings_link_label="Manage your saved searches",
     ),
     "fr": _AlertStrings(
-        subject='Nouveau résultat pour « {name} »',
-        intro='Un nouvel article correspond à votre recherche enregistrée « {name} ».',
+        subject="Nouveau résultat pour « {name} »",
+        intro="Un nouvel article correspond à votre recherche enregistrée « {name} ».",
         settings_notice="Vous recevez cette alerte car vous l'avez activée pour cette recherche.",
         settings_link_label="Gérer vos recherches enregistrées",
     ),
@@ -34,8 +34,8 @@ _ALERT_STRINGS: dict[str, _AlertStrings] = {
         settings_link_label="Gestionar tus búsquedas guardadas",
     ),
     "de": _AlertStrings(
-        subject='Neuer Treffer für „{name}“',
-        intro='Ein neuer Artikel passt zu Ihrer gespeicherten Suche „{name}“.',
+        subject="Neuer Treffer für „{name}“",
+        intro="Ein neuer Artikel passt zu Ihrer gespeicherten Suche „{name}“.",
         settings_notice="Sie erhalten diese Meldung, weil Sie sie für diese Suche aktiviert haben.",
         settings_link_label="Gespeicherte Suchen verwalten",
     ),
@@ -52,8 +52,8 @@ _ALERT_STRINGS: dict[str, _AlertStrings] = {
         settings_link_label="Gerir as suas pesquisas guardadas",
     ),
     "ru": _AlertStrings(
-        subject='Новое совпадение для «{name}»',
-        intro='Новая статья соответствует вашему сохранённому поиску «{name}».',
+        subject="Новое совпадение для «{name}»",
+        intro="Новая статья соответствует вашему сохранённому поиску «{name}».",
         settings_notice="Вы получаете это уведомление, так как включили его для этого поиска.",
         settings_link_label="Управление сохранёнными поисками",
     ),
@@ -114,7 +114,11 @@ def _text_body(
         lines.append(summary)
     lines.append(url)
     return "\n\n".join(
-        [intro, "\n".join(lines), f"{strings.settings_notice}\n{strings.settings_link_label}: {settings_url}"]
+        [
+            intro,
+            "\n".join(lines),
+            f"{strings.settings_notice}\n{strings.settings_link_label}: {settings_url}",
+        ]
     )
 
 

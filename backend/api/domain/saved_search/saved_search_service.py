@@ -28,9 +28,7 @@ def _filters_of(saved_search: SavedSearch) -> SearchFilters:
 
 async def list_saved_searches(session: AsyncSession, user_id: UUID) -> list[SavedSearch]:
     rows = await session.scalars(
-        select(SavedSearch)
-        .where(SavedSearch.user_id == user_id)
-        .order_by(SavedSearch.name)
+        select(SavedSearch).where(SavedSearch.user_id == user_id).order_by(SavedSearch.name)
     )
     return list(rows)
 
@@ -38,11 +36,11 @@ async def list_saved_searches(session: AsyncSession, user_id: UUID) -> list[Save
 async def get_saved_search(
     session: AsyncSession, user_id: UUID, saved_search_id: UUID
 ) -> SavedSearch | None:
-    return await session.scalar(
-        select(SavedSearch).where(
-            SavedSearch.id == saved_search_id, SavedSearch.user_id == user_id
-        )
+    query = select(SavedSearch).where(
+        SavedSearch.id == saved_search_id, SavedSearch.user_id == user_id
     )
+    result: SavedSearch | None = await session.scalar(query)
+    return result
 
 
 async def create_saved_search(
@@ -114,7 +112,9 @@ async def run_saved_search(
     session: AsyncSession, saved_search: SavedSearch, *, limit: int, offset: int
 ) -> list[Article]:
     """Re-runs a saved search exactly as `GET /articles` would, most recent first."""
-    query = apply_search_filters(base_query_for_user(saved_search.user_id), _filters_of(saved_search))
+    query = apply_search_filters(
+        base_query_for_user(saved_search.user_id), _filters_of(saved_search)
+    )
     query = query.order_by(Article.published_at.desc()).limit(limit).offset(offset)
     return list(await session.scalars(query))
 
@@ -136,7 +136,9 @@ async def count_unread_matches(session: AsyncSession, saved_search: SavedSearch)
     # unlike the other filters it is applied by loading ids rather than folded into the count query.
     articles = list(
         await session.scalars(
-            apply_search_filters(base_query_for_user(saved_search.user_id), _filters_of(saved_search))
+            apply_search_filters(
+                base_query_for_user(saved_search.user_id), _filters_of(saved_search)
+            )
         )
     )
     states: dict[UUID, ReadState] = await fetch_read_state(

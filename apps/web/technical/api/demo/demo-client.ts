@@ -23,6 +23,9 @@ import type {
 	MeUpdate,
 	PlaylistDetail,
 	PlaylistSummary,
+	SavedSearch,
+	SavedSearchFilters,
+	SavedSearchUpdate,
 	TokenStore,
 	UnreadCounts
 } from '@lumia/core';
@@ -73,6 +76,7 @@ interface DemoState {
 	feedback: Record<string, Feedback>;
 	playlists: { id: string; name: string; article_ids: string[] }[];
 	filterRules: FilterRule[];
+	savedSearches: SavedSearch[];
 	scores: Scores;
 	me: Me;
 	instance: InstanceSettings;
@@ -146,6 +150,7 @@ function initialState(): DemoState {
 		feedback,
 		playlists: SEED_PLAYLISTS.map((playlist) => ({ ...playlist, article_ids: [...playlist.article_ids] })),
 		filterRules: [],
+		savedSearches: [],
 		scores,
 		me: {
 			id: 'demo-user',
@@ -260,6 +265,46 @@ export function createDemoClient(): LumiaClient {
 		if (terms.length === 0) return false;
 		const haystack = `${article.title} ${article.summary}`.toLowerCase();
 		return terms.some((term) => haystack.includes(term));
+	}
+
+	/**
+	 * Whether a seed article satisfies one saved search. Author, category and keyword filters are
+	 * left out: the demo's seed data does not carry stable ids for them, and a demo fixture is not
+	 * where that would be worth adding — the backend's own filters are exercised for real there.
+	 */
+	function matchesSavedSearch(article: SeedArticle, savedSearch: SavedSearch): boolean {
+		if (savedSearch.feed_id && article.feed_id !== savedSearch.feed_id) return false;
+		if (savedSearch.folder_id) {
+			const feed = state.feeds.find((candidate) => candidate.id === article.feed_id);
+			if (feed?.folder_id !== savedSearch.folder_id) return false;
+		}
+		if (savedSearch.query) {
+			const haystack = `${article.title} ${article.summary}`.toLowerCase();
+			if (!haystack.includes(savedSearch.query.toLowerCase())) return false;
+		}
+		return true;
+	}
+
+	function unreadCountFor(savedSearch: SavedSearch): number {
+		return state.articleIds.filter((id) => {
+			const article = seedArticle(id);
+			return article && !feedbackFor(id).read && matchesSavedSearch(article, savedSearch);
+		}).length;
+	}
+
+	function withUnreadCount(savedSearch: SavedSearch): SavedSearch {
+		return { ...savedSearch, unread_count: unreadCountFor(savedSearch) };
+	}
+
+	function savedSearchPayload(filters: SavedSearchFilters = {}) {
+		return {
+			query: filters.query ?? null,
+			folder_id: filters.folderId ?? null,
+			feed_id: filters.feedId ?? null,
+			author_id: filters.authorId ?? null,
+			category_id: filters.categoryId ?? null,
+			keyword_id: filters.keywordId ?? null
+		};
 	}
 
 	/** Average affinity over the article's dimensions, boost rules included. */
@@ -849,6 +894,37 @@ export function createDemoClient(): LumiaClient {
 				playlist.article_ids = [...articleIds.filter((id) => playlist.article_ids.includes(id)), ...missing];
 				persist();
 				return settle(playlistDetail(playlistId));
+			}
+		},
+		savedSearch: {
+			listSavedSearches: async () => settle(state.savedSearches.map(withUnreadCount)),
+			createSavedSearch: async (name: string, filters: SavedSearchFilters = {}, isAlert = false) => {
+				const savedSearch: SavedSearch = {
+					id: nextId('search'),
+					name,
+					...savedSearchPayload(filters),
+					is_alert: isAlert,
+					unread_count: 0
+				};
+				state.savedSearches = [...state.savedSearches, savedSearch];
+				persist();
+				return settle(withUnreadCount(savedSearch));
+			},
+			updateSavedSearch: async (savedSearchId: string, update: SavedSearchUpdate) => {
+				const savedSearch = state.savedSearches.find((candidate) => candidate.id === savedSearchId);
+				if (!savedSearch) throw new Error('recherche introuvable');
+				if (update.name !== undefined) savedSearch.name = update.name;
+				if (update.isAlert !== undefined) savedSearch.is_alert = update.isAlert;
+				if (update.filters !== undefined) Object.assign(savedSearch, savedSearchPayload(update.filters));
+				persist();
+				return settle(withUnreadCount(savedSearch));
+			},
+			deleteSavedSearch: async (savedSearchId: string) => {
+				state.savedSearches = state.savedSearches.filter(
+					(candidate) => candidate.id !== savedSearchId
+				);
+				persist();
+				return settle(undefined);
 			}
 		}
 	};

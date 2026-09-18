@@ -67,9 +67,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_index(
-        "ix_saved_search_matches_saved_search_id", table_name="saved_search_matches"
-    )
+    op.drop_index("ix_saved_search_matches_saved_search_id", table_name="saved_search_matches")
     op.drop_table("saved_search_matches")
     op.drop_index("ix_saved_searches_user_id", table_name="saved_searches")
     op.drop_table("saved_searches")

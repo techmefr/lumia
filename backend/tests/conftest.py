@@ -37,6 +37,7 @@ from api.domain.feed import models as _feed_models  # noqa: F401
 from api.domain.instance import models as _instance_models  # noqa: F401
 from api.domain.playlist import models as _playlist_models  # noqa: F401
 from api.domain.recommendation import models as _recommendation_models  # noqa: F401
+from api.domain.saved_search import models as _saved_search_models  # noqa: F401
 from api.domain.user import models as _user_models  # noqa: F401
 from api.technical.orm import Base
 from config.database import get_engine

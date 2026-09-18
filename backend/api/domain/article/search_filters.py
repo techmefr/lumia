@@ -42,10 +42,15 @@ def search_condition(q: str) -> ColumnElement[bool]:
     return Article.search_vector.op("@@")(combined)
 
 
-def apply_search_filters(
-    query: Select[tuple[Article]], filters: SearchFilters
-) -> Select[tuple[Article]]:
-    """Narrows an article query to one saved search's (or the live search bar's) filters."""
+def apply_search_filters[RowT: tuple[Any, ...]](
+    query: Select[RowT], filters: SearchFilters
+) -> Select[RowT]:
+    """Narrows an article query to one saved search's (or the live search bar's) filters.
+
+    Generic over the selected row: the same predicate applies whether the query selects whole
+    `Article` rows, a bare `Article.id` (ingestion-time matching) or a `count(...)` (the unread
+    counter), since none of the filters below touch what is being selected, only what is matched.
+    """
     if filters.folder_id is not None:
         query = query.where(Feed.folder_id == filters.folder_id)
     if filters.feed_id is not None:

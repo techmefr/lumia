@@ -12,6 +12,7 @@
 	import PasswordSettings from '$domain/settings/password-settings.svelte';
 	import TotpSettings from '$domain/settings/totp-settings.svelte';
 	import FilterRules from '$domain/settings/filter-rules.svelte';
+	import SavedSearches from '$domain/settings/saved-searches.svelte';
 	import NotificationSettings from '$domain/settings/notification-settings.svelte';
 	import DigestSettings from '$domain/settings/digest-settings.svelte';
 	import InstanceAdmin from '$domain/settings/instance-admin.svelte';
@@ -423,6 +424,8 @@
 	<DigestSettings />
 
 	<FilterRules />
+
+	<SavedSearches />
 
 	<AiSettings />
 
