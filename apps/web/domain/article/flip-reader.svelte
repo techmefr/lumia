@@ -10,6 +10,7 @@
 	import Gauge from '@lucide/svelte/icons/gauge';
 	import { accentHueForFeed } from './accent-hue';
 	import { getLocale, t } from '$technical/i18n/i18n.svelte';
+	import { formatDateInUserTimezone } from '$technical/time/format-date';
 
 	interface Props {
 		articles: ArticleSummary[];
@@ -66,7 +67,7 @@
 	const hue = $derived(current ? accentHueForFeed(current.feed_id) : 0);
 	const formattedDate = $derived(
 		current
-			? new Date(current.published_at).toLocaleDateString(getLocale(), {
+			? formatDateInUserTimezone(current.published_at, getLocale(), {
 					day: 'numeric',
 					month: 'long'
 				})
