@@ -1,10 +1,11 @@
-import type { ArticleSummary } from '@lumia/core';
-import { render, waitFor } from '@testing-library/svelte';
+import { cleanup, render, waitFor } from '@testing-library/svelte';
 import { fireEvent } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { goto } from '$app/navigation';
 import { toasts } from '@lumia/ui';
 import { lumia } from '$technical/api/client';
+import { setShortcutsEnabled } from '$technical/keyboard/shortcuts-store.svelte.js';
+import { articleSummary as article, feed, folder } from '../test-support/fixtures';
 import ArticlesPage from './+page.svelte';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
@@ -31,27 +32,6 @@ vi.mock('$technical/api/client', () => ({
 }));
 
 const api = vi.mocked(lumia);
-
-function article(id: string): ArticleSummary {
-	return {
-		id,
-		title: `Titre ${id}`,
-		summary: null,
-		url: `https://example.test/${id}`,
-		image_url: null,
-		source_label: 'Atelier Papier',
-		feed_id: 'feed-1',
-		published_at: '2026-08-09T08:30:00Z',
-		reading_minutes: 4,
-		read: false,
-		scroll_progress: 0,
-		relevance_score: 50,
-		author_id: null,
-		author_name: null,
-		category_id: null,
-		category_name: null
-	} as ArticleSummary;
-}
 
 const crossThreshold = new Set<() => void>();
 let compactWidth = false;
@@ -90,6 +70,18 @@ function articlesPage() {
 		searchStatus: () => q('[data-test-search-status]'),
 		kioskButton: () =>
 			[...container.querySelectorAll<HTMLButtonElement>('[data-test-display-mode] button')][1],
+		error: () => q('[data-test-articles-error]'),
+		cards: () => [...container.querySelectorAll('[data-test-article-card]')],
+		card: (id: string) => q(`[data-test-article-card="${id}"]`),
+		unreadOnly: () => q<HTMLButtonElement>('[data-test-unread-only]')!,
+		markAllRead: () => q<HTMLButtonElement>('[data-test-mark-all-read]')!,
+		clearTagFilter: () => q<HTMLButtonElement>('[data-test-clear-tag-filter]'),
+		loadMore: () => q<HTMLButtonElement>('[data-test-load-more]'),
+		selectFeed: async (id: string) => {
+			const selector = `[data-test-feed="${id}"]`;
+			await waitFor(() => expect(q(selector)).not.toBeNull());
+			await fireEvent.click(q<HTMLElement>(selector)!);
+		},
 		selectionToggle: () => q<HTMLButtonElement>('[data-test-selection-toggle]'),
 		selectionBar: () => q('[data-test-selection-bar]'),
 		selectionCount: () => q('[data-test-selection-count]'),
@@ -121,6 +113,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+	// `globals` is off in this project, so testing-library never registers its own cleanup: without
+	// this, a page from a previous test keeps its document-level shortcut listener bound.
+	cleanup();
+	setShortcutsEnabled(true);
 	vi.unstubAllGlobals();
 	vi.clearAllMocks();
 });
@@ -248,6 +244,306 @@ describe('searching articles', () => {
 			expect((calls.at(0)?.[0] as { query?: string }).query).toBe('borrow');
 		});
 		expect(view.searchInput()?.value).toBe('borrow');
+	});
+});
+
+
+/** The parameters the list was last asked for, which is the page's observable output. */
+function lastRequest(): Record<string, unknown> {
+	return vi.mocked(api.article.listArticles).mock.calls.at(-1)?.[0] as Record<string, unknown>;
+}
+
+describe('loading the list', () => {
+	beforeEach(() => stubViewport(false));
+
+	it('says so when the list cannot be fetched', async () => {
+		vi.mocked(api.article.listArticles).mockRejectedValue(new Error('offline'));
+		const view = articlesPage();
+
+		await waitFor(() => expect(view.error()).not.toBeNull());
+	});
+
+	it('picks up the feed and folder scope carried by the url', async () => {
+		stubUrl = new URL('http://test/articles?feed_id=feed-3');
+		articlesPage();
+
+		await waitFor(() => expect(api.article.listArticles).toHaveBeenCalled());
+		expect(lastRequest().feedId).toBe('feed-3');
+	});
+
+	it('picks up a keyword filter and drops it when the chip is dismissed', async () => {
+		stubUrl = new URL('http://test/articles?keyword_id=kw-1&keyword_term=typographie');
+		const view = articlesPage();
+		await waitFor(() => expect(view.clearTagFilter()).not.toBeNull());
+		expect(lastRequest().keywordId).toBe('kw-1');
+
+		await fireEvent.click(view.clearTagFilter()!);
+
+		await waitFor(() => expect(lastRequest().keywordId).toBeUndefined());
+		expect(view.clearTagFilter()).toBeNull();
+	});
+
+	// The counts are decoration; a list that vanished because a badge failed would be a worse bug
+	// than a missing badge.
+	it('still shows the articles when the unread counts fail', async () => {
+		vi.mocked(api.feed.getUnreadCounts).mockRejectedValue(new Error('nope'));
+		const view = articlesPage();
+
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+		expect(view.error()).toBeNull();
+	});
+
+	it('offers more only once a full page came back', async () => {
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		expect(view.loadMore()).toBeNull();
+	});
+
+	it('appends the next page after the ones already on screen', async () => {
+		const firstPage = Array.from({ length: 24 }, (_, index) => article(`a${index}`));
+		vi.mocked(api.article.listArticles).mockResolvedValue(firstPage);
+		const view = articlesPage();
+		await waitFor(() => expect(view.loadMore()).not.toBeNull());
+		vi.mocked(api.article.listArticles).mockResolvedValue([article('later')]);
+
+		await fireEvent.click(view.loadMore()!);
+
+		await waitFor(() => expect(view.card('later')).not.toBeNull());
+		expect(lastRequest().offset).toBe(24);
+		expect(view.cards()).toHaveLength(25);
+	});
+});
+
+describe('narrowing the list to what is unread', () => {
+	beforeEach(() => stubViewport(false));
+
+	it('asks for unread articles only, then for everything again', async () => {
+		const view = articlesPage();
+		await waitFor(() => expect(api.article.listArticles).toHaveBeenCalled());
+
+		await fireEvent.click(view.unreadOnly());
+		await waitFor(() => expect(lastRequest().unreadOnly).toBe(true));
+
+		await fireEvent.click(view.unreadOnly());
+		await waitFor(() => expect(lastRequest().unreadOnly).toBeUndefined());
+	});
+
+	it('toggles through the u shortcut as well', async () => {
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		await fireEvent.keyDown(document, { key: 'u' });
+
+		await waitFor(() => expect(lastRequest().unreadOnly).toBe(true));
+	});
+});
+
+describe('marking a scope as read', () => {
+	beforeEach(() => {
+		stubViewport(false);
+		vi.mocked(api.recommendation.markRead).mockResolvedValue({ updated: 2 });
+	});
+
+	it('marks everything when no feed or folder is selected', async () => {
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		await fireEvent.click(view.markAllRead());
+
+		await waitFor(() => expect(api.recommendation.markRead).toHaveBeenCalledWith({ all: true }));
+	});
+
+	it('scopes the request to the selected feed', async () => {
+		vi.mocked(api.feed.listFeeds).mockResolvedValue([feed('feed-1')]);
+		vi.mocked(api.feed.listFolders).mockResolvedValue([folder('folder-1')]);
+		const view = articlesPage();
+		await view.selectFeed('feed-1');
+
+		await fireEvent.click(view.markAllRead());
+
+		await waitFor(() =>
+			expect(api.recommendation.markRead).toHaveBeenCalledWith({ feed_id: 'feed-1' })
+		);
+	});
+
+	// "Tout" is the one scope with no ceiling, so a large one asks before wiping the backlog.
+	it('asks before clearing a large unread backlog', async () => {
+		vi.mocked(api.feed.getUnreadCounts).mockResolvedValue({ total: 300, feeds: {}, folders: {} });
+		const confirm = vi.fn(() => false);
+		vi.stubGlobal('confirm', confirm);
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		await fireEvent.click(view.markAllRead());
+
+		expect(confirm).toHaveBeenCalled();
+		expect(api.recommendation.markRead).not.toHaveBeenCalled();
+	});
+
+	it('asks nothing for a handful of unread articles', async () => {
+		vi.mocked(api.feed.getUnreadCounts).mockResolvedValue({ total: 3, feeds: {}, folders: {} });
+		const confirm = vi.fn(() => true);
+		vi.stubGlobal('confirm', confirm);
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		await fireEvent.click(view.markAllRead());
+
+		await waitFor(() => expect(api.recommendation.markRead).toHaveBeenCalled());
+		expect(confirm).not.toHaveBeenCalled();
+	});
+});
+
+describe('driving the list from the keyboard', () => {
+	beforeEach(() => stubViewport(false));
+
+	it('opens the article the cursor sits on', async () => {
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		await fireEvent.keyDown(document, { key: 'j' });
+		await fireEvent.keyDown(document, { key: 'o' });
+
+		await waitFor(() => expect(goto).toHaveBeenCalled());
+		expect(String(vi.mocked(goto).mock.calls.at(-1)?.[0])).toContain('/articles/a');
+	});
+
+	it('walks down then back up without running off the top', async () => {
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		await fireEvent.keyDown(document, { key: 'j' });
+		await fireEvent.keyDown(document, { key: 'j' });
+		await fireEvent.keyDown(document, { key: 'k' });
+		await fireEvent.keyDown(document, { key: 'k' });
+		await fireEvent.keyDown(document, { key: 'k' });
+		await fireEvent.keyDown(document, { key: 'o' });
+
+		await waitFor(() => expect(goto).toHaveBeenCalled());
+		expect(String(vi.mocked(goto).mock.calls.at(-1)?.[0])).toContain('/articles/a');
+	});
+
+	it('flips the read state of the article under the cursor', async () => {
+		vi.mocked(api.recommendation.sendFeedback).mockResolvedValue(undefined);
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		await fireEvent.keyDown(document, { key: 'j' });
+		await fireEvent.keyDown(document, { key: 'm' });
+
+		await waitFor(() =>
+			expect(api.recommendation.sendFeedback).toHaveBeenCalledWith('a', { read: true })
+		);
+		await waitFor(() => expect(view.card('a')?.getAttribute('data-test-read')).toBe('true'));
+	});
+
+	it('saves the article under the cursor', async () => {
+		vi.mocked(api.recommendation.sendFeedback).mockResolvedValue(undefined);
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		await fireEvent.keyDown(document, { key: 'j' });
+		await fireEvent.keyDown(document, { key: 's' });
+
+		await waitFor(() =>
+			expect(api.recommendation.sendFeedback).toHaveBeenCalledWith('a', { saved: true })
+		);
+	});
+
+	it('does nothing while the cursor sits on no article', async () => {
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		await fireEvent.keyDown(document, { key: 'm' });
+		await fireEvent.keyDown(document, { key: 's' });
+		await fireEvent.keyDown(document, { key: 'o' });
+
+		expect(api.recommendation.sendFeedback).not.toHaveBeenCalled();
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	// Typing a search term must not be read as a stream of commands.
+	it('ignores a shortcut key typed into the search field', async () => {
+		const view = articlesPage();
+		await waitFor(() => expect(view.searchInput()).not.toBeNull());
+
+		await fireEvent.keyDown(view.searchInput() as HTMLInputElement, { key: 'u' });
+
+		expect(lastRequest().unreadOnly).toBeUndefined();
+	});
+
+	// A dialog or a menu owns the keyboard while it is up: a stray `u` behind an open overlay would
+	// reorder the list the reader cannot even see.
+	it.each(['dialog', 'menu'])('stands down while a %s is open', async (role) => {
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+		const overlay = document.createElement('div');
+		overlay.setAttribute('role', role);
+		document.body.append(overlay);
+
+		await fireEvent.keyDown(document, { key: 'u' });
+
+		expect(lastRequest().unreadOnly).toBeUndefined();
+		overlay.remove();
+	});
+
+	// WCAG 2.1.4: the reader can silence single-key shortcuts from the settings, and the list has to
+	// honour that too.
+	it('does nothing once the reader has turned the shortcuts off', async () => {
+		setShortcutsEnabled(false);
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		await fireEvent.keyDown(document, { key: 'u' });
+
+		expect(lastRequest().unreadOnly).toBeUndefined();
+	});
+
+	it('puts the focus in the search field on slash', async () => {
+		const view = articlesPage();
+		await waitFor(() => expect(view.searchInput()).not.toBeNull());
+
+		await fireEvent.keyDown(document, { key: '/' });
+
+		expect(document.activeElement).toBe(view.searchInput());
+	});
+
+	it('opens the flip reader on f', async () => {
+		const view = articlesPage();
+		await waitFor(() => expect(view.cards().length).toBeGreaterThan(0));
+
+		await fireEvent.keyDown(document, { key: 'f' });
+
+		await waitFor(() => expect(view.container.querySelector('[data-test-flip-stage]')).not.toBeNull());
+	});
+});
+
+describe('an empty list', () => {
+	beforeEach(() => {
+		stubViewport(false);
+		vi.mocked(api.article.listArticles).mockResolvedValue([]);
+	});
+
+	it('points a reader with no feeds at the subscriptions screen', async () => {
+		const view = articlesPage();
+
+		await waitFor(() =>
+			expect(view.container.querySelector('a[href$="/feeds"]')).not.toBeNull()
+		);
+		expect(view.cards()).toHaveLength(0);
+	});
+
+	it('offers a way back out of an empty search', async () => {
+		const view = articlesPage();
+		await waitFor(() => expect(view.searchInput()).not.toBeNull());
+		await fireEvent.input(view.searchInput() as HTMLInputElement, { target: { value: 'rien' } });
+		await fireEvent.click(view.searchSubmit() as HTMLButtonElement);
+
+		await waitFor(() => expect(view.searchClear()).not.toBeNull());
+		await fireEvent.click(view.searchClear() as HTMLButtonElement);
+
+		await waitFor(() => expect(lastRequest().query).toBeUndefined());
 	});
 });
 

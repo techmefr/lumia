@@ -381,6 +381,7 @@
 					variant={comfort ? 'secondary' : 'outline'}
 					size="sm"
 					class="self-start"
+					data-test-comfort
 					aria-pressed={comfort}
 					onclick={toggleComfort}
 				>

@@ -98,7 +98,7 @@
 	});
 </script>
 
-<Card>
+<Card data-test-instance-admin>
 	<CardContent class="flex flex-col gap-6 pt-6">
 		<div>
 			<h2 class="flex items-center gap-2 text-lg font-semibold">

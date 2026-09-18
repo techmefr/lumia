@@ -434,6 +434,7 @@
 		>
 			<div class="flex w-full max-w-3xl gap-1.5 sm:gap-2">
 				<Button
+					data-test-like
 					class="flex-1 gap-1.5 px-2 sm:px-4"
 					variant={sentiment === 'like' ? 'default' : 'outline'}
 					onclick={() => toggleSentiment('like')}
@@ -442,6 +443,7 @@
 					<span class="hidden sm:inline">{t('article.like')}</span>
 				</Button>
 				<Button
+					data-test-dislike
 					class="flex-1 gap-1.5 px-2 sm:px-4"
 					variant={sentiment === 'dislike' ? 'default' : 'outline'}
 					onclick={() => toggleSentiment('dislike')}
