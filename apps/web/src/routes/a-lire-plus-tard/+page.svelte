@@ -5,10 +5,14 @@
 	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, toast } from '@lumia/ui';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import Plus from '@lucide/svelte/icons/plus';
+	import CloudDownload from '@lucide/svelte/icons/cloud-download';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import ArticleGrid from '$domain/article/article-grid.svelte';
+	import OfflineStorageIndicator from '$domain/offline/offline-storage-indicator.svelte';
+	import { offlineLibrary } from '$technical/offline/offline-runtime';
+	import { OfflineQuotaExceededError } from '$domain/offline/offline-library.svelte';
 
 	const PAGE_SIZE = 24;
 
@@ -21,6 +25,8 @@
 	let newUrl = $state('');
 	let savingUrl = $state(false);
 	let saveError = $state<MessageKey | null>(null);
+	let pendingOfflineIds = $state<string[]>([]);
+	let makingAllAvailable = $state(false);
 
 	async function load() {
 		loading = true;
@@ -69,8 +75,45 @@
 		}
 	}
 
+	async function toggleOffline(articleId: string) {
+		if (pendingOfflineIds.includes(articleId)) return;
+		pendingOfflineIds = [...pendingOfflineIds, articleId];
+		try {
+			if (offlineLibrary.isOffline(articleId)) {
+				await offlineLibrary.makeUnavailable(articleId);
+				toast(t('offline.removedToast'));
+				return;
+			}
+			const detail = await lumia.article.getArticle(articleId);
+			await offlineLibrary.makeAvailable(detail);
+			toast(t('offline.addedToast'));
+		} catch (cause) {
+			toast(cause instanceof OfflineQuotaExceededError ? t('offline.quotaExceededToast') : t('offline.addFailedToast'));
+		} finally {
+			pendingOfflineIds = pendingOfflineIds.filter((id) => id !== articleId);
+		}
+	}
+
+	async function makeAllAvailable() {
+		if (makingAllAvailable) return;
+		makingAllAvailable = true;
+		try {
+			const result = await offlineLibrary.makeAllAvailable(articles, (articleId) =>
+				lumia.article.getArticle(articleId)
+			);
+			toast(
+				result.skipped.length > 0
+					? t('offline.makeAllPartial', { cached: result.cached.length, skipped: result.skipped.length })
+					: t('offline.makeAllDone', { count: result.cached.length })
+			);
+		} finally {
+			makingAllAvailable = false;
+		}
+	}
+
 	onMount(() => {
 		if (requireAuth()) void load();
+		void offlineLibrary.init();
 	});
 </script>
 
@@ -82,6 +125,31 @@
 		</h1>
 		<p class="text-sm text-muted-foreground">{t('readLater.intro')}</p>
 	</div>
+
+	<Card>
+		<CardHeader>
+			<CardTitle>{t('offline.title')}</CardTitle>
+			<CardDescription>{t('offline.description')}</CardDescription>
+		</CardHeader>
+		<CardContent class="flex flex-col gap-3">
+			<OfflineStorageIndicator
+				bytesUsed={offlineLibrary.bytesUsed}
+				capBytes={offlineLibrary.capBytes}
+				articleCount={offlineLibrary.records.length}
+			/>
+			<Button
+				data-test-make-all-offline
+				size="sm"
+				variant="outline"
+				class="w-fit"
+				disabled={makingAllAvailable || articles.length === 0}
+				onclick={makeAllAvailable}
+			>
+				<CloudDownload class="size-4" />
+				{makingAllAvailable ? t('offline.makingAllAvailable') : t('offline.makeAllAvailable')}
+			</Button>
+		</CardContent>
+	</Card>
 
 	<Card>
 		<CardHeader>
@@ -116,7 +184,14 @@
 		<p data-test-list-error role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{/if}
 
-	<ArticleGrid {articles} {loading}>
+	<ArticleGrid
+		{articles}
+		{loading}
+		offlineControl
+		offlineIds={offlineLibrary.offlineIds}
+		offlinePendingIds={pendingOfflineIds}
+		onToggleOffline={toggleOffline}
+	>
 		{#snippet empty()}
 			<div class="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-6">
 				<p class="text-sm text-muted-foreground">{t('readLater.empty')}</p>

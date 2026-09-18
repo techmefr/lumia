@@ -24,6 +24,25 @@ vi.mock('$technical/api/client', () => ({
 	}
 }));
 
+// The real runtime opens IndexedDB at module scope, which jsdom does not provide. The in-memory
+// database already backs OfflineLibrary's own unit tests, so reusing it here exercises the real
+// class instead of a hand-rolled stub that would drift from its actual interface. Imported inside
+// the factory, not at the top of the file: vi.mock is hoisted above ordinary imports, so a
+// top-level binding would still be undefined when this factory runs.
+vi.mock('$technical/offline/offline-runtime', async () => {
+	const { OfflineLibrary } = await import('$domain/offline/offline-library.svelte');
+	const { OfflineWriteQueue } = await import('$domain/offline/offline-write-queue.svelte');
+	const { createInMemoryOfflineDatabase } = await import(
+		'$technical/offline/in-memory-offline-database'
+	);
+	const db = createInMemoryOfflineDatabase();
+	return {
+		offlineLibrary: new OfflineLibrary(db),
+		writeQueue: new OfflineWriteQueue(db),
+		startOfflineRuntime: () => () => {}
+	};
+});
+
 const api = vi.mocked(lumia, { deep: true });
 
 function layout() {

@@ -168,6 +168,26 @@ export const mg: Catalogue = {
 	'readLater.saveFailed':
 		'Tsy afaka nitahiry ity pejy ity — mety tsy azo idirana na tsy misy votoaty azo vakiana.',
 
+	'offline.banner': 'Tsy misy aterineto — tsy azo sokafana ny lahatsoratra tsy voatahiry hogamiana.',
+	'offline.title': 'Famakiana tsy misy aterineto',
+	'offline.description':
+		"Safidio ireo lahatsoratra amin'ity lisitra ity mbola azo vakina tsy misy tambajotra. Ny soratra ihany no tehirizina, tsy ny sary.",
+	'offline.storageUsed': '{used} amin\'ny {cap} nampiasaina',
+	'offline.articleCount': 'Lahatsoratra {count} tsy misy aterineto',
+	'offline.makeAllAvailable': "Ataovy azo jerena tsy misy aterineto ny lisitra manontolo",
+	'offline.makingAllAvailable': 'Mitahiry…',
+	'offline.makeAllDone': 'Lahatsoratra {count} no azo vakiana tsy misy aterineto izao.',
+	'offline.makeAllPartial':
+		'Lahatsoratra {cached} voatahiry, {skipped} nodinganina — tratra ny fetran\'ny fitehirizana.',
+	'offline.addedToast': 'Azo vakiana tsy misy aterineto.',
+	'offline.removedToast': 'Nesorina tamin\'ny tsy misy aterineto.',
+	'offline.addFailedToast': "Tsy afaka nanao an'ity lahatsoratra ity ho azo vakiana tsy misy aterineto.",
+	'offline.quotaExceededToast':
+		"Tratra ny fetran'ny fitehirizana tsy misy aterineto — esory ny iray mba hampidirana ny hafa.",
+	'offline.removeTitle': 'Esory amin\'ny tsy misy aterineto',
+	'offline.makeAvailableTitle': 'Ataovy azo vakiana tsy misy aterineto',
+	'offline.readingOfflineCopy': "Dikany tsy misy aterineto — voatahiry talohan'ny fahaverezan'ny tambajotra.",
+
 	'read.title': 'Famakiana',
 	'read.titleWithLabel': 'Famakiana — {label}',
 	'read.help':

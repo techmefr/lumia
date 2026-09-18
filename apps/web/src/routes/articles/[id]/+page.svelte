@@ -6,6 +6,7 @@
 		sanitizeArticleHtml,
 		type ArticleDetail,
 		type ArticleTranslation,
+		type FeedbackUpdate,
 		type OrbitPosition
 	} from '@lumia/core';
 	import { Button, Card, CardContent, Badge, GlareHover, ReadingProgress, Skeleton, toast } from '@lumia/ui';
@@ -22,6 +23,9 @@
 	import Gauge from '@lucide/svelte/icons/gauge';
 	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import Square from '@lucide/svelte/icons/square';
+	import Download from '@lucide/svelte/icons/download';
+	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import CloudOff from '@lucide/svelte/icons/cloud-off';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
@@ -31,6 +35,8 @@
 	import AddToPlaylist from '$domain/playlist/add-to-playlist.svelte';
 	import TranslateButton from '$domain/article/translate-button.svelte';
 	import OrbitButton, { type OrbitAction } from '$domain/article/orbit-button.svelte';
+	import { offlineLibrary, writeQueue } from '$technical/offline/offline-runtime';
+	import { OfflineQuotaExceededError } from '$domain/offline/offline-library.svelte';
 
 	/** Below this, "reading" is really just landing on the page; don't record it as progress. */
 	const MIN_TRACKED_PROGRESS = 0.02;
@@ -53,6 +59,10 @@
 	// The stored side of the orbit button. Right is the model's default, and the fallback when the
 	// preference cannot be read: the button has to appear either way.
 	let orbitPosition = $state<OrbitPosition>('right');
+	// Set when the network had nothing to give and the reader is looking at the copy they opted
+	// into offline reading instead — a stale `article.notFound` would be the wrong story here.
+	let servingOffline = $state(false);
+	let offlineToggling = $state(false);
 
 	const speech = new SpeechReader();
 
@@ -60,10 +70,24 @@
 	let saveTimer: ReturnType<typeof setTimeout> | null = null;
 	let markedRead = false;
 
+	/**
+	 * Sends one feedback write, or queues it if the network refuses it. Every field here is an
+	 * absolute value the server keeps as-is (scroll progress only ever moves up server-side), so a
+	 * write made offline and replayed later — possibly after a further edit already coalesced into
+	 * it — lands on the same state a live write would have, never double-counted.
+	 */
+	async function submitFeedback(articleId: string, update: FeedbackUpdate): Promise<void> {
+		try {
+			await lumia.recommendation.sendFeedback(articleId, update);
+		} catch {
+			await writeQueue.enqueue(articleId, update);
+		}
+	}
+
 	async function toggleSentiment(choice: 'like' | 'dislike') {
 		if (!article) return;
 		sentiment = sentiment === choice ? null : choice;
-		await lumia.recommendation.sendFeedback(article.id, { sentiment });
+		await submitFeedback(article.id, { sentiment });
 		toast(
 			sentiment === null
 				? t('article.opinionRemoved')
@@ -76,15 +100,37 @@
 	async function toggleSaved() {
 		if (!article) return;
 		saved = !saved;
-		await lumia.recommendation.sendFeedback(article.id, { saved });
+		await submitFeedback(article.id, { saved });
 		toast(saved ? t('article.savedToast') : t('article.unsavedToast'));
 	}
 
 	async function toggleFavorite() {
 		if (!article) return;
 		favorite = !favorite;
-		await lumia.recommendation.sendFeedback(article.id, { favorite });
+		await submitFeedback(article.id, { favorite });
 		toast(favorite ? t('article.favoritedToast') : t('article.unfavoritedToast'));
+	}
+
+	async function toggleOfflineAvailability() {
+		if (!article || offlineToggling) return;
+		offlineToggling = true;
+		try {
+			if (offlineLibrary.isOffline(article.id)) {
+				await offlineLibrary.makeUnavailable(article.id);
+				toast(t('offline.removedToast'));
+			} else {
+				await offlineLibrary.makeAvailable(article);
+				toast(t('offline.addedToast'));
+			}
+		} catch (cause) {
+			toast(
+				cause instanceof OfflineQuotaExceededError
+					? t('offline.quotaExceededToast')
+					: t('offline.addFailedToast')
+			);
+		} finally {
+			offlineToggling = false;
+		}
 	}
 
 	async function share() {
@@ -150,6 +196,13 @@
 				]
 			: []),
 		{
+			id: 'offline',
+			label: article && offlineLibrary.isOffline(article.id) ? t('offline.removeTitle') : t('offline.makeAvailableTitle'),
+			icon: article && offlineLibrary.isOffline(article.id) ? CircleCheck : Download,
+			active: article ? offlineLibrary.isOffline(article.id) : false,
+			run: () => void toggleOfflineAvailability()
+		},
+		{
 			id: 'share',
 			label: linkCopied ? t('article.linkCopied') : t('article.share'),
 			icon: linkCopied ? Check : Share2,
@@ -184,7 +237,9 @@
 
 	function persistProgress(value: number) {
 		if (!article) return;
-		void lumia.recommendation.sendFeedback(article.id, { scroll_progress: value });
+		// Reading the offline copy still records progress: `submitFeedback` queues it locally when
+		// the network refuses the write, to be replayed once it comes back.
+		void submitFeedback(article.id, { scroll_progress: value });
 	}
 
 	function onScroll() {
@@ -193,7 +248,7 @@
 
 		if (!markedRead && progress >= AUTO_READ_PROGRESS && article) {
 			markedRead = true;
-			void lumia.recommendation.sendFeedback(article.id, { read: true });
+			void submitFeedback(article.id, { read: true });
 		}
 
 		// Throttle: a scroll fires dozens of times a second and each save is a request.
@@ -241,16 +296,51 @@
 			})
 			.catch(() => {});
 
+		void offlineLibrary.init();
+
 		lumia.article
 			.getArticle(articleId)
 			.then(async (loaded) => {
 				article = loaded;
+				servingOffline = false;
 				saved = false;
 				favorite = false;
 				markedRead = loaded.read;
 				await restoreScroll(loaded.scroll_progress);
 			})
-			.catch(() => (error = 'article.notFound'))
+			.catch(async () => {
+				// No network, or the instance itself is unreachable: fall back to the copy this
+				// reader explicitly opted into offline reading, rather than a bare "not found".
+				const cached = await offlineLibrary.getContent(articleId);
+				if (!cached) {
+					error = 'article.notFound';
+					return;
+				}
+				article = {
+					id: articleId,
+					feed_id: '',
+					author_id: null,
+					author_name: null,
+					category_id: null,
+					category_name: null,
+					source_label: cached.sourceLabel,
+					title: cached.title,
+					url: '',
+					summary: null,
+					image_url: null,
+					published_at: '',
+					reading_minutes: cached.readingMinutes,
+					read: false,
+					scroll_progress: 0,
+					relevance_score: 50,
+					content: cached.content,
+					keywords: []
+				};
+				servingOffline = true;
+				saved = false;
+				favorite = false;
+				markedRead = false;
+			})
 			.finally(() => (loading = false));
 
 		return () => {
@@ -414,6 +504,16 @@
 				{#if translation}
 					<p class="mt-3 text-xs text-muted-foreground" data-test-translated-notice>
 						{t('article.translatedNotice')}
+					</p>
+				{/if}
+
+				{#if servingOffline}
+					<p
+						class="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground"
+						data-test-offline-notice
+					>
+						<CloudOff class="size-3.5" />
+						{t('offline.readingOfflineCopy')}
 					</p>
 				{/if}
 
