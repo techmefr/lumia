@@ -26,6 +26,7 @@ import type {
 	TokenStore,
 	UnreadCounts
 } from '@lumia/core';
+import { Temporal } from 'temporal-polyfill';
 import { ApiError } from '@lumia/core';
 import {
 	SEED_ARTICLES,
@@ -412,7 +413,7 @@ export function createDemoClient(): LumiaClient {
 		);
 		if (!pending) return;
 		pending.status = status;
-		pending.decided_at = new Date().toISOString();
+		pending.decided_at = Temporal.Now.instant().toString();
 		if (status === 'approved') state.instance.account_count += 1;
 		persist();
 	}
@@ -444,7 +445,7 @@ export function createDemoClient(): LumiaClient {
 					email,
 					username,
 					status: 'pending',
-					created_at: new Date().toISOString(),
+					created_at: Temporal.Now.instant().toString(),
 					decided_at: null
 				};
 				state.accessRequests = [request, ...state.accessRequests];
@@ -536,12 +537,12 @@ export function createDemoClient(): LumiaClient {
 				// so a refresh has nothing to fetch and only stamps the moment it was asked for.
 				const feed = state.feeds.find((candidate) => candidate.id === feedId);
 				if (!feed) throw new Error('flux introuvable');
-				feed.last_refreshed_at = new Date().toISOString();
+				feed.last_refreshed_at = Temporal.Now.instant().toString();
 				persist();
 				return settle({ ...feed });
 			},
 			refreshAllFeeds: async () => {
-				const requestedAt = new Date().toISOString();
+				const requestedAt = Temporal.Now.instant().toString();
 				for (const feed of state.feeds) feed.last_refreshed_at = requestedAt;
 				persist();
 				return settle({ feeds_requested: state.feeds.length, requested_at: requestedAt });
@@ -652,7 +653,7 @@ export function createDemoClient(): LumiaClient {
 					title: `Page enregistrée depuis ${host}`,
 					summary: "Enregistrée pendant la démo : dans la vraie app, la page est téléchargée puis nettoyée.",
 					keywords: ['enregistré'],
-					published_at: new Date().toISOString(),
+					published_at: Temporal.Now.instant().toString(),
 					image_hue: 265,
 					paragraphs: [
 						`Cette page vient de ${url}. La démo ne va pas la chercher : elle tourne entièrement dans le navigateur, sans serveur ni accès réseau vers des sites tiers.`,
@@ -791,9 +792,11 @@ export function createDemoClient(): LumiaClient {
 					if (remaining <= 0) break;
 				}
 
-				const stamp = new Date();
-				const day = String(stamp.getDate()).padStart(2, '0');
-				const month = String(stamp.getMonth() + 1).padStart(2, '0');
+				// Reader-local calendar date, not the server's: naming a playlist "07/09" only reads
+				// right if that is today where the reader actually is.
+				const stamp = Temporal.Now.zonedDateTimeISO();
+				const day = String(stamp.day).padStart(2, '0');
+				const month = String(stamp.month).padStart(2, '0');
 				const playlist = {
 					id: nextId('playlist'),
 					name: `${targetMinutes} min · ${day}/${month}`,

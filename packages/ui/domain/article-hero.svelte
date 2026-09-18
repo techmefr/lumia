@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { cn } from '../technical/utils.js';
+	import { formatPublishedDate } from '../technical/dates.js';
 	import GlareHover from '../technical/effects/glare-hover.svelte';
 	import BorderGlow from '../technical/effects/border-glow.svelte';
 
@@ -53,7 +54,7 @@
 	let iconFailed = $state(false);
 
 	const formattedDate = $derived(
-		new Date(publishedAt).toLocaleDateString(locale, {
+		formatPublishedDate(publishedAt, locale, {
 			day: 'numeric',
 			month: 'long'
 		})

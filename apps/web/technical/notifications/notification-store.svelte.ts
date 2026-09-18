@@ -7,6 +7,7 @@
  * while a tab is open, and notifies when the total goes up.
  */
 
+import { Temporal } from 'temporal-polyfill';
 import { t } from '../i18n/i18n.svelte';
 
 const SETTINGS_KEY = 'lumia-notifications';
@@ -73,10 +74,21 @@ export async function requestPermission(): Promise<PermissionState> {
 	return (await Notification.requestPermission()) as Exclude<PermissionState, 'unsupported'>;
 }
 
-/** True inside the quiet window, which may wrap past midnight. */
-export function isQuietHour(date: Date, from: number, to: number): boolean {
+/**
+ * True inside the quiet window, which may wrap past midnight.
+ *
+ * The timezone is an explicit parameter rather than the ambient one `Date.getHours()` would read:
+ * the same instant must be quiet or not depending on where the reader is, not on wherever the code
+ * happens to run (a browser tab, a test runner, or eventually a worker).
+ */
+export function isQuietHour(
+	instant: Temporal.Instant,
+	from: number,
+	to: number,
+	timeZone: string
+): boolean {
 	if (from === to) return false;
-	const hour = date.getHours();
+	const hour = instant.toZonedDateTimeISO(timeZone).hour;
 	return from < to ? hour >= from && hour < to : hour >= from || hour < to;
 }
 
@@ -105,12 +117,13 @@ export function notificationFor(
 	total: number,
 	baseline: number | null,
 	config: NotificationSettings,
-	now: Date
+	now: Temporal.Instant,
+	timeZone: string
 ): string | null {
 	if (baseline === null || total <= baseline) return null;
 	const fresh = total - baseline;
 	if (fresh < config.threshold) return null;
-	if (isQuietHour(now, config.quietFromHour, config.quietToHour)) return null;
+	if (isQuietHour(now, config.quietFromHour, config.quietToHour, timeZone)) return null;
 	return fresh === 1
 		? t('notifications.newArticle')
 		: t('notifications.newArticles', { count: fresh });
@@ -124,6 +137,9 @@ export function notificationFor(
  */
 export function watchUnread(fetchTotal: () => Promise<number>): () => void {
 	let stopped = false;
+	// Resolved once: the reader's zone does not change mid-session, and re-reading it on every poll
+	// would only add noise.
+	const timeZone = Temporal.Now.timeZoneId();
 
 	function isActive(): boolean {
 		return settings.enabled && permissionState() === 'granted';
@@ -142,7 +158,13 @@ export function watchUnread(fetchTotal: () => Promise<number>): () => void {
 		}
 		try {
 			const total = await fetchTotal();
-			const message = notificationFor(total, readBaseline(), settings, new Date());
+			const message = notificationFor(
+				total,
+				readBaseline(),
+				settings,
+				Temporal.Now.instant(),
+				timeZone
+			);
 			writeBaseline(total);
 			if (message) new Notification('Lumia', { body: message, tag: 'lumia-unread' });
 		} catch {
