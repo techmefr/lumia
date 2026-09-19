@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { cn } from '../technical/utils.js';
+	import { formatPublishedDate } from '../technical/dates.js';
 	import GlareHover from '../technical/effects/glare-hover.svelte';
 	import BorderGlow from '../technical/effects/border-glow.svelte';
 
@@ -62,7 +63,7 @@
 	let iconFailed = $state(false);
 
 	const formattedDate = $derived(
-		new Date(publishedAt).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
+		formatPublishedDate(publishedAt, locale, { day: 'numeric', month: 'short' })
 	);
 	const initial = $derived(sourceLabel.charAt(0).toUpperCase());
 	const progressPercent = $derived(Math.round(Math.min(Math.max(scrollProgress, 0), 1) * 100));
