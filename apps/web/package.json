@@ -17,7 +17,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"dependencies": {
-		"@lucide/svelte": "^1.45.0",
+		"@lucide/svelte": "^1.47.0",
 		"@lumia/core": "workspace:*",
 		"@lumia/ui": "workspace:*",
 		"bits-ui": "^2.19.2",
