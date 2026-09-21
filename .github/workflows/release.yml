@@ -70,7 +70,7 @@ jobs:
           mkdir -p /tmp/digests
           echo "${{ steps.build.outputs.digest }}" > "/tmp/digests/${{ matrix.image }}-${{ matrix.suffix }}"
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: digest-${{ matrix.image }}-${{ matrix.suffix }}
           path: /tmp/digests/${{ matrix.image }}-${{ matrix.suffix }}
@@ -84,7 +84,7 @@ jobs:
       matrix:
         image: [lumia-backend, lumia-web]
     steps:
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           pattern: digest-${{ matrix.image }}-*
           path: /tmp/digests
