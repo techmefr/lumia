@@ -166,6 +166,26 @@ export const it: Catalogue = {
 	'readLater.saveFailed':
 		'Impossibile salvare questa pagina — forse è inaccessibile o senza contenuto leggibile.',
 
+	'offline.banner': 'Offline — gli articoli non resi disponibili offline non si possono aprire.',
+	'offline.title': 'Lettura offline',
+	'offline.description':
+		'Scegli quali articoli di questa lista restano leggibili senza rete. Il testo viene conservato, le immagini no.',
+	'offline.storageUsed': '{used} su {cap} utilizzati',
+	'offline.articleCount': '{count} articolo/i offline',
+	'offline.makeAllAvailable': "Rendi disponibile offline tutta la lista",
+	'offline.makingAllAvailable': 'Salvataggio in cache…',
+	'offline.makeAllDone': '{count} articolo/i ora disponibili offline.',
+	'offline.makeAllPartial':
+		'{cached} articolo/i salvato/i, {skipped} saltato/i — limite di spazio raggiunto.',
+	'offline.addedToast': 'Disponibile offline.',
+	'offline.removedToast': 'Rimosso dalla modalità offline.',
+	'offline.addFailedToast': 'Impossibile rendere questo articolo disponibile offline.',
+	'offline.quotaExceededToast':
+		'Limite di spazio offline raggiunto — rimuovi un articolo per aggiungerne un altro.',
+	'offline.removeTitle': 'Rimuovi dalla modalità offline',
+	'offline.makeAvailableTitle': 'Rendi disponibile offline',
+	'offline.readingOfflineCopy': 'Copia offline — salvata prima della perdita di rete.',
+
 	'read.title': 'Lettura',
 	'read.titleWithLabel': 'Lettura — {label}',
 	'read.help':

@@ -15,3 +15,12 @@ const FORBIDDEN_TAGS = ['form', 'input', 'button', 'select', 'textarea', 'option
 export function sanitizeArticleHtml(html: string): string {
 	return DOMPurify.sanitize(html, { FORBID_TAGS: FORBIDDEN_TAGS });
 }
+
+/**
+ * The text-only variant an offline copy is stored as. Images are the bulk of an article's weight
+ * and the one thing a phone cannot fetch again once it has no signal, so a reader who opts an
+ * article into offline reading gets its words, not a page of broken image placeholders.
+ */
+export function sanitizeArticleHtmlForOffline(html: string): string {
+	return DOMPurify.sanitize(html, { FORBID_TAGS: [...FORBIDDEN_TAGS, 'img', 'picture', 'source'] });
+}

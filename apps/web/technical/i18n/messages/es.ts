@@ -166,6 +166,26 @@ export const es: Catalogue = {
 	'readLater.saveFailed':
 		'No se ha podido guardar esta página — puede que sea inaccesible o que no tenga contenido legible.',
 
+	'offline.banner': 'Sin conexión — los artículos no disponibles sin conexión no se pueden abrir.',
+	'offline.title': 'Lectura sin conexión',
+	'offline.description':
+		'Elige qué artículos de esta lista siguen siendo legibles sin red. Se conserva el texto, no las imágenes.',
+	'offline.storageUsed': '{used} de {cap} usados',
+	'offline.articleCount': '{count} artículo(s) sin conexión',
+	'offline.makeAllAvailable': 'Hacer disponible toda la lista sin conexión',
+	'offline.makingAllAvailable': 'Guardando en caché…',
+	'offline.makeAllDone': '{count} artículo(s) ahora disponibles sin conexión.',
+	'offline.makeAllPartial':
+		'{cached} artículo(s) guardado(s), {skipped} omitido(s) — límite de almacenamiento alcanzado.',
+	'offline.addedToast': 'Disponible sin conexión.',
+	'offline.removedToast': 'Eliminado del modo sin conexión.',
+	'offline.addFailedToast': 'No se pudo hacer disponible este artículo sin conexión.',
+	'offline.quotaExceededToast':
+		'Límite de almacenamiento sin conexión alcanzado — elimina un artículo para añadir otro.',
+	'offline.removeTitle': 'Quitar del modo sin conexión',
+	'offline.makeAvailableTitle': 'Hacer disponible sin conexión',
+	'offline.readingOfflineCopy': 'Copia sin conexión — guardada antes de perder la red.',
+
 	'read.title': 'Lectura',
 	'read.titleWithLabel': 'Lectura — {label}',
 	'read.help':

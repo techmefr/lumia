@@ -170,6 +170,26 @@ export const fr = {
 	'readLater.saveFailed':
 		"Impossible d'enregistrer cette page — elle est peut-être inaccessible ou sans contenu lisible.",
 
+	'offline.banner': 'Hors ligne — les articles non disponibles hors ligne restent inaccessibles.',
+	'offline.title': 'Lecture hors ligne',
+	'offline.description':
+		'Choisis quels articles de cette liste restent lisibles sans réseau. Le texte est conservé, pas les images.',
+	'offline.storageUsed': '{used} sur {cap} utilisés',
+	'offline.articleCount': '{count} article(s) hors ligne',
+	'offline.makeAllAvailable': 'Rendre toute la liste disponible hors ligne',
+	'offline.makingAllAvailable': 'Mise en cache…',
+	'offline.makeAllDone': '{count} article(s) disponible(s) hors ligne.',
+	'offline.makeAllPartial':
+		'{cached} article(s) mis en cache, {skipped} ignoré(s) — plafond de stockage atteint.',
+	'offline.addedToast': 'Disponible hors ligne.',
+	'offline.removedToast': 'Retiré du hors ligne.',
+	'offline.addFailedToast': "Impossible de rendre cet article disponible hors ligne.",
+	'offline.quotaExceededToast':
+		'Plafond de stockage hors ligne atteint — retire un article pour en ajouter un autre.',
+	'offline.removeTitle': 'Retirer du hors ligne',
+	'offline.makeAvailableTitle': 'Rendre disponible hors ligne',
+	'offline.readingOfflineCopy': 'Copie hors ligne — enregistrée avant la perte du réseau.',
+
 	'read.title': 'Lecture',
 	'read.titleWithLabel': 'Lecture — {label}',
 	'read.help':

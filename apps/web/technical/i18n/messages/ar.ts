@@ -163,6 +163,24 @@ export const ar: Catalogue = {
 	'readLater.saveFailed':
 		'تعذّر حفظ هذه الصفحة — قد تكون غير متاحة أو بلا محتوى قابل للقراءة.',
 
+	'offline.banner': 'غير متصل — لا يمكن فتح المقالات غير المتاحة دون اتصال.',
+	'offline.title': 'القراءة دون اتصال',
+	'offline.description':
+		'اختر أي مقالات من هذه القائمة تبقى قابلة للقراءة دون شبكة. يُحفظ النص فقط دون الصور.',
+	'offline.storageUsed': 'تم استخدام {used} من {cap}',
+	'offline.articleCount': '{count} مقالة متاحة دون اتصال',
+	'offline.makeAllAvailable': 'إتاحة القائمة كاملة دون اتصال',
+	'offline.makingAllAvailable': 'جارٍ الحفظ المؤقت…',
+	'offline.makeAllDone': 'أصبحت {count} مقالة متاحة دون اتصال.',
+	'offline.makeAllPartial': 'تم حفظ {cached} وتخطي {skipped} — تم بلوغ حد التخزين.',
+	'offline.addedToast': 'متاح دون اتصال.',
+	'offline.removedToast': 'أُزيل من وضع عدم الاتصال.',
+	'offline.addFailedToast': 'تعذّر إتاحة هذه المقالة دون اتصال.',
+	'offline.quotaExceededToast': 'تم بلوغ حد التخزين دون اتصال — أزل مقالة لإضافة أخرى.',
+	'offline.removeTitle': 'إزالة من وضع عدم الاتصال',
+	'offline.makeAvailableTitle': 'إتاحة دون اتصال',
+	'offline.readingOfflineCopy': 'نسخة دون اتصال — محفوظة قبل انقطاع الشبكة.',
+
 	'read.title': 'القراءة',
 	'read.titleWithLabel': 'القراءة — {label}',
 	'read.help':

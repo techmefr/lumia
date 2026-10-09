@@ -21,6 +21,9 @@
 	import { bindSequenceShortcuts, bindShortcuts } from '$technical/keyboard/shortcuts';
 	import { NAVIGATION_PREFIX, NAVIGATION_SHORTCUTS } from '$technical/keyboard/shortcut-catalogue';
 	import { initLocale, t } from '$technical/i18n/i18n.svelte.js';
+	import { startOfflineRuntime } from '$technical/offline/offline-runtime';
+	import { isOnline } from '$technical/network/connectivity.svelte';
+	import OfflineBanner from '$domain/offline/offline-banner.svelte';
 
 	let { children } = $props();
 
@@ -103,6 +106,10 @@
 		return watchUnread(async () => (await lumia.feed.getUnreadCounts()).total);
 	});
 
+	// Owned by the layout, like the unread poll above: the shell precache, the offline library and
+	// the pending-writes queue are shared by every screen, not just the saved list or the reader.
+	onMount(() => startOfflineRuntime());
+
 	onMount(() => {
 		if (!bottomNavEl) return;
 		const measure = () => {
@@ -146,6 +153,10 @@
 
 {#if isDemo}
 	<DemoBanner />
+{/if}
+
+{#if !isOnline()}
+	<OfflineBanner />
 {/if}
 
 {#if !isAuthRoute(page.url.pathname)}

@@ -166,6 +166,26 @@ export const ru: Catalogue = {
 	'readLater.saveFailed':
 		'Не удалось сохранить эту страницу — возможно, она недоступна или без читаемого текста.',
 
+	'offline.banner': 'Нет сети — статьи, не сохранённые для офлайна, недоступны.',
+	'offline.title': 'Чтение офлайн',
+	'offline.description':
+		'Выбери, какие статьи из этого списка останутся доступны без сети. Сохраняется текст, но не изображения.',
+	'offline.storageUsed': 'Использовано {used} из {cap}',
+	'offline.articleCount': 'Статей офлайн: {count}',
+	'offline.makeAllAvailable': 'Сделать весь список доступным офлайн',
+	'offline.makingAllAvailable': 'Кэшируется…',
+	'offline.makeAllDone': 'Статей теперь доступно офлайн: {count}.',
+	'offline.makeAllPartial':
+		'Сохранено: {cached}, пропущено: {skipped} — достигнут лимит хранилища.',
+	'offline.addedToast': 'Доступно офлайн.',
+	'offline.removedToast': 'Удалено из офлайн-доступа.',
+	'offline.addFailedToast': 'Не удалось сделать эту статью доступной офлайн.',
+	'offline.quotaExceededToast':
+		'Достигнут лимит офлайн-хранилища — удали одну статью, чтобы добавить другую.',
+	'offline.removeTitle': 'Убрать из офлайн-доступа',
+	'offline.makeAvailableTitle': 'Сделать доступным офлайн',
+	'offline.readingOfflineCopy': 'Офлайн-копия — сохранена до потери сети.',
+
 	'read.title': 'Чтение',
 	'read.titleWithLabel': 'Чтение — {label}',
 	'read.help':
