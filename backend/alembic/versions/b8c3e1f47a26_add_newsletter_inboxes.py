@@ -1,7 +1,7 @@
 """add newsletter inboxes
 
 Revision ID: b8c3e1f47a26
-Revises: a4d82e6b1c75, a91d3e57b2c4
+Revises: a3e9b7d21c64
 Create Date: 2026-10-21 12:00:00.000000
 
 """
@@ -14,7 +14,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "b8c3e1f47a26"
-down_revision: str | Sequence[str] | None = ("a4d82e6b1c75", "a91d3e57b2c4")
+down_revision: str | Sequence[str] | None = "a3e9b7d21c64"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
