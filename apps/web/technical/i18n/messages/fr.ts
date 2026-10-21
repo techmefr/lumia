@@ -831,7 +831,30 @@ export const fr = {
 	'highlights.show': 'Afficher dans le texte',
 	'highlights.orphan': 'Ce passage n\'est plus dans le texte de l\'article. Votre note est conservée.',
 	'highlights.translatedNotice': 'Les surlignages sont masqués dans le texte traduit.',
-	'highlights.openArticle': 'Ouvrir l\'article'
+	'highlights.openArticle': 'Ouvrir l\'article',
+	'tags.title': 'Tags',
+	'tags.label': 'Ajouter un tag',
+	'tags.placeholder': 'Ajouter un tag…',
+	'tags.remove': 'Retirer le tag {name}',
+	'tags.suggested': 'Suggestions',
+	'tags.accept': 'Ajouter le tag suggéré {name}',
+	'tags.dismiss': 'Écarter la suggestion {name}',
+	'tags.askAi': 'Suggérer avec l\'IA',
+	'tags.aiUnavailable': 'Aucun fournisseur d\'IA n\'est configuré sur ce compte.',
+	'tags.aiFailed': 'Les suggestions n\'ont pas pu être récupérées.',
+	'tags.aiNone': 'Aucune nouvelle suggestion.',
+	'tags.saveFailed': 'Le tag n\'a pas pu être enregistré.',
+	'tags.loadFailed': 'Impossible de charger les tags.',
+	'tags.filter': 'Tag : {name}',
+	'tags.manageIntro': 'Vos propres étiquettes, séparées des mots-clés automatiques. Elles ne changent jamais ce qu\'on vous recommande.',
+	'tags.empty': 'Aucun tag pour l\'instant. Ajoutez-en un depuis un article.',
+	'tags.count': 'Articles : {count}',
+	'tags.rename': 'Renommer le tag {name}',
+	'tags.delete': 'Supprimer le tag {name}',
+	'tags.deleteConfirm': 'Supprimer le tag {name} ? Il sera retiré de {count} articles.',
+	'tags.nameTaken': 'Un tag portant ce nom existe déjà.',
+	'tags.renamed': 'Tag renommé.',
+	'tags.deleted': 'Tag supprimé.'
 } as const;
 
 export type MessageKey = keyof typeof fr;

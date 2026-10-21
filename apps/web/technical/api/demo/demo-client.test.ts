@@ -802,6 +802,93 @@ describe('public sharing', () => {
 
 	it('does not know a token it never issued', async () => {
 		await expect(demo.article.getPublicArticle('made-up')).rejects.toMatchObject({ status: 404 });
+describe('the tags', () => {
+	async function firstArticleId(): Promise<string> {
+		return (await demo.article.listArticles())[0].id;
+	}
+
+	it('starts with none', async () => {
+		await expect(demo.tag.listTags()).resolves.toEqual([]);
+	});
+
+	it('creates the tag on first use and shows it on the article and in the list', async () => {
+		const id = await firstArticleId();
+		const tags = await demo.tag.tagArticle(id, ' Cuisine ');
+		expect(tags.map((tag) => tag.name)).toEqual(['Cuisine']);
+		expect((await demo.article.getArticle(id)).tags).toEqual(tags);
+		expect((await demo.article.listArticles())[0].tags).toEqual(tags);
+		await expect(demo.tag.listTags()).resolves.toMatchObject([
+			{ name: 'Cuisine', article_count: 1 }
+		]);
+	});
+
+	it('treats a name that differs only by case as the same tag', async () => {
+		const id = await firstArticleId();
+		await demo.tag.tagArticle(id, 'Cuisine');
+		const tags = await demo.tag.tagArticle(id, 'cuisine');
+		expect(tags).toHaveLength(1);
+		await expect(demo.tag.createTag('CUISINE')).rejects.toMatchObject({ status: 409 });
+	});
+
+	it('filters the list by tag, alongside the other filters', async () => {
+		const [first, second] = await demo.article.listArticles();
+		const [tag] = await demo.tag.tagArticle(first.id, 'Cuisine');
+		await expect(demo.article.listArticles({ tagId: tag.id })).resolves.toMatchObject([
+			{ id: first.id }
+		]);
+		await expect(
+			demo.article.listArticles({ tagId: tag.id, feedId: second.feed_id === first.feed_id ? 'none' : second.feed_id })
+		).resolves.toEqual([]);
+	});
+
+	it('untags an article without deleting the tag', async () => {
+		const id = await firstArticleId();
+		const [tag] = await demo.tag.tagArticle(id, 'Cuisine');
+		await expect(demo.tag.untagArticle(id, tag.id)).resolves.toEqual([]);
+		await expect(demo.tag.listTags()).resolves.toMatchObject([{ article_count: 0 }]);
+	});
+
+	it('renames a tag, refusing a name another tag has', async () => {
+		const created = await demo.tag.createTag('Cuisine');
+		await demo.tag.createTag('Voyage');
+		await expect(demo.tag.renameTag(created.id, 'voyage')).rejects.toMatchObject({ status: 409 });
+		await expect(demo.tag.renameTag(created.id, 'Recettes')).resolves.toMatchObject({
+			name: 'Recettes'
+		});
+	});
+
+	it('deletes a tag and takes it off its articles', async () => {
+		const id = await firstArticleId();
+		const [tag] = await demo.tag.tagArticle(id, 'Cuisine');
+		await demo.tag.deleteTag(tag.id);
+		expect((await demo.article.getArticle(id)).tags).toEqual([]);
+		await expect(demo.tag.deleteTag(tag.id)).rejects.toMatchObject({ status: 404 });
+	});
+
+	it('refuses an unknown tag or article', async () => {
+		await expect(demo.tag.tagArticle('nope', 'x')).rejects.toMatchObject({ status: 404 });
+		await expect(demo.tag.untagArticle('a', 'nope')).rejects.toMatchObject({ status: 404 });
+		await expect(demo.tag.renameTag('nope', 'x')).rejects.toMatchObject({ status: 404 });
+	});
+
+	it('suggests the article keywords first, then the tags already in use, never what it carries', async () => {
+		const [first, second] = await demo.article.listArticles();
+		await demo.tag.tagArticle(second.id, 'Voyage');
+		const own = SEED_ARTICLES.find((article) => article.id === first.id)!;
+		const suggestions = await demo.tag.getSuggestions(first.id);
+		expect(suggestions.filter((item) => item.source === 'keyword').map((item) => item.name)).toEqual(
+			own.keywords.slice(0, 3)
+		);
+		expect(suggestions.filter((item) => item.source === 'used').map((item) => item.name)).toEqual([
+			'Voyage'
+		]);
+		await demo.tag.tagArticle(first.id, own.keywords[0]);
+		const after = await demo.tag.getSuggestions(first.id);
+		expect(after.map((item) => item.name.toLowerCase())).not.toContain(own.keywords[0].toLowerCase());
+	});
+
+	it('answers the model suggestions as unavailable, since the demo has no model', async () => {
+		await expect(demo.tag.getAiSuggestions('a')).rejects.toMatchObject({ status: 503 });
 	});
 });
 

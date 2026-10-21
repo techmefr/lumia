@@ -199,6 +199,11 @@ class ExportedShare(BaseModel):
     created_at: datetime
 
 
+class ExportedTag(BaseModel):
+    name: str
+    articles: list[ExportedArticle]
+
+
 class ExportedPlaylist(BaseModel):
     name: str
     articles: list[ExportedArticle]
@@ -219,6 +224,7 @@ class AccountExportResponse(BaseModel):
     saved_searches: list[ExportedSavedSearch]
     playlists: list[ExportedPlaylist]
     highlights: list[ExportedHighlight]
+    tags: list[ExportedTag]
     saved: list[ExportedArticle]
     favorites: list[ExportedArticle]
     shares: list[ExportedShare]

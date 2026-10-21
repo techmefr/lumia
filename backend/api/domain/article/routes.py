@@ -45,6 +45,9 @@ from api.domain.recommendation.relevance import (
     score_articles,
     to_relevance,
 )
+from api.domain.tag.models import ArticleTag, Tag
+from api.domain.tag.schemas import TagRef
+from api.domain.tag.service import tags_for_articles
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.domain.user.providers import get_translator
@@ -73,7 +76,11 @@ _RANKING_POOL = 500
 
 
 def to_summary(
-    article: Article, *, state: ReadState | None = None, relevance: int = 50
+    article: Article,
+    *,
+    state: ReadState | None = None,
+    relevance: int = 50,
+    tags: list[Tag] | None = None,
 ) -> ArticleSummaryResponse:
     state = state or ReadState()
     return ArticleSummaryResponse(
@@ -93,6 +100,7 @@ def to_summary(
         read=state.read,
         scroll_progress=state.scroll_progress,
         relevance_score=relevance,
+        tags=[TagRef(id=tag.id, name=tag.name) for tag in tags or []],
     )
 
 
@@ -101,11 +109,13 @@ async def to_summaries(
 ) -> list[ArticleSummaryResponse]:
     states = await fetch_read_state(session, user_id, [article.id for article in articles])
     raw = await score_articles(session, user_id, articles)
+    tags = await tags_for_articles(session, user_id, [article.id for article in articles])
     return [
         to_summary(
             article,
             state=states.get(article.id),
             relevance=to_relevance(raw.get(article.id, 0.0)),
+            tags=tags.get(article.id),
         )
         for article in articles
     ]
@@ -118,6 +128,7 @@ async def list_articles(
     author_id: UUID | None = Query(default=None),
     category_id: UUID | None = Query(default=None),
     keyword_id: UUID | None = Query(default=None),
+    tag_id: UUID | None = Query(default=None),
     q: str | None = Query(default=None, min_length=2, max_length=200),
     unread_only: bool = Query(default=False),
     sort: Literal["recent", "relevance"] = Query(default="recent"),
@@ -139,6 +150,9 @@ async def list_articles(
         query = query.join(ArticleKeyword, ArticleKeyword.article_id == Article.id).where(
             ArticleKeyword.keyword_id == keyword_id
         )
+    if tag_id is not None:
+        tagged = select(ArticleTag.article_id).join(Tag, Tag.id == ArticleTag.tag_id)
+        query = query.where(Article.id.in_(tagged.where(Tag.id == tag_id, Tag.user_id == user.id)))
     if q is not None:
         query = query.where(search_condition(q))
     if unread_only:
@@ -287,12 +301,14 @@ async def get_article(
     ]
     states = await fetch_read_state(session, user.id, [article.id])
     raw = await score_articles(session, user.id, [article])
+    tags = await tags_for_articles(session, user.id, [article.id])
 
     return ArticleDetailResponse(
         **to_summary(
             article,
             state=states.get(article.id),
             relevance=to_relevance(raw.get(article.id, 0.0)),
+            tags=tags.get(article.id),
         ).model_dump(),
         content=article.content,
         keywords=keywords,
