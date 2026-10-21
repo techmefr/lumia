@@ -15,6 +15,7 @@ from api.technical.logging.correlation import (
 from api.technical.logging.setup import configure_logging
 from config.redis import get_redis_config
 from worker.domain.digest.send_digests import send_reader_digests
+from worker.domain.imports.import_reading_list import import_reading_list
 from worker.domain.maintenance.purge_tokens import purge_expired_tokens
 from worker.domain.maintenance.reconcile_articles import reconcile_recent_articles
 from worker.domain.maintenance.refresh_due_feeds import refresh_due_feeds
@@ -47,7 +48,10 @@ async def release_job_correlation_id(ctx: dict[str, Any]) -> None:
 
 
 class WorkerSettings:
-    functions: ClassVar[list[Callable[..., Awaitable[Any]]]] = [enrich_article]
+    functions: ClassVar[list[Callable[..., Awaitable[Any]]]] = [
+        enrich_article,
+        import_reading_list,
+    ]
     # Reconciliation on the hour, because a webhook lost at 14:02 should not wait for the night;
     # the purge in the small hours, where a long-running delete disturbs nobody; the feed status
     # sync every 15 minutes, so a feed going silent surfaces well within the same reading session;

@@ -655,6 +655,10 @@ export function createDemoClient(): LumiaClient {
 				};
 				return settle(detail);
 			},
+			// The demo build fetches no page, so a reading list is accepted and has nothing to import.
+			importReadingList: async () => settle({ import_id: 'demo', total: 0 }),
+			getReadingListImportProgress: async () =>
+				settle({ total: 0, saved: 0, failed: 0, finished: true }),
 			saveUrl: async (url: string) => {
 				const id = nextId('article');
 				const host = new URL(url).hostname.replace(/^www\./, '');

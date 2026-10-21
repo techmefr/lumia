@@ -209,6 +209,15 @@ describe('getArticle', () => {
 	});
 });
 
+describe('importReadingList', () => {
+	it('accepts an export and reports it as already finished, with nothing fetched', async () => {
+		const started = await demo.article.importReadingList('pocket', new File(['x'], 'export.html'));
+		const progress = await demo.article.getReadingListImportProgress(started.import_id);
+		expect(started.total).toBe(0);
+		expect(progress).toEqual({ total: 0, saved: 0, failed: 0, finished: true });
+	});
+});
+
 describe('saveUrl', () => {
 	it('adds the page at the top of the library', async () => {
 		const saved = await demo.article.saveUrl('https://www.blog.test/un-billet');
