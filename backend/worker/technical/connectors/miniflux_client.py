@@ -155,13 +155,17 @@ async def create_feed(
     feed_url: str,
     *,
     category_id: int | None = None,
+    user_agent: str | None = None,
+    crawler: bool = True,
     transport: httpx.AsyncBaseTransport | None = None,
 ) -> MinifluxFeed:
     # crawler=true tells Miniflux to fetch the original article page and extract the full
     # content (readability-style) instead of trusting the feed's own, often truncated, excerpt.
-    payload: dict[str, str | int | bool] = {"feed_url": feed_url, "crawler": True}
+    payload: dict[str, str | int | bool] = {"feed_url": feed_url, "crawler": crawler}
     if category_id is not None:
         payload["category_id"] = category_id
+    if user_agent is not None:
+        payload["user_agent"] = user_agent
     async with _client(transport) as client:
         response = await client.post("/v1/feeds", json=payload)
         if response.status_code >= 400:

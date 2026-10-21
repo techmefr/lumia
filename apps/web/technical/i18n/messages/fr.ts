@@ -224,6 +224,7 @@ export const fr = {
 	'feeds.addFailed': 'Impossible d’ajouter ce flux — vérifie l’URL.',
 	'feeds.urlLabel': 'URL du flux',
 	'feeds.urlPlaceholder': 'https://exemple.com/feed.xml',
+	'feeds.urlHint': 'Fonctionne aussi avec un profil Mastodon ou Bluesky, un subreddit ou utilisateur Reddit, ou une recherche Google Actualités : colle son adresse ou une forme courte comme r/python, @user@mastodon.social ou news:climat.',
 	'feeds.importTitle': 'Importer depuis Feedly',
 	'feeds.importDescription':
 		'Exporte tes flux en OPML depuis Feedly, puis importe le fichier ici.',
