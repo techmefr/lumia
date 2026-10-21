@@ -28,6 +28,7 @@ export function articleSummary(id: string, overrides: Partial<ArticleSummary> = 
 		read: false,
 		scroll_progress: 0,
 		relevance_score: 50,
+		tags: [],
 		...overrides
 	};
 }

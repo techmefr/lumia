@@ -3,6 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from api.domain.tag.schemas import TagRef
 from api.domain.user.models import ReadingLang
 
 
@@ -29,6 +30,7 @@ class ArticleSummaryResponse(BaseModel):
     scroll_progress: float = 0.0
     # 0-100 affinity, 50 meaning "nothing learned about this one yet".
     relevance_score: int = 50
+    tags: list[TagRef] = []
 
 
 class ArticleDetailResponse(ArticleSummaryResponse):

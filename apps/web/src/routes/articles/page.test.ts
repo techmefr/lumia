@@ -316,6 +316,17 @@ describe('loading the list', () => {
 		expect(view.clearTagFilter()).toBeNull();
 	});
 
+	it('picks up a tag filter and drops it when the chip is dismissed', async () => {
+		stubUrl = new URL('http://test/articles?tag_id=tag-1&tag_name=Cuisine');
+		const view = articlesPage();
+		await waitFor(() => expect(view.clearTagFilter()).not.toBeNull());
+		expect(lastRequest().tagId).toBe('tag-1');
+
+		await fireEvent.click(view.clearTagFilter()!);
+
+		await waitFor(() => expect(lastRequest().tagId).toBeUndefined());
+	});
+
 	// The counts are decoration; a list that vanished because a badge failed would be a worse bug
 	// than a missing badge.
 	it('still shows the articles when the unread counts fail', async () => {

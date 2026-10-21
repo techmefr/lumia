@@ -7,6 +7,7 @@
 		youtubeEmbedUrl,
 		type ArticleDetail,
 		type ArticleTranslation,
+		type TagRef,
 		type OrbitPosition
 	} from '@lumia/core';
 	import { Button, Card, CardContent, Badge, GlareHover, ReadingProgress, Skeleton, toast } from '@lumia/ui';
@@ -39,6 +40,7 @@
 	import ShareArticleButton from '$domain/article/share-article-button.svelte';
 	import TranslateButton from '$domain/article/translate-button.svelte';
 	import RelatedArticles from '$domain/article/related-articles.svelte';
+	import ArticleTags from '$domain/tag/article-tags.svelte';
 	import OrbitButton, { type OrbitAction } from '$domain/article/orbit-button.svelte';
 	import { ArticleHighlights } from '$domain/highlight/article-highlights.svelte';
 	import HighlightCard from '$domain/highlight/highlight-card.svelte';
@@ -520,6 +522,14 @@
 						</a>
 					{/each}
 				</div>
+
+				<ArticleTags
+					articleId={article.id}
+					tags={article.tags}
+					onchange={(next: TagRef[]) => {
+						if (article) article.tags = next;
+					}}
+				/>
 
 				{#if translation}
 					<p class="mt-3 text-xs text-muted-foreground print:hidden" data-test-translated-notice>

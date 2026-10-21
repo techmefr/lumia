@@ -102,3 +102,7 @@ def speech_synthesizer_for(user: User) -> SpeechSynthesizer | None:
 
 def get_speech_synthesizer(user: User = Depends(get_current_user)) -> SpeechSynthesizer | None:
     return speech_synthesizer_for(user)
+
+
+def get_chat_client(user: User = Depends(get_current_user)) -> ChatClient | None:
+    return chat_client_for(user)

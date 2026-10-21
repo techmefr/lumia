@@ -1,3 +1,5 @@
+import type { TagRef } from '../tag/types';
+
 export interface ArticleSummary {
 	id: string;
 	feed_id: string;
@@ -18,6 +20,8 @@ export interface ArticleSummary {
 	scroll_progress: number;
 	/** 0 to 100 affinity, 50 meaning nothing has been learned about this article yet. */
 	relevance_score: number;
+	/** The reader's own tags. They never feed the relevance score. */
+	tags: TagRef[];
 }
 
 /**

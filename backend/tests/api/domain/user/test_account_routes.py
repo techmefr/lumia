@@ -19,6 +19,7 @@ from api.domain.recommendation.models import (
     UserKeywordScore,
 )
 from api.domain.saved_search.models import AlertNotification, SavedSearch
+from api.domain.tag.models import ArticleTag, Tag
 from api.domain.user.models import Role, User
 from api.main import app
 from api.technical.auth.hashing import hash_password
@@ -87,8 +88,12 @@ async def _fill_the_account(email: str = ADMIN_PAYLOAD["email"]) -> UUID:
         session.add(
             AlertNotification(user_id=user.id, saved_search_id=search.id, article_id=article.id)
         )
+        tag = Tag(user_id=user.id, name="Cuisine", slug="cuisine")
+        session.add(tag)
+        await session.flush()
         session.add_all(
             [
+                ArticleTag(article_id=article.id, tag_id=tag.id),
                 ArticleKeyword(article_id=article.id, keyword_id=keyword.id, weight=1.0),
                 PlaylistItem(playlist_id=playlist.id, article_id=article.id, position=0),
                 UserArticleFeedback(
@@ -166,6 +171,8 @@ async def test_the_export_returns_what_the_reader_put_in(client: httpx.AsyncClie
         ("Body", "Worth keeping")
     ]
     assert body["highlights"][0]["article_title"] == "An article"
+    assert [tag["name"] for tag in body["tags"]] == ["Cuisine"]
+    assert [article["title"] for article in body["tags"][0]["articles"]] == ["An article"]
     assert [article["title"] for article in body["saved"]] == ["An article"]
     assert [article["title"] for article in body["favorites"]] == ["An article"]
 
@@ -226,6 +233,8 @@ async def test_deleting_an_account_takes_everything_that_hung_off_it(
     assert await _count(PlaylistItem) == 1
     assert await _count(Highlight) == 1
     assert await _count(ArticleKeyword) == 1
+    assert await _count(Tag) == 1
+    assert await _count(ArticleTag) == 1
     assert await _count(UserArticleFeedback) == 1
     assert await _count(UserFilterRule) == 1
     assert await _count(SavedSearch) == 1

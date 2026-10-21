@@ -13,6 +13,7 @@
 	import PasswordSettings from '$domain/settings/password-settings.svelte';
 	import TotpSettings from '$domain/settings/totp-settings.svelte';
 	import FilterRules from '$domain/settings/filter-rules.svelte';
+	import TagManager from '$domain/settings/tag-manager.svelte';
 	import NotificationSettings from '$domain/settings/notification-settings.svelte';
 	import DigestSettings from '$domain/settings/digest-settings.svelte';
 	import InstanceAdmin from '$domain/settings/instance-admin.svelte';
@@ -424,6 +425,8 @@
 	<DigestSettings />
 
 	<FilterRules />
+
+	<TagManager />
 
 	<AiSettings />
 

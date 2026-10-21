@@ -37,6 +37,9 @@ import type {
 	Popularity,
 	ReadingStatistics,
 	SavedSearch,
+	Tag,
+	TagRef,
+	TagSuggestion,
 	TokenStore,
 	UnreadCounts
 } from '@lumia/core';
@@ -97,6 +100,7 @@ interface DemoState {
 	feedback: Record<string, Feedback>;
 	playlists: DemoPlaylist[];
 	highlights: Highlight[];
+	tags: { id: string; name: string; article_ids: string[] }[];
 	filterRules: FilterRule[];
 	/** Stored without the unread count: that one is derived from the reading state on each read. */
 	savedSearches: Omit<SavedSearch, 'unread_count'>[];
@@ -176,6 +180,7 @@ function initialState(): DemoState {
 		feedback,
 		playlists: SEED_PLAYLISTS.map((playlist) => ({ ...playlist, article_ids: [...playlist.article_ids] })),
 		highlights: [],
+		tags: [],
 		filterRules: [],
 		savedSearches: [],
 		notifications: [],
@@ -317,6 +322,37 @@ export function createDemoClient(): LumiaClient {
 		return Math.round(50 + 50 * Math.tanh(raw / TANH_SCALE));
 	}
 
+	function tagsOf(articleId: string): TagRef[] {
+		return state.tags
+			.filter((tag) => tag.article_ids.includes(articleId))
+			.map((tag) => ({ id: tag.id, name: tag.name }))
+			.sort((a, b) => a.name.localeCompare(b.name));
+	}
+
+	/** Same rule as the backend: « Cuisine » and « cuisine » are one tag for one reader. */
+	function findTag(name: string): DemoState['tags'][number] | undefined {
+		return state.tags.find((tag) => tag.name.toLowerCase() === name.toLowerCase());
+	}
+
+	function tagSummary(tag: DemoState['tags'][number]): Tag {
+		return { id: tag.id, name: tag.name, article_count: tag.article_ids.length };
+	}
+
+	function tagSuggestions(articleId: string): TagSuggestion[] {
+		const carried = new Set(tagsOf(articleId).map((tag) => tag.name.toLowerCase()));
+		const fromKeywords: TagSuggestion[] = (seedArticle(articleId)?.keywords ?? [])
+			.filter((term) => !carried.has(term.toLowerCase()))
+			.slice(0, 3)
+			.map((term) => ({ name: term, source: 'keyword' }));
+		const taken = new Set([...carried, ...fromKeywords.map((item) => item.name.toLowerCase())]);
+		const used: TagSuggestion[] = [...state.tags]
+			.sort((a, b) => b.article_ids.length - a.article_ids.length)
+			.filter((tag) => tag.article_ids.length > 0 && !taken.has(tag.name.toLowerCase()))
+			.slice(0, 5)
+			.map((tag) => ({ name: tag.name, source: 'used' }));
+		return [...fromKeywords, ...used];
+	}
+
 	function toSummary(id: string): ArticleSummary | null {
 		const article = seedArticle(id);
 		if (!article) return null;
@@ -336,6 +372,7 @@ export function createDemoClient(): LumiaClient {
 			image_url: null,
 			published_at: article.published_at,
 			reading_minutes: readingMinutes(article.paragraphs),
+			tags: tagsOf(id),
 			relevance_score: toRelevance(rawScore(article)),
 			read: state_.read,
 			scroll_progress: state_.scroll_progress
@@ -363,6 +400,9 @@ export function createDemoClient(): LumiaClient {
 		if (params.authorId && `author-${article.author_name}` !== params.authorId) return false;
 		if (params.categoryId && `category-${article.category_name}` !== params.categoryId) return false;
 		if (params.keywordId && !article.keywords.includes(params.keywordId.replace('keyword-', ''))) {
+			return false;
+		}
+		if (params.tagId && !state.tags.some((tag) => tag.id === params.tagId && tag.article_ids.includes(id))) {
 			return false;
 		}
 		if (params.unreadOnly && feedbackFor(id).read) return false;
@@ -1123,6 +1163,60 @@ export function createDemoClient(): LumiaClient {
 				}
 				persist();
 				return settle(undefined);
+			}
+		},
+		tag: {
+			listTags: async () =>
+				settle([...state.tags].sort((a, b) => a.name.localeCompare(b.name)).map(tagSummary)),
+			createTag: async (name: string) => {
+				const clean = name.trim();
+				if (findTag(clean)) throw new ApiError(409, { detail: 'tag_name_taken' });
+				const tag = { id: nextId('tag'), name: clean, article_ids: [] };
+				state.tags = [...state.tags, tag];
+				persist();
+				return settle(tagSummary(tag));
+			},
+			renameTag: async (tagId: string, name: string) => {
+				const tag = state.tags.find((candidate) => candidate.id === tagId);
+				if (!tag) throw new ApiError(404, null);
+				const clean = name.trim();
+				const clash = findTag(clean);
+				if (clash && clash.id !== tag.id) throw new ApiError(409, { detail: 'tag_name_taken' });
+				tag.name = clean;
+				persist();
+				return settle(tagSummary(tag));
+			},
+			deleteTag: async (tagId: string) => {
+				if (!state.tags.some((tag) => tag.id === tagId)) throw new ApiError(404, null);
+				state.tags = state.tags.filter((tag) => tag.id !== tagId);
+				persist();
+				return settle(undefined);
+			},
+			tagArticle: async (articleId: string, name: string) => {
+				if (!seedArticle(articleId)) throw new ApiError(404, null);
+				const clean = name.trim();
+				let tag = findTag(clean);
+				if (!tag) {
+					tag = { id: nextId('tag'), name: clean, article_ids: [] };
+					state.tags = [...state.tags, tag];
+				}
+				if (!tag.article_ids.includes(articleId)) tag.article_ids.push(articleId);
+				persist();
+				return settle(tagsOf(articleId));
+			},
+			untagArticle: async (articleId: string, tagId: string) => {
+				const tag = state.tags.find((candidate) => candidate.id === tagId);
+				if (!tag) throw new ApiError(404, null);
+				tag.article_ids = tag.article_ids.filter((id) => id !== articleId);
+				persist();
+				return settle(tagsOf(articleId));
+			},
+			getSuggestions: async (articleId: string) => settle(tagSuggestions(articleId)),
+			// The demo has no model behind it, so the answer is the same as on an account with no
+			// provider: unavailable rather than invented.
+			getAiSuggestions: async () => {
+				await settle(undefined);
+				throw new ApiError(503, { detail: 'no_ai_provider' });
 			}
 		},
 		playlist: {
