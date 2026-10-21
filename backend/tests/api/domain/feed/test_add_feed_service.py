@@ -145,3 +145,25 @@ async def test_add_feed_subscribes_a_youtube_channel_through_its_feed(
     )
 
     assert feed.url == feed_url
+
+
+async def test_add_feed_resolves_a_subreddit_and_registers_it_with_an_honest_user_agent(
+    session: AsyncSession,
+) -> None:
+    user = await _create_user(session)
+    created: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST" and request.url.path == "/v1/feeds":
+            created.append(request.content)
+            return httpx.Response(201, json={"feed_id": 7})
+        return _miniflux_handler(request)
+
+    feed = await add_feed(
+        session, user, "r/python", None, miniflux_transport=httpx.MockTransport(handler)
+    )
+
+    assert feed.url == "https://www.reddit.com/r/python/.rss"
+    assert len(created) == 1
+    assert b'"user_agent":"Lumia/1.0' in created[0]
+    assert b'"crawler":false' in created[0]

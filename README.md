@@ -41,6 +41,7 @@ text-to-speech on a real device before installing anything.
   filters.
 - **Playlists** — ordered queues of articles with a total duration, reorderable, readable aloud
   end to end.
+- **Exports** — an article or a playlist as JSON or EPUB, and as PDF through the browser's print dialog.
 - **Paging** on every list, 24 articles at a time.
 
 ### Getting articles in
@@ -48,6 +49,12 @@ text-to-speech on a real device before installing anything.
 - **OPML import** (a Feedly export works as-is): one folder per category, each feed registered with
   Miniflux.
 - **Add a feed by URL**, with the real feed title resolved from the source.
+- **Social sources, through their public RSS**: paste a Mastodon profile or hashtag, a Bluesky
+  profile, a Reddit subreddit or user, or a Google News search (or a short form such as `r/python`,
+  `@user@mastodon.social`, `#tag@mastodon.social`, `@alice.bsky.social`, `news:climate`). No API key
+  and no account are needed. Reddit is fetched with an honest User-Agent and Miniflux backs off on
+  429/Retry-After; its public RSS is meant for non-commercial personal use, so keep it to your own
+  reading.
 - **Save any page by URL**, Pocket-style: the page is extracted and filed on a per-user
   "Enregistrés" feed. Re-saving the same URL returns the existing article rather than duplicating it.
 - **Translation** of foreign-language articles (DeepL).
@@ -132,6 +139,10 @@ if it's reached from a domain or a LAN address instead.
 (`X-Miniflux-Signature`), and the API rejects anything that doesn't match rather than trusting
 whatever reaches `/webhooks/miniflux`. Set it once in `.env` before the first `docker compose up`,
 the same value on both sides — the compose file already wires it to both.
+
+The [`create-lumia`](packages/create-lumia/README.md) CLI automates the setup from a checkout:
+`init` writes `.env` with generated secrets, `doctor` checks docker, ports and `.env`, `up` starts the
+stack with the right compose files. It is not published to npm yet.
 
 Already running your own Miniflux? Skip the bundled one with the second compose file:
 

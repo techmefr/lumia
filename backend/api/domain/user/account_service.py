@@ -8,6 +8,7 @@ from api.domain.audio.models import ArticleAudio
 from api.domain.chat.models import ChatMessage
 from api.domain.export.models import ExportJob
 from api.domain.feed.models import Feed, Folder
+from api.domain.fever.models import FeverKey
 from api.domain.highlight.models import Highlight
 from api.domain.newsletter.models import NewsletterInbox
 from api.domain.playlist.models import Playlist, PlaylistItem, PlaylistMember
@@ -108,6 +109,7 @@ async def delete_account(session: AsyncSession, user_id: UUID) -> None:
     await session.execute(delete(Feed).where(Feed.id.in_(feed_ids)))
     await session.execute(delete(Folder).where(Folder.user_id == user_id))
 
+    await session.execute(delete(FeverKey).where(FeverKey.user_id == user_id))
     await session.execute(delete(RecoveryCode).where(RecoveryCode.user_id == user_id))
     await session.execute(delete(RefreshToken).where(RefreshToken.user_id == user_id))
     await session.execute(delete(MagicLinkToken).where(MagicLinkToken.user_id == user_id))

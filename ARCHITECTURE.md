@@ -119,6 +119,21 @@ Newsletters arrive without any mail server in the stack. A reader opens an inbox
 
 A podcast episode keeps only a reference: the first audio enclosure Miniflux reports for an entry is stored as `enclosure_url` and `enclosure_type` on the article, and the instance never fetches or keeps the file. The browser streams it straight from the feed's host through the persistent player, which treats it as one more source next to speech synthesis.
 
+Third-party reader apps sync through a Fever-compatible endpoint (`api/domain/fever/`, `/fever/`),
+the protocol Reeder, NetNewsWire, Fiery Feeds and ReadKit speak. It maps feeds, folders, articles and
+the read and saved marks onto the existing models; L’Étincelle and playlists have no equivalent in
+the protocol and stay out. Fever identifies everything by integer, so feeds, folders and articles carry
+an identity column (`fever_id`) next to their uuid, which also serves as the `since_id` / `max_id`
+cursor. Authentication is the protocol’s own: the client sends `md5(email:password)` as `api_key`.
+Lumia does not keep a reader’s password in a form that can answer that, so the reader asks for a
+dedicated Fever secret in the settings (`POST /me/fever`): it is drawn at random, shown once, and only
+the sha256 of the key a client derives from it is stored (`FeverKey`, one per reader). The trade-off is
+the protocol’s: the key is a bearer credential travelling in every request, so the endpoint should
+only be exposed over HTTPS, and md5 here is wire format, not protection. The secret is separate from the
+account password, so revoking it (`DELETE /me/fever`) cuts every app at once without touching the
+login, and the key is bound to the email it was issued for. A wrong key answers `200` with `auth: 0`,
+because that is what Fever clients look for. Only the JSON format is served, not XML.
+
 ## Bounded contexts
 
 | Context | Responsibility |
@@ -129,6 +144,7 @@ A podcast episode keeps only a reference: the first audio enclosure Miniflux rep
 | `recommendation` | Scoring, L'Étincelle, learning algorithm |
 | `audio` | TTS queue, available-time scheduling |
 | `highlight` | Passages a reader marks in an article, with notes; anchored on text, not on the DOM |
+| `fever` | Fever-compatible sync endpoint for third-party reader apps, and the per-reader key it authenticates with |
 
 ## Pipeline
 
@@ -156,3 +172,7 @@ Recommendation scores aren't written at ingestion time — they're learned per u
 ## Multi-tenancy
 
 First launch runs a mandatory 3-step admin onboarding (admin account → instance limits → confirmation) before any other access is allowed. Instance-wide settings (max accounts, per-user disk quota) are admin-only; AI provider and API key are per-user, with no instance-wide key.
+
+## Second factor on non-browser clients
+
+Mobile and the extension sign in through `createSignInFlow` (`packages/core/domain/user/sign-in-flow.ts`), the same state machine the web login uses. The backend contract is unchanged: `POST /auth/login` (or `/auth/magic-link/verify`) answers `401 totp_required` when the account has a second factor, and the client resends the same request with `totp_code` or, after `toggleRecovery()`, `recovery_code`. A client only renders `flow.step` (`credentials`, `code`, `recovery`) and the `SignInOutcome` of each call, so a `401 totp_required` is never shown as a wrong password.

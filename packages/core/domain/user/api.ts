@@ -1,6 +1,8 @@
 import { ApiError, type HttpClient } from '../../technical/http-client';
 import type { TokenStore } from '../../technical/token-store';
 import type {
+	FeverKeyCreated,
+	FeverKeyStatus,
 	MagicLinkPurpose,
 	Me,
 	MeUpdate,
@@ -164,6 +166,19 @@ export function createUserApi(http: HttpClient, tokenStore: TokenStore) {
 		});
 	}
 
+	async function getFeverKey(): Promise<FeverKeyStatus> {
+		return http.request<FeverKeyStatus>('/me/fever');
+	}
+
+	/** Replaces any earlier key, so every app signed in with it has to be given the new one. */
+	async function createFeverKey(): Promise<FeverKeyCreated> {
+		return http.request<FeverKeyCreated>('/me/fever', { method: 'POST' });
+	}
+
+	async function revokeFeverKey(): Promise<void> {
+		await http.request('/me/fever', { method: 'DELETE' });
+	}
+
 	async function getMe(): Promise<Me> {
 		return http.request<Me>('/me');
 	}
@@ -188,6 +203,9 @@ export function createUserApi(http: HttpClient, tokenStore: TokenStore) {
 		confirmTotpEnrolment,
 		renewRecoveryCodes,
 		disableTotp,
+		getFeverKey,
+		createFeverKey,
+		revokeFeverKey,
 		getMe,
 		updateMe,
 		isAuthenticated

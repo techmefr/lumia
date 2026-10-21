@@ -17,6 +17,7 @@ export * from './technical/token-store';
 export * from './technical/sanitize-html';
 export * from './domain/user/types';
 export * from './domain/user/api';
+export * from './domain/user/sign-in-flow';
 export * from './domain/instance/types';
 export * from './domain/instance/api';
 export * from './domain/feed/types';

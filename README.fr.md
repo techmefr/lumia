@@ -44,6 +44,7 @@ lecture et la synthèse vocale sur un vrai appareil avant d'installer quoi que c
   dossier/flux/auteur/mot-clé.
 - **Playlists** — des files d'articles ordonnées avec leur durée totale, réordonnables, écoutables
   d'un bout à l'autre.
+- **Exports** — un article ou une playlist en JSON ou EPUB, et en PDF via la boîte d'impression du navigateur.
 - **Pagination** sur toutes les listes, 24 articles à la fois.
 
 ### Faire entrer les articles
@@ -144,6 +145,10 @@ de l'app si elle est jointe par un domaine ou une adresse LAN.
 confiance à ce qui arrive sur `/webhooks/miniflux`. Renseigne-la une fois dans `.env` avant le
 premier `docker compose up`, la même valeur des deux côtés — le docker-compose la relie déjà aux
 deux.
+
+Le CLI [`create-lumia`](packages/create-lumia/README.md) automatise l'installation depuis un clone :
+`init` écrit `.env` avec des secrets générés, `doctor` vérifie docker, les ports et `.env`, `up` démarre
+la pile avec les bons fichiers compose. Il n'est pas encore publié sur npm.
 
 Tu as déjà ton propre Miniflux ? Passe le Miniflux fourni avec le second fichier compose :
 

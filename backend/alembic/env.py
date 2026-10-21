@@ -23,6 +23,7 @@ from api.domain.audio import models as audio_models  # noqa: F401
 from api.domain.chat import models as chat_models  # noqa: F401
 from api.domain.export import models as export_models  # noqa: F401
 from api.domain.feed import models as feed_models  # noqa: F401
+from api.domain.fever import models as fever_models  # noqa: F401
 from api.domain.highlight import models as highlight_models  # noqa: F401
 from api.domain.instance import models as instance_models  # noqa: F401
 from api.domain.newsletter import models as newsletter_models  # noqa: F401

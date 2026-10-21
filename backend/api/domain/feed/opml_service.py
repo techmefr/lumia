@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError
 from api.domain.feed.models import Feed, Folder, SourceType
 from api.domain.feed.opml_parser import OpmlEntry, parse_opml
+from api.domain.feed.social_source import resolve_social_feed
 from api.domain.feed.youtube_channel import resolve_youtube_feed_url
 from api.domain.user.models import User
 from api.technical.logging.external import (
@@ -139,6 +140,9 @@ async def add_feed(
     resolve: Resolver = resolve_with_system,
     youtube_transport: httpx.AsyncBaseTransport | None = None,
 ) -> Feed:
+    social = resolve_social_feed(url)
+    if social is not None:
+        url = social.url
     ensure_public_http_url(url, resolve=resolve)
     url = await resolve_youtube_feed_url(url, transport=youtube_transport)
 
@@ -171,7 +175,11 @@ async def add_feed(
             )
         else:
             miniflux_feed = await create_feed(
-                url, category_id=category_id, transport=miniflux_transport
+                url,
+                category_id=category_id,
+                user_agent=social.user_agent if social else None,
+                crawler=social is None,
+                transport=miniflux_transport,
             )
             detail = await get_feed(miniflux_feed.feed_id, transport=miniflux_transport)
     except (MinifluxApiError, httpx.HTTPError) as exc:

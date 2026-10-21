@@ -647,6 +647,11 @@ export function createDemoClient(): LumiaClient {
 			confirmTotpEnrolment: async () => settle([]),
 			renewRecoveryCodes: async () => settle([]),
 			disableTotp: async () => settle(undefined),
+			// There is no server to sync from in the demo, so a key can neither be drawn nor held.
+			getFeverKey: async () => settle({ enabled: false, created_at: null }),
+			createFeverKey: async () =>
+				settle({ email: state.me.email, secret: '', created_at: new Date().toISOString() }),
+			revokeFeverKey: async () => settle(undefined),
 			getMe: async () => settle({ ...state.me }),
 			updateMe: async (payload: MeUpdate) => {
 				const { ai_api_key, translation_api_key, tts_api_key, ...rest } = payload;

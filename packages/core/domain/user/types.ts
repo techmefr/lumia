@@ -43,6 +43,18 @@ export interface TotpRecoveryCodes {
 	recovery_codes: string[];
 }
 
+export interface FeverKeyStatus {
+	enabled: boolean;
+	created_at: string | null;
+}
+
+/** What a reader app is given at creation: the secret is returned this once and never again. */
+export interface FeverKeyCreated {
+	email: string;
+	secret: string;
+	created_at: string;
+}
+
 /** Why a sign-in was refused, when it was refused for the second factor rather than the first. */
 export type SecondFactorFailure = 'totp_required' | 'invalid_totp_code';
 

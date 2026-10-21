@@ -11,6 +11,7 @@
 	import AiSettings from '$domain/settings/ai-settings.svelte';
 	import TtsSettings from '$domain/settings/tts-settings.svelte';
 	import PasswordSettings from '$domain/settings/password-settings.svelte';
+	import FeverSettings from '$domain/settings/fever-settings.svelte';
 	import TotpSettings from '$domain/settings/totp-settings.svelte';
 	import FilterRules from '$domain/settings/filter-rules.svelte';
 	import TagManager from '$domain/settings/tag-manager.svelte';
@@ -419,6 +420,8 @@
 	<PasswordSettings />
 
 	<TotpSettings />
+
+	<FeverSettings />
 
 	<NotificationSettings />
 
