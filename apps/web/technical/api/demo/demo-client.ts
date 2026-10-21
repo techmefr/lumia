@@ -42,7 +42,9 @@ import type {
 	TagRef,
 	TagSuggestion,
 	TokenStore,
-	UnreadCounts
+	UnreadCounts,
+	Webhook,
+	WebhookCreated
 } from '@lumia/core';
 import { Temporal } from 'temporal-polyfill';
 import { ApiError } from '@lumia/core';
@@ -561,6 +563,9 @@ export function createDemoClient(): LumiaClient {
 
 	/** Held for the session only: the demo has no mailbox to deliver to, so it only plays the flow. */
 	let newsletterInboxCreatedAt: string | null = null;
+
+	/** Session only, like the inbox: with no worker to deliver anything, no delivery is recorded. */
+	let demoWebhooks: Webhook[] = [];
 
 	return {
 		tokenStore,
@@ -1238,6 +1243,36 @@ export function createDemoClient(): LumiaClient {
 				await settle(undefined);
 				throw new ApiError(503, { detail: 'no_ai_provider' });
 			}
+		},
+		webhook: {
+			listWebhooks: async () => settle([...demoWebhooks]),
+			createWebhook: async (input): Promise<WebhookCreated> => {
+				if (!/^https?:\/\/[^\s/]+\.[^\s/]+/.test(input.url)) {
+					throw new ApiError(422, 'webhook_url_blocked');
+				}
+				const webhook: Webhook = {
+					id: nextId('webhook'),
+					url: input.url,
+					events: [...new Set(input.events)],
+					active: true,
+					created_at: Temporal.Now.instant().toString()
+				};
+				demoWebhooks = [...demoWebhooks, webhook];
+				return settle({ ...webhook, secret: `demo-${webhook.id}-not-a-real-secret` });
+			},
+			updateWebhook: async (webhookId, update) => {
+				const webhook = demoWebhooks.find((candidate) => candidate.id === webhookId);
+				if (!webhook) throw new ApiError(404, 'webhook introuvable');
+				if (update.url !== undefined) webhook.url = update.url;
+				if (update.events !== undefined) webhook.events = [...new Set(update.events)];
+				if (update.active !== undefined) webhook.active = update.active;
+				return settle({ ...webhook });
+			},
+			deleteWebhook: async (webhookId: string) => {
+				demoWebhooks = demoWebhooks.filter((webhook) => webhook.id !== webhookId);
+				return settle(undefined);
+			},
+			listDeliveries: async () => settle([])
 		},
 		playlist: {
 			/** The demo has no worker to build a book: it answers as if the file was ready at once. */

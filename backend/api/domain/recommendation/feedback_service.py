@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
@@ -20,6 +21,15 @@ _VOTE_DELTA: dict[Vote, float] = {Vote.LIKE: 1.5, Vote.DISLIKE: -0.5}
 _UNSET: Any = object()
 
 
+@dataclass(frozen=True)
+class FeedbackChange:
+    """The axes this call switched on, which is what an outgoing event is about: repeating a state
+    a reader already had is not something that happened."""
+
+    newly_saved: bool
+    newly_favorited: bool
+
+
 async def apply_feedback(
     session: AsyncSession,
     *,
@@ -30,7 +40,7 @@ async def apply_feedback(
     favorite: bool = _UNSET,
     read: bool = _UNSET,
     scroll_progress: float = _UNSET,
-) -> None:
+) -> FeedbackChange:
     existing = await session.scalar(
         select(UserArticleFeedback).where(
             UserArticleFeedback.user_id == user_id,
@@ -50,6 +60,8 @@ async def apply_feedback(
         if new_delta:
             await _apply_delta(session, user_id, article_id, new_delta)
 
+    newly_saved = saved is True and not existing.saved
+    newly_favorited = favorite is True and not existing.favorite
     if saved is not _UNSET:
         existing.saved = saved
     if favorite is not _UNSET:
@@ -63,6 +75,7 @@ async def apply_feedback(
         existing.scroll_progress = max(existing.scroll_progress or 0.0, scroll_progress)
 
     await session.commit()
+    return FeedbackChange(newly_saved=newly_saved, newly_favorited=newly_favorited)
 
 
 async def _apply_delta(

@@ -6,6 +6,7 @@ from typing import Any, ClassVar
 from arq import cron
 from arq.connections import ArqRedis, RedisSettings, create_pool
 from arq.cron import CronJob
+from arq.worker import Function
 
 from api.technical.logging.correlation import (
     reset_correlation_id,
@@ -23,6 +24,7 @@ from worker.domain.maintenance.reconcile_articles import reconcile_recent_articl
 from worker.domain.maintenance.refresh_due_feeds import refresh_due_feeds
 from worker.domain.maintenance.sync_feed_status import sync_feed_error_status
 from worker.domain.pipeline.enrich_article import enrich_article
+from worker.domain.webhook.deliver_webhook import deliver_webhook_function
 
 JOB_EVENT = "job"
 _CORRELATION_TOKEN_KEY = "correlation_token"
@@ -50,10 +52,11 @@ async def release_job_correlation_id(ctx: dict[str, Any]) -> None:
 
 
 class WorkerSettings:
-    functions: ClassVar[list[Callable[..., Awaitable[Any]]]] = [
+    functions: ClassVar[list[Callable[..., Awaitable[Any]] | Function]] = [
         enrich_article,
         import_reading_list,
         build_playlist_epub,
+        deliver_webhook_function,
     ]
     # Reconciliation on the hour, because a webhook lost at 14:02 should not wait for the night;
     # the purge in the small hours, where a long-running delete disturbs nobody; the feed status

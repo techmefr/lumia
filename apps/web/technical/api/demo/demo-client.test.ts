@@ -931,6 +931,35 @@ describe('the newsletter inbox', () => {
 	});
 });
 
+describe('the outbound webhooks', () => {
+	it('registers one with a secret, pauses it, and removes it', async () => {
+		const created = await demo.webhook.createWebhook({
+			url: 'https://hooks.example.com/lumia',
+			events: ['article.saved', 'article.saved']
+		});
+		expect(created.secret).toContain('not-a-real-secret');
+		expect(created.events).toEqual(['article.saved']);
+
+		const [listed] = await demo.webhook.listWebhooks();
+		expect(listed).not.toHaveProperty('secret');
+
+		await expect(demo.webhook.updateWebhook(created.id, { active: false })).resolves.toMatchObject({
+			active: false
+		});
+		await demo.webhook.deleteWebhook(created.id);
+		await expect(demo.webhook.listWebhooks()).resolves.toEqual([]);
+	});
+
+	it('refuses an address that is not a public http one, as the backend guard does', async () => {
+		await expect(
+			demo.webhook.createWebhook({ url: 'ftp://hooks.example.com', events: ['article.saved'] })
+		).rejects.toMatchObject({ status: 422 });
+		await expect(
+			demo.webhook.createWebhook({ url: 'http://localhost/x', events: ['article.saved'] })
+		).rejects.toMatchObject({ status: 422 });
+	});
+});
+
 describe('the saved searches', () => {
 	const WORD = SEED_ARTICLES[0].title.split(' ')[0].toLowerCase();
 

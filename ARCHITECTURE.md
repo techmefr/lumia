@@ -134,6 +134,8 @@ account password, so revoking it (`DELETE /me/fever`) cuts every app at once wit
 login, and the key is bound to the email it was issued for. A wrong key answers `200` with `auth: 0`,
 because that is what Fever clients look for. Only the JSON format is served, not XML.
 
+Outbound webhooks (`api/domain/webhook/`) are the other direction: a reader registers up to ten addresses, each with the events it wants (article saved, article favorited, article added to a playlist). Saving, favoriting and adding to a playlist call `EventPublisher`, which writes one `WebhookDelivery` row per listening webhook and queues `deliver_webhook` by id; it never raises into the request, so a reader's save does not depend on their endpoint or on the queue. The address goes through the public-URL guard when it is registered and again before every delivery, redirects are not followed, so a name repointed at an internal address is never requested. The body is signed with HMAC-SHA256 over `{timestamp}.{body}` (`X-Lumia-Signature`, `X-Lumia-Timestamp`) using a per-webhook secret that is stored encrypted, because it has to be read back, and returned once at creation. The worker retries a network error, a 5xx, a 408, a 425 or a 429 with a growing delay (30 s, 2 min, 10 min, 1 h, five tries in all); any other answer, or a blocked address, ends the delivery at once. A delivery that gives up is kept as `failed` with its last error and is listed at `GET /outbound-webhooks/{id}/deliveries`, so a failure is never silent.
+
 ## Bounded contexts
 
 | Context | Responsibility |

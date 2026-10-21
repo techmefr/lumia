@@ -44,6 +44,8 @@ from api.domain.playlist.schemas import (
 )
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
+from api.domain.webhook.models import WebhookEvent
+from api.domain.webhook.publisher import EventPublisher, get_event_publisher
 from api.technical.db import get_db_session
 
 router = APIRouter()
@@ -206,13 +208,26 @@ async def add_playlist_item(
     payload: PlaylistItemAddRequest,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
+    publisher: EventPublisher = Depends(get_event_publisher),
 ) -> PlaylistDetailResponse:
+    already_in = any(
+        item.article_id == payload.article_id
+        for item in (await _load(session, user.id, playlist_id, PlaylistRole.EDITOR)).items
+    )
     try:
         playlist = await add_article(session, user.id, playlist_id, payload.article_id)
     except (PlaylistNotFoundError, ArticleNotFoundError) as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
     except PlaylistForbiddenError as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN) from exc
+    if not already_in:
+        await publisher.publish(
+            session,
+            user.id,
+            WebhookEvent.PLAYLIST_ARTICLE_ADDED,
+            [payload.article_id],
+            playlist=(playlist.id, playlist.name),
+        )
     return await _to_detail(session, user.id, playlist)
 
 
@@ -222,6 +237,7 @@ async def bulk_playlist_items(
     payload: PlaylistBulkItemsRequest,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
+    publisher: EventPublisher = Depends(get_event_publisher),
 ) -> PlaylistBulkItemsResponse:
     """Adds or removes a whole scope of articles, all of it or none of it."""
     article_ids = await resolve_scope_article_ids(
@@ -243,6 +259,15 @@ async def bulk_playlist_items(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="bulk_items_failed"
         ) from exc
+    if payload.present:
+        playlist = await _load(session, user.id, playlist_id)
+        await publisher.publish(
+            session,
+            user.id,
+            WebhookEvent.PLAYLIST_ARTICLE_ADDED,
+            moved,
+            playlist=(playlist.id, playlist.name),
+        )
     return PlaylistBulkItemsResponse(moved=len(moved), article_ids=moved)
 
 

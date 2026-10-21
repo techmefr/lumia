@@ -7,7 +7,7 @@ from api.domain.article.models import Article
 from api.domain.article.routes import to_summaries
 from api.domain.article.schemas import ArticleSummaryResponse
 from api.domain.article.scope import resolve_scope_article_ids
-from api.domain.recommendation.bulk_feedback_service import set_feedback_axis
+from api.domain.recommendation.bulk_feedback_service import FeedbackAxis, set_feedback_axis
 from api.domain.recommendation.etincelle_service import list_etincelle
 from api.domain.recommendation.exceptions import BulkFeedbackFailedError
 from api.domain.recommendation.favorite_service import list_favorites
@@ -34,9 +34,16 @@ from api.domain.recommendation.statistics_service import (
 )
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
+from api.domain.webhook.models import WebhookEvent
+from api.domain.webhook.publisher import EventPublisher, get_event_publisher
 from api.technical.db import get_db_session
 
 router = APIRouter()
+
+_AXIS_EVENTS = {
+    FeedbackAxis.SAVED: WebhookEvent.ARTICLE_SAVED,
+    FeedbackAxis.FAVORITE: WebhookEvent.ARTICLE_FAVORITED,
+}
 
 
 @router.get("/articles/saved", response_model=list[ArticleSummaryResponse])
@@ -94,6 +101,7 @@ async def bulk_feedback(
     payload: BulkFeedbackRequest,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
+    publisher: EventPublisher = Depends(get_event_publisher),
 ) -> BulkFeedbackResponse:
     """Applies one feedback axis over one scope, all of it or none of it."""
     article_ids = await resolve_scope_article_ids(
@@ -111,6 +119,8 @@ async def bulk_feedback(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="bulk_feedback_failed"
         ) from exc
+    if payload.value and payload.axis in _AXIS_EVENTS:
+        await publisher.publish(session, user.id, _AXIS_EVENTS[payload.axis], changed)
     return BulkFeedbackResponse(updated=len(article_ids), changed_article_ids=changed)
 
 
@@ -120,13 +130,18 @@ async def send_feedback(
     payload: FeedbackRequest,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
+    publisher: EventPublisher = Depends(get_event_publisher),
 ) -> None:
     article = await session.get(Article, article_id)
     if article is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     updates = payload.model_dump(exclude_unset=True)
-    await apply_feedback(session, user_id=user.id, article_id=article_id, **updates)
+    change = await apply_feedback(session, user_id=user.id, article_id=article_id, **updates)
+    if change.newly_saved:
+        await publisher.publish(session, user.id, WebhookEvent.ARTICLE_SAVED, [article_id])
+    if change.newly_favorited:
+        await publisher.publish(session, user.id, WebhookEvent.ARTICLE_FAVORITED, [article_id])
 
 
 @router.get("/filter-rules", response_model=list[FilterRuleResponse])

@@ -1,5 +1,7 @@
 from arq.connections import ArqRedis
+from arq.worker import Function
 
+from worker.domain.webhook.deliver_webhook import MAX_TRIES
 from worker.technical.queue import WorkerSettings, get_arq_pool
 
 
@@ -25,7 +27,11 @@ def test_the_worker_schedules_every_pass_it_defines() -> None:
 
 def test_the_worker_can_run_the_job_that_builds_a_playlist_book() -> None:
     """The API enqueues it by name: a job missing from this list is never picked up."""
-    assert "build_playlist_epub" in {function.__name__ for function in WorkerSettings.functions}
+    assert "build_playlist_epub" in {
+        function.__name__
+        for function in WorkerSettings.functions
+        if not isinstance(function, Function)
+    }
 
 
 def test_the_scheduled_refresh_ticks_at_the_shortest_interval_a_feed_can_be_given() -> None:
@@ -40,3 +46,15 @@ def test_the_reconciliation_runs_every_hour_and_the_purge_once_a_night() -> None
     assert by_name["cron:purge_expired_tokens"].hour == 3
     # Hourly too, because the hour that matters is each reader's own and the job picks who is due.
     assert by_name["cron:send_reader_digests"].hour is None
+
+
+def test_the_worker_can_run_the_job_that_delivers_a_webhook_and_retries_it_beyond_the_default() -> (
+    None
+):
+    """The API enqueues it by name, and a delivery needs more tries than the worker-wide default."""
+    deliver = next(
+        function
+        for function in WorkerSettings.functions
+        if isinstance(function, Function) and function.name == "deliver_webhook"
+    )
+    assert deliver.max_tries == MAX_TRIES > WorkerSettings.max_tries
