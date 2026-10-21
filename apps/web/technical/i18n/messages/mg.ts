@@ -438,6 +438,7 @@ export const mg: Catalogue = {
 	'article.loading': 'Mampiditra ny lahatsoratra',
 	'article.notFound': 'Tsy hita ny lahatsoratra.',
 	'article.readSource': 'Hamaky ny loharano',
+	'article.videoPlayer': 'Mpilalao horonan-tsary',
 	'article.readingTime': 'Famakiana {count} min',
 	'article.relevanceTitle': 'Fifanakaikezana tombanana araka izay vakianao',
 	'article.relevance': '{score}/100',

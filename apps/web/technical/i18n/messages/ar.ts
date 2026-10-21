@@ -424,6 +424,7 @@ export const ar: Catalogue = {
 	'article.loading': 'جارٍ تحميل المقال',
 	'article.notFound': 'المقال غير موجود.',
 	'article.readSource': 'قراءة المصدر',
+	'article.videoPlayer': 'مشغل الفيديو',
 	'article.readingTime': '{count} دقيقة قراءة',
 	'article.relevanceTitle': 'صلة مقدَّرة انطلاقًا من قراءاتك',
 	'article.relevance': '{score}/100',

@@ -439,6 +439,7 @@ export const fr = {
 	'article.loading': "Chargement de l'article",
 	'article.notFound': 'Article introuvable.',
 	'article.readSource': 'Lire la source',
+	'article.videoPlayer': 'Lecteur vidéo',
 	'article.readingTime': '{count} min de lecture',
 	'article.relevanceTitle': "Pertinence estimée d'après tes lectures",
 	'article.relevance': '{score}/100',

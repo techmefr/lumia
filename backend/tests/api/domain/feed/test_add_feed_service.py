@@ -126,3 +126,22 @@ async def test_add_feed_raises_when_miniflux_cannot_reach_the_url(session: Async
             None,
             miniflux_transport=httpx.MockTransport(handler),
         )
+
+
+async def test_add_feed_subscribes_a_youtube_channel_through_its_feed(
+    session: AsyncSession,
+) -> None:
+    user = await _create_user(session)
+    channel_id = "UCX6OQ3DkcsbYNE6H8uQQuVA"
+    feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
+
+    feed = await add_feed(
+        session,
+        user,
+        f"https://www.youtube.com/channel/{channel_id}",
+        None,
+        miniflux_transport=httpx.MockTransport(_miniflux_handler),
+        resolve=lambda host: ["93.184.216.34"],
+    )
+
+    assert feed.url == feed_url

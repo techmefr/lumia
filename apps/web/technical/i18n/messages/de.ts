@@ -436,6 +436,7 @@ export const de: Catalogue = {
 	'article.loading': 'Artikel wird geladen',
 	'article.notFound': 'Artikel nicht gefunden.',
 	'article.readSource': 'Quelle lesen',
+	'article.videoPlayer': 'Videoplayer',
 	'article.readingTime': '{count} Min. Lesezeit',
 	'article.relevanceTitle': 'Relevanz, geschätzt anhand deiner Lektüre',
 	'article.relevance': '{score}/100',

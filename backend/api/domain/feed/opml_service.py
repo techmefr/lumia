@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError
 from api.domain.feed.models import Feed, Folder, SourceType
 from api.domain.feed.opml_parser import OpmlEntry, parse_opml
+from api.domain.feed.youtube_channel import resolve_youtube_feed_url
 from api.domain.user.models import User
 from api.technical.logging.external import (
     EXTERNAL_CALL_FAILED_EVENT,
@@ -136,8 +137,10 @@ async def add_feed(
     *,
     miniflux_transport: httpx.AsyncBaseTransport | None = None,
     resolve: Resolver = resolve_with_system,
+    youtube_transport: httpx.AsyncBaseTransport | None = None,
 ) -> Feed:
     ensure_public_http_url(url, resolve=resolve)
+    url = await resolve_youtube_feed_url(url, transport=youtube_transport)
 
     folder: Folder | None = None
     if folder_id is not None:

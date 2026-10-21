@@ -18,6 +18,7 @@ export * from './domain/feed/types';
 export * from './domain/feed/api';
 export * from './domain/article/types';
 export * from './domain/article/api';
+export * from './domain/article/video';
 export * from './domain/recommendation/types';
 export * from './domain/recommendation/api';
 export * from './domain/playlist/types';
