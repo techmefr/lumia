@@ -15,8 +15,8 @@ from api.technical.logging.correlation import (
 from api.technical.logging.setup import configure_logging
 from config.redis import get_redis_config
 from worker.domain.digest.send_digests import send_reader_digests
-from worker.domain.imports.import_reading_list import import_reading_list
 from worker.domain.export.build_playlist_epub import build_playlist_epub
+from worker.domain.imports.import_reading_list import import_reading_list
 from worker.domain.maintenance.purge_exports import purge_expired_exports
 from worker.domain.maintenance.purge_tokens import purge_expired_tokens
 from worker.domain.maintenance.reconcile_articles import reconcile_recent_articles
