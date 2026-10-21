@@ -19,7 +19,13 @@ def test_the_worker_schedules_every_pass_it_defines() -> None:
         "cron:sync_feed_error_status",
         "cron:refresh_due_feeds",
         "cron:send_reader_digests",
+        "cron:purge_expired_exports",
     }
+
+
+def test_the_worker_can_run_the_job_that_builds_a_playlist_book() -> None:
+    """The API enqueues it by name: a job missing from this list is never picked up."""
+    assert "build_playlist_epub" in {function.__name__ for function in WorkerSettings.functions}
 
 
 def test_the_scheduled_refresh_ticks_at_the_shortest_interval_a_feed_can_be_given() -> None:

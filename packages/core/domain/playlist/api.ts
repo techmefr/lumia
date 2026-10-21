@@ -1,6 +1,6 @@
 import type { HttpClient } from '../../technical/http-client';
 import type { ArticleScope } from '../article/types';
-import type { PlaylistBulkItemsResult, PlaylistDetail, PlaylistSummary } from './types';
+import type { ExportJob, PlaylistBulkItemsResult, PlaylistDetail, PlaylistSummary } from './types';
 
 export function createPlaylistApi(http: HttpClient) {
 	async function listPlaylists(): Promise<PlaylistSummary[]> {
@@ -70,6 +70,22 @@ export function createPlaylistApi(http: HttpClient) {
 		});
 	}
 
+	/**
+	 * Starts the build of the playlist as one book. The worker does the work, so this answers at
+	 * once with a job to follow through `getExport`.
+	 */
+	async function exportPlaylistEpub(playlistId: string): Promise<ExportJob> {
+		return http.request<ExportJob>(`/playlists/${playlistId}/export-epub`, { method: 'POST' });
+	}
+
+	async function getExport(jobId: string): Promise<ExportJob> {
+		return http.request<ExportJob>(`/exports/${jobId}`);
+	}
+
+	async function downloadExport(jobId: string): Promise<Blob> {
+		return http.requestBlob(`/exports/${jobId}/download`);
+	}
+
 	return {
 		listPlaylists,
 		createPlaylist,
@@ -80,7 +96,10 @@ export function createPlaylistApi(http: HttpClient) {
 		addArticle,
 		removeArticle,
 		bulkSetItems,
-		reorder
+		reorder,
+		exportPlaylistEpub,
+		getExport,
+		downloadExport
 	};
 }
 

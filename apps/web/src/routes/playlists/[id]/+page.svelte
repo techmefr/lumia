@@ -14,6 +14,7 @@
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Clock from '@lucide/svelte/icons/clock';
+	import ExportPlaylistButton from '$domain/playlist/export-playlist-button.svelte';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
@@ -170,6 +171,7 @@
 	{:else if playlist}
 		<div class="flex flex-wrap items-baseline justify-between gap-2">
 			<h1 class="text-2xl font-semibold">{playlist.name}</h1>
+			<ExportPlaylistButton playlistId={playlist.id} name={playlist.name} />
 			<span class="flex items-center gap-1.5 text-sm text-muted-foreground">
 				<Clock class="size-4" />
 				{playlist.articles.length > 1

@@ -18,3 +18,12 @@ export interface PlaylistBulkItemsResult {
 	/** Only the articles that actually moved, which is what an undo must revert. */
 	article_ids: string[];
 }
+
+export type ExportStatus = 'pending' | 'ready' | 'failed';
+
+export interface ExportJob {
+	id: string;
+	kind: 'playlist_epub';
+	status: ExportStatus;
+	file_name: string | null;
+}

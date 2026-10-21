@@ -34,6 +34,7 @@ os.environ["DATABASE_URL"] = run_database_url(
 
 from api.domain.article import models as _article_models  # noqa: F401
 from api.domain.audio import models as _audio_models  # noqa: F401
+from api.domain.export import models as _export_models  # noqa: F401
 from api.domain.feed import models as _feed_models  # noqa: F401
 from api.domain.highlight import models as _highlight_models  # noqa: F401
 from api.domain.instance import models as _instance_models  # noqa: F401
