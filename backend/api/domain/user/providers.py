@@ -53,6 +53,10 @@ def chat_client_for(user: User | None) -> ChatClient | None:
     )
 
 
+def get_chat_client(user: User = Depends(get_current_user)) -> ChatClient | None:
+    return chat_client_for(user)
+
+
 def translator_for(user: User | None) -> Translator | None:
     """The translator this account gets, or None when nothing is configured to translate with.
 
@@ -102,7 +106,3 @@ def speech_synthesizer_for(user: User) -> SpeechSynthesizer | None:
 
 def get_speech_synthesizer(user: User = Depends(get_current_user)) -> SpeechSynthesizer | None:
     return speech_synthesizer_for(user)
-
-
-def get_chat_client(user: User = Depends(get_current_user)) -> ChatClient | None:
-    return chat_client_for(user)

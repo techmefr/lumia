@@ -877,7 +877,23 @@ export const fr = {
 	'tags.deleteConfirm': 'Supprimer le tag {name} ? Il sera retiré de {count} articles.',
 	'tags.nameTaken': 'Un tag portant ce nom existe déjà.',
 	'tags.renamed': 'Tag renommé.',
-	'tags.deleted': 'Tag supprimé.'
+	'tags.deleted': 'Tag supprimé.',
+	'chat.title': 'Discuter avec l\'IA',
+	'chat.open': 'Discuter de cet article',
+	'chat.close': 'Fermer la conversation',
+	'chat.empty': 'Posez une question sur cet article, ou commencez par une action rapide.',
+	'chat.you': 'Vous',
+	'chat.assistant': 'Assistant',
+	'chat.inputLabel': 'Votre question',
+	'chat.send': 'Envoyer',
+	'chat.sending': 'Envoi…',
+	'chat.summarize': 'Résumer',
+	'chat.explain': 'Expliquer simplement',
+	'chat.clear': 'Effacer la conversation',
+	'chat.loadFailed': 'Impossible de charger la conversation.',
+	'chat.unavailable': 'Configurez un fournisseur d\'IA et sa clé dans vos réglages pour discuter des articles.',
+	'chat.failed': 'L\'assistant n\'a pas pu répondre. Réessayez.',
+	'chat.thinking': 'L\'assistant écrit…'
 } as const;
 
 export type MessageKey = keyof typeof fr;

@@ -874,5 +874,21 @@ export const es: Catalogue = {
 	'tags.deleteConfirm': '¿Eliminar la etiqueta {name}? Se quitará de {count} artículos.',
 	'tags.nameTaken': 'Ya existe una etiqueta con este nombre.',
 	'tags.renamed': 'Etiqueta renombrada.',
-	'tags.deleted': 'Etiqueta eliminada.'
+	'tags.deleted': 'Etiqueta eliminada.',
+	'chat.title': 'Hablar con la IA',
+	'chat.open': 'Hablar de este artículo',
+	'chat.close': 'Cerrar la conversación',
+	'chat.empty': 'Haz una pregunta sobre este artículo o empieza con una acción rápida.',
+	'chat.you': 'Tú',
+	'chat.assistant': 'Asistente',
+	'chat.inputLabel': 'Tu pregunta',
+	'chat.send': 'Enviar',
+	'chat.sending': 'Enviando…',
+	'chat.summarize': 'Resumir',
+	'chat.explain': 'Explicar con sencillez',
+	'chat.clear': 'Borrar la conversación',
+	'chat.loadFailed': 'No se pudo cargar la conversación.',
+	'chat.unavailable': 'Configura un proveedor de IA y su clave en tus ajustes para hablar de los artículos.',
+	'chat.failed': 'El asistente no pudo responder. Inténtalo de nuevo.',
+	'chat.thinking': 'El asistente está escribiendo…'
 };

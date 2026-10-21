@@ -858,5 +858,21 @@ export const ar: Catalogue = {
 	'tags.deleteConfirm': 'حذف الوسم {name}؟ سيُزال من {count} مقالًا.',
 	'tags.nameTaken': 'يوجد وسم بهذا الاسم بالفعل.',
 	'tags.renamed': 'تمت إعادة تسمية الوسم.',
-	'tags.deleted': 'تم حذف الوسم.'
+	'tags.deleted': 'تم حذف الوسم.',
+	'chat.title': 'ناقش مع الذكاء الاصطناعي',
+	'chat.open': 'ناقش هذا المقال',
+	'chat.close': 'إغلاق المحادثة',
+	'chat.empty': 'اطرح سؤالا عن هذا المقال أو ابدأ بإجراء سريع.',
+	'chat.you': 'أنت',
+	'chat.assistant': 'المساعد',
+	'chat.inputLabel': 'سؤالك',
+	'chat.send': 'إرسال',
+	'chat.sending': 'جارٍ الإرسال…',
+	'chat.summarize': 'تلخيص',
+	'chat.explain': 'اشرح ببساطة',
+	'chat.clear': 'مسح المحادثة',
+	'chat.loadFailed': 'تعذر تحميل المحادثة.',
+	'chat.unavailable': 'اضبط مزود ذكاء اصطناعي ومفتاحه في الإعدادات لمناقشة المقالات.',
+	'chat.failed': 'تعذر على المساعد الرد. حاول مرة أخرى.',
+	'chat.thinking': 'المساعد يكتب…'
 };

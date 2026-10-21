@@ -875,5 +875,21 @@ export const it: Catalogue = {
 	'tags.deleteConfirm': 'Eliminare il tag {name}? Verrà rimosso da {count} articoli.',
 	'tags.nameTaken': 'Esiste già un tag con questo nome.',
 	'tags.renamed': 'Tag rinominato.',
-	'tags.deleted': 'Tag eliminato.'
+	'tags.deleted': 'Tag eliminato.',
+	'chat.title': 'Parla con l\'IA',
+	'chat.open': 'Parla di questo articolo',
+	'chat.close': 'Chiudi la conversazione',
+	'chat.empty': 'Fai una domanda su questo articolo o inizia con un\'azione rapida.',
+	'chat.you': 'Tu',
+	'chat.assistant': 'Assistente',
+	'chat.inputLabel': 'La tua domanda',
+	'chat.send': 'Invia',
+	'chat.sending': 'Invio…',
+	'chat.summarize': 'Riassumi',
+	'chat.explain': 'Spiega in modo semplice',
+	'chat.clear': 'Cancella la conversazione',
+	'chat.loadFailed': 'Impossibile caricare la conversazione.',
+	'chat.unavailable': 'Configura un provider di IA e la sua chiave nelle impostazioni per parlare degli articoli.',
+	'chat.failed': 'L\'assistente non ha potuto rispondere. Riprova.',
+	'chat.thinking': 'L\'assistente sta scrivendo…'
 };

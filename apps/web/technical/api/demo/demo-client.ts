@@ -9,6 +9,7 @@ import type {
 	ArticleScope,
 	ArticleSummary,
 	ArticleTranslation,
+	ChatMessage,
 	BulkFeedbackRequest,
 	DiscoverSuggestion,
 	Feed,
@@ -1079,6 +1080,18 @@ export function createDemoClient(): LumiaClient {
 				persist();
 				return settle(undefined);
 			}
+		},
+		/**
+		 * The demo has no AI provider, and a canned answer would pass for a capability the reader
+		 * does not have: it answers the way an account without a configured provider does.
+		 */
+		chat: {
+			listChat: async (): Promise<ChatMessage[]> => settle([]),
+			sendChat: async (): Promise<ChatMessage[]> => {
+				await settle(null);
+				throw new ApiError(503, { detail: 'no_ai_provider' });
+			},
+			clearChat: async () => settle(undefined)
 		},
 		highlight: {
 			listHighlights: async () => settle([...state.highlights].reverse()),

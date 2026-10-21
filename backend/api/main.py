@@ -9,6 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from api.domain.article.routes import router as article_router
 from api.domain.article.share_routes import router as article_share_router
 from api.domain.audio.routes import router as audio_router
+from api.domain.chat.routes import router as chat_router
 from api.domain.export.routes import router as export_router
 from api.domain.feed.routes import router as feed_router
 from api.domain.fever.routes import router as fever_router
@@ -67,6 +68,7 @@ app.include_router(instance_router)
 app.include_router(feed_router)
 app.include_router(fever_router)
 app.include_router(highlight_router)
+app.include_router(chat_router)
 app.include_router(playlist_router)
 app.include_router(export_router)
 app.include_router(recommendation_router)

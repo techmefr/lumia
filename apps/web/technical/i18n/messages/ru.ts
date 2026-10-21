@@ -872,5 +872,21 @@ export const ru: Catalogue = {
 	'tags.deleteConfirm': 'Удалить тег {name}? Он будет убран из статей: {count}.',
 	'tags.nameTaken': 'Тег с таким названием уже существует.',
 	'tags.renamed': 'Тег переименован.',
-	'tags.deleted': 'Тег удалён.'
+	'tags.deleted': 'Тег удалён.',
+	'chat.title': 'Обсудить с ИИ',
+	'chat.open': 'Обсудить эту статью',
+	'chat.close': 'Закрыть беседу',
+	'chat.empty': 'Задайте вопрос по этой статье или начните с быстрого действия.',
+	'chat.you': 'Вы',
+	'chat.assistant': 'Ассистент',
+	'chat.inputLabel': 'Ваш вопрос',
+	'chat.send': 'Отправить',
+	'chat.sending': 'Отправка…',
+	'chat.summarize': 'Кратко изложить',
+	'chat.explain': 'Объяснить просто',
+	'chat.clear': 'Очистить беседу',
+	'chat.loadFailed': 'Не удалось загрузить беседу.',
+	'chat.unavailable': 'Укажите в настройках поставщика ИИ и ключ, чтобы обсуждать статьи.',
+	'chat.failed': 'Ассистент не смог ответить. Попробуйте ещё раз.',
+	'chat.thinking': 'Ассистент пишет…'
 };
