@@ -66,7 +66,15 @@ export function playlistSummary(
 	id: string,
 	overrides: Partial<PlaylistSummary> = {}
 ): PlaylistSummary {
-	return { id, name: `Playlist ${id}`, item_count: 2, total_reading_minutes: 8, ...overrides };
+	return {
+		id,
+		name: `Playlist ${id}`,
+		role: 'owner',
+		owner_name: 'admin',
+		item_count: 2,
+		total_reading_minutes: 8,
+		...overrides
+	};
 }
 
 export function playlistDetail(
@@ -74,7 +82,15 @@ export function playlistDetail(
 	articles: ArticleSummary[] = [],
 	overrides: Partial<PlaylistDetail> = {}
 ): PlaylistDetail {
-	return { id, name: `Playlist ${id}`, articles, ...overrides };
+	return {
+		id,
+		name: `Playlist ${id}`,
+		role: 'owner',
+		owner_name: 'admin',
+		articles,
+		authorship: articles.map((article) => ({ article_id: article.id, added_by: 'admin' })),
+		...overrides
+	};
 }
 
 export function me(overrides: Partial<Me> = {}): Me {

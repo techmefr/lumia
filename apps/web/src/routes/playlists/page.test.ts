@@ -190,3 +190,23 @@ describe('renaming and deleting', () => {
 		expect(view.item('list-1')).not.toBeNull();
 	});
 });
+
+describe('a playlist shared with the reader', () => {
+	it('says who shares it and offers neither rename nor delete', async () => {
+		const view = await withPlaylists([
+			playlistSummary('list-1', { role: 'viewer', owner_name: 'ada' })
+		]);
+
+		expect(view.item('list-1')?.querySelector('[data-test-shared-by]')?.textContent).toContain(
+			'ada'
+		);
+		expect(view.rename('list-1')).toBeNull();
+		expect(view.remove('list-1')).toBeNull();
+	});
+
+	it('does not mention a sharer on the reader own playlists', async () => {
+		const view = await withPlaylists([playlistSummary('list-1')]);
+
+		expect(view.item('list-1')?.querySelector('[data-test-shared-by]')).toBeNull();
+	});
+});

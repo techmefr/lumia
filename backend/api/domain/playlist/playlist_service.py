@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,17 +11,50 @@ from api.domain.feed.models import Feed
 from api.domain.playlist.exceptions import (
     ArticleNotFoundError,
     BulkItemsFailedError,
+    PlaylistForbiddenError,
     PlaylistNotFoundError,
 )
-from api.domain.playlist.models import Playlist, PlaylistItem
+from api.domain.playlist.models import Playlist, PlaylistItem, PlaylistMember, PlaylistRole
+
+_RANK = {PlaylistRole.VIEWER: 1, PlaylistRole.EDITOR: 2, PlaylistRole.OWNER: 3}
 
 
-async def get_playlist(session: AsyncSession, user_id: UUID, playlist_id: UUID) -> Playlist:
-    playlist = await session.scalar(
-        select(Playlist).where(Playlist.id == playlist_id, Playlist.user_id == user_id)
+def role_on(playlist: Playlist, user_id: UUID) -> PlaylistRole | None:
+    if playlist.user_id == user_id:
+        return PlaylistRole.OWNER
+    for member in playlist.members:
+        if member.user_id == user_id:
+            return PlaylistRole(member.role.value)
+    return None
+
+
+async def list_accessible(session: AsyncSession, user_id: UUID) -> list[Playlist]:
+    shared = select(PlaylistMember.playlist_id).where(PlaylistMember.user_id == user_id)
+    playlists = await session.scalars(
+        select(Playlist)
+        .where(or_(Playlist.user_id == user_id, Playlist.id.in_(shared)))
+        .order_by(Playlist.created_at)
     )
-    if playlist is None:
+    return list(playlists)
+
+
+async def get_playlist(
+    session: AsyncSession,
+    user_id: UUID,
+    playlist_id: UUID,
+    needs: PlaylistRole = PlaylistRole.VIEWER,
+) -> Playlist:
+    """Loads a playlist the account may reach with at least the needs role.
+
+    An account with no role at all gets the same not-found as a missing id, so a stranger cannot
+    tell which playlists exist; a member whose role falls short is told so instead.
+    """
+    playlist = await session.scalar(select(Playlist).where(Playlist.id == playlist_id))
+    role = None if playlist is None else role_on(playlist, user_id)
+    if playlist is None or role is None:
         raise PlaylistNotFoundError
+    if _RANK[role] < _RANK[needs]:
+        raise PlaylistForbiddenError
     return playlist
 
 
@@ -30,7 +63,7 @@ async def add_article(
 ) -> Playlist:
     """Appends an article, ignoring a duplicate rather than failing: adding twice is a user slip,
     not an error worth surfacing."""
-    playlist = await get_playlist(session, user_id, playlist_id)
+    playlist = await get_playlist(session, user_id, playlist_id, PlaylistRole.EDITOR)
     await _assert_article_belongs_to_user(session, user_id, article_id)
 
     if any(item.article_id == article_id for item in playlist.items):
@@ -38,7 +71,12 @@ async def add_article(
 
     next_position = max((item.position for item in playlist.items), default=-1) + 1
     session.add(
-        PlaylistItem(playlist_id=playlist.id, article_id=article_id, position=next_position)
+        PlaylistItem(
+            playlist_id=playlist.id,
+            article_id=article_id,
+            position=next_position,
+            added_by_user_id=user_id,
+        )
     )
     await session.commit()
     return await _reload(session, playlist.id)
@@ -58,7 +96,7 @@ async def set_articles_present(
     are skipped rather than raising: adding an article twice is a slip, and the undo of a bulk add
     must not remove what was already there before it.
     """
-    playlist = await get_playlist(session, user_id, playlist_id)
+    playlist = await get_playlist(session, user_id, playlist_id, PlaylistRole.EDITOR)
     if not article_ids:
         return []
 
@@ -73,7 +111,10 @@ async def set_articles_present(
                     continue
                 session.add(
                     PlaylistItem(
-                        playlist_id=playlist.id, article_id=article_id, position=next_position
+                        playlist_id=playlist.id,
+                        article_id=article_id,
+                        position=next_position,
+                        added_by_user_id=user_id,
                     )
                 )
                 next_position += 1
@@ -96,7 +137,7 @@ async def set_articles_present(
 async def remove_article(
     session: AsyncSession, user_id: UUID, playlist_id: UUID, article_id: UUID
 ) -> Playlist:
-    playlist = await get_playlist(session, user_id, playlist_id)
+    playlist = await get_playlist(session, user_id, playlist_id, PlaylistRole.EDITOR)
     remaining = [item for item in playlist.items if item.article_id != article_id]
     if len(remaining) == len(playlist.items):
         raise ArticleNotFoundError
@@ -114,7 +155,7 @@ async def reorder(
 ) -> Playlist:
     """Applies a client-supplied order. Ids absent from the payload keep their relative order at
     the end, so a stale client can't silently drop items from the playlist."""
-    playlist = await get_playlist(session, user_id, playlist_id)
+    playlist = await get_playlist(session, user_id, playlist_id, PlaylistRole.EDITOR)
     by_article = {item.article_id: item for item in playlist.items}
 
     ordered = [by_article[article_id] for article_id in article_ids if article_id in by_article]

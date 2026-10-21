@@ -1,6 +1,13 @@
 import type { HttpClient } from '../../technical/http-client';
 import type { ArticleScope } from '../article/types';
-import type { ExportJob, PlaylistBulkItemsResult, PlaylistDetail, PlaylistSummary } from './types';
+import type {
+	ExportJob,
+	PlaylistBulkItemsResult,
+	PlaylistDetail,
+	PlaylistMemberRole,
+	PlaylistMembers,
+	PlaylistSummary
+} from './types';
 
 export function createPlaylistApi(http: HttpClient) {
 	async function listPlaylists(): Promise<PlaylistSummary[]> {
@@ -86,6 +93,27 @@ export function createPlaylistApi(http: HttpClient) {
 		return http.requestBlob(`/exports/${jobId}/download`);
 	}
 
+	async function listMembers(playlistId: string): Promise<PlaylistMembers> {
+		return http.request<PlaylistMembers>(`/playlists/${playlistId}/members`);
+	}
+
+	/** Grants a role to an account of this instance, found by email, or changes the one it holds. */
+	async function shareWith(
+		playlistId: string,
+		email: string,
+		role: PlaylistMemberRole
+	): Promise<PlaylistMembers> {
+		return http.request<PlaylistMembers>(`/playlists/${playlistId}/members`, {
+			method: 'PUT',
+			body: { email, role }
+		});
+	}
+
+	/** The owner removes anyone; a member removing themselves is leaving the playlist. */
+	async function removeMember(playlistId: string, userId: string): Promise<void> {
+		await http.request(`/playlists/${playlistId}/members/${userId}`, { method: 'DELETE' });
+	}
+
 	return {
 		listPlaylists,
 		createPlaylist,
@@ -99,7 +127,10 @@ export function createPlaylistApi(http: HttpClient) {
 		reorder,
 		exportPlaylistEpub,
 		getExport,
-		downloadExport
+		downloadExport,
+		listMembers,
+		shareWith,
+		removeMember
 	};
 }
 

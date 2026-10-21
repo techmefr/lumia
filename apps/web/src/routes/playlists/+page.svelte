@@ -219,6 +219,11 @@
 								<a href="{base}/playlists/{playlist.id}" class="flex min-w-0 flex-1 flex-col gap-0.5">
 									<span class="truncate font-medium">{playlist.name}</span>
 									<span class="flex items-center gap-2 text-xs text-muted-foreground">
+										{#if playlist.role !== 'owner'}
+											<span data-test-shared-by>
+												{t('playlists.sharedBy', { name: playlist.owner_name })}
+											</span>
+										{/if}
 										{playlist.item_count > 1
 											? t('playlists.countMany', { count: playlist.item_count })
 											: t('playlists.countOne', { count: playlist.item_count })}
@@ -230,6 +235,7 @@
 										{/if}
 									</span>
 								</a>
+								{#if playlist.role === 'owner'}
 								<div class="flex items-center gap-1">
 									<Button
 										data-test-rename={playlist.id}
@@ -250,6 +256,7 @@
 										<span class="sr-only">{t('playlists.deleteOne', { name: playlist.name })}</span>
 									</Button>
 								</div>
+								{/if}
 							{/if}
 						</CardContent>
 					</Card>
