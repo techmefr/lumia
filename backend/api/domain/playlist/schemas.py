@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from api.domain.article.schemas import ArticleSummaryResponse
 from api.domain.article.scope import ArticleScopeRequest
+from api.domain.playlist.models import MemberRole, PlaylistRole
 
 
 class PlaylistCreateRequest(BaseModel):
@@ -44,9 +45,34 @@ class PlaylistReorderRequest(BaseModel):
     article_ids: list[UUID]
 
 
+class PlaylistShareRequest(BaseModel):
+    email: str
+    role: MemberRole
+
+
+class PlaylistMemberResponse(BaseModel):
+    user_id: UUID
+    username: str
+    role: MemberRole
+
+
+class PlaylistMembersResponse(BaseModel):
+    owner_name: str
+    members: list[PlaylistMemberResponse]
+
+
+class PlaylistItemAuthorship(BaseModel):
+    """`added_by` is null for an item from before playlists could be shared."""
+
+    article_id: UUID
+    added_by: str | None
+
+
 class PlaylistSummaryResponse(BaseModel):
     id: UUID
     name: str
+    role: PlaylistRole
+    owner_name: str
     item_count: int
     total_reading_minutes: int
 
@@ -54,4 +80,7 @@ class PlaylistSummaryResponse(BaseModel):
 class PlaylistDetailResponse(BaseModel):
     id: UUID
     name: str
+    role: PlaylistRole
+    owner_name: str
     articles: list[ArticleSummaryResponse]
+    authorship: list[PlaylistItemAuthorship]

@@ -538,6 +538,25 @@ describe('the playlists', () => {
 		});
 	});
 
+	it('shares one by email, changes the role on a second share and removes the member', async () => {
+		const created = await demo.playlist.createPlaylist('Trajet');
+		await demo.playlist.shareWith(created.id, 'Ada@Example.com', 'viewer');
+		const changed = await demo.playlist.shareWith(created.id, 'ada@example.com', 'editor');
+		expect(changed.members).toEqual([
+			{ user_id: 'demo-ada@example.com', username: 'ada', role: 'editor' }
+		]);
+
+		await demo.playlist.removeMember(created.id, 'demo-ada@example.com');
+		await expect(demo.playlist.listMembers(created.id)).resolves.toMatchObject({ members: [] });
+	});
+
+	it('attributes every item to the demo account', async () => {
+		const [playlist] = await demo.playlist.listPlaylists();
+		const detail = await demo.playlist.getPlaylist(playlist.id);
+		expect(detail.authorship).toHaveLength(detail.articles.length);
+		expect(detail.authorship.every((item) => item.added_by === detail.owner_name)).toBe(true);
+	});
+
 	it('deletes one', async () => {
 		const created = await demo.playlist.createPlaylist('Trajet');
 		await demo.playlist.deletePlaylist(created.id);

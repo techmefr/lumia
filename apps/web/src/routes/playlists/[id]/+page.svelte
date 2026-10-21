@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import type { PlaylistDetail } from '@lumia/core';
-	import { Button, Card, CardContent, Skeleton, toast } from '@lumia/ui';
+	import { Badge, Button, Card, CardContent, Skeleton, toast } from '@lumia/ui';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Play from '@lucide/svelte/icons/play';
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
@@ -11,6 +12,7 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Clock from '@lucide/svelte/icons/clock';
 	import ExportPlaylistButton from '$domain/playlist/export-playlist-button.svelte';
+	import PlaylistSharing from '../../../../domain/playlist/playlist-sharing.svelte';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
@@ -23,6 +25,10 @@
 
 	const totalMinutes = $derived(
 		(playlist?.articles ?? []).reduce((sum, article) => sum + article.reading_minutes, 0)
+	);
+	const canEdit = $derived(playlist?.role === 'owner' || playlist?.role === 'editor');
+	const addedBy = $derived(
+		new Map((playlist?.authorship ?? []).map((item) => [item.article_id, item.added_by]))
 	);
 
 	async function load() {
@@ -96,7 +102,14 @@
 		<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{:else if playlist}
 		<div class="flex flex-wrap items-baseline justify-between gap-2">
-			<h1 class="text-2xl font-semibold">{playlist.name}</h1>
+			<h1 class="text-2xl font-semibold">
+				{playlist.name}
+				{#if playlist.role !== 'owner'}
+					<Badge data-test-role={playlist.role} variant="secondary" class="ml-2 align-middle">
+						{t(playlist.role === 'editor' ? 'playlists.roleEditor' : 'playlists.roleViewer')}
+					</Badge>
+				{/if}
+			</h1>
 			<ExportPlaylistButton playlistId={playlist.id} name={playlist.name} />
 			<span class="flex items-center gap-1.5 text-sm text-muted-foreground">
 				<Clock class="size-4" />
@@ -142,6 +155,11 @@
 											count: article.reading_minutes
 										})}
 										{#if article.read}· {t('playlists.read')}{/if}
+										{#if addedBy.get(article.id)}
+											<span data-test-added-by>
+												· {t('playlists.addedBy', { name: addedBy.get(article.id) ?? '' })}
+											</span>
+										{/if}
 									</span>
 								</a>
 								<div class="flex items-center gap-0.5">
@@ -149,6 +167,7 @@
 										<Play class="size-4" />
 										<span class="sr-only">{t('playlists.listen', { title: article.title })}</span>
 									</Button>
+									{#if canEdit}
 									<Button
 										size="sm"
 										variant="ghost"
@@ -173,6 +192,7 @@
 											{t('playlists.removeArticle', { title: article.title })}
 										</span>
 									</Button>
+									{/if}
 								</div>
 							</CardContent>
 						</Card>
@@ -181,5 +201,11 @@
 			</ol>
 
 		{/if}
+
+		<PlaylistSharing
+			playlistId={playlist.id}
+			role={playlist.role}
+			onleave={() => goto(`${base}/playlists`)}
+		/>
 	{/if}
 </div>

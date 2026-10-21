@@ -28,6 +28,9 @@ import type {
 	NewsletterInboxCreated,
 	NewsletterInboxStatus,
 	PlaylistDetail,
+	PlaylistMember,
+	PlaylistMemberRole,
+	PlaylistMembers,
 	PublicArticle,
 	PlaylistSummary,
 	Popularity,
@@ -77,12 +80,20 @@ interface Scores {
 	categories: Record<string, number>;
 }
 
+/** `members` is absent from state saved before sharing existed, so it reads as empty. */
+interface DemoPlaylist {
+	id: string;
+	name: string;
+	article_ids: string[];
+	members?: PlaylistMember[];
+}
+
 interface DemoState {
 	folders: Folder[];
 	feeds: Feed[];
 	articleIds: string[];
 	feedback: Record<string, Feedback>;
-	playlists: { id: string; name: string; article_ids: string[] }[];
+	playlists: DemoPlaylist[];
 	highlights: Highlight[];
 	filterRules: FilterRule[];
 	scores: Scores;
@@ -364,7 +375,23 @@ export function createDemoClient(): LumiaClient {
 	function playlistDetail(playlistId: string): PlaylistDetail {
 		const playlist = state.playlists.find((candidate) => candidate.id === playlistId);
 		if (!playlist) throw new Error('playlist introuvable');
-		return { id: playlist.id, name: playlist.name, articles: summaries(playlist.article_ids) };
+		return {
+			id: playlist.id,
+			name: playlist.name,
+			role: 'owner',
+			owner_name: state.me.username,
+			articles: summaries(playlist.article_ids),
+			authorship: playlist.article_ids.map((articleId) => ({
+				article_id: articleId,
+				added_by: state.me.username
+			}))
+		};
+	}
+
+	function playlistMembers(playlistId: string): PlaylistMembers {
+		const playlist = state.playlists.find((candidate) => candidate.id === playlistId);
+		if (!playlist) throw new Error('playlist introuvable');
+		return { owner_name: state.me.username, members: [...(playlist.members ?? [])] };
 	}
 
 	function playlistSummary(playlist: DemoState['playlists'][number]): PlaylistSummary {
@@ -372,6 +399,8 @@ export function createDemoClient(): LumiaClient {
 		return {
 			id: playlist.id,
 			name: playlist.name,
+			role: 'owner',
+			owner_name: state.me.username,
 			item_count: articles.length,
 			total_reading_minutes: articles.reduce((total, article) => total + article.reading_minutes, 0)
 		};
@@ -1066,6 +1095,26 @@ export function createDemoClient(): LumiaClient {
 				return settle(playlistDetail(playlist.id));
 			},
 			getPlaylist: async (playlistId: string) => settle(playlistDetail(playlistId)),
+			listMembers: async (playlistId: string) => settle(playlistMembers(playlistId)),
+			shareWith: async (playlistId: string, email: string, role: PlaylistMemberRole) => {
+				const playlist = state.playlists.find((candidate) => candidate.id === playlistId);
+				if (!playlist) throw new Error('playlist introuvable');
+				const userId = `demo-${email.trim().toLowerCase()}`;
+				const others = (playlist.members ?? []).filter((member) => member.user_id !== userId);
+				playlist.members = [
+					...others,
+					{ user_id: userId, username: email.split('@')[0], role }
+				];
+				persist();
+				return settle(playlistMembers(playlistId));
+			},
+			removeMember: async (playlistId: string, userId: string) => {
+				const playlist = state.playlists.find((candidate) => candidate.id === playlistId);
+				if (!playlist) throw new Error('playlist introuvable');
+				playlist.members = (playlist.members ?? []).filter((member) => member.user_id !== userId);
+				persist();
+				return settle(undefined);
+			},
 			renamePlaylist: async (playlistId: string, name: string) => {
 				const playlist = state.playlists.find((candidate) => candidate.id === playlistId);
 				if (!playlist) throw new Error('playlist introuvable');

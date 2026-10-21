@@ -20,9 +20,16 @@ vi.mock('$app/state', () => ({
 vi.mock('$technical/api/client', () => ({
 	isDemo: false,
 	lumia: {
-		user: { isAuthenticated: vi.fn(() => true) },
+		user: { isAuthenticated: vi.fn(() => true), getMe: vi.fn() },
 		article: { getArticle: vi.fn() },
-		playlist: { getPlaylist: vi.fn(), reorder: vi.fn(), removeArticle: vi.fn() },
+		playlist: {
+			getPlaylist: vi.fn(),
+			reorder: vi.fn(),
+			removeArticle: vi.fn(),
+			listMembers: vi.fn(),
+			shareWith: vi.fn(),
+			removeMember: vi.fn()
+		},
 		recommendation: { sendFeedback: vi.fn() }
 	}
 }));
@@ -243,5 +250,57 @@ describe('removing an article from a playlist', () => {
 
 		await waitFor(() => expect(api.playlist.removeArticle).toHaveBeenCalled());
 		expect(view.rows()).toHaveLength(2);
+	});
+});
+
+describe('a shared playlist', () => {
+	async function sharedWith(role: 'editor' | 'viewer') {
+		api.user.getMe.mockResolvedValue({ id: 'me' } as Awaited<ReturnType<typeof api.user.getMe>>);
+		api.playlist.listMembers.mockResolvedValue({ owner_name: 'ada', members: [] });
+		api.playlist.getPlaylist.mockResolvedValue(
+			playlistDetail('list-1', [articleSummary('a'), articleSummary('b')], {
+				role,
+				owner_name: 'ada',
+				authorship: [
+					{ article_id: 'a', added_by: 'ada' },
+					{ article_id: 'b', added_by: null }
+				]
+			})
+		);
+		const view = playlistPage();
+		await waitFor(() => expect(view.loading()).toBeNull());
+		return view;
+	}
+
+	it('shows who added each article, and nothing for an item from before sharing', async () => {
+		const view = await sharedWith('editor');
+
+		const notes = [...view.container.querySelectorAll('ol > li')].map(
+			(row) => row.querySelector('[data-test-added-by]')?.textContent?.trim() ?? null
+		);
+		expect(notes[0]).toContain('ada');
+		expect(notes[1]).toBeNull();
+	});
+
+	it('lets an editor reorder and remove', async () => {
+		const view = await sharedWith('editor');
+
+		expect(view.rowButtons(0)).toHaveLength(4);
+		expect(view.container.querySelector('[data-test-role="editor"]')).not.toBeNull();
+	});
+
+	it('gives a viewer the reading controls only', async () => {
+		const view = await sharedWith('viewer');
+
+		expect(view.rowButtons(0)).toHaveLength(1);
+		expect(view.container.querySelector('[data-test-role="viewer"]')).not.toBeNull();
+	});
+
+	it('shows the sharing panel to a member, who can leave', async () => {
+		const view = await sharedWith('viewer');
+
+		await waitFor(() =>
+			expect(view.container.querySelector('[data-test-leave]')).not.toBeNull()
+		);
 	});
 });
