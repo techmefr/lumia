@@ -34,6 +34,7 @@
 	import ExportEpubButton from '$domain/article/export-epub-button.svelte';
 	import ShareArticleButton from '$domain/article/share-article-button.svelte';
 	import TranslateButton from '$domain/article/translate-button.svelte';
+	import RelatedArticles from '$domain/article/related-articles.svelte';
 	import OrbitButton, { type OrbitAction } from '$domain/article/orbit-button.svelte';
 
 	/** Below this, "reading" is really just landing on the page; don't record it as progress. */
@@ -451,6 +452,8 @@
 				</div>
 			</CardContent>
 		</Card>
+
+		<RelatedArticles articleId={article.id} />
 
 		<div
 			class="fixed inset-x-0 z-40 flex justify-center border-t bg-background/90 p-3 backdrop-blur print:hidden"

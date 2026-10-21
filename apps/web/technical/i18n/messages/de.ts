@@ -443,6 +443,7 @@ export const de: Catalogue = {
 	'article.translating': 'Wird übersetzt…',
 	'article.showOriginal': 'Original anzeigen',
 	'article.translatedNotice': 'Maschinelle Übersetzung',
+	'article.related': 'Ähnliche Artikel',
 	'article.translateUnavailable': 'Für diese Sprache ist kein Übersetzungsdienst eingerichtet.',
 	'article.translateFailed': 'Übersetzung fehlgeschlagen. Der Artikel bleibt in seiner Sprache.',
 	'article.exportEpub': 'Als EPUB exportieren',

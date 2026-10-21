@@ -431,6 +431,7 @@ export const ar: Catalogue = {
 	'article.translating': 'جارٍ الترجمة…',
 	'article.showOriginal': 'إظهار الأصل',
 	'article.translatedNotice': 'ترجمة آلية',
+	'article.related': 'مقالات ذات صلة',
 	'article.translateUnavailable': 'لا توجد خدمة ترجمة مهيأة لهذه اللغة.',
 	'article.translateFailed': 'فشلت الترجمة. يبقى المقال بلغته الأصلية.',
 	'article.exportEpub': 'تصدير بصيغة EPUB',

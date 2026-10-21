@@ -76,6 +76,14 @@ describe('getArticle', () => {
 	});
 });
 
+describe('getRelatedArticles', () => {
+	it('asks for the related articles of one article', async () => {
+		const { articles, last } = api([[]]);
+		await articles.getRelatedArticles('article-1');
+		expect(last()).toMatchObject({ path: '/articles/article-1/related', method: 'GET' });
+	});
+});
+
 describe('saveUrl', () => {
 	it('posts the url to the save endpoint', async () => {
 		const { articles, last } = api([{ id: 'article-9' }]);

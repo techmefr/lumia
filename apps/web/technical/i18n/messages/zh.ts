@@ -423,6 +423,7 @@ export const zh: Catalogue = {
 	'article.translating': '翻译中…',
 	'article.showOriginal': '显示原文',
 	'article.translatedNotice': '机器翻译',
+	'article.related': '相关文章',
 	'article.translateUnavailable': '尚未为该语言配置翻译服务。',
 	'article.translateFailed': '翻译失败，文章保留原文。',
 	'article.exportEpub': '导出为 EPUB',

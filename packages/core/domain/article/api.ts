@@ -56,6 +56,10 @@ export function createArticleApi(http: HttpClient) {
 		return http.request<ArticleDetail>(`/articles/${articleId}`);
 	}
 
+	async function getRelatedArticles(articleId: string): Promise<ArticleSummary[]> {
+		return http.request<ArticleSummary[]>(`/articles/${articleId}/related`);
+	}
+
 	/** Saves an arbitrary web page as a readable article on the user's "Enregistrés" feed. */
 	async function saveUrl(url: string): Promise<ArticleSummary> {
 		return http.request<ArticleSummary>('/articles/save-url', { method: 'POST', body: { url } });
@@ -127,6 +131,7 @@ export function createArticleApi(http: HttpClient) {
 	return {
 		listArticles,
 		getArticle,
+		getRelatedArticles,
 		saveUrl,
 		importReadingList,
 		getReadingListImportProgress,

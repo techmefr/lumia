@@ -433,6 +433,7 @@ export const en: Catalogue = {
 	'article.translating': 'Translating…',
 	'article.showOriginal': 'Show original',
 	'article.translatedNotice': 'Machine translation',
+	'article.related': 'Related articles',
 	'article.translateUnavailable': 'No translation service is configured for this language.',
 	'article.translateFailed': 'Translation failed. The article stays in its own language.',
 	'article.exportEpub': 'Export as EPUB',

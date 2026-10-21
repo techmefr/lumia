@@ -443,6 +443,7 @@ export const es: Catalogue = {
 	'article.translating': 'Traduciendo…',
 	'article.showOriginal': 'Ver el original',
 	'article.translatedNotice': 'Traducción automática',
+	'article.related': 'Artículos relacionados',
 	'article.translateUnavailable': 'Ningún servicio de traducción configurado para este idioma.',
 	'article.translateFailed': 'La traducción ha fallado. El artículo se queda en su idioma.',
 	'article.exportEpub': 'Exportar como EPUB',
