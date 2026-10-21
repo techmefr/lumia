@@ -24,6 +24,8 @@ class ArticleSummaryResponse(BaseModel):
     url: str
     summary: str | None
     image_url: str | None
+    enclosure_url: str | None = None
+    enclosure_type: str | None = None
     published_at: datetime
     reading_minutes: int
     read: bool = False

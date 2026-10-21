@@ -34,6 +34,7 @@
 	import { readableText } from '$technical/speech/readable-text';
 	import { articleAudio } from '$technical/speech/server-voice';
 	import { player } from '$domain/audio/audio-player.svelte';
+	import PlayIcon from '@lucide/svelte/icons/play';
 	import { clearKaraoke, highlightChunk } from '$technical/speech/karaoke';
 	import AddToPlaylist from '$domain/playlist/add-to-playlist.svelte';
 	import ExportEpubButton from '$domain/article/export-epub-button.svelte';
@@ -395,6 +396,14 @@
 						loading="lazy"
 					/>
 					<GlareHover class="absolute inset-0" glareColor="#ffffff" glareOpacity={0.3} glareSize={220} />
+				</div>
+			{/if}
+			{#if article.enclosure_url}
+				<div class="px-6 pt-6 print:hidden">
+					<Button data-test-play-episode onclick={() => article && player.play([article])}>
+						<PlayIcon class="size-4" />
+						{t('player.listenEpisode')}
+					</Button>
 				</div>
 			{/if}
 			<CardContent class="pt-6">

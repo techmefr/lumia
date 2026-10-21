@@ -311,6 +311,8 @@ export const ru: Catalogue = {
 	'player.expand': 'Показать подробности',
 	'player.collapse': 'Скрыть подробности',
 	'player.close': 'Закрыть плеер',
+	'player.enclosureFailed': 'Не удалось воспроизвести этот выпуск из источника.',
+	'player.listenEpisode': 'Слушать выпуск',
 	'player.seek': 'Позиция в статье',
 	'player.seekValue': 'Прочитано {percent}%',
 	'playlists.title': 'Подборки',

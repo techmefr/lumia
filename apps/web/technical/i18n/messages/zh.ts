@@ -300,6 +300,8 @@ export const zh: Catalogue = {
 	'player.expand': '显示详情',
 	'player.collapse': '隐藏详情',
 	'player.close': '关闭播放器',
+	'player.enclosureFailed': '无法从来源播放此集。',
+	'player.listenEpisode': '播放此集',
 	'player.seek': '文章中的位置',
 	'player.seekValue': '已朗读 {percent}%',
 	'playlists.title': '播放列表',

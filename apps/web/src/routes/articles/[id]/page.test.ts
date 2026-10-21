@@ -115,6 +115,19 @@ describe('opening an article', () => {
 		expect(view.video()?.getAttribute('title')).toBeTruthy();
 	});
 
+	it('offers to play the episode of a podcast article and only then', async () => {
+		api.article.getArticle.mockResolvedValue(
+			articleDetail('article-1', { enclosure_url: 'https://cdn.example.com/ep1.mp3' })
+		);
+		const withEpisode = await loaded();
+		expect(withEpisode.container.querySelector('[data-test-play-episode]')).not.toBeNull();
+		cleanup();
+
+		api.article.getArticle.mockResolvedValue(articleDetail('article-1'));
+		const ordinary = await loaded();
+		expect(ordinary.container.querySelector('[data-test-play-episode]')).toBeNull();
+	});
+
 	it('shows no player for an ordinary article', async () => {
 		const view = await loaded();
 

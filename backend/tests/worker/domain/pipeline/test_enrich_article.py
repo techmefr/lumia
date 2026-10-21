@@ -661,3 +661,17 @@ async def test_enrich_article_keeps_a_mailed_newsletter_as_received(session: Asy
     assert article is not None
     assert article.content == FRENCH_CONTENT
     assert article.url == "urn:lumia:newsletter:deadbeef"
+
+
+async def test_enrich_article_stores_the_enclosure_reference_without_fetching_it(
+    session: AsyncSession,
+) -> None:
+    await _create_feed(session)
+    raw = _raw_article(enclosure_url="https://cdn.example.com/ep1.mp3", enclosure_type="audio/mpeg")
+
+    await enrich_article({}, raw, content_extractor=_FakeContentExtractor())
+
+    article = await session.scalar(select(Article))
+    assert article is not None
+    assert article.enclosure_url == "https://cdn.example.com/ep1.mp3"
+    assert article.enclosure_type == "audio/mpeg"

@@ -314,6 +314,8 @@ export const pt: Catalogue = {
 	'player.expand': 'Mostrar detalhes',
 	'player.collapse': 'Ocultar detalhes',
 	'player.close': 'Fechar o leitor',
+	'player.enclosureFailed': 'Não foi possível reproduzir este episódio a partir da origem.',
+	'player.listenEpisode': 'Reproduzir o episódio',
 	'player.seek': 'Posição no artigo',
 	'player.seekValue': '{percent}% lido',
 	'playlists.title': 'Listas',

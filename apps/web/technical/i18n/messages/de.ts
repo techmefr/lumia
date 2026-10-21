@@ -313,6 +313,8 @@ export const de: Catalogue = {
 	'player.expand': 'Details anzeigen',
 	'player.collapse': 'Details ausblenden',
 	'player.close': 'Player schließen',
+	'player.enclosureFailed': 'Diese Folge konnte nicht von ihrer Quelle abgespielt werden.',
+	'player.listenEpisode': 'Folge abspielen',
 	'player.seek': 'Position im Artikel',
 	'player.seekValue': '{percent} % vorgelesen',
 	'playlists.title': 'Playlists',

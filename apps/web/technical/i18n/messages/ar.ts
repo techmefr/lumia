@@ -305,6 +305,8 @@ export const ar: Catalogue = {
 	'player.expand': 'إظهار التفاصيل',
 	'player.collapse': 'إخفاء التفاصيل',
 	'player.close': 'إغلاق المشغّل',
+	'player.enclosureFailed': 'تعذّر تشغيل هذه الحلقة من مصدرها.',
+	'player.listenEpisode': 'تشغيل الحلقة',
 	'player.seek': 'الموضع في المقال',
 	'player.seekValue': 'تمت قراءة {percent}%',
 	'playlists.title': 'قوائم التشغيل',

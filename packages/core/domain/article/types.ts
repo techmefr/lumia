@@ -12,6 +12,9 @@ export interface ArticleSummary {
 	url: string;
 	summary: string | null;
 	image_url: string | null;
+	/** Audio file of a podcast episode, streamed by the browser from its source; null for an ordinary article. */
+	enclosure_url: string | null;
+	enclosure_type: string | null;
 	published_at: string;
 	/** Estimated minutes to read, from the backend's word count. Always at least 1. */
 	reading_minutes: number;

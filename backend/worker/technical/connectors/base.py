@@ -18,6 +18,8 @@ class RawArticle:
     published_at: datetime
     author_name: str | None = None
     category_name: str | None = None
+    enclosure_url: str | None = None
+    enclosure_type: str | None = None
 
 
 class SourceConnector(Protocol):
