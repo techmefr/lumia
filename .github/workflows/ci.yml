@@ -40,6 +40,12 @@ jobs:
       - name: Test the app
         run: pnpm --filter web test:coverage
 
+      - name: Check, test and build the create-lumia CLI
+        run: |
+          pnpm --filter create-lumia check
+          pnpm --filter create-lumia test:coverage
+          pnpm --filter create-lumia build
+
       # Kept even when a step above failed: the report is most useful precisely when it is the
       # coverage gate that went red.
       - name: Upload the coverage reports
