@@ -1,7 +1,7 @@
 """add article chat messages
 
 Revision ID: c4b8e2a1d695
-Revises: a3d9e1f5b742
+Revises: b8d3f1a7c250
 Create Date: 2026-10-21 14:00:00.000000
 
 """
@@ -14,7 +14,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "c4b8e2a1d695"
-down_revision: str | Sequence[str] | None = "a3d9e1f5b742"
+down_revision: str | Sequence[str] | None = "b8d3f1a7c250"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
