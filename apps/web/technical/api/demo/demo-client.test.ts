@@ -1022,3 +1022,14 @@ describe('the saved searches', () => {
 		await expect(demo.savedSearch.listNotifications()).resolves.toMatchObject({ items: [] });
 	});
 });
+
+describe('the fever key', () => {
+	it('is never active, since the demo has no server for a reader app to sync from', async () => {
+		await expect(demo.user.getFeverKey()).resolves.toEqual({ enabled: false, created_at: null });
+	});
+
+	it('answers a creation and a revocation without failing', async () => {
+		await expect(demo.user.createFeverKey()).resolves.toMatchObject({ secret: '' });
+		await expect(demo.user.revokeFeverKey()).resolves.toBeUndefined();
+	});
+});

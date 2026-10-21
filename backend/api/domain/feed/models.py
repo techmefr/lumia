@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Identity
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.technical.orm import Base, TimestampMixin
@@ -21,12 +21,15 @@ class Folder(Base, TimestampMixin):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
     name: Mapped[str]
+    # Fever clients address everything by integer; see Article.fever_id.
+    fever_id: Mapped[int] = mapped_column(BigInteger, Identity(), unique=True)
 
 
 class Feed(Base, TimestampMixin):
     __tablename__ = "feeds"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    fever_id: Mapped[int] = mapped_column(BigInteger, Identity(), unique=True)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
     folder_id: Mapped[UUID | None] = mapped_column(ForeignKey("folders.id"), default=None)
     source_type: Mapped[SourceType]

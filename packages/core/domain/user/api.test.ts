@@ -232,3 +232,24 @@ describe('the profile', () => {
 		});
 	});
 });
+
+describe('the fever key', () => {
+	it('reads whether one is active from /me/fever', async () => {
+		const { user, last } = api([{ enabled: false, created_at: null }]);
+		await expect(user.getFeverKey()).resolves.toEqual({ enabled: false, created_at: null });
+		expect(last()).toMatchObject({ path: '/me/fever', method: 'GET' });
+	});
+
+	it('creates a key with a POST and returns what the server answered', async () => {
+		const answer = { email: 'lena@lumia.test', secret: 's3cret', created_at: '2026-10-21T10:00:00Z' };
+		const { user, last } = api([answer]);
+		await expect(user.createFeverKey()).resolves.toEqual(answer);
+		expect(last()).toMatchObject({ path: '/me/fever', method: 'POST' });
+	});
+
+	it('revokes it with a DELETE', async () => {
+		const { user, last } = api([undefined]);
+		await user.revokeFeverKey();
+		expect(last()).toMatchObject({ path: '/me/fever', method: 'DELETE' });
+	});
+});

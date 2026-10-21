@@ -2,7 +2,14 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import Computed, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    Computed,
+    DateTime,
+    ForeignKey,
+    Identity,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
@@ -52,6 +59,9 @@ class Article(Base, TimestampMixin):
     __tablename__ = "articles"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    # The Fever protocol identifies items by an integer and pages with since_id / max_id, which a
+    # random uuid cannot answer. The identity grows with insertion, so it is also the cursor.
+    fever_id: Mapped[int] = mapped_column(BigInteger, Identity(), unique=True)
     feed_id: Mapped[UUID] = mapped_column(ForeignKey("feeds.id"))
     author_id: Mapped[UUID | None] = mapped_column(ForeignKey("authors.id"), default=None)
     category_id: Mapped[UUID | None] = mapped_column(ForeignKey("categories.id"), default=None)
