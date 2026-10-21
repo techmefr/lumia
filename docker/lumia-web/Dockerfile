@@ -1,4 +1,4 @@
-FROM node:26.8-alpine AS build
+FROM node:26.10-alpine AS build
 # Node 26 ships without corepack, so enabling it straight away exits 127. Installing it is
 # still the way to honour the packageManager field rather than guessing a pnpm version.
 RUN npm install --global corepack@latest && corepack enable
@@ -12,7 +12,7 @@ RUN pnpm install --frozen-lockfile
 ENV VITE_API_BASE_URL=/api
 RUN pnpm --filter web build
 
-FROM nginx:1.31.5-alpine
+FROM nginx:1.31.6-alpine
 
 # Templated rather than copied to conf.d: the image is published, so the backend it proxies to
 # cannot be a name that only resolves inside this repository's compose file. The default keeps
