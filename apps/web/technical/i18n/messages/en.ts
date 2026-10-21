@@ -290,6 +290,12 @@ export const en: Catalogue = {
 	'instanceFeeds.attachedToast': '{count} feed(s) attached.',
 	'instanceFeeds.attachFailed': 'Those feeds could not be attached.',
 
+	'player.label': 'Audio player',
+	'player.expand': 'Show details',
+	'player.collapse': 'Hide details',
+	'player.close': 'Close the player',
+	'player.seek': 'Position in the article',
+	'player.seekValue': '{percent}% read aloud',
 	'playlists.title': 'Playlists',
 	'playlists.intro':
 		'Ordered queues of articles, with their total length, to read or listen to in one go.',

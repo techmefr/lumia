@@ -113,6 +113,7 @@ export class SpeechReader {
 	 * can tell it is no longer wanted instead of starting over the next article.
 	 */
 	private generation = 0;
+	private onProgress: ((progress: number) => void) | null = null;
 	private rate = 1;
 	private lang = 'fr-FR';
 
@@ -122,13 +123,23 @@ export class SpeechReader {
 
 	speak(
 		text: string,
-		options: { rate?: number; lang?: string; onDone?: () => void; audio?: AudioSource } = {}
+		options: {
+			rate?: number;
+			lang?: string;
+			onDone?: () => void;
+			onProgress?: (progress: number) => void;
+			/** Where to begin, 0 to 1 across the chunks; a resumed reading. */
+			startAt?: number;
+			audio?: AudioSource;
+		} = {}
 	): void {
 		if (!this.supported) return;
 		this.stop();
 
 		this.chunks = splitIntoChunks(text);
-		this.index = 0;
+		this.index = this.indexAt(options.startAt ?? 0);
+		this.progress = this.chunks.length ? this.index / this.chunks.length : 0;
+		this.onProgress = options.onProgress ?? null;
 		this.spokenChunks = 0;
 		this.error = null;
 		this.rate = options.rate ?? 1;
@@ -145,6 +156,23 @@ export class SpeechReader {
 			return;
 		}
 		this.speakCurrent();
+	}
+
+	/** Jumps to a fraction of the queued text, starting that chunk over when playing. */
+	seek(fraction: number): void {
+		if (!this.speaking) return;
+		this.index = this.indexAt(fraction);
+		this.progress = this.index / this.chunks.length;
+		if (this.paused) return;
+		this.utterance = null;
+		window.speechSynthesis.cancel();
+		this.speakCurrent();
+	}
+
+	private indexAt(fraction: number): number {
+		if (this.chunks.length === 0) return 0;
+		const clamped = Math.min(Math.max(fraction, 0), 1);
+		return Math.min(Math.floor(clamped * this.chunks.length), this.chunks.length - 1);
 	}
 
 	setRate(rate: number): void {
@@ -186,6 +214,7 @@ export class SpeechReader {
 		this.generation += 1;
 		this.releaseAudio();
 		this.onDone = null;
+		this.onProgress = null;
 		this.chunks = [];
 		this.index = 0;
 		this.speaking = false;
@@ -267,6 +296,7 @@ export class SpeechReader {
 		}
 
 		this.currentChunk = chunk;
+		this.onProgress?.(this.progress);
 		const utterance = new SpeechSynthesisUtterance(chunk);
 		this.utterance = utterance;
 		utterance.rate = this.rate;

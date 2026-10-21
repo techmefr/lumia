@@ -297,6 +297,12 @@ export const es: Catalogue = {
 	'instanceFeeds.attachedToast': '{count} fuente(s) vinculada(s).',
 	'instanceFeeds.attachFailed': 'No se han podido vincular esas fuentes.',
 
+	'player.label': 'Reproductor de audio',
+	'player.expand': 'Mostrar detalles',
+	'player.collapse': 'Ocultar detalles',
+	'player.close': 'Cerrar el reproductor',
+	'player.seek': 'Posición en el artículo',
+	'player.seekValue': '{percent} % leído',
 	'playlists.title': 'Listas',
 	'playlists.intro':
 		'Colas de artículos ordenadas, con su duración total, para leer o escuchar del tirón.',

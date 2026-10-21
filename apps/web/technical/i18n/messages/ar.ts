@@ -289,6 +289,12 @@ export const ar: Catalogue = {
 	'instanceFeeds.attachedToast': 'تم ربط {count} تدفق.',
 	'instanceFeeds.attachFailed': 'تعذّر ربط هذه التدفقات.',
 
+	'player.label': 'مشغّل الصوت',
+	'player.expand': 'إظهار التفاصيل',
+	'player.collapse': 'إخفاء التفاصيل',
+	'player.close': 'إغلاق المشغّل',
+	'player.seek': 'الموضع في المقال',
+	'player.seekValue': 'تمت قراءة {percent}%',
 	'playlists.title': 'قوائم التشغيل',
 	'playlists.intro': 'طوابير مقالات مرتَّبة، مع مدّتها الإجمالية، للقراءة أو الاستماع دفعة واحدة.',
 	'playlists.loadFailed': 'تعذّر تحميل قوائم التشغيل.',

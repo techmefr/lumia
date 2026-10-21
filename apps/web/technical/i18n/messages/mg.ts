@@ -299,6 +299,12 @@ export const mg: Catalogue = {
 	'instanceFeeds.attachedToast': 'Fantsona {count} no nampifandraisina.',
 	'instanceFeeds.attachFailed': 'Tsy afaka nampifandray ireo fantsona ireo.',
 
+	'player.label': 'Mpilalao feo',
+	'player.expand': 'Asehoy ny antsipiriany',
+	'player.collapse': 'Afeno ny antsipiriany',
+	'player.close': 'Akatony ny mpilalao',
+	'player.seek': "Toerana ao amin'ny lahatsoratra",
+	'player.seekValue': '{percent}% no vakiana',
 	'playlists.title': 'Lisitra',
 	'playlists.intro':
 		'Filaharana lahatsoratra voalamina, miaraka amin’ny fotoana ilaina, hovakiana na hohenoina tsy an-kijanona.',

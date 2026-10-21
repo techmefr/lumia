@@ -298,6 +298,12 @@ export const pt: Catalogue = {
 	'instanceFeeds.attachedToast': '{count} fonte(s) ligada(s).',
 	'instanceFeeds.attachFailed': 'Não foi possível ligar essas fontes.',
 
+	'player.label': 'Leitor de áudio',
+	'player.expand': 'Mostrar detalhes',
+	'player.collapse': 'Ocultar detalhes',
+	'player.close': 'Fechar o leitor',
+	'player.seek': 'Posição no artigo',
+	'player.seekValue': '{percent}% lido',
 	'playlists.title': 'Listas',
 	'playlists.intro':
 		'Filas de artigos ordenadas, com a sua duração total, para ler ou ouvir de seguida.',

@@ -295,6 +295,12 @@ export const ru: Catalogue = {
 	'instanceFeeds.attachedToast': 'Подключено лент: {count}.',
 	'instanceFeeds.attachFailed': 'Не удалось подключить эти ленты.',
 
+	'player.label': 'Аудиоплеер',
+	'player.expand': 'Показать подробности',
+	'player.collapse': 'Скрыть подробности',
+	'player.close': 'Закрыть плеер',
+	'player.seek': 'Позиция в статье',
+	'player.seekValue': 'Прочитано {percent}%',
 	'playlists.title': 'Подборки',
 	'playlists.intro':
 		'Упорядоченные очереди статей с общей длительностью — читать или слушать подряд.',

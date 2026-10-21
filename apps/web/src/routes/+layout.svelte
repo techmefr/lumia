@@ -17,6 +17,8 @@
 	import SettingsMenu from '$domain/navigation/settings-menu.svelte';
 	import DemoBanner from '$domain/navigation/demo-banner.svelte';
 	import ShortcutsHelp from '$domain/navigation/shortcuts-help.svelte';
+	import PlayerBar from '$domain/audio/player-bar.svelte';
+	import { player } from '$domain/audio/audio-player.svelte';
 	import { watchUnread } from '$technical/notifications/notification-store.svelte.js';
 	import { bindSequenceShortcuts, bindShortcuts } from '$technical/keyboard/shortcuts';
 	import { NAVIGATION_PREFIX, NAVIGATION_SHORTCUTS } from '$technical/keyboard/shortcut-catalogue';
@@ -54,7 +56,9 @@
 		return isAuthRoute(pathname) || pathname.startsWith(`${base}/share/`);
 	}
 
-	const mainPadding = $derived(isChromeless(page.url.pathname) ? '' : 'pb-20 sm:pb-6');
+	const mainPadding = $derived(
+		isChromeless(page.url.pathname) ? '' : player.current ? 'pb-56 sm:pb-6' : 'pb-20 sm:pb-6'
+	);
 
 	// An article body is the one screen whose width is a measure rather than a container; every
 	// other screen is a list, a grid or a form and gets the whole display.
@@ -226,6 +230,10 @@
 			</a>
 		{/each}
 	</nav>
+{/if}
+
+{#if !isChromeless(page.url.pathname)}
+	<PlayerBar />
 {/if}
 
 <p data-test-shortcut-announcement aria-live="polite" class="sr-only">{arrivalAnnouncement}</p>

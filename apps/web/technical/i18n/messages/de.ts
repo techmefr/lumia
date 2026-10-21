@@ -297,6 +297,12 @@ export const de: Catalogue = {
 	'instanceFeeds.attachedToast': '{count} Feed(s) übernommen.',
 	'instanceFeeds.attachFailed': 'Diese Feeds konnten nicht übernommen werden.',
 
+	'player.label': 'Audioplayer',
+	'player.expand': 'Details anzeigen',
+	'player.collapse': 'Details ausblenden',
+	'player.close': 'Player schließen',
+	'player.seek': 'Position im Artikel',
+	'player.seekValue': '{percent} % vorgelesen',
 	'playlists.title': 'Playlists',
 	'playlists.intro':
 		'Geordnete Artikelfolgen mit ihrer Gesamtdauer, zum Lesen oder Hören in einem Zug.',
