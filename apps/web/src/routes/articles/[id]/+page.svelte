@@ -412,15 +412,18 @@
 				</p>
 				<div class="mt-1 flex flex-wrap items-center justify-between gap-2 print:hidden">
 					<div class="flex items-center gap-3">
-						<a
-							href={article.url}
-							target="_blank"
-							rel="noopener noreferrer"
-							class="flex w-fit items-center gap-1 text-sm text-primary hover:underline"
-						>
-							<ExternalLink class="size-3.5" />
-							{t('article.readSource')}
-						</a>
+						{#if /^https?:/.test(article.url)}
+							<a
+								data-test-read-source
+								href={article.url}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="flex w-fit items-center gap-1 text-sm text-primary hover:underline"
+							>
+								<ExternalLink class="size-3.5" />
+								{t('article.readSource')}
+							</a>
+						{/if}
 						<span class="flex items-center gap-1 text-sm text-muted-foreground">
 							<Clock class="size-3.5" />
 							{t('article.readingTime', { count: article.reading_minutes })}

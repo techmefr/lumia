@@ -134,6 +134,21 @@ describe('opening an article', () => {
 		expect(view.content()?.textContent).toContain('Un corps.');
 	});
 
+	it('links to the source page of a web article but not of a mailed newsletter', async () => {
+		api.article.getArticle.mockResolvedValue(
+			articleDetail('article-1', { url: 'https://example.com/a' })
+		);
+		await loaded();
+		expect(document.querySelector('[data-test-read-source]')).not.toBeNull();
+		cleanup();
+
+		api.article.getArticle.mockResolvedValue(
+			articleDetail('article-1', { url: 'urn:lumia:newsletter:abc' })
+		);
+		await loaded();
+		expect(document.querySelector('[data-test-read-source]')).toBeNull();
+	});
+
 	it('says the article cannot be found when the request fails', async () => {
 		api.article.getArticle.mockRejectedValue(new Error('gone'));
 

@@ -115,6 +115,8 @@ the only credential the invitee has yet.  is the ceiling all three creation
 paths respect: invitation, acceptance, and SSO provisioning. Pending invitations count against it,
 so seats already promised cannot be promised twice.
 
+Newsletters arrive without any mail server in the stack. A reader opens an inbox (`api/domain/newsletter/`), which yields a secret address of the form `/api/inbound/newsletters/{token}`; only its hash is stored, it is shown once, and creating a new one or closing it retires the old one. Any forwarder that can POST JSON (sender, subject, html or text, optionally message id and date) to that address delivers an issue: the body is read capped at 1 MiB, attachments are never read, the HTML goes through `nh3`, and the result is queued as a `RawArticle` of a per-reader MANUAL feed so it takes the same enrichment path as every other article. The message id makes a retried delivery idempotent, and the route shares the Redis rate limiter with the other unauthenticated routes.
+
 ## Bounded contexts
 
 | Context | Responsibility |

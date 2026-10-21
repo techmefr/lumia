@@ -19,6 +19,11 @@ vi.mock('$technical/api/client', () => ({
 	isDemo: false,
 	lumia: {
 		user: { isAuthenticated: vi.fn(() => true) },
+		newsletter: {
+			getInboxStatus: vi.fn(async () => ({ active: false, created_at: null })),
+			createInbox: vi.fn(),
+			revokeInbox: vi.fn()
+		},
 		feed: {
 			listFolders: vi.fn(),
 			listFeeds: vi.fn(),

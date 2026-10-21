@@ -8,6 +8,7 @@ from api.domain.audio.models import ArticleAudio
 from api.domain.export.models import ExportJob
 from api.domain.feed.models import Feed, Folder
 from api.domain.highlight.models import Highlight
+from api.domain.newsletter.models import NewsletterInbox
 from api.domain.playlist.models import Playlist, PlaylistItem
 from api.domain.recommendation.models import (
     UserArticleFeedback,
@@ -61,6 +62,7 @@ async def delete_account(session: AsyncSession, user_id: UUID) -> None:
             (ArticleShare.user_id == user_id) | ArticleShare.article_id.in_(article_ids)
         )
     )
+    await session.execute(delete(NewsletterInbox).where(NewsletterInbox.user_id == user_id))
     await session.execute(delete(ArticleKeyword).where(ArticleKeyword.article_id.in_(article_ids)))
     await session.execute(
         delete(ArticleAudio).where(

@@ -70,7 +70,11 @@ async def _reload(session: AsyncSession, article: Article) -> Article:
 
 async def _get_or_create_manual_feed(session: AsyncSession, user: User) -> Feed:
     feed = await session.scalar(
-        select(Feed).where(Feed.user_id == user.id, Feed.source_type == SourceType.MANUAL)
+        select(Feed).where(
+            Feed.user_id == user.id,
+            Feed.source_type == SourceType.MANUAL,
+            Feed.external_feed_id == _MANUAL_EXTERNAL_ID,
+        )
     )
     if feed is None:
         feed = Feed(
