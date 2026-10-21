@@ -874,7 +874,7 @@ export const ar: Catalogue = {
 	'chat.loadFailed': 'تعذر تحميل المحادثة.',
 	'chat.unavailable': 'اضبط مزود ذكاء اصطناعي ومفتاحه في الإعدادات لمناقشة المقالات.',
 	'chat.failed': 'تعذر على المساعد الرد. حاول مرة أخرى.',
-	'chat.thinking': 'المساعد يكتب…'
+	'chat.thinking': 'المساعد يكتب…',
 	'webhooks.title': 'الخطافات الصادرة',
 	'webhooks.description': 'يرسل Lumia رسالة موقّعة إلى العنوان الذي تحدده كلما وقع أحد الأحداث المختارة. يجب أن يكون العنوان عامًا.',
 	'webhooks.urlLabel': 'العنوان المراد استدعاؤه',

@@ -890,7 +890,7 @@ export const es: Catalogue = {
 	'chat.loadFailed': 'No se pudo cargar la conversación.',
 	'chat.unavailable': 'Configura un proveedor de IA y su clave en tus ajustes para hablar de los artículos.',
 	'chat.failed': 'El asistente no pudo responder. Inténtalo de nuevo.',
-	'chat.thinking': 'El asistente está escribiendo…'
+	'chat.thinking': 'El asistente está escribiendo…',
 	'webhooks.title': 'Webhooks salientes',
 	'webhooks.description': 'Lumia envía un mensaje firmado a la dirección que indiques cada vez que ocurre uno de los eventos elegidos. La dirección debe ser pública.',
 	'webhooks.urlLabel': 'Dirección a llamar',

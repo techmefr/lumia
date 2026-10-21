@@ -880,7 +880,7 @@ export const en: Catalogue = {
 	'chat.loadFailed': 'Could not load the conversation.',
 	'chat.unavailable': 'Set up an AI provider and key in your settings to discuss articles.',
 	'chat.failed': 'The assistant could not answer. Try again.',
-	'chat.thinking': 'The assistant is writing…'
+	'chat.thinking': 'The assistant is writing…',
 	'webhooks.title': 'Outgoing webhooks',
 	'webhooks.description': 'Lumia sends a signed message to the address you give each time one of the chosen events happens. The address must be public.',
 	'webhooks.urlLabel': 'Address to call',

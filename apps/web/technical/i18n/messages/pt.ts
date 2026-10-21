@@ -891,7 +891,7 @@ export const pt: Catalogue = {
 	'chat.loadFailed': 'Não foi possível carregar a conversa.',
 	'chat.unavailable': 'Configure um provedor de IA e a sua chave nas configurações para conversar sobre artigos.',
 	'chat.failed': 'O assistente não conseguiu responder. Tente novamente.',
-	'chat.thinking': 'O assistente está escrevendo…'
+	'chat.thinking': 'O assistente está escrevendo…',
 	'webhooks.title': 'Webhooks de saída',
 	'webhooks.description': 'O Lumia envia uma mensagem assinada para o endereço indicado sempre que um dos eventos escolhidos acontece. O endereço tem de ser público.',
 	'webhooks.urlLabel': 'Endereço a chamar',

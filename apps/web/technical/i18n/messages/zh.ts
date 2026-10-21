@@ -860,7 +860,7 @@ export const zh: Catalogue = {
 	'chat.loadFailed': '无法加载对话。',
 	'chat.unavailable': '请在设置中配置 AI 提供商和密钥，以便讨论文章。',
 	'chat.failed': '助手无法回答，请重试。',
-	'chat.thinking': '助手正在输入…'
+	'chat.thinking': '助手正在输入…',
 	'webhooks.title': '出站 Webhook',
 	'webhooks.description': '每当所选事件发生时，Lumia 会向你提供的地址发送一条带签名的消息。地址必须是公开的。',
 	'webhooks.urlLabel': '要调用的地址',

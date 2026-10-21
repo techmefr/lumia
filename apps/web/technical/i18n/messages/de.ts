@@ -891,7 +891,7 @@ export const de: Catalogue = {
 	'chat.loadFailed': 'Die Unterhaltung konnte nicht geladen werden.',
 	'chat.unavailable': 'Richte in den Einstellungen einen KI-Anbieter mit Schlüssel ein, um über Artikel zu sprechen.',
 	'chat.failed': 'Der Assistent konnte nicht antworten. Versuche es erneut.',
-	'chat.thinking': 'Der Assistent schreibt…'
+	'chat.thinking': 'Der Assistent schreibt…',
 	'webhooks.title': 'Ausgehende Webhooks',
 	'webhooks.description': 'Lumia sendet bei jedem der gewählten Ereignisse eine signierte Nachricht an die angegebene Adresse. Die Adresse muss öffentlich sein.',
 	'webhooks.urlLabel': 'Aufzurufende Adresse',

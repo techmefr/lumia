@@ -893,7 +893,7 @@ export const fr = {
 	'chat.loadFailed': 'Impossible de charger la conversation.',
 	'chat.unavailable': 'Configurez un fournisseur d\'IA et sa clé dans vos réglages pour discuter des articles.',
 	'chat.failed': 'L\'assistant n\'a pas pu répondre. Réessayez.',
-	'chat.thinking': 'L\'assistant écrit…'
+	'chat.thinking': 'L\'assistant écrit…',
 	'webhooks.title': 'Webhooks sortants',
 	'webhooks.description': 'Lumia envoie un message signé à l\'adresse que tu donnes chaque fois qu\'un des événements choisis se produit. L\'adresse doit être publique.',
 	'webhooks.urlLabel': 'Adresse à appeler',

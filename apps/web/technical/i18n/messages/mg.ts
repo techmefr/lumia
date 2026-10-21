@@ -894,7 +894,7 @@ export const mg: Catalogue = {
 	'chat.loadFailed': 'Tsy azo nalaina ny resaka.',
 	'chat.unavailable': 'Alefaso ao amin\'ny fikandrana ny mpamatsy AI sy ny fanalahidiny mba hiresahana momba ny lahatsoratra.',
 	'chat.failed': 'Tsy nahavaly ny mpanampy. Andramo indray.',
-	'chat.thinking': 'Mpanampy mamorona…'
+	'chat.thinking': 'Mpanampy mamorona…',
 	'webhooks.title': 'Webhook mivoaka',
 	'webhooks.description': 'Mandefa hafatra voasonia any amin\'ny adiresy omenao i Lumia isaky ny misy hetsika voafidy. Tsy maintsy mivelatra ny adiresy.',
 	'webhooks.urlLabel': 'Adiresy antsoina',
