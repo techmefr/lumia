@@ -33,7 +33,8 @@ vi.mock('$technical/api/client', () => ({
 			startTotpEnrolment: vi.fn(),
 			confirmTotpEnrolment: vi.fn(),
 			renewRecoveryCodes: vi.fn(),
-			disableTotp: vi.fn()
+			disableTotp: vi.fn(),
+			getFeverKey: vi.fn().mockResolvedValue({ enabled: false, created_at: null })
 		},
 		recommendation: { listFilterRules: vi.fn() },
 		instance: { getSettings: vi.fn(), listAccounts: vi.fn(), listAccessRequests: vi.fn() }
