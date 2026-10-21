@@ -94,3 +94,21 @@ class ArticleKeyword(Base):
     weight: Mapped[float]
 
     keyword: Mapped[Keyword] = relationship(lazy="selectin")
+
+
+class ArticleShare(Base, TimestampMixin):
+    """A public read-only link to one article, held by its reader.
+
+    Only the hash of the token is stored, like every other opaque token here: the link is shown
+    once at creation, and a database leak does not hand out working links. Revoking deletes the
+    row, so there is no state in which a revoked link still resolves.
+    """
+
+    __tablename__ = "article_shares"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"), index=True)
+    token_hash: Mapped[str] = mapped_column(unique=True)
+
+    article: Mapped[Article] = relationship(lazy="selectin")

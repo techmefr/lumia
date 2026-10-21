@@ -10,6 +10,8 @@ export interface InstanceSettings {
 	/** The cap on what a single account may store, not on the whole instance. */
 	disk_quota_mb: number;
 	access_mode: AccessMode;
+	/** Whether readers may create public share links. Off until an admin allows it. */
+	public_sharing_enabled: boolean;
 	account_count: number;
 }
 
@@ -17,6 +19,7 @@ export interface InstanceSettingsUpdate {
 	max_accounts?: number;
 	disk_quota_mb?: number;
 	access_mode?: AccessMode;
+	public_sharing_enabled?: boolean;
 }
 
 export interface AccountUsage {

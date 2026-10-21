@@ -25,6 +25,7 @@ const SETTINGS: InstanceSettings = {
 	max_accounts: 10,
 	disk_quota_mb: 1000,
 	access_mode: 'closed',
+	public_sharing_enabled: false,
 	account_count: 2
 };
 
@@ -68,6 +69,7 @@ function panel() {
 		maxAccounts: () => q<HTMLInputElement>('[data-test-max-accounts]')!,
 		quota: () => q<HTMLInputElement>('[data-test-account-quota]')!,
 		accessMode: () => q<HTMLSelectElement>('[data-test-access-mode]')!,
+		publicSharing: () => q<HTMLInputElement>('[data-test-public-sharing]')!,
 		save: () => q<HTMLButtonElement>('[data-test-admin-save]')!,
 		accountRows: () => container.querySelectorAll('[data-test-account-row]'),
 		requests: () => container.querySelectorAll('[data-test-access-request]'),
@@ -112,7 +114,8 @@ describe('the quotas', () => {
 			expect(api.updateSettings).toHaveBeenCalledWith({
 				max_accounts: 25,
 				disk_quota_mb: 2500,
-				access_mode: 'on_approval'
+				access_mode: 'on_approval',
+				public_sharing_enabled: false
 			})
 		);
 		await waitFor(() => expect(toasts.toasts).toHaveLength(1));
@@ -135,6 +138,37 @@ describe('the quotas', () => {
 		await waitFor(() => expect(view.unavailable()).not.toBeNull());
 		expect(view.body()).toBeNull();
 		expect(view.accountRows().length).toBe(0);
+	});
+});
+
+describe('public sharing', () => {
+	it('is off until an admin allows it', async () => {
+		const view = panel();
+		await waitFor(() => expect(view.body()).not.toBeNull());
+
+		expect(view.publicSharing().checked).toBe(false);
+	});
+
+	it('reflects an instance that already allows it', async () => {
+		api.getSettings.mockResolvedValue({ ...SETTINGS, public_sharing_enabled: true });
+		const view = panel();
+		await waitFor(() => expect(view.body()).not.toBeNull());
+
+		expect(view.publicSharing().checked).toBe(true);
+	});
+
+	it('is sent with the other settings when the admin turns it on', async () => {
+		const view = panel();
+		await waitFor(() => expect(view.body()).not.toBeNull());
+
+		await fireEvent.click(view.publicSharing());
+		await fireEvent.click(view.save());
+
+		await waitFor(() =>
+			expect(api.updateSettings).toHaveBeenCalledWith(
+				expect.objectContaining({ public_sharing_enabled: true })
+			)
+		);
 	});
 });
 

@@ -660,7 +660,33 @@ export const fr = {
 	'admin.requests': "Demandes d'accès en attente",
 	'admin.noRequests': 'Aucune demande en attente.',
 	'admin.approve': 'Valider',
-	'admin.reject': 'Refuser'
+	'admin.reject': 'Refuser',
+
+	'share.open': 'Partager un lien public',
+	'share.title': 'Lien public',
+	'share.loading': 'Chargement des options de partage',
+	'share.disabled': "Le partage public est désactivé sur cette instance. Demandez à un administrateur de l'autoriser.",
+	'share.intro': "Toute personne qui possède le lien peut lire cet article sans compte. Elle ne voit rien d'autre de votre bibliothèque.",
+	'share.create': 'Créer un lien public',
+	'share.replace': 'Créer un nouveau lien',
+	'share.revoke': 'Arrêter le partage',
+	'share.active': "Cet article a un lien public actif. Il ne peut pas être affiché à nouveau : créez-en un nouveau pour obtenir un lien à copier, ce qui désactive l'ancien.",
+	'share.linkLabel': 'Lien public',
+	'share.copy': 'Copier le lien',
+	'share.copied': 'Lien copié',
+	'share.revoked': 'Lien public supprimé.',
+	'share.failed': "Le lien public n'a pas pu être modifié. Réessayez plus tard.",
+	'share.noindexNote': 'Les moteurs de recherche ont pour consigne de ne pas indexer les pages partagées.',
+	'print.button': 'Imprimer',
+	'print.sourceLabel': 'Source :',
+	'print.publishedLabel': 'Publié :',
+	'publicShare.loading': "Chargement de l'article",
+	'publicShare.notFound': "Ce lien n'existe pas ou a été retiré.",
+	'publicShare.readSource': "Lire l'original",
+	'publicShare.by': 'Par {author}',
+	'publicShare.notice': 'Partagé en lecture seule',
+	'admin.publicSharing': 'Liens de partage publics',
+	'admin.publicSharingHint': "Permet aux lecteurs de créer des liens en lecture seule que n'importe qui peut ouvrir sans compte. La désactivation coupe tous les liens existants d'un coup."
 } as const;
 
 export type MessageKey = keyof typeof fr;

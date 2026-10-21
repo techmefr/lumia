@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
-from api.domain.article.models import Article
+from api.domain.article.models import Article, ArticleShare
 from api.domain.feed.models import Feed, Folder
 from api.domain.playlist.models import Playlist
 from api.domain.recommendation.models import UserArticleFeedback, UserFilterRule
@@ -14,6 +14,7 @@ from api.domain.user.schemas import (
     ExportedFeed,
     ExportedFilterRule,
     ExportedPlaylist,
+    ExportedShare,
 )
 
 
@@ -33,6 +34,9 @@ async def export_account(session: AsyncSession, user: User) -> AccountExportResp
         await session.scalars(select(UserFilterRule).where(UserFilterRule.user_id == user.id))
     )
     playlists = list(await session.scalars(select(Playlist).where(Playlist.user_id == user.id)))
+    shares = list(
+        await session.scalars(select(ArticleShare).where(ArticleShare.user_id == user.id))
+    )
 
     return AccountExportResponse(
         account=ExportedAccount(
@@ -63,6 +67,14 @@ async def export_account(session: AsyncSession, user: User) -> AccountExportResp
         ],
         saved=await _articles_where(session, user, UserArticleFeedback.saved),
         favorites=await _articles_where(session, user, UserArticleFeedback.favorite),
+        shares=[
+            ExportedShare(
+                article_title=share.article.title,
+                article_url=share.article.url,
+                created_at=share.created_at,
+            )
+            for share in shares
+        ],
     )
 
 

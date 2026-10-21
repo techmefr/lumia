@@ -76,6 +76,7 @@ async def read_instance_settings(
         max_accounts=instance.max_accounts,
         disk_quota_mb=instance.disk_quota_mb,
         access_mode=instance.access_mode,
+        public_sharing_enabled=instance.public_sharing_enabled,
         account_count=await count_accounts(session, instance.id),
     )
 
@@ -94,6 +95,7 @@ async def patch_instance_settings(
             max_accounts=payload.max_accounts,
             disk_quota_mb=payload.disk_quota_mb,
             access_mode=payload.access_mode,
+            public_sharing_enabled=payload.public_sharing_enabled,
         )
     except MaxAccountsBelowCurrentCountError as exc:
         raise HTTPException(
@@ -104,6 +106,7 @@ async def patch_instance_settings(
         max_accounts=instance.max_accounts,
         disk_quota_mb=instance.disk_quota_mb,
         access_mode=instance.access_mode,
+        public_sharing_enabled=instance.public_sharing_enabled,
         account_count=await count_accounts(session, instance.id),
     )
 

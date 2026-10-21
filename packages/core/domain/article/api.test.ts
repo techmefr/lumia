@@ -129,3 +129,44 @@ describe('exportArticleEpub', () => {
 		expect(await articles.exportArticleEpub('article-1')).toBe(book);
 	});
 });
+
+describe('public sharing', () => {
+	it('reads whether the article has a link, with the session', async () => {
+		const { articles, last } = api([{ enabled: true, shared: false, created_at: null }]);
+		await articles.getShareStatus('article-1');
+		expect(last()).toMatchObject({
+			path: '/articles/article-1/share',
+			method: 'GET',
+			auth: true
+		});
+	});
+
+	it('asks for a new link with a POST and returns the token it was given', async () => {
+		const { articles, last } = api([{ token: 'secret', created_at: '2026-10-21T10:00:00Z' }]);
+		const created = await articles.createShare('article-1');
+		expect(last()).toMatchObject({ path: '/articles/article-1/share', method: 'POST', auth: true });
+		expect(created.token).toBe('secret');
+	});
+
+	it('revokes the link with a DELETE', async () => {
+		const { articles, last } = api([undefined]);
+		await articles.revokeShare('article-1');
+		expect(last()).toMatchObject({
+			path: '/articles/article-1/share',
+			method: 'DELETE',
+			auth: true
+		});
+	});
+
+	it('opens a public article without any session', async () => {
+		const { articles, last } = api([{ title: 'Un article' }]);
+		await expect(articles.getPublicArticle('tok_en')).resolves.toEqual({ title: 'Un article' });
+		expect(last()).toMatchObject({ path: '/public/articles/tok_en', method: 'GET', auth: false });
+	});
+
+	it('keeps a hostile token inside its path segment', async () => {
+		const { articles, last } = api([{}]);
+		await articles.getPublicArticle('a/../b?x=1');
+		expect(last().path).toBe('/public/articles/a%2F..%2Fb%3Fx%3D1');
+	});
+});

@@ -228,7 +228,7 @@ async def save_article_url(
     return to_summary(article)
 
 
-async def _load_own_article(session: AsyncSession, article_id: UUID, user: User) -> Article:
+async def load_own_article(session: AsyncSession, article_id: UUID, user: User) -> Article:
     article = await session.scalar(
         select(Article)
         .join(Feed, Feed.id == Article.feed_id)
@@ -245,7 +245,7 @@ async def get_article(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> ArticleDetailResponse:
-    article = await _load_own_article(session, article_id, user)
+    article = await load_own_article(session, article_id, user)
 
     keywords = [
         KeywordResponse(id=link.keyword.id, term=link.keyword.term)
@@ -272,7 +272,7 @@ async def export_article_epub(
     session: AsyncSession = Depends(get_db_session),
     images: ImageFetcher = Depends(get_image_fetcher),
 ) -> Response:
-    article = await _load_own_article(session, article_id, user)
+    article = await load_own_article(session, article_id, user)
     book = await build_epub(
         title=article.title,
         language=article.original_lang.value,
@@ -307,7 +307,7 @@ async def translate_article(
     Unavailable rather than failed when the account has no provider or the provider does not cover
     the language: neither is a bug on either side, and the reader keeps the original.
     """
-    article = await _load_own_article(session, article_id, user)
+    article = await load_own_article(session, article_id, user)
     if translator is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="no_translation_provider"

@@ -19,6 +19,7 @@ describe('the instance settings', () => {
 			max_accounts: 10,
 			disk_quota_mb: 1000,
 			access_mode: 'closed',
+			public_sharing_enabled: false,
 			account_count: 2
 		};
 		const { instance, last } = api([settings]);

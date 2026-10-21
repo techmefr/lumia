@@ -182,6 +182,14 @@ class ExportedArticle(BaseModel):
     source: str
 
 
+class ExportedShare(BaseModel):
+    """A live public link. The token itself is not exported: only its hash is stored."""
+
+    article_title: str
+    article_url: str
+    created_at: datetime
+
+
 class ExportedPlaylist(BaseModel):
     name: str
     articles: list[ExportedArticle]
@@ -194,6 +202,7 @@ class AccountExportResponse(BaseModel):
     playlists: list[ExportedPlaylist]
     saved: list[ExportedArticle]
     favorites: list[ExportedArticle]
+    shares: list[ExportedShare]
 
 
 class MeResponse(BaseModel):

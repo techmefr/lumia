@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from api.domain.article.routes import router as article_router
+from api.domain.article.share_routes import router as article_share_router
 from api.domain.feed.routes import router as feed_router
 from api.domain.instance.provisioning_service import provision_admin_from_env
 from api.domain.instance.routes import router as instance_router
@@ -59,4 +60,5 @@ app.include_router(feed_router)
 app.include_router(playlist_router)
 app.include_router(recommendation_router)
 app.include_router(article_router)
+app.include_router(article_share_router)
 app.include_router(webhook_router)

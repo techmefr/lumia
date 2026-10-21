@@ -32,6 +32,13 @@ server {
 		try_files $uri =404;
 	}
 
+	# A page opened from a share link: always the app shell, never indexed.
+	location /share/ {
+		include /etc/nginx/conf.d/security-headers.conf;
+		add_header X-Robots-Tag "noindex, nofollow, noarchive" always;
+		try_files /index.html =404;
+	}
+
 	# SPA fallback: every route is resolved client-side.
 	location / {
 		try_files $uri $uri/ /index.html;

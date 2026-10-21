@@ -28,6 +28,7 @@
 	let maxAccounts = $state(0);
 	let accountQuotaMb = $state(0);
 	let accessMode = $state<AccessMode>('closed');
+	let publicSharing = $state(false);
 
 	function roleLabel(role: Role): string {
 		return role === 'admin' ? t('admin.roleAdmin') : t('admin.roleMember');
@@ -38,6 +39,7 @@
 		maxAccounts = next.max_accounts;
 		accountQuotaMb = next.disk_quota_mb;
 		accessMode = next.access_mode;
+		publicSharing = next.public_sharing_enabled;
 	}
 
 	async function load() {
@@ -68,7 +70,8 @@
 				await lumia.instance.updateSettings({
 					max_accounts: maxAccounts,
 					disk_quota_mb: accountQuotaMb,
-					access_mode: accessMode
+					access_mode: accessMode,
+					public_sharing_enabled: publicSharing
 				})
 			);
 			toast(t('admin.saved'));
@@ -158,6 +161,23 @@
 							<option value={option.value}>{option.label}</option>
 						{/each}
 					</select>
+				</div>
+
+				<div class="flex items-start gap-3">
+					<input
+						id="admin-public-sharing"
+						data-test-public-sharing
+						type="checkbox"
+						bind:checked={publicSharing}
+						aria-describedby="admin-public-sharing-hint"
+						class="mt-1 size-4"
+					/>
+					<div class="flex flex-col gap-1">
+						<Label for="admin-public-sharing">{t('admin.publicSharing')}</Label>
+						<p id="admin-public-sharing-hint" class="text-xs text-muted-foreground">
+							{t('admin.publicSharingHint')}
+						</p>
+					</div>
 				</div>
 
 				{#if error}
