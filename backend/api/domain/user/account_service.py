@@ -19,6 +19,7 @@ from api.domain.recommendation.models import (
     UserKeywordScore,
 )
 from api.domain.saved_search.models import AlertNotification, SavedSearch
+from api.domain.tag.models import ArticleTag, Tag
 from api.domain.user.exceptions import LastAdminError
 from api.domain.user.models import MagicLinkToken, RecoveryCode, RefreshToken, Role, User
 
@@ -38,6 +39,7 @@ async def delete_account(session: AsyncSession, user_id: UUID) -> None:
     article_ids = list(
         await session.scalars(select(Article.id).where(Article.feed_id.in_(feed_ids)))
     )
+    tag_ids = list(await session.scalars(select(Tag.id).where(Tag.user_id == user_id)))
     playlist_ids = list(
         await session.scalars(select(Playlist.id).where(Playlist.user_id == user_id))
     )
@@ -64,6 +66,12 @@ async def delete_account(session: AsyncSession, user_id: UUID) -> None:
             PlaylistMember.playlist_id.in_(playlist_ids) | (PlaylistMember.user_id == user_id)
         )
     )
+    await session.execute(
+        delete(ArticleTag).where(
+            ArticleTag.tag_id.in_(tag_ids) | ArticleTag.article_id.in_(article_ids)
+        )
+    )
+    await session.execute(delete(Tag).where(Tag.id.in_(tag_ids)))
     await session.execute(
         delete(UserArticleFeedback).where(
             (UserArticleFeedback.user_id == user_id)

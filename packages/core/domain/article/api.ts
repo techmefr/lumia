@@ -17,6 +17,7 @@ export interface ListArticlesParams {
 	authorId?: string;
 	categoryId?: string;
 	keywordId?: string;
+	tagId?: string;
 	/** Free-text search over title, summary and content. Two characters minimum server-side. */
 	query?: string;
 	unreadOnly?: boolean;
@@ -43,6 +44,7 @@ export function createArticleApi(http: HttpClient) {
 			author_id: params.authorId,
 			category_id: params.categoryId,
 			keyword_id: params.keywordId,
+			tag_id: params.tagId,
 			q: params.query,
 			unread_only: params.unreadOnly ? true : undefined,
 			sort: params.sort,
