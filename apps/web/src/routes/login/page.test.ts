@@ -80,7 +80,7 @@ describe('signing in with a password', () => {
 		await fireEvent.submit(view.loginForm()!);
 		await waitFor(() => expect(goto).toHaveBeenCalled());
 
-		expect(api.login).toHaveBeenCalledWith('reader@example.test', 'hunter2', {});
+		expect(api.login).toHaveBeenCalledWith('reader@example.test', 'hunter2');
 		expect(String(vi.mocked(goto).mock.calls[0][0])).toContain('/articles');
 	});
 

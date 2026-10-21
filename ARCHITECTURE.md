@@ -156,3 +156,7 @@ Recommendation scores aren't written at ingestion time — they're learned per u
 ## Multi-tenancy
 
 First launch runs a mandatory 3-step admin onboarding (admin account → instance limits → confirmation) before any other access is allowed. Instance-wide settings (max accounts, per-user disk quota) are admin-only; AI provider and API key are per-user, with no instance-wide key.
+
+## Second factor on non-browser clients
+
+Mobile and the extension sign in through `createSignInFlow` (`packages/core/domain/user/sign-in-flow.ts`), the same state machine the web login uses. The backend contract is unchanged: `POST /auth/login` (or `/auth/magic-link/verify`) answers `401 totp_required` when the account has a second factor, and the client resends the same request with `totp_code` or, after `toggleRecovery()`, `recovery_code`. A client only renders `flow.step` (`credentials`, `code`, `recovery`) and the `SignInOutcome` of each call, so a `401 totp_required` is never shown as a wrong password.
