@@ -133,10 +133,18 @@ if it's reached from a domain or a LAN address instead.
 whatever reaches `/webhooks/miniflux`. Set it once in `.env` before the first `docker compose up`,
 the same value on both sides — the compose file already wires it to both.
 
-Already running your own Miniflux instead of the bundled one? Point `MINIFLUX_BASE_URL` at it and
-set its webhook the same way; see [issue #1](https://github.com/techmefr/lumia/issues/1) for the
-walkthrough and the current limits (feeds already in Miniflux don't attach to Lumia on their own
-yet — [issue #11](https://github.com/techmefr/lumia/issues/11) tracks that).
+Already running your own Miniflux? Skip the bundled one with the second compose file:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.external-miniflux.yml up -d
+```
+
+Set `MINIFLUX_BASE_URL`, `MINIFLUX_USERNAME` and `MINIFLUX_PASSWORD` in `.env` to your instance, and in
+its Integrations settings point the webhook at `http://lumia-backend-api:8000/webhooks/miniflux` with
+the same `MINIFLUX_WEBHOOK_SECRET` (use the address Miniflux can reach the API on if it does not share
+a Docker network with Lumia). Feeds already in your Miniflux are listed in Lumia, where you tick the
+ones to attach: nothing is copied on the Miniflux side. See
+[issue #1](https://github.com/techmefr/lumia/issues/1) for the discussion.
 
 To reach it from a phone or tablet on the same network, use the machine's LAN address rather than
 `localhost`. The [landing page](https://techmefr.github.io/lumia/) can store that address per device

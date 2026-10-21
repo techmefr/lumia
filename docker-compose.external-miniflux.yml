@@ -1,0 +1,21 @@
+# For an instance that already has a Miniflux: run Lumia without the bundled one.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.external-miniflux.yml up -d
+#
+# or set COMPOSE_FILE=docker-compose.yml:docker-compose.external-miniflux.yml in .env so a plain
+# docker compose up does the same. MINIFLUX_BASE_URL, MINIFLUX_USERNAME and MINIFLUX_PASSWORD in .env
+# then point at your instance.
+services:
+  miniflux:
+    profiles: ["bundled-miniflux"]
+
+  miniflux-postgres:
+    profiles: ["bundled-miniflux"]
+
+  # A service that a profile leaves out cannot be waited on, so the API drops its wait on Miniflux.
+  lumia-backend-api:
+    depends_on: !override
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
