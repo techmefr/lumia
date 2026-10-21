@@ -533,6 +533,7 @@ export const mg: Catalogue = {
 	'swipe.expand': 'Velaro',
 	'swipe.collapse': 'Aforeto',
 	'swipe.hint': 'Zana-tsipìka hifidianana na hitehirizana',
+	'swipe.done': '{action}: {title}',
 
 	'flip.dialog': 'Hanao pejy ny lahatsoratra',
 	'flip.hint': '← → hanovana pejy · Esc hivoahana',

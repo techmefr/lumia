@@ -529,6 +529,7 @@ export const ru: Catalogue = {
 	'swipe.expand': 'Развернуть',
 	'swipe.collapse': 'Свернуть',
 	'swipe.hint': 'Стрелки для оценки или сохранения',
+	'swipe.done': '{action}: {title}',
 
 	'flip.dialog': 'Пролистать статьи',
 	'flip.hint': '← → листать страницы · Esc выйти',

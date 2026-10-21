@@ -28,6 +28,7 @@
 		"temporal-polyfill": "^1.0.5"
 	},
 	"devDependencies": {
+		"@axe-core/playwright": "^4.14.0",
 		"@playwright/test": "^1.63.0",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.70.3",

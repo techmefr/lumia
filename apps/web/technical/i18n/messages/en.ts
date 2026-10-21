@@ -521,6 +521,7 @@ export const en: Catalogue = {
 	'swipe.expand': 'Expand',
 	'swipe.collapse': 'Collapse',
 	'swipe.hint': 'Arrow keys to vote or save',
+	'swipe.done': '{action}: {title}',
 
 	'flip.dialog': 'Flip through the articles',
 	'flip.hint': '← → to turn pages · Esc to leave',

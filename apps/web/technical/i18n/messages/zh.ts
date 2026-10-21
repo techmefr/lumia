@@ -511,6 +511,7 @@ export const zh: Catalogue = {
 	'swipe.expand': '展开',
 	'swipe.collapse': '收起',
 	'swipe.hint': '方向键投票或收藏',
+	'swipe.done': '{action}：{title}',
 
 	'flip.dialog': '翻阅文章',
 	'flip.hint': '← → 翻页 · Esc 退出',

@@ -534,6 +534,7 @@ export const fr = {
 	'swipe.expand': 'Déplier',
 	'swipe.collapse': 'Replier',
 	'swipe.hint': "Flèches pour voter ou garder l'article",
+	'swipe.done': '{action} : {title}',
 
 	'flip.dialog': 'Feuilleter les articles',
 	'flip.hint': '← → pour tourner les pages · Échap pour sortir',

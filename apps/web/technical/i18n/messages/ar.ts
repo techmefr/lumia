@@ -519,6 +519,7 @@ export const ar: Catalogue = {
 	'swipe.expand': 'توسيع',
 	'swipe.collapse': 'تصغير',
 	'swipe.hint': 'الأسهم للتصويت أو الحفظ · Enter/Space على الأزرار',
+	'swipe.done': '{action}: {title}',
 
 	'flip.dialog': 'تقليب المقالات',
 	'flip.hint': '← → لتقليب الصفحات · Esc للخروج',
