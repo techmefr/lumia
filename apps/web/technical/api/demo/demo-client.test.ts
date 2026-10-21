@@ -802,6 +802,9 @@ describe('public sharing', () => {
 
 	it('does not know a token it never issued', async () => {
 		await expect(demo.article.getPublicArticle('made-up')).rejects.toMatchObject({ status: 404 });
+	});
+});
+
 describe('the tags', () => {
 	async function firstArticleId(): Promise<string> {
 		return (await demo.article.listArticles())[0].id;
