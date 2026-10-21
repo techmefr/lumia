@@ -176,6 +176,14 @@ class ExportedFilterRule(BaseModel):
     mode: FilterMode
 
 
+class ExportedSavedSearch(BaseModel):
+    name: str
+    query: str
+    alert: bool
+    feed: str | None
+    folder: str | None
+
+
 class ExportedArticle(BaseModel):
     title: str
     url: str
@@ -208,6 +216,7 @@ class AccountExportResponse(BaseModel):
     account: ExportedAccount
     feeds: list[ExportedFeed]
     filter_rules: list[ExportedFilterRule]
+    saved_searches: list[ExportedSavedSearch]
     playlists: list[ExportedPlaylist]
     highlights: list[ExportedHighlight]
     saved: list[ExportedArticle]

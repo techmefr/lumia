@@ -27,7 +27,8 @@ vi.mock('$technical/api/client', () => ({
 		article: { listArticles: vi.fn() },
 		feed: { listFolders: vi.fn(), listFeeds: vi.fn(), getUnreadCounts: vi.fn() },
 		recommendation: { markRead: vi.fn(), sendFeedback: vi.fn(), bulkFeedback: vi.fn() },
-		playlist: { listPlaylists: vi.fn(), bulkSetItems: vi.fn() }
+		playlist: { listPlaylists: vi.fn(), bulkSetItems: vi.fn() },
+		savedSearch: { createSavedSearch: vi.fn() }
 	}
 }));
 
@@ -66,6 +67,7 @@ function articlesPage() {
 		hero: () => q('[data-test-article-hero]'),
 		searchInput: () => q<HTMLInputElement>('[data-test-search-input]'),
 		searchSubmit: () => q<HTMLButtonElement>('[data-test-search-submit]'),
+		searchSave: () => q<HTMLButtonElement>('[data-test-search-save]'),
 		searchClear: () => q<HTMLButtonElement>('[data-test-search-clear]'),
 		searchStatus: () => q('[data-test-search-status]'),
 		kioskButton: () =>
@@ -217,6 +219,37 @@ describe('searching articles', () => {
 
 		await waitFor(() => expect(view.searchStatus()).not.toBeNull());
 		expect(view.searchStatus()?.getAttribute('aria-live')).toBe('polite');
+	});
+
+	it('saves the applied search under its own text', async () => {
+		vi.mocked(api.savedSearch.createSavedSearch).mockResolvedValue({} as never);
+		const view = articlesPage();
+		await waitFor(() => expect(view.searchInput()).not.toBeNull());
+		await fireEvent.input(view.searchInput() as HTMLInputElement, { target: { value: 'rust' } });
+		await fireEvent.click(view.searchSubmit() as HTMLButtonElement);
+		await waitFor(() => expect(view.searchSave()).not.toBeNull());
+
+		await fireEvent.click(view.searchSave() as HTMLButtonElement);
+
+		expect(api.savedSearch.createSavedSearch).toHaveBeenCalledWith({
+			name: 'rust',
+			query: 'rust',
+			feed_id: undefined,
+			folder_id: undefined
+		});
+	});
+
+	it('survives a failure to save the search', async () => {
+		vi.mocked(api.savedSearch.createSavedSearch).mockRejectedValue(new Error('down'));
+		const view = articlesPage();
+		await waitFor(() => expect(view.searchInput()).not.toBeNull());
+		await fireEvent.input(view.searchInput() as HTMLInputElement, { target: { value: 'rust' } });
+		await fireEvent.click(view.searchSubmit() as HTMLButtonElement);
+		await waitFor(() => expect(view.searchSave()).not.toBeNull());
+
+		await fireEvent.click(view.searchSave() as HTMLButtonElement);
+
+		await waitFor(() => expect(api.savedSearch.createSavedSearch).toHaveBeenCalled());
 	});
 
 	it('clears the query from the url when the search is cleared', async () => {

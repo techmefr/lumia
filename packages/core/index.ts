@@ -7,6 +7,7 @@ import { createInstanceApi } from './domain/instance/api';
 import { createNewsletterApi } from './domain/newsletter/api';
 import { createPlaylistApi } from './domain/playlist/api';
 import { createRecommendationApi } from './domain/recommendation/api';
+import { createSavedSearchApi } from './domain/saved-search/api';
 import { createUserApi } from './domain/user/api';
 
 export * from './technical/http-client';
@@ -30,6 +31,8 @@ export * from './domain/newsletter/types';
 export * from './domain/newsletter/api';
 export * from './domain/playlist/types';
 export * from './domain/playlist/api';
+export * from './domain/saved-search/types';
+export * from './domain/saved-search/api';
 
 export function createLumiaClient(baseUrl: string, tokenStore: TokenStore = createLocalStorageTokenStore()) {
 	const http = createHttpClient({ baseUrl, tokenStore });
@@ -42,7 +45,8 @@ export function createLumiaClient(baseUrl: string, tokenStore: TokenStore = crea
 		newsletter: createNewsletterApi(http),
 		recommendation: createRecommendationApi(http),
 		playlist: createPlaylistApi(http),
-		highlight: createHighlightApi(http)
+		highlight: createHighlightApi(http),
+		savedSearch: createSavedSearchApi(http)
 	};
 }
 

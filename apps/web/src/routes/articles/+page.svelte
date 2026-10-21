@@ -17,6 +17,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import Search from '@lucide/svelte/icons/search';
 	import CheckCheck from '@lucide/svelte/icons/check-check';
+	import BellPlus from '@lucide/svelte/icons/bell-plus';
 	import Plus from '@lucide/svelte/icons/plus';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import LayoutTemplate from '@lucide/svelte/icons/layout-template';
@@ -191,6 +192,22 @@
 		appliedQuery = searchInput.trim();
 		syncSearchToUrl(appliedQuery);
 		void loadArticles();
+	}
+
+	async function saveSearch() {
+		try {
+			await lumia.savedSearch.createSavedSearch({
+				name: appliedQuery,
+				query: appliedQuery,
+				feed_id: selectedFeedId || undefined,
+				folder_id: selectedFolderId || undefined
+			});
+			toast(t('alerts.created'), {
+				action: { label: t('common.open'), run: () => goto(`${base}/alerts`) }
+			});
+		} catch {
+			toast(t('alerts.saveFailed'), { tone: 'destructive' });
+		}
 	}
 
 	function clearSearch() {
@@ -550,6 +567,16 @@
 				{t('articles.search')}
 			</Button>
 			{#if appliedQuery}
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					onclick={saveSearch}
+					data-test-search-save
+				>
+					<BellPlus class="size-4" />
+					{t('alerts.saveThis')}
+				</Button>
 				<Button
 					type="button"
 					variant="ghost"

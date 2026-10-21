@@ -14,6 +14,7 @@
 	import ListMusic from '@lucide/svelte/icons/list-music';
 	import Settings from '@lucide/svelte/icons/settings';
 	import { isDemo, lumia } from '$technical/api/client';
+	import AlertBell from '$domain/alerts/alert-bell.svelte';
 	import SettingsMenu from '$domain/navigation/settings-menu.svelte';
 	import DemoBanner from '$domain/navigation/demo-banner.svelte';
 	import ShortcutsHelp from '$domain/navigation/shortcuts-help.svelte';
@@ -181,6 +182,7 @@
 				{/each}
 			</div>
 			<div class="ml-auto flex items-center">
+				<AlertBell />
 				<SettingsMenu
 					href="{base}/settings"
 					label={t('nav.settings')}

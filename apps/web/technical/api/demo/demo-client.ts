@@ -2,6 +2,7 @@ import type {
 	AccessRequest,
 	AccessRequestStatus,
 	AccountUsage,
+	AlertNotification,
 	ArticleDetail,
 	ArticleShareCreated,
 	ArticleShareStatus,
@@ -32,6 +33,7 @@ import type {
 	PlaylistSummary,
 	Popularity,
 	ReadingStatistics,
+	SavedSearch,
 	TokenStore,
 	UnreadCounts
 } from '@lumia/core';
@@ -85,6 +87,9 @@ interface DemoState {
 	playlists: { id: string; name: string; article_ids: string[] }[];
 	highlights: Highlight[];
 	filterRules: FilterRule[];
+	/** Stored without the unread count: that one is derived from the reading state on each read. */
+	savedSearches: Omit<SavedSearch, 'unread_count'>[];
+	notifications: AlertNotification[];
 	scores: Scores;
 	me: Me;
 	instance: InstanceSettings;
@@ -161,6 +166,8 @@ function initialState(): DemoState {
 		playlists: SEED_PLAYLISTS.map((playlist) => ({ ...playlist, article_ids: [...playlist.article_ids] })),
 		highlights: [],
 		filterRules: [],
+		savedSearches: [],
+		notifications: [],
 		scores,
 		me: {
 			id: 'demo-user',
@@ -355,6 +362,41 @@ export function createDemoClient(): LumiaClient {
 			if (!haystack.includes(params.query.toLowerCase())) return false;
 		}
 		return true;
+	}
+
+	function searchMatches(search: DemoState['savedSearches'][number], id: string): boolean {
+		return matches(id, {
+			query: search.query,
+			feedId: search.feed_id ?? undefined,
+			folderId: search.folder_id ?? undefined
+		});
+	}
+
+	function withUnreadCount(search: DemoState['savedSearches'][number]): SavedSearch {
+		const unread = state.articleIds.filter(
+			(id) => searchMatches(search, id) && !feedbackFor(id).read
+		);
+		return { ...search, unread_count: unread.length };
+	}
+
+	/** The demo has no worker, so turning an alert on notifies about what already matches. */
+	function notifyExistingMatches(search: DemoState['savedSearches'][number]): void {
+		for (const id of sortedIds()) {
+			const article = seedArticle(id);
+			const known = state.notifications.some(
+				(item) => item.saved_search_id === search.id && item.article_id === id
+			);
+			if (!article || known || !searchMatches(search, id)) continue;
+			state.notifications.unshift({
+				id: nextId('notification'),
+				saved_search_id: search.id,
+				saved_search_name: search.name,
+				article_id: id,
+				article_title: article.title,
+				read: false,
+				created_at: new Date().toISOString()
+			});
+		}
 	}
 
 	function page(ids: string[], limit = 20, offset = 0): string[] {
@@ -998,6 +1040,58 @@ export function createDemoClient(): LumiaClient {
 			},
 			deleteHighlight: async (highlightId: string) => {
 				state.highlights = state.highlights.filter((item) => item.id !== highlightId);
+				persist();
+				return settle(undefined);
+			}
+		},
+		savedSearch: {
+			listSavedSearches: async () =>
+				settle(
+					[...state.savedSearches]
+						.sort((a, b) => a.name.localeCompare(b.name))
+						.map(withUnreadCount)
+				),
+			createSavedSearch: async (input) => {
+				if (state.savedSearches.some((candidate) => candidate.name === input.name)) {
+					throw new ApiError(409, 'nom déjà pris');
+				}
+				const search = {
+					id: nextId('search'),
+					name: input.name,
+					query: input.query,
+					feed_id: input.feed_id ?? null,
+					folder_id: input.folder_id ?? null,
+					alert: input.alert ?? false
+				};
+				state.savedSearches = [...state.savedSearches, search];
+				if (search.alert) notifyExistingMatches(search);
+				persist();
+				return settle(withUnreadCount(search));
+			},
+			updateSavedSearch: async (searchId, update) => {
+				const search = state.savedSearches.find((candidate) => candidate.id === searchId);
+				if (!search) throw new ApiError(404, 'recherche introuvable');
+				if (update.name !== undefined) search.name = update.name;
+				if (update.alert !== undefined) search.alert = update.alert;
+				if (search.alert) notifyExistingMatches(search);
+				persist();
+				return settle(withUnreadCount(search));
+			},
+			deleteSavedSearch: async (searchId: string) => {
+				state.savedSearches = state.savedSearches.filter((search) => search.id !== searchId);
+				state.notifications = state.notifications.filter((item) => item.saved_search_id !== searchId);
+				persist();
+				return settle(undefined);
+			},
+			listNotifications: async (limit = 30, offset = 0) =>
+				settle({
+					unread_count: state.notifications.filter((item) => !item.read).length,
+					items: state.notifications.slice(offset, offset + limit)
+				}),
+			markNotificationsRead: async (ids?: string[]) => {
+				for (const item of state.notifications) {
+					if (ids === undefined || ids.includes(item.id)) item.read = true;
+				}
 				persist();
 				return settle(undefined);
 			}

@@ -18,6 +18,7 @@ from api.domain.recommendation.models import (
     UserFilterRule,
     UserKeywordScore,
 )
+from api.domain.saved_search.models import AlertNotification, SavedSearch
 from api.domain.user.exceptions import LastAdminError
 from api.domain.user.models import MagicLinkToken, RecoveryCode, RefreshToken, Role, User
 
@@ -41,6 +42,8 @@ async def delete_account(session: AsyncSession, user_id: UUID) -> None:
         await session.scalars(select(Playlist.id).where(Playlist.user_id == user_id))
     )
 
+    await session.execute(delete(AlertNotification).where(AlertNotification.user_id == user_id))
+    await session.execute(delete(SavedSearch).where(SavedSearch.user_id == user_id))
     await session.execute(
         delete(PlaylistItem).where(
             PlaylistItem.playlist_id.in_(playlist_ids) | PlaylistItem.article_id.in_(article_ids)
