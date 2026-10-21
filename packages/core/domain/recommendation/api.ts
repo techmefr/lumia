@@ -6,7 +6,9 @@ import type {
 	FeedbackUpdate,
 	FilterMode,
 	FilterRule,
-	MarkReadScope
+	MarkReadScope,
+	Popularity,
+	ReadingStatistics
 } from './types';
 
 export function createRecommendationApi(http: HttpClient) {
@@ -53,6 +55,14 @@ export function createRecommendationApi(http: HttpClient) {
 		await http.request(`/filter-rules/${ruleId}`, { method: 'DELETE' });
 	}
 
+	async function getReadingStatistics(days = 30): Promise<ReadingStatistics> {
+		return http.request<ReadingStatistics>(`/statistics/reading?days=${days}`);
+	}
+
+	async function getPopularArticles(days = 7): Promise<Popularity> {
+		return http.request<Popularity>(`/statistics/popular?days=${days}`);
+	}
+
 	return {
 		getEtincelle,
 		getSaved,
@@ -62,7 +72,9 @@ export function createRecommendationApi(http: HttpClient) {
 		bulkFeedback,
 		listFilterRules,
 		addFilterRule,
-		deleteFilterRule
+		deleteFilterRule,
+		getReadingStatistics,
+		getPopularArticles
 	};
 }
 

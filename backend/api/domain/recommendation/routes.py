@@ -24,6 +24,14 @@ from api.domain.recommendation.schemas import (
     MarkReadRequest,
     MarkReadResponse,
 )
+from api.domain.recommendation.statistics_schemas import (
+    PopularityResponse,
+    ReadingStatisticsResponse,
+)
+from api.domain.recommendation.statistics_service import (
+    get_popular_articles,
+    get_reading_statistics,
+)
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.technical.db import get_db_session
@@ -150,3 +158,21 @@ async def remove_filter_rule(
 ) -> None:
     if not await delete_rule(session, user.id, rule_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.get("/statistics/reading", response_model=ReadingStatisticsResponse)
+async def get_reading_statistics_route(
+    days: int = Query(default=30, ge=1, le=365),
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> ReadingStatisticsResponse:
+    return await get_reading_statistics(session, user, days=days)
+
+
+@router.get("/statistics/popular", response_model=PopularityResponse)
+async def get_popular_articles_route(
+    days: int = Query(default=7, ge=1, le=90),
+    _user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> PopularityResponse:
+    return await get_popular_articles(session, days=days)
