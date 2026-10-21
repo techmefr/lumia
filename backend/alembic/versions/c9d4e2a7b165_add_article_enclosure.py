@@ -1,7 +1,7 @@
 """add the audio enclosure of an article
 
 Revision ID: c9d4e2a7b165
-Revises: a3d9e1c5b742, b8e3a51c7d04
+Revises: a3d9e1f5b742
 Create Date: 2026-10-21 10:00:00.000000
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "c9d4e2a7b165"
-down_revision: str | Sequence[str] | None = ("a3d9e1c5b742", "b8e3a51c7d04")
+down_revision: str | Sequence[str] | None = "a3d9e1f5b742"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

@@ -667,9 +667,7 @@ async def test_enrich_article_stores_the_enclosure_reference_without_fetching_it
     session: AsyncSession,
 ) -> None:
     await _create_feed(session)
-    raw = _raw_article(
-        enclosure_url="https://cdn.example.com/ep1.mp3", enclosure_type="audio/mpeg"
-    )
+    raw = _raw_article(enclosure_url="https://cdn.example.com/ep1.mp3", enclosure_type="audio/mpeg")
 
     await enrich_article({}, raw, content_extractor=_FakeContentExtractor())
 
