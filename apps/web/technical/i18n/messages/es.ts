@@ -531,6 +531,7 @@ export const es: Catalogue = {
 	'swipe.expand': 'Desplegar',
 	'swipe.collapse': 'Plegar',
 	'swipe.hint': 'Flechas para votar o guardar',
+	'swipe.done': '{action}: {title}',
 
 	'flip.dialog': 'Hojear los artículos',
 	'flip.hint': '← → para pasar páginas · Esc para salir',

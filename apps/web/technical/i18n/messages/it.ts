@@ -531,6 +531,7 @@ export const it: Catalogue = {
 	'swipe.expand': 'Espandi',
 	'swipe.collapse': 'Riduci',
 	'swipe.hint': 'Frecce per votare o salvare',
+	'swipe.done': '{action}: {title}',
 
 	'flip.dialog': 'Sfogliare gli articoli',
 	'flip.hint': '← → per girare pagina · Esc per uscire',

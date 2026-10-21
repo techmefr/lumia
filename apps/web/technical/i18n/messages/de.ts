@@ -531,6 +531,7 @@ export const de: Catalogue = {
 	'swipe.expand': 'Ausklappen',
 	'swipe.collapse': 'Einklappen',
 	'swipe.hint': 'Pfeiltasten zum Bewerten oder Speichern',
+	'swipe.done': '{action}: {title}',
 
 	'flip.dialog': 'Artikel durchblättern',
 	'flip.hint': '← → zum Blättern · Esc zum Verlassen',

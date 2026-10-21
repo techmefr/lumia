@@ -38,7 +38,7 @@
 		>
 			{t('sections.all')}
 			{#if unread.total > 0}
-				<span data-test-chip-count class="text-xs opacity-70">{unread.total}</span>
+				<span data-test-chip-count class="text-xs">{unread.total}</span>
 			{/if}
 		</button>
 		{#each folders as folder (folder.id)}
@@ -54,7 +54,7 @@
 			>
 				{folder.name}
 				{#if count > 0}
-					<span data-test-chip-count class="text-xs opacity-70">{count}</span>
+					<span data-test-chip-count class="text-xs">{count}</span>
 				{/if}
 			</button>
 		{/each}

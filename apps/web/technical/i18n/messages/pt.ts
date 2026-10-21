@@ -532,6 +532,7 @@ export const pt: Catalogue = {
 	'swipe.expand': 'Expandir',
 	'swipe.collapse': 'Recolher',
 	'swipe.hint': 'Setas para votar ou guardar',
+	'swipe.done': '{action}: {title}',
 
 	'flip.dialog': 'Folhear os artigos',
 	'flip.hint': '← → para virar páginas · Esc para sair',

@@ -6,6 +6,7 @@
  * touching neither the markup nor the layout. Where it is missing, the reading simply has no
  * highlight — the audio is unaffected.
  */
+import { scrollBehavior } from '../layout/motion';
 
 const HIGHLIGHT_NAME = 'lumia-tts';
 
@@ -117,6 +118,6 @@ function scrollIntoViewIfNeeded(range: Range): void {
 	if (rect.top >= margin && rect.bottom <= window.innerHeight - margin) return;
 	window.scrollTo({
 		top: window.scrollY + rect.top - window.innerHeight / 2,
-		behavior: 'smooth'
+		behavior: scrollBehavior()
 	});
 }
