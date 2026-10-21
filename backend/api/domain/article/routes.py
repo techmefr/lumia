@@ -1,15 +1,22 @@
 import logging
 from typing import Any, Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Response, UploadFile, status
 from sqlalchemy import ColumnElement, Select, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.epub_export import EpubChapter, build_epub
+from api.domain.article.exceptions import (
+    ImportNotFoundError,
+    InvalidReadingListError,
+    ReadingListTooLargeError,
+)
 from api.domain.article.export_filename import attachment_header
+from api.domain.article.import_progress import ProgressRedis, read_progress, start_progress
 from api.domain.article.models import Article, ArticleKeyword
+from api.domain.article.reading_list_parser import ReadingListSource, parse_reading_list
 from api.domain.article.reading_time import estimate_reading_minutes
 from api.domain.article.save_url_service import save_url
 from api.domain.article.schemas import (
@@ -17,6 +24,8 @@ from api.domain.article.schemas import (
     ArticleSummaryResponse,
     ArticleTranslationResponse,
     KeywordResponse,
+    ReadingListImportProgressResponse,
+    ReadingListImportStartedResponse,
     SaveUrlRequest,
     TranslateArticleRequest,
 )
@@ -46,11 +55,16 @@ from worker.technical.content_extraction import (
     get_page_extractor,
 )
 from worker.technical.html import strip_html
+from worker.technical.queue import get_arq_pool
 from worker.technical.translation.base import TranslationApiError, Translator
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+_MAX_READING_LIST_BYTES = 5 * 1024 * 1024
+_UPLOAD_CHUNK_BYTES = 64 * 1024
+_IMPORT_JOB_TIMEOUT_SECONDS = 60 * 60
 
 #: The smallest window of recent articles scored when the feed is sorted by relevance. A deeper
 #: page widens it, so pagination never stops before the feed does.
@@ -196,17 +210,7 @@ async def list_articles(
     return await to_summaries(session, user.id, articles)
 
 
-@router.post(
-    "/articles/save-url",
-    response_model=ArticleSummaryResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-async def save_article_url(
-    payload: SaveUrlRequest,
-    user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_db_session),
-    page_extractor: PageExtractor = Depends(get_page_extractor),
-) -> ArticleSummaryResponse:
+async def _ensure_room_to_save(session: AsyncSession, user: User) -> None:
     try:
         instance = await get_instance(session)
         await ensure_within_disk_quota(session, instance, user)
@@ -221,11 +225,88 @@ async def save_article_url(
             ),
         ) from exc
 
+
+@router.post(
+    "/articles/save-url",
+    response_model=ArticleSummaryResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def save_article_url(
+    payload: SaveUrlRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    page_extractor: PageExtractor = Depends(get_page_extractor),
+) -> ArticleSummaryResponse:
+    await _ensure_room_to_save(session, user)
+
     try:
         article = await save_url(session, user, payload.url, page_extractor=page_extractor)
     except PageFetchError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
     return to_summary(article)
+
+
+async def _read_capped(file: UploadFile) -> bytes:
+    body = bytearray()
+    while chunk := await file.read(_UPLOAD_CHUNK_BYTES):
+        body += chunk
+        if len(body) > _MAX_READING_LIST_BYTES:
+            raise HTTPException(status_code=status.HTTP_413_CONTENT_TOO_LARGE)
+    return bytes(body)
+
+
+@router.post(
+    "/articles/import-reading-list",
+    response_model=ReadingListImportStartedResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def import_reading_list(
+    file: UploadFile,
+    source: ReadingListSource = Form(),
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    pool: Any = Depends(get_arq_pool),
+) -> ReadingListImportStartedResponse:
+    """Parses the export here, but fetches the pages in the worker: a Pocket list is thousands of
+    links, far more than a request can wait for."""
+    await _ensure_room_to_save(session, user)
+    data = await _read_capped(file)
+    try:
+        urls = parse_reading_list(source, data)
+    except InvalidReadingListError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
+    except ReadingListTooLargeError as exc:
+        raise HTTPException(status_code=status.HTTP_413_CONTENT_TOO_LARGE) from exc
+
+    import_id = uuid4().hex
+    progress_store: ProgressRedis = pool
+    await start_progress(progress_store, import_id, user.id, len(urls))
+    if urls:
+        await pool.enqueue_job(
+            "import_reading_list",
+            str(user.id),
+            import_id,
+            urls,
+            _job_timeout=_IMPORT_JOB_TIMEOUT_SECONDS,
+        )
+    return ReadingListImportStartedResponse(import_id=import_id, total=len(urls))
+
+
+@router.get(
+    "/articles/import-reading-list/{import_id}",
+    response_model=ReadingListImportProgressResponse,
+)
+async def get_reading_list_import_progress(
+    import_id: str,
+    user: User = Depends(get_current_user),
+    pool: Any = Depends(get_arq_pool),
+) -> ReadingListImportProgressResponse:
+    progress_store: ProgressRedis = pool
+    try:
+        progress = await read_progress(progress_store, import_id, user.id)
+    except ImportNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
+    return ReadingListImportProgressResponse.model_validate(progress)
 
 
 async def load_own_article(session: AsyncSession, article_id: UUID, user: User) -> Article:

@@ -94,6 +94,28 @@ describe('saveUrl', () => {
 	});
 });
 
+describe('importReadingList', () => {
+	it('uploads the file and its source as multipart under the names the backend reads', async () => {
+		const { articles, last } = api([{ import_id: 'abc', total: 2 }]);
+		const file = new File(['<ul />'], 'ril_export.html', { type: 'text/html' });
+		await expect(articles.importReadingList('pocket', file)).resolves.toEqual({
+			import_id: 'abc',
+			total: 2
+		});
+		expect(last()).toMatchObject({ path: '/articles/import-reading-list', method: 'POST' });
+		expect(last().formData?.get('file')).toBe(file);
+		expect(last().formData?.get('source')).toBe('pocket');
+		expect(last().body).toBeUndefined();
+	});
+
+	it('reads the progress of one import', async () => {
+		const progress = { total: 2, saved: 1, failed: 0, finished: false };
+		const { articles, last } = api([progress]);
+		await expect(articles.getReadingListImportProgress('abc')).resolves.toEqual(progress);
+		expect(last()).toMatchObject({ path: '/articles/import-reading-list/abc', method: 'GET' });
+	});
+});
+
 describe('translateArticle', () => {
 	it('posts the target language to the article translation endpoint', async () => {
 		const { articles, last } = api([{ target_lang: 'fr', title: 'Titre', content: 'Corps' }]);

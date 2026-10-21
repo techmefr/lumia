@@ -40,6 +40,18 @@ class SaveUrlRequest(BaseModel):
     url: str
 
 
+class ReadingListImportStartedResponse(BaseModel):
+    import_id: str
+    total: int
+
+
+class ReadingListImportProgressResponse(BaseModel):
+    total: int
+    saved: int
+    failed: int
+    finished: bool
+
+
 class TranslateArticleRequest(BaseModel):
     target_lang: ReadingLang
 

@@ -5,7 +5,10 @@ import type {
 	ArticleShareStatus,
 	ArticleSummary,
 	ArticleTranslation,
-	PublicArticle
+	PublicArticle,
+	ReadingListImportProgress,
+	ReadingListImportStarted,
+	ReadingListSource
 } from './types';
 
 export interface ListArticlesParams {
@@ -59,6 +62,30 @@ export function createArticleApi(http: HttpClient) {
 	}
 
 	/**
+	 * Uploads a Pocket, Wallabag or Instapaper export. The backend only parses it and queues the
+	 * links: the pages are fetched by the worker, so progress is read back with
+	 * `getReadingListImportProgress`.
+	 */
+	async function importReadingList(
+		source: ReadingListSource,
+		file: File
+	): Promise<ReadingListImportStarted> {
+		const formData = new FormData();
+		formData.append('source', source);
+		formData.append('file', file);
+		return http.request<ReadingListImportStarted>('/articles/import-reading-list', {
+			method: 'POST',
+			formData
+		});
+	}
+
+	async function getReadingListImportProgress(
+		importId: string
+	): Promise<ReadingListImportProgress> {
+		return http.request<ReadingListImportProgress>(`/articles/import-reading-list/${importId}`);
+	}
+
+	/**
 	 * Translates one article on demand. Nothing is stored server-side, so the caller keeps the
 	 * original text and can put it back.
 	 */
@@ -101,6 +128,8 @@ export function createArticleApi(http: HttpClient) {
 		listArticles,
 		getArticle,
 		saveUrl,
+		importReadingList,
+		getReadingListImportProgress,
 		translateArticle,
 		exportArticleEpub,
 		getShareStatus,

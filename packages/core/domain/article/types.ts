@@ -73,3 +73,17 @@ export interface PublicArticle {
 	image_url: string | null;
 	language: string;
 }
+
+export type ReadingListSource = 'pocket' | 'wallabag' | 'instapaper';
+
+export interface ReadingListImportStarted {
+	import_id: string;
+	total: number;
+}
+
+export interface ReadingListImportProgress {
+	total: number;
+	saved: number;
+	failed: number;
+	finished: boolean;
+}
