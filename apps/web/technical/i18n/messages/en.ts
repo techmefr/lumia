@@ -634,6 +634,21 @@ export const en: Catalogue = {
 	'ai.loading': 'Loading settings…',
 	'ai.summaryKeyDeleted': 'Summary key deleted.',
 	'ai.deeplKeyDeleted': 'DeepL key deleted.',
+	'tts.title': 'Natural voice',
+	'tts.intro':
+		'Read articles aloud with a speech provider instead of your device voice. Without one, your browser voice is used.',
+	'tts.provider': 'Speech provider',
+	'tts.providerNone': 'None — browser voice',
+	'tts.providerCustom': 'OpenAI-compatible endpoint (self-hosted)',
+	'tts.voice': 'Voice',
+	'tts.voiceDefault': 'leave empty for the default',
+	'tts.endpointHint':
+		'The server must be reachable from the Lumia instance; private addresses are refused unless the operator allows them.',
+	'tts.keyDeleted': 'Speech key deleted.',
+	'tts.loading': 'Loading voice settings…',
+	'tts.loadFailed': 'Could not load the voice settings.',
+	'tts.saveFailed': 'Could not save. Check the key and try again.',
+	'tts.saved': 'Voice settings saved.',
 
 	'admin.title': 'Administration',
 	'admin.intro': 'Instance administration only: quotas, accounts and access requests.',

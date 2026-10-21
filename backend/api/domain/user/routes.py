@@ -543,6 +543,11 @@ async def _to_me_response(session: AsyncSession, user: User) -> MeResponse:
         ai_api_key_set=user.ai_api_key_encrypted is not None,
         translation_provider=user.translation_provider,
         translation_api_key_set=user.translation_api_key_encrypted is not None,
+        tts_provider=user.tts_provider,
+        tts_endpoint_url=user.tts_endpoint_url,
+        tts_model=user.tts_model,
+        tts_voice=user.tts_voice,
+        tts_api_key_set=user.tts_api_key_encrypted is not None,
     )
 
 
@@ -750,7 +755,7 @@ async def update_me(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> MeResponse:
-    secret_fields = {"ai_api_key", "translation_api_key"}
+    secret_fields = {"ai_api_key", "translation_api_key", "tts_api_key"}
     updates = payload.model_dump(exclude_unset=True, exclude=secret_fields)
     for field, value in updates.items():
         setattr(user, field, value)
@@ -764,6 +769,10 @@ async def update_me(
     if "translation_api_key" in payload.model_fields_set:
         user.translation_api_key_encrypted = (
             encrypt_secret(payload.translation_api_key) if payload.translation_api_key else None
+        )
+    if "tts_api_key" in payload.model_fields_set:
+        user.tts_api_key_encrypted = (
+            encrypt_secret(payload.tts_api_key) if payload.tts_api_key else None
         )
 
     await session.commit()

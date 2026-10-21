@@ -7,7 +7,7 @@ about what a reader is entitled to.
 from fastapi import Depends
 
 from api.domain.user.dependencies import get_current_user
-from api.domain.user.models import AIProvider, TranslationProvider, User
+from api.domain.user.models import AIProvider, TranslationProvider, TtsProvider, User
 from api.technical.crypto.secret_box import decrypt_secret
 from config.deepl import get_deepl_config
 from worker.technical.ai.anthropic_client import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
@@ -18,6 +18,14 @@ from worker.technical.ai.llm_client import (
     resolve_base_url,
     resolve_model,
 )
+from worker.technical.speech.base import SpeechSynthesizer
+from worker.technical.speech.openai_speech import (
+    DEFAULT_MODEL as TTS_DEFAULT_MODEL,
+)
+from worker.technical.speech.openai_speech import (
+    DEFAULT_VOICE as TTS_DEFAULT_VOICE,
+)
+from worker.technical.speech.openai_speech import OPENAI_BASE_URL, OpenAiSpeechSynthesizer
 from worker.technical.translation.base import Translator
 from worker.technical.translation.deepl_client import DeeplTranslator
 from worker.technical.translation.llm_translator import LlmTranslator
@@ -69,3 +77,28 @@ def translator_for(user: User | None) -> Translator | None:
 
 def get_translator(user: User = Depends(get_current_user)) -> Translator | None:
     return translator_for(user)
+
+
+def speech_synthesizer_for(user: User) -> SpeechSynthesizer | None:
+    """The account's own speech provider, or None so the reader keeps the browser voice.
+
+    A custom endpoint with no url is an incomplete configuration and falls back, like the LLM one.
+    """
+    if user.tts_provider is None or user.tts_api_key_encrypted is None:
+        return None
+    if user.tts_provider is TtsProvider.OPENAI:
+        base_url = OPENAI_BASE_URL
+    elif user.tts_endpoint_url:
+        base_url = user.tts_endpoint_url.rstrip("/")
+    else:
+        return None
+    return OpenAiSpeechSynthesizer(
+        api_key=decrypt_secret(user.tts_api_key_encrypted),
+        base_url=base_url,
+        model=user.tts_model or TTS_DEFAULT_MODEL,
+        voice=user.tts_voice or TTS_DEFAULT_VOICE,
+    )
+
+
+def get_speech_synthesizer(user: User = Depends(get_current_user)) -> SpeechSynthesizer | None:
+    return speech_synthesizer_for(user)

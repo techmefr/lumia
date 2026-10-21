@@ -15,6 +15,7 @@ from api.domain.user.models import (
     Role,
     Theme,
     TranslationProvider,
+    TtsProvider,
 )
 
 # Every path that writes a password holds to the same floor: onboarding, an accepted invitation,
@@ -232,6 +233,11 @@ class MeResponse(BaseModel):
     ai_api_key_set: bool
     translation_provider: TranslationProvider | None
     translation_api_key_set: bool
+    tts_provider: TtsProvider | None
+    tts_endpoint_url: str | None
+    tts_model: str | None
+    tts_voice: str | None
+    tts_api_key_set: bool
 
 
 class MeUpdateRequest(BaseModel):
@@ -250,6 +256,11 @@ class MeUpdateRequest(BaseModel):
     ai_model: str | None = None
     translation_provider: TranslationProvider | None = None
     translation_api_key: str | None = None
+    tts_provider: TtsProvider | None = None
+    tts_api_key: str | None = None
+    tts_endpoint_url: str | None = None
+    tts_model: str | None = None
+    tts_voice: str | None = None
 
     @field_validator("digest_timezone")
     @classmethod

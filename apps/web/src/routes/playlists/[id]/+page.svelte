@@ -19,6 +19,7 @@
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { SPEECH_FAILURE_MESSAGES, SpeechReader } from '$technical/speech/speech.svelte';
 	import { readableText } from '$technical/speech/readable-text';
+	import { articleAudio } from '$technical/speech/server-voice';
 
 	const RATES = [0.8, 1, 1.25, 1.5];
 
@@ -79,6 +80,7 @@
 
 		speech.speak(`${article.title}. ${text}`, {
 			rate,
+			audio: articleAudio(article.id),
 			onDone: () => void playFrom(index + 1)
 		});
 	}

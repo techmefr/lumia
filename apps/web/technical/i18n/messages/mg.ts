@@ -648,6 +648,21 @@ export const mg: Catalogue = {
 	'ai.loading': 'Maka ny fandrindrana…',
 	'ai.summaryKeyDeleted': 'Voafafa ny fanalahidin’ny fintina.',
 	'ai.deeplKeyDeleted': 'Voafafa ny fanalahidy DeepL.',
+	'tts.title': 'Feo voajanahary',
+	'tts.intro':
+		'Vakio mafy ny lahatsoratra amin’ny alalan’ny mpamatsy feo fa tsy ny feon’ny fitaovanao. Raha tsy misy mpamatsy, ny feon’ny navigateur no ampiasaina.',
+	'tts.provider': 'Mpamatsy feo',
+	'tts.providerNone': 'Tsy misy — feon’ny navigateur',
+	'tts.providerCustom': 'Endpoint mifanaraka amin’ny OpenAI (ampiantranoina anao manokana)',
+	'tts.voice': 'Feo',
+	'tts.voiceDefault': 'avelao foana ho an’ny mahazatra',
+	'tts.endpointHint':
+		'Tsy maintsy azon’ny instance Lumia ny serivisy; very ny adiresy manokana raha tsy avelan’ny mpandrindra.',
+	'tts.keyDeleted': 'Voafafa ny fanalahidin’ny feo.',
+	'tts.loading': 'Mamaky ny fanamafisana ny feo…',
+	'tts.loadFailed': 'Tsy afaka namaky ny fanamafisana ny feo.',
+	'tts.saveFailed': 'Tsy afaka nitahiry. Hamarino ny fanalahidy ary andramo indray.',
+	'tts.saved': 'Voatahiry ny fanamafisana ny feo.',
 
 	'admin.title': 'Fitantanana',
 	'admin.intro': "Natokana ho an'ny fitantanana ny sehatra: fetra, kaonty ary fangatahana fidirana.",

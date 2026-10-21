@@ -19,6 +19,7 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from api.domain.article import models as article_models  # noqa: F401
+from api.domain.audio import models as audio_models  # noqa: F401
 from api.domain.feed import models as feed_models  # noqa: F401
 from api.domain.instance import models as instance_models  # noqa: F401
 from api.domain.playlist import models as playlist_models  # noqa: F401

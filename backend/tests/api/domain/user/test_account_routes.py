@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from api.domain.article.models import Article, ArticleKeyword, Keyword, Lang
+from api.domain.audio.models import ArticleAudio
 from api.domain.feed.models import Feed, Folder, SourceType
 from api.domain.playlist.models import Playlist, PlaylistItem
 from api.domain.recommendation.models import (
@@ -87,6 +88,14 @@ async def _fill_the_account(email: str = ADMIN_PAYLOAD["email"]) -> UUID:
                 ),
                 UserFilterRule(user_id=user.id, term="crypto", mode=FilterMode.MUTE),
                 UserKeywordScore(user_id=user.id, keyword_id=keyword.id, score=0.5),
+                ArticleAudio(
+                    user_id=user.id,
+                    article_id=article.id,
+                    voice_hash="voice",
+                    content_type="audio/mpeg",
+                    size_bytes=1,
+                    data=b"x",
+                ),
             ]
         )
         await session.commit()
@@ -195,6 +204,7 @@ async def test_deleting_an_account_takes_everything_that_hung_off_it(
     assert await _count(UserArticleFeedback) == 1
     assert await _count(UserFilterRule) == 1
     assert await _count(UserKeywordScore) == 1
+    assert await _count(ArticleAudio) == 1
     assert await _count(User) == 1
 
 

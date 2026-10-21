@@ -26,6 +26,11 @@ class TranslationProvider(StrEnum):
     DEEPL = "deepl"
 
 
+class TtsProvider(StrEnum):
+    OPENAI = "openai"
+    CUSTOM = "custom"
+
+
 class ReadingLang(StrEnum):
     """The language the reader wants articles in.
 
@@ -115,6 +120,11 @@ class User(Base, TimestampMixin):
     # Per account rather than per instance: the key is the user's, and so is the bill.
     translation_provider: Mapped[TranslationProvider | None] = mapped_column(default=None)
     translation_api_key_encrypted: Mapped[str | None] = mapped_column(default=None)
+    tts_provider: Mapped[TtsProvider | None] = mapped_column(default=None)
+    tts_api_key_encrypted: Mapped[str | None] = mapped_column(default=None)
+    tts_endpoint_url: Mapped[str | None] = mapped_column(default=None)
+    tts_model: Mapped[str | None] = mapped_column(default=None)
+    tts_voice: Mapped[str | None] = mapped_column(default=None)
     theme: Mapped[Theme] = mapped_column(default=Theme.SYSTEM)
     orbit_position: Mapped[OrbitPosition] = mapped_column(default=OrbitPosition.RIGHT)
     font_base_size: Mapped[int] = mapped_column(default=16)

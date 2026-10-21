@@ -26,6 +26,13 @@ export const SPEECH_FAILURE_MESSAGES: Record<SpeechFailure, MessageKey> = {
 	'not-allowed': 'article.speechFailed.not-allowed'
 };
 
+/**
+ * Where a natural voice comes from, when the account has one: a server-rendered recording of the
+ * whole text. Resolving to null — nothing configured, article too long, provider down — is how the
+ * reader learns to use the browser voice instead, and is never an error.
+ */
+export type AudioSource = () => Promise<Blob | null>;
+
 export function splitIntoChunks(text: string): string[] {
 	// No chunk may straddle a block boundary: the voice would run two paragraphs together, and the
 	// karaoke highlight looks its chunk up inside a single block of the rendered article.
@@ -99,6 +106,13 @@ export class SpeechReader {
 	 */
 	private spokenChunks = 0;
 	private onDone: (() => void) | null = null;
+	private audio: HTMLAudioElement | null = null;
+	private audioUrl: string | null = null;
+	/**
+	 * Bumped by every stop(), so a recording that finishes downloading after the reader moved on
+	 * can tell it is no longer wanted instead of starting over the next article.
+	 */
+	private generation = 0;
 	private rate = 1;
 	private lang = 'fr-FR';
 
@@ -106,7 +120,10 @@ export class SpeechReader {
 		return typeof window !== 'undefined' && 'speechSynthesis' in window;
 	}
 
-	speak(text: string, options: { rate?: number; lang?: string; onDone?: () => void } = {}): void {
+	speak(
+		text: string,
+		options: { rate?: number; lang?: string; onDone?: () => void; audio?: AudioSource } = {}
+	): void {
 		if (!this.supported) return;
 		this.stop();
 
@@ -123,11 +140,19 @@ export class SpeechReader {
 		}
 		this.speaking = true;
 		this.paused = false;
+		if (options.audio && typeof Audio !== 'undefined') {
+			void this.playRecording(options.audio, this.generation);
+			return;
+		}
 		this.speakCurrent();
 	}
 
 	setRate(rate: number): void {
 		this.rate = rate;
+		if (this.audio) {
+			this.audio.playbackRate = rate;
+			return;
+		}
 		// The rate of an utterance already handed to the engine can't be changed; restart the chunk.
 		if (this.speaking && !this.paused) {
 			this.utterance = null;
@@ -139,17 +164,27 @@ export class SpeechReader {
 	pause(): void {
 		if (!this.speaking || this.paused) return;
 		this.paused = true;
+		if (this.audio) {
+			this.audio.pause();
+			return;
+		}
 		window.speechSynthesis.cancel();
 	}
 
 	resume(): void {
 		if (!this.speaking || !this.paused) return;
 		this.paused = false;
+		if (this.audio) {
+			void this.audio.play().catch(() => this.failRecording());
+			return;
+		}
 		this.speakCurrent();
 	}
 
 	stop(): void {
 		if (!this.supported) return;
+		this.generation += 1;
+		this.releaseAudio();
 		this.onDone = null;
 		this.chunks = [];
 		this.index = 0;
@@ -160,6 +195,66 @@ export class SpeechReader {
 		this.utterance = null;
 		this.spokenChunks = 0;
 		window.speechSynthesis.cancel();
+	}
+
+	private async playRecording(source: AudioSource, generation: number): Promise<void> {
+		let recording: Blob | null = null;
+		try {
+			recording = await source();
+		} catch {
+			recording = null;
+		}
+		if (generation !== this.generation) return;
+		if (recording && (await this.startRecording(recording, generation))) return;
+		if (generation !== this.generation) return;
+		// A recording that never came, or would not play, must not cost the reader the article.
+		if (!this.paused) this.speakCurrent();
+	}
+
+	private async startRecording(recording: Blob, generation: number): Promise<boolean> {
+		const url = URL.createObjectURL(recording);
+		const audio = new Audio(url);
+		audio.playbackRate = this.rate;
+		audio.ontimeupdate = () => {
+			if (audio.duration > 0) this.progress = audio.currentTime / audio.duration;
+		};
+		audio.onended = () => {
+			const done = this.onDone;
+			this.stop();
+			done?.();
+		};
+		audio.onerror = () => this.failRecording();
+		this.audio = audio;
+		this.audioUrl = url;
+		if (this.paused) return true;
+		try {
+			await audio.play();
+			return true;
+		} catch {
+			// The browser refused to start sound outside the gesture, or the file is unplayable.
+			if (generation === this.generation) this.releaseAudio();
+			return false;
+		}
+	}
+
+	private failRecording(): void {
+		if (!this.audio) return;
+		this.stop();
+		this.error = 'engine';
+	}
+
+	private releaseAudio(): void {
+		if (this.audio) {
+			this.audio.onended = null;
+			this.audio.onerror = null;
+			this.audio.ontimeupdate = null;
+			this.audio.pause();
+			this.audio = null;
+		}
+		if (this.audioUrl) {
+			URL.revokeObjectURL(this.audioUrl);
+			this.audioUrl = null;
+		}
 	}
 
 	private speakCurrent(): void {
