@@ -115,3 +115,34 @@ describe('the filter rules', () => {
 		expect(last()).toMatchObject({ path: '/filter-rules/rule-1', method: 'DELETE' });
 	});
 });
+
+describe('the statistics', () => {
+	it('asks for the last 30 days of reading by default', async () => {
+		const { recommendation, last } = api([{}]);
+		await recommendation.getReadingStatistics();
+		expect(last()).toMatchObject({ path: '/statistics/reading?days=30', method: 'GET' });
+	});
+
+	it('carries an explicit period through', async () => {
+		const { recommendation, last } = api([{}]);
+		await recommendation.getReadingStatistics(90);
+		expect(last().path).toBe('/statistics/reading?days=90');
+	});
+
+	it('returns the statistics the backend answered', async () => {
+		const { recommendation } = api([{ articles_read: 12 }]);
+		await expect(recommendation.getReadingStatistics()).resolves.toEqual({ articles_read: 12 });
+	});
+
+	it('asks for the last 7 days of popularity by default', async () => {
+		const { recommendation, last } = api([{}]);
+		await recommendation.getPopularArticles();
+		expect(last()).toMatchObject({ path: '/statistics/popular?days=7', method: 'GET' });
+	});
+
+	it('carries an explicit popularity period through', async () => {
+		const { recommendation, last } = api([{}]);
+		await recommendation.getPopularArticles(30);
+		expect(last().path).toBe('/statistics/popular?days=30');
+	});
+});

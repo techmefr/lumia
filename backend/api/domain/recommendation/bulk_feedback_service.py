@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from enum import StrEnum
 from uuid import UUID
 
@@ -65,6 +66,8 @@ async def set_feedback_axis(
             elif getattr(row, axis.value) == value:
                 continue
             setattr(row, axis.value, value)
+            if axis is FeedbackAxis.READ:
+                row.read_at = datetime.now(UTC) if value else None
             changed.append(article_id)
 
         await session.commit()

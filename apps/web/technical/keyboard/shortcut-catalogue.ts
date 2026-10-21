@@ -39,6 +39,7 @@ export const NAVIGATION_SHORTCUTS: NavigationShortcut[] = [
 	},
 	{ id: 'playlists', key: 'p', href: '/playlists', keys: ['g', 'p'], labelKey: 'nav.playlists' },
 	{ id: 'favorites', key: 'v', href: '/favoris', keys: ['g', 'v'], labelKey: 'nav.favorites' },
+	{ id: 'statistics', key: 't', href: '/statistiques', keys: ['g', 't'], labelKey: 'stats.nav' },
 	{ id: 'settings', key: 's', href: '/settings', keys: ['g', 's'], labelKey: 'nav.settings' }
 ];
 

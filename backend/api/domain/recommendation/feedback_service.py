@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -55,6 +56,7 @@ async def apply_feedback(
         existing.favorite = favorite
     if read is not _UNSET:
         existing.read = read
+        existing.read_at = datetime.now(UTC) if read else None
     if scroll_progress is not _UNSET:
         # Never rewind: a quick revisit that lands at the top must not erase how far the user got.
         # The column default only applies at INSERT, so a not-yet-flushed row still reads None.

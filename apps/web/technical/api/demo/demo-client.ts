@@ -26,6 +26,8 @@ import type {
 	PlaylistDetail,
 	PublicArticle,
 	PlaylistSummary,
+	Popularity,
+	ReadingStatistics,
 	TokenStore,
 	UnreadCounts
 } from '@lumia/core';
@@ -52,6 +54,7 @@ const LATENCY_MS = 180;
 /** Same numbers as the backend, so the demo teaches the right feel for a vote. */
 const VOTE_DELTA: Record<'like' | 'dislike', number> = { like: 1.5, dislike: -0.5 };
 const BOOST_WEIGHT = 1;
+const DEMO_POPULARITY_MIN_READERS = 3;
 const TANH_SCALE = 3;
 
 interface Feedback {
@@ -756,6 +759,94 @@ export function createDemoClient(): LumiaClient {
 				const ids = sortedIds().filter((id) => feedbackFor(id).favorite);
 				return settle(summaries(page(ids, limit, offset)));
 			},
+			/**
+			 * The demo keeps no reading timestamps, so the whole read count lands on the last day
+			 * of the period; what it teaches is the shape of the page, not a history.
+			 */
+			getReadingStatistics: async (days = 30): Promise<ReadingStatistics> => {
+				const readIds = state.articleIds.filter((id) => feedbackFor(id).read);
+				const readArticles = readIds.flatMap((id) => seedArticle(id) ?? []);
+				const minutes = readArticles.reduce(
+					(total, article) => total + readingMinutes(article.paragraphs),
+					0
+				);
+				const today = Temporal.Now.plainDateISO('Europe/Paris');
+				const daily = Array.from({ length: days }, (_, index) => ({
+					day: today.subtract({ days: days - 1 - index }).toString(),
+					articles_read: index === days - 1 ? readArticles.length : 0,
+					reading_minutes: index === days - 1 ? minutes : 0
+				}));
+				const ranked = (labelOf: (article: SeedArticle) => string | null) => {
+					const counts = new Map<string, number>();
+					for (const article of readArticles) {
+						const label = labelOf(article);
+						if (label) counts.set(label, (counts.get(label) ?? 0) + 1);
+					}
+					return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 5);
+				};
+				const feedTitle = (feedId: string) =>
+					state.feeds.find((feed) => feed.id === feedId)?.title ?? feedId;
+				const keywordCounts = new Map<string, number>();
+				for (const article of readArticles) {
+					for (const term of article.keywords) {
+						keywordCounts.set(term, (keywordCounts.get(term) ?? 0) + 1);
+					}
+				}
+				const engagement = state.feeds
+					.map((feed) => {
+						const received = state.articleIds.filter((id) => seedArticle(id)?.feed_id === feed.id);
+						const read = received.filter((id) => feedbackFor(id).read).length;
+						return {
+							feed_id: feed.id,
+							title: feed.title,
+							received: received.length,
+							read,
+							ignored: received.length - read,
+							read_ratio: received.length ? Math.round((read / received.length) * 100) / 100 : 0
+						};
+					})
+					.filter((entry) => entry.received > 0)
+					.sort((a, b) => a.read_ratio - b.read_ratio || b.received - a.received);
+				const feedbacks = state.articleIds.map((id) => feedbackFor(id));
+				return settle({
+					period_days: days,
+					articles_read: readArticles.length,
+					reading_minutes: minutes,
+					daily,
+					top_feeds: ranked((article) => article.feed_id).map(([id, count]) => ({
+						id,
+						name: feedTitle(id),
+						articles_read: count
+					})),
+					top_authors: ranked((article) => article.author_name).map(([name, count]) => ({
+						id: `author-${name}`,
+						name,
+						articles_read: count
+					})),
+					top_keywords: [...keywordCounts]
+						.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+						.slice(0, 5)
+						.map(([term, count]) => ({ term, articles_read: count })),
+					feed_engagement: engagement,
+					totals: {
+						saved: feedbacks.filter((entry) => entry.saved).length,
+						favorites: feedbacks.filter((entry) => entry.favorite).length,
+						liked: feedbacks.filter((entry) => entry.sentiment === 'like').length,
+						disliked: feedbacks.filter((entry) => entry.sentiment === 'dislike').length
+					}
+				});
+			},
+			/** A fixed sample: the demo has a single reader, so no real crowd to count. */
+			getPopularArticles: async (days = 7): Promise<Popularity> =>
+				settle({
+					period_days: days,
+					min_readers: DEMO_POPULARITY_MIN_READERS,
+					articles: SEED_ARTICLES.slice(0, 3).map((article, index) => ({
+						title: article.title,
+						url: `https://exemple.test/${article.id}`,
+						readers: DEMO_POPULARITY_MIN_READERS + 3 - index
+					}))
+				}),
 			sendFeedback: async (articleId: string, update: FeedbackUpdate) => {
 				const feedback = feedbackFor(articleId);
 				if (update.sentiment !== undefined && update.sentiment !== feedback.sentiment) {
