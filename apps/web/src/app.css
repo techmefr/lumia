@@ -15,19 +15,19 @@
 	--card-foreground: oklch(0.145 0 0);
 	--popover: oklch(1 0 0);
 	--popover-foreground: oklch(0.145 0 0);
-	--primary: oklch(0.55 0.2 265);
+	--primary: oklch(0.5 0.2 265);
 	--primary-foreground: oklch(0.985 0 0);
 	--secondary: oklch(0.97 0 0);
 	--secondary-foreground: oklch(0.205 0 0);
 	--muted: oklch(0.97 0 0);
-	--muted-foreground: oklch(0.556 0 0);
+	--muted-foreground: oklch(0.48 0 0);
 	--accent: oklch(0.94 0.03 265);
 	--accent-foreground: oklch(0.205 0 0);
 	--destructive: oklch(0.577 0.245 27.325);
 	--destructive-foreground: oklch(0.985 0 0);
 	--border: oklch(0.922 0 0);
 	--input: oklch(0.922 0 0);
-	--ring: oklch(0.55 0.2 265);
+	--ring: oklch(0.5 0.2 265);
 	--grain-opacity: 0.05;
 	/* Named rather than arbitrary: the two fixed decorative layers sit above the app chrome
 	   (sticky header 30, panels 40, dialogs and toasts 50) and must not reorder by accident. */
@@ -61,7 +61,7 @@
 	--card-foreground: oklch(0.985 0 0);
 	--popover: oklch(0.205 0 0);
 	--popover-foreground: oklch(0.985 0 0);
-	--primary: oklch(0.65 0.2 265);
+	--primary: oklch(0.72 0.17 265);
 	--primary-foreground: oklch(0.145 0 0);
 	--secondary: oklch(0.269 0 0);
 	--secondary-foreground: oklch(0.985 0 0);
@@ -73,7 +73,7 @@
 	--destructive-foreground: oklch(0.145 0 0);
 	--border: oklch(1 0 0 / 12%);
 	--input: oklch(1 0 0 / 18%);
-	--ring: oklch(0.65 0.2 265);
+	--ring: oklch(0.72 0.17 265);
 	--grain-opacity: 0.08;
 }
 

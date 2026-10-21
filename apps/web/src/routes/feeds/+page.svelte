@@ -711,7 +711,12 @@
 											<Badge variant="secondary">
 											{resolveFolderName(folders, feed.folder_id, t('feeds.noFolder'))}
 										</Badge>
-											<Button variant="ghost" size="icon" onclick={() => removeFeed(feed.id)}>
+											<Button
+												variant="ghost"
+												size="icon"
+												aria-label={t('feeds.removeFeed')}
+												onclick={() => removeFeed(feed.id)}
+											>
 												<Trash2 class="size-4" />
 											</Button>
 										</div>

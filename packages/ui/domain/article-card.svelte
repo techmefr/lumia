@@ -18,7 +18,7 @@
 		featured?: boolean;
 		/** Estimated minutes to read, from the backend's word count. */
 		readingMinutes?: number | null;
-		/** Already-read articles are dimmed so the unread ones stand out at a glance. */
+		/** Already-read articles have a dimmed picture (never dimmed text: that would sink its contrast) so the unread ones stand out at a glance. */
 		read?: boolean;
 		/** 0 to 1. Drawn as a thin bar at the bottom of the tile when reading started. */
 		scrollProgress?: number;
@@ -77,7 +77,6 @@
 	class={cn(
 		'group relative flex animate-in flex-col overflow-hidden rounded-2xl border bg-card shadow-sm fade-in slide-in-from-bottom-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl',
 		featured ? 'sm:col-span-2 lg:col-span-2' : '',
-		read ? 'opacity-60 hover:opacity-100' : '',
 		className
 	)}
 >
@@ -86,7 +85,11 @@
 	{/if}
 
 	<div
-		class={cn('relative w-full overflow-hidden', featured ? 'h-64 sm:h-80' : 'h-36')}
+		class={cn(
+			'relative w-full overflow-hidden',
+			featured ? 'h-64 sm:h-80' : 'h-36',
+			read ? 'opacity-60 group-hover:opacity-100' : ''
+		)}
 		style={`background: linear-gradient(135deg, hsl(${accentHue} 45% 55% / 20%), hsl(${accentHue + 40} 45% 45% / 28%)), var(--card, #fff); view-transition-name: article-image-${id};`}
 	>
 		{#if imageUrl && !imageFailed}

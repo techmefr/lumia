@@ -23,11 +23,14 @@ export function articleSummary(id: string, overrides: Partial<ArticleSummary> = 
 		url: `https://example.test/${id}`,
 		summary: null,
 		image_url: null,
+		enclosure_url: null,
+		enclosure_type: null,
 		published_at: '2026-08-09T08:30:00Z',
 		reading_minutes: 4,
 		read: false,
 		scroll_progress: 0,
 		relevance_score: 50,
+		tags: [],
 		...overrides
 	};
 }

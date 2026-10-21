@@ -200,6 +200,29 @@ describe('the keyboard alternative to swiping', () => {
 		expect(view.onSave).toHaveBeenCalledWith(THREE[0]);
 	});
 
+	it('announces what a key press did to which article', async () => {
+		const view = stack();
+
+		await fireEvent.keyDown(document, { key: 'ArrowRight' });
+
+		const announcement = view.container.querySelector('[data-test-swipe-announcement]');
+		expect(announcement?.textContent).toContain(THREE[0].title);
+		expect(announcement?.getAttribute('aria-live')).toBe('polite');
+		await settle();
+	});
+
+	it('leaves up and down to the summary while it has the focus', async () => {
+		const view = stack({ articles: [article('long', { summary: 'text' }), article('next')] });
+
+		view.scroll()!.focus();
+		await fireEvent.keyDown(view.scroll()!, { key: 'ArrowDown' });
+		await fireEvent.keyDown(view.scroll()!, { key: 'ArrowUp' });
+		await settle();
+
+		expect(view.onSave).not.toHaveBeenCalled();
+		expect(view.onFavorite).not.toHaveBeenCalled();
+	});
+
 	it('does not act twice when the key repeats while the card is already exiting', async () => {
 		const view = stack();
 

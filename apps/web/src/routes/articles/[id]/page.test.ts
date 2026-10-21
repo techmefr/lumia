@@ -31,6 +31,13 @@ vi.mock('$technical/api/client', () => ({
 			createHighlight: vi.fn(),
 			updateHighlightNote: vi.fn(),
 			deleteHighlight: vi.fn()
+		},
+		tag: {
+			listTags: vi.fn(),
+			getSuggestions: vi.fn(),
+			tagArticle: vi.fn(),
+			untagArticle: vi.fn(),
+			getAiSuggestions: vi.fn()
 		}
 	}
 }));
@@ -82,6 +89,8 @@ beforeEach(() => {
 	api.recommendation.sendFeedback.mockResolvedValue(undefined);
 	api.playlist.listPlaylists.mockResolvedValue([]);
 	api.highlight.listArticleHighlights.mockResolvedValue([]);
+	api.tag.listTags.mockResolvedValue([]);
+	api.tag.getSuggestions.mockResolvedValue([]);
 });
 
 afterEach(() => {
@@ -104,6 +113,19 @@ describe('opening an article', () => {
 			'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ'
 		);
 		expect(view.video()?.getAttribute('title')).toBeTruthy();
+	});
+
+	it('offers to play the episode of a podcast article and only then', async () => {
+		api.article.getArticle.mockResolvedValue(
+			articleDetail('article-1', { enclosure_url: 'https://cdn.example.com/ep1.mp3' })
+		);
+		const withEpisode = await loaded();
+		expect(withEpisode.container.querySelector('[data-test-play-episode]')).not.toBeNull();
+		cleanup();
+
+		api.article.getArticle.mockResolvedValue(articleDetail('article-1'));
+		const ordinary = await loaded();
+		expect(ordinary.container.querySelector('[data-test-play-episode]')).toBeNull();
 	});
 
 	it('shows no player for an ordinary article', async () => {
@@ -301,6 +323,34 @@ describe('the article metadata', () => {
 		const hrefs = view.filterLinks().map((link) => link.getAttribute('href') ?? '');
 		expect(hrefs.some((href) => href.includes('author_id='))).toBe(false);
 		expect(hrefs.some((href) => href.includes('category_id='))).toBe(false);
+	});
+});
+
+describe('the reader tags', () => {
+	it('shows the tags the article carries, each linking to the filtered list', async () => {
+		api.article.getArticle.mockResolvedValue(
+			articleDetail('article-1', { tags: [{ id: 'tag-1', name: 'Cuisine' }] })
+		);
+
+		const view = await loaded();
+
+		const hrefs = view.filterLinks().map((link) => link.getAttribute('href') ?? '');
+		expect(hrefs.some((href) => href.includes('tag_id=tag-1'))).toBe(true);
+	});
+
+	it('updates the shown tags when one is added from the editor', async () => {
+		api.tag.tagArticle.mockResolvedValue([{ id: 'tag-2', name: 'Voyage' }]);
+		const view = await loaded();
+
+		await fireEvent.input(view.container.querySelector('[data-test-tag-input]')!, {
+			target: { value: 'Voyage' }
+		});
+		await fireEvent.submit(view.container.querySelector('[data-test-article-tags] form')!);
+
+		await waitFor(() =>
+			expect(view.container.querySelector('[data-test-tag="tag-2"]')).not.toBeNull()
+		);
+		expect(api.tag.tagArticle).toHaveBeenCalledWith('article-1', 'Voyage');
 	});
 });
 

@@ -65,6 +65,8 @@ class Article(Base, TimestampMixin):
     content: Mapped[str]
     summary: Mapped[str | None] = mapped_column(default=None)
     image_url: Mapped[str | None] = mapped_column(default=None)
+    enclosure_url: Mapped[str | None] = mapped_column(default=None)
+    enclosure_type: Mapped[str | None] = mapped_column(default=None)
     original_lang: Mapped[Lang] = mapped_column(default=Lang.FR)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     # Computed by postgres itself, never written from python: a generated column rejects any

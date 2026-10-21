@@ -284,3 +284,101 @@ describe('the media session', () => {
 		await vi.waitFor(() => expect(player.current?.id).toBe('b'));
 	});
 });
+
+
+describe('a podcast episode', () => {
+	class FakeAudio {
+		static instances: FakeAudio[] = [];
+		paused = true;
+		duration = 100;
+		currentTime = 0;
+		playbackRate = 1;
+		onended: (() => void) | null = null;
+		onplay: (() => void) | null = null;
+		onpause: (() => void) | null = null;
+		onloadedmetadata: (() => void) | null = null;
+		ontimeupdate: (() => void) | null = null;
+		onerror: (() => void) | null = null;
+		constructor(public src: string) {
+			FakeAudio.instances.push(this);
+		}
+		play() {
+			this.paused = false;
+			this.onplay?.();
+			return Promise.resolve();
+		}
+		pause() {
+			this.paused = true;
+			this.onpause?.();
+		}
+		removeAttribute() {}
+	}
+
+	const episode = articleSummary('ep', {
+		title: 'Episode',
+		enclosure_url: 'https://cdn.example.com/ep.mp3',
+		enclosure_type: 'audio/mpeg'
+	});
+
+	beforeEach(() => {
+		FakeAudio.instances = [];
+		vi.stubGlobal('Audio', FakeAudio);
+	});
+
+	it('streams the file from its source instead of speaking it', async () => {
+		const player = await started([episode]);
+
+		expect(FakeAudio.instances[0].src).toBe('https://cdn.example.com/ep.mp3');
+		expect(engine.spoken).toEqual([]);
+		expect(api.article.getArticle).not.toHaveBeenCalled();
+		expect(player.playing).toBe(true);
+	});
+
+	it('pauses and resumes the file', async () => {
+		const player = await started([episode]);
+
+		player.toggle();
+		expect(player.paused).toBe(true);
+		player.toggle();
+		expect(player.playing).toBe(true);
+	});
+
+	it('tracks progress and seeks within the file', async () => {
+		const player = await started([episode]);
+		const audio = FakeAudio.instances[0];
+
+		audio.currentTime = 25;
+		audio.ontimeupdate?.();
+		expect(player.progress).toBe(0.25);
+
+		player.seek(0.5);
+		expect(audio.currentTime).toBe(50);
+	});
+
+	it('resumes where the listener left off', async () => {
+		localStorage.setItem(RESUME_STORAGE_KEY, JSON.stringify({ articleId: 'ep', progress: 0.4 }));
+		await started([episode]);
+		const audio = FakeAudio.instances[0];
+
+		audio.onloadedmetadata?.();
+
+		expect(audio.currentTime).toBe(40);
+	});
+
+	it('marks the episode read and moves on when it ends', async () => {
+		const player = await started([episode, B]);
+
+		FakeAudio.instances[0].onended?.();
+
+		await vi.waitFor(() => expect(player.current?.id).toBe('b'));
+		expect(api.recommendation.sendFeedback).toHaveBeenCalledWith('ep', { read: true });
+	});
+
+	it('applies the playback rate to the file', async () => {
+		const player = await started([episode]);
+
+		player.setRate(1.5);
+
+		expect(FakeAudio.instances[0].playbackRate).toBe(1.5);
+	});
+});

@@ -1,4 +1,6 @@
 import type { ArticleSummary } from '@lumia/core';
+import { toast } from '@lumia/ui';
+import { t } from '$technical/i18n/i18n.svelte';
 import { lumia } from '$technical/api/client';
 import { SpeechReader } from '$technical/speech/speech.svelte';
 import { readableText } from '$technical/speech/readable-text';
@@ -46,11 +48,14 @@ export class AudioPlayer {
 	rate = $state(1);
 
 	private readonly reader = new SpeechReader();
+	/** The podcast file being streamed from its source, when the current article carries one. */
+	private enclosure: HTMLAudioElement | null = null;
+	private enclosureState = $state({ playing: false, progress: 0 });
 	/** Bumped on every article change so a body fetched for a skipped article is ignored. */
 	private generation = 0;
 
 	get supported(): boolean {
-		return this.reader.supported;
+		return this.reader.supported || Boolean(this.current?.enclosure_url);
 	}
 
 	get current(): ArticleSummary | null {
@@ -58,16 +63,18 @@ export class AudioPlayer {
 	}
 
 	get playing(): boolean {
+		if (this.enclosure) return this.enclosureState.playing;
 		return this.reader.speaking && !this.reader.paused;
 	}
 
 	get paused(): boolean {
+		if (this.enclosure) return !this.enclosureState.playing;
 		return this.reader.paused;
 	}
 
 	/** 0 to 1 within the current article. */
 	get progress(): number {
-		return this.reader.progress;
+		return this.enclosure ? this.enclosureState.progress : this.reader.progress;
 	}
 
 	get error() {
@@ -98,7 +105,10 @@ export class AudioPlayer {
 	}
 
 	toggle(): void {
-		if (this.reader.paused) {
+		if (this.enclosure) {
+			if (this.enclosure.paused) void this.enclosure.play().catch(() => {});
+			else this.enclosure.pause();
+		} else if (this.reader.paused) {
 			this.reader.resume();
 			this.syncMediaSession();
 		} else if (this.reader.speaking) {
@@ -118,12 +128,16 @@ export class AudioPlayer {
 	}
 
 	seek(fraction: number): void {
-		this.reader.seek(fraction);
+		if (this.enclosure) {
+			if (this.enclosure.duration > 0) this.enclosure.currentTime = fraction * this.enclosure.duration;
+		} else {
+			this.reader.seek(fraction);
+		}
 		this.persist(fraction);
 	}
 
 	seekBy(delta: number): void {
-		this.seek(Math.min(Math.max(this.reader.progress + delta, 0), 1));
+		this.seek(Math.min(Math.max(this.progress + delta, 0), 1));
 	}
 
 	skipForward(): void {
@@ -136,6 +150,7 @@ export class AudioPlayer {
 
 	setRate(rate: number): void {
 		this.rate = rate;
+		if (this.enclosure) this.enclosure.playbackRate = rate;
 		this.reader.setRate(rate);
 	}
 
@@ -143,6 +158,7 @@ export class AudioPlayer {
 	close(): void {
 		this.generation += 1;
 		this.reader.stop();
+		this.releaseEnclosure();
 		this.queue = [];
 		this.index = -1;
 		writeResumePoint(null);
@@ -153,11 +169,13 @@ export class AudioPlayer {
 	yield(): void {
 		this.generation += 1;
 		this.reader.stop();
+		this.releaseEnclosure();
 	}
 
 	private async playAt(position: number): Promise<void> {
 		const article = this.queue[position];
 		const generation = ++this.generation;
+		this.releaseEnclosure();
 		if (!article) {
 			this.reader.stop();
 			this.index = -1;
@@ -169,6 +187,11 @@ export class AudioPlayer {
 
 		this.index = position;
 		this.syncMediaSession();
+		if (article.enclosure_url) {
+			this.reader.stop();
+			this.startEnclosure(article, article.enclosure_url, position);
+			return;
+		}
 		let text = article.summary ?? '';
 		try {
 			// The list only carries the summary; the body has to be fetched to read it in full.
@@ -193,6 +216,58 @@ export class AudioPlayer {
 			}
 		});
 		this.syncMediaSession();
+	}
+
+	/** Streams straight from the feed's host: the instance never downloads or stores the file. */
+	private startEnclosure(article: ArticleSummary, url: string, position: number): void {
+		const audio = new Audio(url);
+		audio.playbackRate = this.rate;
+		const resume = readResumePoint();
+		const startAt = resume?.articleId === article.id ? resume.progress : 0;
+		audio.onloadedmetadata = () => {
+			if (startAt > 0 && audio.duration > 0) audio.currentTime = startAt * audio.duration;
+		};
+		audio.ontimeupdate = () => {
+			if (audio.duration > 0) {
+				this.enclosureState.progress = audio.currentTime / audio.duration;
+				this.persist(this.enclosureState.progress);
+			}
+		};
+		audio.onplay = () => {
+			this.enclosureState.playing = true;
+			this.syncMediaSession();
+		};
+		audio.onpause = () => {
+			this.enclosureState.playing = false;
+			this.syncMediaSession();
+		};
+		audio.onended = () => {
+			void lumia.recommendation.sendFeedback(article.id, { read: true }).catch(() => {});
+			writeResumePoint(null);
+			void this.playAt(position + 1);
+		};
+		audio.onerror = () => {
+			this.releaseEnclosure();
+			toast(t('player.enclosureFailed'));
+		};
+		this.enclosureState.progress = startAt;
+		this.enclosure = audio;
+		void audio.play().catch(() => {});
+	}
+
+	private releaseEnclosure(): void {
+		const audio = this.enclosure;
+		if (!audio) return;
+		audio.onloadedmetadata = null;
+		audio.ontimeupdate = null;
+		audio.onplay = null;
+		audio.onpause = null;
+		audio.onended = null;
+		audio.onerror = null;
+		audio.pause();
+		audio.removeAttribute('src');
+		this.enclosure = null;
+		this.enclosureState = { playing: false, progress: 0 };
 	}
 
 	private persist(progress: number): void {
