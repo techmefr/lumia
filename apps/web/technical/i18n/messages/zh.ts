@@ -296,6 +296,12 @@ export const zh: Catalogue = {
 	'instanceFeeds.attachedToast': '已接入 {count} 个订阅源。',
 	'instanceFeeds.attachFailed': '无法接入这些订阅源。',
 
+	'player.label': '音频播放器',
+	'player.expand': '显示详情',
+	'player.collapse': '隐藏详情',
+	'player.close': '关闭播放器',
+	'player.seek': '文章中的位置',
+	'player.seekValue': '已朗读 {percent}%',
 	'playlists.title': '播放列表',
 	'playlists.intro': '有序的文章队列，附带总时长，可一口气读完或听完。',
 	'playlists.loadFailed': '无法加载播放列表。',

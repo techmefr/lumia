@@ -32,6 +32,7 @@
 	import { SPEECH_FAILURE_MESSAGES, SpeechReader } from '$technical/speech/speech.svelte';
 	import { readableText } from '$technical/speech/readable-text';
 	import { articleAudio } from '$technical/speech/server-voice';
+	import { player } from '$domain/audio/audio-player.svelte';
 	import { clearKaraoke, highlightChunk } from '$technical/speech/karaoke';
 	import AddToPlaylist from '$domain/playlist/add-to-playlist.svelte';
 	import ExportEpubButton from '$domain/article/export-epub-button.svelte';
@@ -129,6 +130,7 @@
 			return;
 		}
 		const text = `${article.title}. ${contentEl ? readableText(contentEl) : ''}`;
+		player.yield();
 		speech.speak(text, {
 			audio: articleAudio(article.id),
 			onDone: () => toast(t('article.speechDone'))

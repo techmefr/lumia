@@ -555,3 +555,61 @@ describe('SpeechReader when the engine produces no sound', () => {
 		expect(reader.error).toBe(null);
 	});
 });
+
+describe('SpeechReader seeking and resuming', () => {
+	const text = Array.from({ length: 10 }, (_, i) => `${'mot '.repeat(40)}${i}.`).join(' ');
+
+	beforeEach(() => {
+		fakeSpeechSynthesis();
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('begins part-way through when told where to start', () => {
+		const reader = new SpeechReader();
+
+		reader.speak(text, { startAt: 0.5 });
+
+		expect(reader.progress).toBeGreaterThanOrEqual(0.4);
+	});
+
+	it('jumps to a fraction of the text while playing', () => {
+		const reader = new SpeechReader();
+		reader.speak(text);
+
+		reader.seek(0.6);
+
+		expect(reader.progress).toBeGreaterThanOrEqual(0.5);
+		expect(reader.speaking).toBe(true);
+	});
+
+	it('moves the position without speaking while paused', () => {
+		const reader = new SpeechReader();
+		reader.speak(text);
+		reader.pause();
+
+		reader.seek(0.8);
+
+		expect(reader.paused).toBe(true);
+		expect(reader.progress).toBeGreaterThanOrEqual(0.7);
+	});
+
+	it('ignores a seek when nothing is being read', () => {
+		const reader = new SpeechReader();
+
+		reader.seek(0.5);
+
+		expect(reader.progress).toBe(0);
+	});
+
+	it('reports progress each time a chunk starts', () => {
+		const reader = new SpeechReader();
+		const seen: number[] = [];
+
+		reader.speak(text, { onProgress: (progress) => seen.push(progress) });
+
+		expect(seen).toEqual([0]);
+	});
+});

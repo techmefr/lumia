@@ -312,6 +312,12 @@ export const fr = {
 	'instanceFeeds.attachedToast': '{count} flux rattaché(s).',
 	'instanceFeeds.attachFailed': 'Impossible de rattacher ces flux.',
 
+	'player.label': 'Lecteur audio',
+	'player.expand': 'Afficher les détails',
+	'player.collapse': 'Masquer les détails',
+	'player.close': 'Fermer le lecteur',
+	'player.seek': "Position dans l'article",
+	'player.seekValue': '{percent} % lu',
 	'playlists.title': 'Playlists',
 	'playlists.intro':
 		"Des files d'articles ordonnées, avec leur durée totale, à lire ou à écouter d'affilée.",

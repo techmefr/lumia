@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { lumia } from '$technical/api/client';
 import { fakeSpeechSynthesis, type FakeSynthesis } from '../../../../test-support/fake-speech-synthesis';
 import { articleDetail, articleSummary, playlistDetail } from '../../test-support/fixtures';
+import { player } from '$domain/audio/audio-player.svelte';
 import PlaylistPage from './+page.svelte';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
@@ -45,7 +46,7 @@ function playlistPage() {
 			),
 		rowButtons: (index: number) =>
 			[...(container.querySelectorAll('ol > li')[index]?.querySelectorAll('button') ?? [])],
-		nowPlaying: () => q('[aria-live="polite"]'),
+		listenAll: () => q<HTMLButtonElement>('[data-test-listen-all]'),
 		browse: () => q<HTMLAnchorElement>('a[href$="/articles"]')
 	};
 }
@@ -73,6 +74,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+	player.close();
 	cleanup();
 	vi.unstubAllGlobals();
 	vi.clearAllMocks();
@@ -125,6 +127,9 @@ describe('reading the playlist aloud', () => {
 		const view = await loaded([articleSummary('a')]);
 
 		await fireEvent.click(view.rowButtons(0)[LISTEN]);
+		await waitFor(() => expect(engine.spoken.length).toBeGreaterThan(0));
+
+		while (engine.current()) engine.finish();
 
 		await waitFor(() =>
 			expect(api.recommendation.sendFeedback).toHaveBeenCalledWith('a', { read: true })
@@ -155,23 +160,21 @@ describe('reading the playlist aloud', () => {
 			expect(engine.spoken.map((utterance) => utterance.text).join(' ')).toContain('Le suivant')
 		);
 	});
+});
 
-	it('announces which article is being read', async () => {
-		const view = await loaded([articleSummary('a', { title: 'Le papier' })]);
+describe('the listen-all button', () => {
+	it('starts the whole playlist from its first article', async () => {
+		const view = await loaded([articleSummary('a', { title: 'Le papier' }), articleSummary('b')]);
 
-		await fireEvent.click(view.rowButtons(0)[LISTEN]);
+		await fireEvent.click(view.listenAll()!);
 
-		await waitFor(() => expect(view.nowPlaying()?.textContent).toContain('Le papier'));
+		await waitFor(() => expect(engine.spoken[0]?.text).toContain('Le papier'));
 	});
 
-	it('stops announcing anything once the playlist runs out', async () => {
-		const view = await loaded([articleSummary('a')]);
-		await fireEvent.click(view.rowButtons(0)[LISTEN]);
-		await waitFor(() => expect(view.nowPlaying()).not.toBeNull());
+	it('is absent from an empty playlist', async () => {
+		const view = await loaded([]);
 
-		while (engine.current()) engine.finish();
-
-		await waitFor(() => expect(view.nowPlaying()).toBeNull());
+		expect(view.listenAll()).toBeNull();
 	});
 });
 

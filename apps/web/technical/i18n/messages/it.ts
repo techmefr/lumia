@@ -309,6 +309,12 @@ export const it: Catalogue = {
 	'instanceFeeds.attachedToast': '{count} flusso/i collegato/i.',
 	'instanceFeeds.attachFailed': 'Impossibile collegare questi flussi.',
 
+	'player.label': 'Lettore audio',
+	'player.expand': 'Mostra i dettagli',
+	'player.collapse': 'Nascondi i dettagli',
+	'player.close': 'Chiudi il lettore',
+	'player.seek': "Posizione nell'articolo",
+	'player.seekValue': '{percent}% letto',
 	'playlists.title': 'Playlist',
 	'playlists.intro':
 		'File di articoli ordinate, con la loro durata totale, da leggere o ascoltare di seguito.',
