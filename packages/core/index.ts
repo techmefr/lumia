@@ -2,6 +2,7 @@ import { createHttpClient } from './technical/http-client';
 import { createLocalStorageTokenStore, type TokenStore } from './technical/token-store';
 import { createArticleApi } from './domain/article/api';
 import { createFeedApi } from './domain/feed/api';
+import { createHighlightApi } from './domain/highlight/api';
 import { createInstanceApi } from './domain/instance/api';
 import { createPlaylistApi } from './domain/playlist/api';
 import { createRecommendationApi } from './domain/recommendation/api';
@@ -20,6 +21,9 @@ export * from './domain/article/types';
 export * from './domain/article/api';
 export * from './domain/recommendation/types';
 export * from './domain/recommendation/api';
+export * from './domain/highlight/types';
+export * from './domain/highlight/api';
+export * from './domain/highlight/anchor';
 export * from './domain/playlist/types';
 export * from './domain/playlist/api';
 
@@ -32,7 +36,8 @@ export function createLumiaClient(baseUrl: string, tokenStore: TokenStore = crea
 		feed: createFeedApi(http),
 		article: createArticleApi(http),
 		recommendation: createRecommendationApi(http),
-		playlist: createPlaylistApi(http)
+		playlist: createPlaylistApi(http),
+		highlight: createHighlightApi(http)
 	};
 }
 

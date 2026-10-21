@@ -3,6 +3,7 @@ import type {
 	ArticleSummary,
 	Feed,
 	Folder,
+	Highlight,
 	InstanceSettings,
 	Me,
 	PlaylistDetail,
@@ -98,4 +99,20 @@ export function me(overrides: Partial<Me> = {}): Me {
 
 export function instanceSettings(overrides: Partial<InstanceSettings> = {}): InstanceSettings {
 	return { max_accounts: 10, disk_quota_mb: 500, access_mode: 'on_approval', public_sharing_enabled: false, account_count: 1, ...overrides };
+}
+
+export function highlight(id: string, overrides: Partial<Highlight> = {}): Highlight {
+	return {
+		id,
+		article_id: 'article-1',
+		article_title: `Titre ${id}`,
+		quote: `Passage ${id}`,
+		prefix: '',
+		suffix: '',
+		start_offset: 0,
+		end_offset: 10,
+		note: null,
+		created_at: '2026-10-21T08:00:00Z',
+		...overrides
+	};
 }

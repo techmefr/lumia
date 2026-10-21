@@ -2,8 +2,10 @@ import { cleanup, fireEvent, render, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { goto } from '$app/navigation';
 import { lumia } from '$technical/api/client';
+import { setLocale } from '$technical/i18n/i18n.svelte';
 import type { ArticleDetail } from '@lumia/core';
-import { articleDetail, me } from '../../test-support/fixtures';
+import { toasts } from '@lumia/ui';
+import { articleDetail, highlight, me } from '../../test-support/fixtures';
 import ArticlePage from './+page.svelte';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
@@ -23,7 +25,13 @@ vi.mock('$technical/api/client', () => ({
 		user: { isAuthenticated: vi.fn(() => true), getMe: vi.fn() },
 		article: { getArticle: vi.fn(), translateArticle: vi.fn(), getRelatedArticles: vi.fn() },
 		playlist: { listPlaylists: vi.fn(), addArticle: vi.fn(), createPlaylist: vi.fn() },
-		recommendation: { sendFeedback: vi.fn() }
+		recommendation: { sendFeedback: vi.fn() },
+		highlight: {
+			listArticleHighlights: vi.fn(),
+			createHighlight: vi.fn(),
+			updateHighlightNote: vi.fn(),
+			deleteHighlight: vi.fn()
+		}
 	}
 }));
 
@@ -72,6 +80,7 @@ beforeEach(() => {
 	api.article.getRelatedArticles.mockResolvedValue([]);
 	api.recommendation.sendFeedback.mockResolvedValue(undefined);
 	api.playlist.listPlaylists.mockResolvedValue([]);
+	api.highlight.listArticleHighlights.mockResolvedValue([]);
 });
 
 afterEach(() => {
@@ -333,5 +342,154 @@ describe('printing', () => {
 
 		expect(source).toContain('https://example.test/papier');
 		expect(source).toMatch(/2026/);
+	});
+});
+
+describe('highlights in the article', () => {
+	const BODY = '<p>Sur le papier et l encre.</p>';
+
+	/** What a reader does: drag across words, which the browser reports as a selection change. */
+	async function select(from: number, to: number) {
+		const text = document.querySelector('[data-test-article-content] p')!.firstChild!;
+		const range = document.createRange();
+		range.setStart(text, from);
+		range.setEnd(text, to);
+		const selection = document.getSelection()!;
+		selection.removeAllRanges();
+		selection.addRange(range);
+		document.dispatchEvent(new Event('selectionchange'));
+	}
+
+	const addButton = () => document.querySelector<HTMLButtonElement>('[data-test-highlight-add]');
+	const cards = () => [...document.querySelectorAll('[data-test-highlight]')];
+
+	beforeEach(() => {
+		setLocale('en');
+		api.article.getArticle.mockResolvedValue(articleDetail('article-1', { content: BODY }));
+		for (const item of [...toasts.toasts]) toasts.dismiss(item.id);
+	});
+
+	it('lists the highlights stored for the article', async () => {
+		api.highlight.listArticleHighlights.mockResolvedValue([
+			highlight('h1', { quote: 'papier', start_offset: 7, end_offset: 13 })
+		]);
+
+		await loaded();
+
+		await waitFor(() => expect(cards()).toHaveLength(1));
+		expect(api.highlight.listArticleHighlights).toHaveBeenCalledWith('article-1');
+	});
+
+	it('shows no highlights section for an article without any', async () => {
+		await loaded();
+
+		expect(document.querySelector('[data-test-highlights]')).toBeNull();
+	});
+
+	it('offers to highlight a selection, and nothing when the selection goes away', async () => {
+		await loaded();
+		expect(addButton()).toBeNull();
+
+		await select(7, 13);
+		await waitFor(() => expect(addButton()).not.toBeNull());
+
+		document.getSelection()!.removeAllRanges();
+		document.dispatchEvent(new Event('selectionchange'));
+		await waitFor(() => expect(addButton()).toBeNull());
+	});
+
+	it('saves the selected passage and lists it', async () => {
+		api.highlight.createHighlight.mockImplementation(async (_id, draft) =>
+			highlight('new', { ...draft, note: null })
+		);
+		await loaded();
+		await select(7, 13);
+		await waitFor(() => expect(addButton()).not.toBeNull());
+
+		await fireEvent.click(addButton()!);
+
+		await waitFor(() => expect(cards()).toHaveLength(1));
+		expect(api.highlight.createHighlight).toHaveBeenCalledWith(
+			'article-1',
+			expect.objectContaining({ quote: 'papier', start_offset: 7, end_offset: 13 })
+		);
+		expect(addButton()).toBeNull();
+	});
+
+	it('says so when the highlight cannot be saved, and keeps the selection', async () => {
+		api.highlight.createHighlight.mockRejectedValue(new Error('offline'));
+		await loaded();
+		await select(7, 13);
+		await waitFor(() => expect(addButton()).not.toBeNull());
+
+		await fireEvent.click(addButton()!);
+
+		await waitFor(() => expect(toasts.toasts.some((item) => item.message.includes('highlight'))).toBe(true));
+		expect(cards()).toHaveLength(0);
+	});
+
+	it('deletes a highlight from the list', async () => {
+		api.highlight.listArticleHighlights.mockResolvedValue([
+			highlight('h1', { quote: 'papier', start_offset: 7, end_offset: 13 })
+		]);
+		api.highlight.deleteHighlight.mockResolvedValue(undefined);
+		await loaded();
+		await waitFor(() => expect(cards()).toHaveLength(1));
+
+		await fireEvent.click(document.querySelector<HTMLButtonElement>('[data-test-highlight-delete]')!);
+
+		await waitFor(() => expect(cards()).toHaveLength(0));
+		expect(api.highlight.deleteHighlight).toHaveBeenCalledWith('h1');
+	});
+
+	it('says so when a highlight cannot be deleted, and keeps it', async () => {
+		api.highlight.listArticleHighlights.mockResolvedValue([highlight('h1')]);
+		api.highlight.deleteHighlight.mockRejectedValue(new Error('offline'));
+		await loaded();
+		await waitFor(() => expect(cards()).toHaveLength(1));
+
+		await fireEvent.click(document.querySelector<HTMLButtonElement>('[data-test-highlight-delete]')!);
+
+		await waitFor(() => expect(api.highlight.deleteHighlight).toHaveBeenCalled());
+		expect(cards()).toHaveLength(1);
+	});
+
+	it('saves a note on a highlight', async () => {
+		api.highlight.listArticleHighlights.mockResolvedValue([highlight('h1')]);
+		api.highlight.updateHighlightNote.mockImplementation(async (id, note) => highlight(id, { note }));
+		await loaded();
+		await waitFor(() => expect(cards()).toHaveLength(1));
+		await fireEvent.click(document.querySelector<HTMLButtonElement>('[data-test-highlight-edit]')!);
+		await fireEvent.input(document.querySelector<HTMLTextAreaElement>('[data-test-highlight-note-field]')!, {
+			target: { value: 'A thought' }
+		});
+
+		await fireEvent.click(document.querySelector<HTMLButtonElement>('[data-test-highlight-note-save]')!);
+
+		await waitFor(() =>
+			expect(document.querySelector('[data-test-highlight-note]')?.textContent).toContain('A thought')
+		);
+		expect(api.highlight.updateHighlightNote).toHaveBeenCalledWith('h1', 'A thought');
+	});
+
+	it('says so when a note cannot be saved', async () => {
+		api.highlight.listArticleHighlights.mockResolvedValue([highlight('h1')]);
+		api.highlight.updateHighlightNote.mockRejectedValue(new Error('offline'));
+		await loaded();
+		await waitFor(() => expect(cards()).toHaveLength(1));
+		await fireEvent.click(document.querySelector<HTMLButtonElement>('[data-test-highlight-edit]')!);
+
+		await fireEvent.click(document.querySelector<HTMLButtonElement>('[data-test-highlight-note-save]')!);
+
+		await waitFor(() => expect(toasts.toasts.some((item) => item.message.includes('note'))).toBe(true));
+	});
+
+	it('still shows the article when the highlights cannot be fetched', async () => {
+		api.highlight.listArticleHighlights.mockRejectedValue(new Error('offline'));
+
+		const view = await loaded();
+
+		expect(view.content()?.textContent).toContain('Sur le papier');
+		expect(view.error()).toBeNull();
 	});
 });

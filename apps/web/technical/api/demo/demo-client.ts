@@ -16,6 +16,8 @@ import type {
 	FilterMode,
 	FilterRule,
 	Folder,
+	Highlight,
+	HighlightDraft,
 	InstanceSettings,
 	InstanceSettingsUpdate,
 	ListArticlesParams,
@@ -79,6 +81,7 @@ interface DemoState {
 	articleIds: string[];
 	feedback: Record<string, Feedback>;
 	playlists: { id: string; name: string; article_ids: string[] }[];
+	highlights: Highlight[];
 	filterRules: FilterRule[];
 	scores: Scores;
 	me: Me;
@@ -154,6 +157,7 @@ function initialState(): DemoState {
 		articleIds: SEED_ARTICLES.map((article) => article.id),
 		feedback,
 		playlists: SEED_PLAYLISTS.map((playlist) => ({ ...playlist, article_ids: [...playlist.article_ids] })),
+		highlights: [],
 		filterRules: [],
 		scores,
 		me: {
@@ -931,6 +935,46 @@ export function createDemoClient(): LumiaClient {
 			},
 			deleteFilterRule: async (ruleId: string) => {
 				state.filterRules = state.filterRules.filter((rule) => rule.id !== ruleId);
+				persist();
+				return settle(undefined);
+			}
+		},
+		highlight: {
+			listHighlights: async () => settle([...state.highlights].reverse()),
+			listArticleHighlights: async (articleId: string) =>
+				settle(
+					state.highlights
+						.filter((item) => item.article_id === articleId)
+						.sort((left, right) => left.start_offset - right.start_offset)
+				),
+			createHighlight: async (articleId: string, draft: HighlightDraft) => {
+				const article = state.articleIds.includes(articleId) ? seedArticle(articleId) : undefined;
+				if (!article) throw new Error('article introuvable');
+				const highlight: Highlight = {
+					id: nextId('highlight'),
+					article_id: articleId,
+					article_title: article.title,
+					quote: draft.quote,
+					prefix: draft.prefix,
+					suffix: draft.suffix,
+					start_offset: draft.start_offset,
+					end_offset: draft.end_offset,
+					note: draft.note ?? null,
+					created_at: Temporal.Now.instant().toString()
+				};
+				state.highlights = [...state.highlights, highlight];
+				persist();
+				return settle({ ...highlight });
+			},
+			updateHighlightNote: async (highlightId: string, note: string | null) => {
+				const highlight = state.highlights.find((item) => item.id === highlightId);
+				if (!highlight) throw new Error('surlignage introuvable');
+				highlight.note = note;
+				persist();
+				return settle({ ...highlight });
+			},
+			deleteHighlight: async (highlightId: string) => {
+				state.highlights = state.highlights.filter((item) => item.id !== highlightId);
 				persist();
 				return settle(undefined);
 			}

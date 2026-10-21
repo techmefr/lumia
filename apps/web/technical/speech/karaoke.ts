@@ -9,7 +9,7 @@
 
 const HIGHLIGHT_NAME = 'lumia-tts';
 
-interface FlatText {
+export interface FlatText {
 	/** The concatenated text with runs of whitespace collapsed to one space. */
 	text: string;
 	/** For each character of `text`, the node it came from and its offset inside that node. */
@@ -77,7 +77,7 @@ function collapse(value: string): string {
 	return value.replace(/\s+/g, ' ').trim();
 }
 
-function flatten(root: HTMLElement): FlatText {
+export function flatten(root: HTMLElement): FlatText {
 	const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 	let text = '';
 	const nodes: Text[] = [];

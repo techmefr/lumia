@@ -613,6 +613,74 @@ describe('the profile', () => {
 	});
 });
 
+describe('the highlights', () => {
+	const articleId = SEED_ARTICLES[0].id;
+	const draft = { quote: 'un passage', prefix: 'avant ', suffix: ' après', start_offset: 6, end_offset: 16 };
+
+	it('starts with none', async () => {
+		await expect(demo.highlight.listHighlights()).resolves.toEqual([]);
+	});
+
+	it('keeps a highlight with the article it belongs to', async () => {
+		const created = await demo.highlight.createHighlight(articleId, { ...draft, note: 'Une note' });
+
+		expect(created).toMatchObject({ article_id: articleId, quote: 'un passage', note: 'Une note' });
+		expect(created.article_title).toBe(SEED_ARTICLES[0].title);
+		await expect(demo.highlight.listArticleHighlights(articleId)).resolves.toEqual([created]);
+	});
+
+	it('refuses to highlight an article it does not have', async () => {
+		await expect(demo.highlight.createHighlight('unknown', draft)).rejects.toThrow();
+	});
+
+	it('lists the highlights of an article in reading order and all of them newest first', async () => {
+		const later = await demo.highlight.createHighlight(articleId, { ...draft, start_offset: 50, end_offset: 60 });
+		const sooner = await demo.highlight.createHighlight(articleId, draft);
+
+		const inArticle = await demo.highlight.listArticleHighlights(articleId);
+		const everywhere = await demo.highlight.listHighlights();
+
+		expect(inArticle.map((item) => item.id)).toEqual([sooner.id, later.id]);
+		expect(everywhere.map((item) => item.id)).toEqual([sooner.id, later.id]);
+	});
+
+	it('edits and clears a note', async () => {
+		const created = await demo.highlight.createHighlight(articleId, draft);
+
+		const edited = await demo.highlight.updateHighlightNote(created.id, 'Nouvelle note');
+		const cleared = await demo.highlight.updateHighlightNote(created.id, null);
+
+		expect(edited.note).toBe('Nouvelle note');
+		expect(cleared.note).toBeNull();
+	});
+
+	it('refuses to edit a highlight that does not exist', async () => {
+		await expect(demo.highlight.updateHighlightNote('unknown', 'x')).rejects.toThrow();
+	});
+
+	it('deletes a highlight', async () => {
+		const created = await demo.highlight.createHighlight(articleId, draft);
+
+		await demo.highlight.deleteHighlight(created.id);
+
+		await expect(demo.highlight.listHighlights()).resolves.toEqual([]);
+	});
+
+	it('survives a reload', async () => {
+		const created = await demo.highlight.createHighlight(articleId, draft);
+
+		const reloaded = createDemoClient();
+
+		await expect(reloaded.highlight.listHighlights()).resolves.toEqual([created]);
+	});
+
+	it('opens a state saved before highlights existed with none', async () => {
+		localStorage.setItem('lumia:demo-state', JSON.stringify({ nextId: 4 }));
+
+		await expect(createDemoClient().highlight.listHighlights()).resolves.toEqual([]);
+	});
+});
+
 describe('the session state', () => {
 	it('survives a reload, so the demo remembers what was tried', async () => {
 		const [article] = await demo.article.listArticles({ limit: 1 });
