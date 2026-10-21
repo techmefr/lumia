@@ -821,3 +821,114 @@ describe('the newsletter inbox', () => {
 		});
 	});
 });
+
+describe('the saved searches', () => {
+	const WORD = SEED_ARTICLES[0].title.split(' ')[0].toLowerCase();
+
+	async function matchingCount(query: string): Promise<number> {
+		return (await demo.article.listArticles({ query, limit: 100 })).length;
+	}
+
+	async function unreadMatches(query: string, feedId?: string) {
+		return demo.article.listArticles({ query, feedId, unreadOnly: true, limit: 100 });
+	}
+
+	it('starts with none', async () => {
+		await expect(demo.savedSearch.listSavedSearches()).resolves.toEqual([]);
+	});
+
+	it('counts the unread articles a search matches', async () => {
+		const created = await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD });
+		expect(created.unread_count).toBe((await unreadMatches(WORD)).length);
+		expect(created.unread_count).toBeGreaterThan(0);
+	});
+
+	it('lowers the count once a match is read', async () => {
+		const created = await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD });
+		const [first] = await unreadMatches(WORD);
+		await demo.recommendation.sendFeedback(first.id, { read: true });
+		const [listed] = await demo.savedSearch.listSavedSearches();
+		expect(listed.unread_count).toBe(created.unread_count - 1);
+	});
+
+	it('narrows the count to a feed', async () => {
+		const feedId = SEED_ARTICLES[0].feed_id;
+		const created = await demo.savedSearch.createSavedSearch({
+			name: 'Un flux',
+			query: WORD,
+			feed_id: feedId
+		});
+		const inFeed = await unreadMatches(WORD, feedId);
+		expect(created.feed_id).toBe(feedId);
+		expect(created.unread_count).toBe(inFeed.length);
+	});
+
+	it('refuses a name already used', async () => {
+		await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD });
+		await expect(
+			demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD })
+		).rejects.toMatchObject({ status: 409 });
+	});
+
+	it('lists them by name', async () => {
+		await demo.savedSearch.createSavedSearch({ name: 'B', query: WORD });
+		await demo.savedSearch.createSavedSearch({ name: 'A', query: WORD });
+		const names = (await demo.savedSearch.listSavedSearches()).map((search) => search.name);
+		expect(names).toEqual(['A', 'B']);
+	});
+
+	it('notifies about the existing matches when created as an alert', async () => {
+		await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD, alert: true });
+		const { items, unread_count } = await demo.savedSearch.listNotifications();
+		expect(items).toHaveLength(await matchingCount(WORD));
+		expect(unread_count).toBe(items.length);
+		expect(items[0].saved_search_name).toBe('Mot');
+	});
+
+	it('stays quiet for a search that is not an alert', async () => {
+		await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD });
+		const { items } = await demo.savedSearch.listNotifications();
+		expect(items).toEqual([]);
+	});
+
+	it('promotes a search to an alert without notifying twice on a second promotion', async () => {
+		const created = await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD });
+		const promoted = await demo.savedSearch.updateSavedSearch(created.id, { alert: true });
+		await demo.savedSearch.updateSavedSearch(created.id, { name: 'Renamed' });
+		expect(promoted.alert).toBe(true);
+		const { items } = await demo.savedSearch.listNotifications();
+		expect(items).toHaveLength(await matchingCount(WORD));
+	});
+
+	it('refuses to update a search that does not exist', async () => {
+		await expect(
+			demo.savedSearch.updateSavedSearch('nope', { alert: true })
+		).rejects.toMatchObject({ status: 404 });
+	});
+
+	it('pages the notifications', async () => {
+		await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD, alert: true });
+		const page = await demo.savedSearch.listNotifications(1, 1);
+		expect(page.items).toHaveLength(1);
+	});
+
+	it('marks given notifications, then all of them, read', async () => {
+		await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD, alert: true });
+		const { items } = await demo.savedSearch.listNotifications();
+		await demo.savedSearch.markNotificationsRead([items[0].id]);
+		expect((await demo.savedSearch.listNotifications()).unread_count).toBe(items.length - 1);
+		await demo.savedSearch.markNotificationsRead();
+		expect((await demo.savedSearch.listNotifications()).unread_count).toBe(0);
+	});
+
+	it('takes the notifications of a deleted search with it', async () => {
+		const created = await demo.savedSearch.createSavedSearch({
+			name: 'Mot',
+			query: WORD,
+			alert: true
+		});
+		await demo.savedSearch.deleteSavedSearch(created.id);
+		await expect(demo.savedSearch.listSavedSearches()).resolves.toEqual([]);
+		await expect(demo.savedSearch.listNotifications()).resolves.toMatchObject({ items: [] });
+	});
+});

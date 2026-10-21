@@ -18,6 +18,7 @@ from api.domain.recommendation.models import (
     UserFilterRule,
     UserKeywordScore,
 )
+from api.domain.saved_search.models import AlertNotification, SavedSearch
 from api.domain.user.models import Role, User
 from api.main import app
 from api.technical.auth.hashing import hash_password
@@ -78,8 +79,14 @@ async def _fill_the_account(email: str = ADMIN_PAYLOAD["email"]) -> UUID:
         session.add_all([article, keyword])
         await session.flush()
         playlist = Playlist(user_id=user.id, name="Ce soir")
-        session.add(playlist)
+        search = SavedSearch(
+            user_id=user.id, name="Rust", query="rust", feed_id=feed.id, alert=True
+        )
+        session.add_all([playlist, search])
         await session.flush()
+        session.add(
+            AlertNotification(user_id=user.id, saved_search_id=search.id, article_id=article.id)
+        )
         session.add_all(
             [
                 ArticleKeyword(article_id=article.id, keyword_id=keyword.id, weight=1.0),
@@ -150,6 +157,9 @@ async def test_the_export_returns_what_the_reader_put_in(client: httpx.AsyncClie
     assert [feed["title"] for feed in body["feeds"]] == ["A blog"]
     assert body["feeds"][0]["folder"] == "Tech"
     assert [rule["term"] for rule in body["filter_rules"]] == ["crypto"]
+    assert body["saved_searches"] == [
+        {"name": "Rust", "query": "rust", "alert": True, "feed": "A blog", "folder": None}
+    ]
     assert [playlist["name"] for playlist in body["playlists"]] == ["Ce soir"]
     assert [article["title"] for article in body["playlists"][0]["articles"]] == ["An article"]
     assert [(item["quote"], item["note"]) for item in body["highlights"]] == [
@@ -218,6 +228,8 @@ async def test_deleting_an_account_takes_everything_that_hung_off_it(
     assert await _count(ArticleKeyword) == 1
     assert await _count(UserArticleFeedback) == 1
     assert await _count(UserFilterRule) == 1
+    assert await _count(SavedSearch) == 1
+    assert await _count(AlertNotification) == 1
     assert await _count(UserKeywordScore) == 1
     assert await _count(ArticleAudio) == 1
     assert await _count(User) == 1

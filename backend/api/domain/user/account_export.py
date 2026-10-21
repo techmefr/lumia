@@ -7,6 +7,7 @@ from api.domain.feed.models import Feed, Folder
 from api.domain.highlight.models import Highlight
 from api.domain.playlist.models import Playlist
 from api.domain.recommendation.models import UserArticleFeedback, UserFilterRule
+from api.domain.saved_search.models import SavedSearch
 from api.domain.user.models import User
 from api.domain.user.schemas import (
     AccountExportResponse,
@@ -16,6 +17,7 @@ from api.domain.user.schemas import (
     ExportedFilterRule,
     ExportedHighlight,
     ExportedPlaylist,
+    ExportedSavedSearch,
     ExportedShare,
 )
 
@@ -35,6 +37,12 @@ async def export_account(session: AsyncSession, user: User) -> AccountExportResp
     rules = list(
         await session.scalars(select(UserFilterRule).where(UserFilterRule.user_id == user.id))
     )
+    searches = list(
+        await session.scalars(
+            select(SavedSearch).where(SavedSearch.user_id == user.id).order_by(SavedSearch.name)
+        )
+    )
+    feed_titles = {feed.id: feed.title for feed in feeds}
     playlists = list(await session.scalars(select(Playlist).where(Playlist.user_id == user.id)))
     shares = list(
         await session.scalars(select(ArticleShare).where(ArticleShare.user_id == user.id))
@@ -67,6 +75,16 @@ async def export_account(session: AsyncSession, user: User) -> AccountExportResp
             for feed in feeds
         ],
         filter_rules=[ExportedFilterRule(term=rule.term, mode=rule.mode) for rule in rules],
+        saved_searches=[
+            ExportedSavedSearch(
+                name=search.name,
+                query=search.query,
+                alert=search.alert,
+                feed=feed_titles.get(search.feed_id) if search.feed_id else None,
+                folder=folders.get(search.folder_id) if search.folder_id else None,
+            )
+            for search in searches
+        ],
         playlists=[
             ExportedPlaylist(
                 name=playlist.name,

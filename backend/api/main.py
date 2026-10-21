@@ -17,6 +17,7 @@ from api.domain.instance.routes import router as instance_router
 from api.domain.newsletter.routes import router as newsletter_router
 from api.domain.playlist.routes import router as playlist_router
 from api.domain.recommendation.routes import router as recommendation_router
+from api.domain.saved_search.routes import router as saved_search_router
 from api.domain.user.routes import router as user_router
 from api.technical.db import get_db_session
 from api.technical.health.routes import router as health_router
@@ -69,4 +70,5 @@ app.include_router(recommendation_router)
 app.include_router(article_router)
 app.include_router(article_share_router)
 app.include_router(newsletter_router)
+app.include_router(saved_search_router)
 app.include_router(webhook_router)
