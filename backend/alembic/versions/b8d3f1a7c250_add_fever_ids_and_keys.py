@@ -1,7 +1,7 @@
 """add fever ids and keys
 
 Revision ID: b8d3f1a7c250
-Revises: a3e9b7d21c64
+Revises: a9d41e7b3c60, b8c3e1f47a26
 Create Date: 2026-10-21 14:00:00.000000
 
 """
@@ -14,7 +14,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "b8d3f1a7c250"
-down_revision: str | Sequence[str] | None = "a3e9b7d21c64"
+down_revision: str | Sequence[str] | None = ("a9d41e7b3c60", "b8c3e1f47a26")
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
