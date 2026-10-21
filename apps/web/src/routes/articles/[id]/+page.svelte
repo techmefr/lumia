@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { onMount, tick } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import {
 		sanitizeArticleHtml,
@@ -21,6 +21,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import Clock from '@lucide/svelte/icons/clock';
 	import Printer from '@lucide/svelte/icons/printer';
+	import Highlighter from '@lucide/svelte/icons/highlighter';
 	import Gauge from '@lucide/svelte/icons/gauge';
 	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import Square from '@lucide/svelte/icons/square';
@@ -38,12 +39,16 @@
 	import TranslateButton from '$domain/article/translate-button.svelte';
 	import RelatedArticles from '$domain/article/related-articles.svelte';
 	import OrbitButton, { type OrbitAction } from '$domain/article/orbit-button.svelte';
+	import { ArticleHighlights } from '$domain/highlight/article-highlights.svelte';
+	import HighlightCard from '$domain/highlight/highlight-card.svelte';
 
 	/** Below this, "reading" is really just landing on the page; don't record it as progress. */
 	const MIN_TRACKED_PROGRESS = 0.02;
 	/** Past this, the article counts as read without the user having to say so. */
 	const AUTO_READ_PROGRESS = 0.9;
 	const SAVE_THROTTLE_MS = 1500;
+	/** Lets a selection settle: the event fires for every handle drag on a touch screen. */
+	const SELECTION_SETTLE_MS = 250;
 
 	let article = $state<ArticleDetail | null>(null);
 	let loading = $state(true);
@@ -64,6 +69,8 @@
 	const videoEmbedUrl = $derived(article ? youtubeEmbedUrl(article.url) : null);
 
 	const speech = new SpeechReader();
+	const highlights = new ArticleHighlights(lumia.highlight);
+	let selectionTimer: ReturnType<typeof setTimeout> | null = null;
 
 	let lastSaved = 0;
 	let saveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -187,6 +194,54 @@
 		highlightChunk(contentEl, chunk);
 	});
 
+	// A translated body is other text, so the stored passages cannot be located in it: the
+	// highlights step aside until the original is back.
+	$effect(() => {
+		const root = article && !translation ? contentEl : null;
+		untrack(() => highlights.attach(root));
+	});
+
+	function onSelectionChange() {
+		if (selectionTimer) clearTimeout(selectionTimer);
+		const selection = document.getSelection();
+		if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+			highlights.capture(null);
+			return;
+		}
+		const range = selection.getRangeAt(0);
+		selectionTimer = setTimeout(() => highlights.capture(range), SELECTION_SETTLE_MS);
+	}
+
+	async function addHighlight() {
+		if (!article) return;
+		try {
+			await highlights.commit(article.id);
+			document.getSelection()?.removeAllRanges();
+			toast(t('highlights.added'));
+		} catch {
+			toast(t('highlights.addFailed'));
+		}
+	}
+
+	async function saveHighlightNote(highlightId: string, note: string | null): Promise<boolean> {
+		try {
+			await highlights.saveNote(highlightId, note);
+			return true;
+		} catch {
+			toast(t('highlights.noteFailed'));
+			return false;
+		}
+	}
+
+	async function removeHighlight(highlightId: string) {
+		try {
+			await highlights.remove(highlightId);
+			toast(t('highlights.removed'));
+		} catch {
+			toast(t('highlights.removeFailed'));
+		}
+	}
+
 	/** Fraction of the document scrolled past, clamped to [0, 1]. */
 	function computeProgress(): number {
 		const scrollable = document.documentElement.scrollHeight - window.innerHeight;
@@ -245,6 +300,7 @@
 		}
 
 		window.addEventListener('scroll', onScroll, { passive: true });
+		document.addEventListener('selectionchange', onSelectionChange);
 
 		void lumia.user
 			.getMe()
@@ -260,6 +316,7 @@
 				saved = false;
 				favorite = false;
 				markedRead = loaded.read;
+				void highlights.load(loaded.id).catch(() => {});
 				await restoreScroll(loaded.scroll_progress);
 			})
 			.catch(() => (error = 'article.notFound'))
@@ -267,6 +324,9 @@
 
 		return () => {
 			window.removeEventListener('scroll', onScroll);
+			document.removeEventListener('selectionchange', onSelectionChange);
+			if (selectionTimer) clearTimeout(selectionTimer);
+			highlights.dispose();
 			if (saveTimer) clearTimeout(saveTimer);
 			speech.stop();
 			clearKaraoke();
@@ -474,6 +534,50 @@
 		</Card>
 
 		<RelatedArticles articleId={article.id} />
+
+		{#if highlights.items.length > 0}
+			<section data-test-highlights aria-labelledby="article-highlights-title" class="flex flex-col gap-3">
+				<h2 id="article-highlights-title" class="text-lg font-semibold">
+					{t('highlights.sectionTitle', { count: highlights.items.length })}
+				</h2>
+				{#if translation}
+					<p class="text-xs text-muted-foreground" data-test-highlights-hidden-notice>
+						{t('highlights.translatedNotice')}
+					</p>
+				{/if}
+				<ul class="flex flex-col gap-3">
+					{#each highlights.items as highlight (highlight.id)}
+						<HighlightCard
+							{highlight}
+							orphaned={highlights.isOrphan(highlight.id)}
+							onsavenote={(note) => saveHighlightNote(highlight.id, note)}
+							ondelete={() => removeHighlight(highlight.id)}
+							onreveal={highlights.canReveal(highlight.id)
+								? () => highlights.reveal(highlight.id)
+								: undefined}
+						/>
+					{/each}
+				</ul>
+			</section>
+		{/if}
+
+		{#if highlights.pending}
+			<div
+				class="fixed inset-x-0 z-50 flex justify-center"
+				style="bottom: calc(var(--bottom-nav-h, 0px) + 5rem)"
+			>
+				<!-- Keeps the selection alive: a plain press on a button would collapse it first. -->
+				<Button
+					data-test-highlight-add
+					onmousedown={(event: MouseEvent) => event.preventDefault()}
+					onclick={addHighlight}
+					class="gap-1.5 shadow-lg"
+				>
+					<Highlighter class="size-4" />
+					{t('highlights.add')}
+				</Button>
+			</div>
+		{/if}
 
 		<div
 			class="fixed inset-x-0 z-40 flex justify-center border-t bg-background/90 p-3 backdrop-blur print:hidden"

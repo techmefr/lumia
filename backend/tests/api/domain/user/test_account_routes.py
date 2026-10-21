@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from api.domain.article.models import Article, ArticleKeyword, Keyword, Lang
 from api.domain.audio.models import ArticleAudio
 from api.domain.feed.models import Feed, Folder, SourceType
+from api.domain.highlight.models import Highlight
 from api.domain.playlist.models import Playlist, PlaylistItem
 from api.domain.recommendation.models import (
     FilterMode,
@@ -86,6 +87,14 @@ async def _fill_the_account(email: str = ADMIN_PAYLOAD["email"]) -> UUID:
                 UserArticleFeedback(
                     user_id=user.id, article_id=article.id, saved=True, favorite=True
                 ),
+                Highlight(
+                    user_id=user.id,
+                    article_id=article.id,
+                    quote="Body",
+                    start_offset=0,
+                    end_offset=4,
+                    note="Worth keeping",
+                ),
                 UserFilterRule(user_id=user.id, term="crypto", mode=FilterMode.MUTE),
                 UserKeywordScore(user_id=user.id, keyword_id=keyword.id, score=0.5),
                 ArticleAudio(
@@ -143,6 +152,10 @@ async def test_the_export_returns_what_the_reader_put_in(client: httpx.AsyncClie
     assert [rule["term"] for rule in body["filter_rules"]] == ["crypto"]
     assert [playlist["name"] for playlist in body["playlists"]] == ["Ce soir"]
     assert [article["title"] for article in body["playlists"][0]["articles"]] == ["An article"]
+    assert [(item["quote"], item["note"]) for item in body["highlights"]] == [
+        ("Body", "Worth keeping")
+    ]
+    assert body["highlights"][0]["article_title"] == "An article"
     assert [article["title"] for article in body["saved"]] == ["An article"]
     assert [article["title"] for article in body["favorites"]] == ["An article"]
 
@@ -168,6 +181,7 @@ async def test_the_export_holds_only_the_calling_reader_s_data(
     response = await client.get("/me/export", headers=await _login(client, member_email))
 
     assert response.json()["feeds"] == []
+    assert response.json()["highlights"] == []
     assert (await client.get("/me/export", headers=headers)).json()["feeds"] != []
 
 
@@ -200,6 +214,7 @@ async def test_deleting_an_account_takes_everything_that_hung_off_it(
     assert await _count(Article) == 1
     assert await _count(Playlist) == 1
     assert await _count(PlaylistItem) == 1
+    assert await _count(Highlight) == 1
     assert await _count(ArticleKeyword) == 1
     assert await _count(UserArticleFeedback) == 1
     assert await _count(UserFilterRule) == 1

@@ -196,11 +196,20 @@ class ExportedPlaylist(BaseModel):
     articles: list[ExportedArticle]
 
 
+class ExportedHighlight(BaseModel):
+    article_title: str
+    article_url: str
+    quote: str
+    note: str | None
+    created_at: datetime
+
+
 class AccountExportResponse(BaseModel):
     account: ExportedAccount
     feeds: list[ExportedFeed]
     filter_rules: list[ExportedFilterRule]
     playlists: list[ExportedPlaylist]
+    highlights: list[ExportedHighlight]
     saved: list[ExportedArticle]
     favorites: list[ExportedArticle]
     shares: list[ExportedShare]

@@ -74,6 +74,7 @@
 		{ label: t('nav.favorites'), href: `${base}/favoris` },
 		{ label: t('stats.nav'), href: `${base}/statistiques` },
 		{ label: t('nav.playlists'), href: `${base}/playlists` },
+		{ label: t('nav.highlights'), href: `${base}/surlignages` },
 		{ label: t('nav.logout'), run: logout }
 	]);
 

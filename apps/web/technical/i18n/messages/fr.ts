@@ -747,7 +747,27 @@ export const fr = {
 	'stats.popularTitle': 'Populaires sur cette instance',
 	'stats.popularIntro': 'Articles ouverts par au moins {min} lecteurs de l\'instance. Seuls des compteurs sont affichés, jamais qui a lu quoi.',
 	'stats.popularEmpty': 'Aucun article n\'atteint encore ce seuil.',
-	'stats.readers': '{count} lecteurs'
+	'stats.readers': '{count} lecteurs',
+	'nav.highlights': 'Surlignages',
+	'highlights.title': 'Surlignages',
+	'highlights.intro': 'Les passages que vous avez surlignés dans vos articles, avec vos notes.',
+	'highlights.loadFailed': 'Impossible de charger vos surlignages.',
+	'highlights.empty': 'Rien pour l\'instant — sélectionnez un passage dans un article pour le surligner.',
+	'highlights.add': 'Surligner la sélection',
+	'highlights.added': 'Passage surligné',
+	'highlights.addFailed': 'Impossible d\'enregistrer le surlignage.',
+	'highlights.removed': 'Surlignage supprimé',
+	'highlights.removeFailed': 'Impossible de supprimer le surlignage.',
+	'highlights.noteFailed': 'Impossible d\'enregistrer la note.',
+	'highlights.sectionTitle': 'Surlignages ({count})',
+	'highlights.addNote': 'Ajouter une note',
+	'highlights.editNote': 'Modifier la note',
+	'highlights.noteLabel': 'Note',
+	'highlights.delete': 'Supprimer le surlignage',
+	'highlights.show': 'Afficher dans le texte',
+	'highlights.orphan': 'Ce passage n\'est plus dans le texte de l\'article. Votre note est conservée.',
+	'highlights.translatedNotice': 'Les surlignages sont masqués dans le texte traduit.',
+	'highlights.openArticle': 'Ouvrir l\'article'
 } as const;
 
 export type MessageKey = keyof typeof fr;

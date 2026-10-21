@@ -21,6 +21,7 @@ if config.config_file_name is not None:
 from api.domain.article import models as article_models  # noqa: F401
 from api.domain.audio import models as audio_models  # noqa: F401
 from api.domain.feed import models as feed_models  # noqa: F401
+from api.domain.highlight import models as highlight_models  # noqa: F401
 from api.domain.instance import models as instance_models  # noqa: F401
 from api.domain.playlist import models as playlist_models  # noqa: F401
 from api.domain.recommendation import models as recommendation_models  # noqa: F401

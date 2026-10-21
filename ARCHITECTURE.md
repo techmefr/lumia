@@ -124,6 +124,7 @@ so seats already promised cannot be promised twice.
 | `user` | Account, preferences, personal AI config |
 | `recommendation` | Scoring, L'Étincelle, learning algorithm |
 | `audio` | TTS queue, available-time scheduling |
+| `highlight` | Passages a reader marks in an article, with notes; anchored on text, not on the DOM |
 
 ## Pipeline
 

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.domain.article.models import Article, ArticleKeyword, ArticleShare
 from api.domain.audio.models import ArticleAudio
 from api.domain.feed.models import Feed, Folder
+from api.domain.highlight.models import Highlight
 from api.domain.playlist.models import Playlist, PlaylistItem
 from api.domain.recommendation.models import (
     UserArticleFeedback,
@@ -40,6 +41,11 @@ async def delete_account(session: AsyncSession, user_id: UUID) -> None:
     await session.execute(
         delete(PlaylistItem).where(
             PlaylistItem.playlist_id.in_(playlist_ids) | PlaylistItem.article_id.in_(article_ids)
+        )
+    )
+    await session.execute(
+        delete(Highlight).where(
+            (Highlight.user_id == user_id) | Highlight.article_id.in_(article_ids)
         )
     )
     await session.execute(

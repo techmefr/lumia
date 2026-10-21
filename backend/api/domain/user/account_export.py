@@ -4,6 +4,7 @@ from sqlalchemy.orm import InstrumentedAttribute
 
 from api.domain.article.models import Article, ArticleShare
 from api.domain.feed.models import Feed, Folder
+from api.domain.highlight.models import Highlight
 from api.domain.playlist.models import Playlist
 from api.domain.recommendation.models import UserArticleFeedback, UserFilterRule
 from api.domain.user.models import User
@@ -13,6 +14,7 @@ from api.domain.user.schemas import (
     ExportedArticle,
     ExportedFeed,
     ExportedFilterRule,
+    ExportedHighlight,
     ExportedPlaylist,
     ExportedShare,
 )
@@ -36,6 +38,13 @@ async def export_account(session: AsyncSession, user: User) -> AccountExportResp
     playlists = list(await session.scalars(select(Playlist).where(Playlist.user_id == user.id)))
     shares = list(
         await session.scalars(select(ArticleShare).where(ArticleShare.user_id == user.id))
+    )
+    highlights = list(
+        await session.scalars(
+            select(Highlight)
+            .where(Highlight.user_id == user.id)
+            .order_by(Highlight.created_at, Highlight.id)
+        )
     )
 
     return AccountExportResponse(
@@ -64,6 +73,16 @@ async def export_account(session: AsyncSession, user: User) -> AccountExportResp
                 articles=[_exported_article(item.article) for item in playlist.items],
             )
             for playlist in playlists
+        ],
+        highlights=[
+            ExportedHighlight(
+                article_title=highlight.article.title,
+                article_url=highlight.article.url,
+                quote=highlight.quote,
+                note=highlight.note,
+                created_at=highlight.created_at,
+            )
+            for highlight in highlights
         ],
         saved=await _articles_where(session, user, UserArticleFeedback.saved),
         favorites=await _articles_where(session, user, UserArticleFeedback.favorite),
