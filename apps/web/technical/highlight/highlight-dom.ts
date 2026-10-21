@@ -10,6 +10,7 @@ import {
 	type Highlight,
 	type HighlightAnchor
 } from '@lumia/core';
+import { scrollBehavior } from '../layout/motion';
 import { flatten, supportsKaraoke, type FlatText } from '../speech/karaoke';
 
 const HIGHLIGHT_NAME = 'lumia-highlight';
@@ -71,7 +72,7 @@ export function clearHighlightPaint(): void {
 }
 
 export function revealRange(range: Range): void {
-	range.startContainer.parentElement?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+	range.startContainer.parentElement?.scrollIntoView?.({ block: 'center', behavior: scrollBehavior() });
 }
 
 function rangeOf(flat: FlatText, start: number, end: number): Range {

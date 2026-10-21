@@ -7,6 +7,8 @@ from api.domain.feed.models import Feed, Folder
 from api.domain.highlight.models import Highlight
 from api.domain.playlist.models import Playlist
 from api.domain.recommendation.models import UserArticleFeedback, UserFilterRule
+from api.domain.saved_search.models import SavedSearch
+from api.domain.tag.models import ArticleTag, Tag
 from api.domain.user.models import User
 from api.domain.user.schemas import (
     AccountExportResponse,
@@ -16,7 +18,9 @@ from api.domain.user.schemas import (
     ExportedFilterRule,
     ExportedHighlight,
     ExportedPlaylist,
+    ExportedSavedSearch,
     ExportedShare,
+    ExportedTag,
 )
 
 
@@ -35,6 +39,12 @@ async def export_account(session: AsyncSession, user: User) -> AccountExportResp
     rules = list(
         await session.scalars(select(UserFilterRule).where(UserFilterRule.user_id == user.id))
     )
+    searches = list(
+        await session.scalars(
+            select(SavedSearch).where(SavedSearch.user_id == user.id).order_by(SavedSearch.name)
+        )
+    )
+    feed_titles = {feed.id: feed.title for feed in feeds}
     playlists = list(await session.scalars(select(Playlist).where(Playlist.user_id == user.id)))
     shares = list(
         await session.scalars(select(ArticleShare).where(ArticleShare.user_id == user.id))
@@ -67,6 +77,16 @@ async def export_account(session: AsyncSession, user: User) -> AccountExportResp
             for feed in feeds
         ],
         filter_rules=[ExportedFilterRule(term=rule.term, mode=rule.mode) for rule in rules],
+        saved_searches=[
+            ExportedSavedSearch(
+                name=search.name,
+                query=search.query,
+                alert=search.alert,
+                feed=feed_titles.get(search.feed_id) if search.feed_id else None,
+                folder=folders.get(search.folder_id) if search.folder_id else None,
+            )
+            for search in searches
+        ],
         playlists=[
             ExportedPlaylist(
                 name=playlist.name,
@@ -84,6 +104,7 @@ async def export_account(session: AsyncSession, user: User) -> AccountExportResp
             )
             for highlight in highlights
         ],
+        tags=await _exported_tags(session, user),
         saved=await _articles_where(session, user, UserArticleFeedback.saved),
         favorites=await _articles_where(session, user, UserArticleFeedback.favorite),
         shares=[
@@ -116,3 +137,19 @@ def _exported_article(article: Article) -> ExportedArticle:
         published_at=article.published_at,
         source=article.feed.title,
     )
+
+
+async def _exported_tags(session: AsyncSession, user: User) -> list[ExportedTag]:
+    tags = list(await session.scalars(select(Tag).where(Tag.user_id == user.id).order_by(Tag.name)))
+    exported: list[ExportedTag] = []
+    for tag in tags:
+        articles = await session.scalars(
+            select(Article)
+            .join(ArticleTag, ArticleTag.article_id == Article.id)
+            .where(ArticleTag.tag_id == tag.id)
+            .order_by(Article.published_at.desc())
+        )
+        exported.append(
+            ExportedTag(name=tag.name, articles=[_exported_article(a) for a in articles])
+        )
+    return exported

@@ -125,6 +125,8 @@ async def test_playlist_summary_totals_the_reading_time(client: httpx.AsyncClien
     assert listed[0] == {
         "id": playlist_id,
         "name": "Trajet",
+        "role": "owner",
+        "owner_name": "admin",
         "item_count": 2,
         "total_reading_minutes": 4,
     }

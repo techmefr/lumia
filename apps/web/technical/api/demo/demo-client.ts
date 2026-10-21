@@ -2,6 +2,7 @@ import type {
 	AccessRequest,
 	AccessRequestStatus,
 	AccountUsage,
+	AlertNotification,
 	ArticleDetail,
 	ArticleShareCreated,
 	ArticleShareStatus,
@@ -28,10 +29,17 @@ import type {
 	NewsletterInboxCreated,
 	NewsletterInboxStatus,
 	PlaylistDetail,
+	PlaylistMember,
+	PlaylistMemberRole,
+	PlaylistMembers,
 	PublicArticle,
 	PlaylistSummary,
 	Popularity,
 	ReadingStatistics,
+	SavedSearch,
+	Tag,
+	TagRef,
+	TagSuggestion,
 	TokenStore,
 	UnreadCounts
 } from '@lumia/core';
@@ -77,14 +85,26 @@ interface Scores {
 	categories: Record<string, number>;
 }
 
+/** `members` is absent from state saved before sharing existed, so it reads as empty. */
+interface DemoPlaylist {
+	id: string;
+	name: string;
+	article_ids: string[];
+	members?: PlaylistMember[];
+}
+
 interface DemoState {
 	folders: Folder[];
 	feeds: Feed[];
 	articleIds: string[];
 	feedback: Record<string, Feedback>;
-	playlists: { id: string; name: string; article_ids: string[] }[];
+	playlists: DemoPlaylist[];
 	highlights: Highlight[];
+	tags: { id: string; name: string; article_ids: string[] }[];
 	filterRules: FilterRule[];
+	/** Stored without the unread count: that one is derived from the reading state on each read. */
+	savedSearches: Omit<SavedSearch, 'unread_count'>[];
+	notifications: AlertNotification[];
 	scores: Scores;
 	me: Me;
 	instance: InstanceSettings;
@@ -160,7 +180,10 @@ function initialState(): DemoState {
 		feedback,
 		playlists: SEED_PLAYLISTS.map((playlist) => ({ ...playlist, article_ids: [...playlist.article_ids] })),
 		highlights: [],
+		tags: [],
 		filterRules: [],
+		savedSearches: [],
+		notifications: [],
 		scores,
 		me: {
 			id: 'demo-user',
@@ -299,6 +322,37 @@ export function createDemoClient(): LumiaClient {
 		return Math.round(50 + 50 * Math.tanh(raw / TANH_SCALE));
 	}
 
+	function tagsOf(articleId: string): TagRef[] {
+		return state.tags
+			.filter((tag) => tag.article_ids.includes(articleId))
+			.map((tag) => ({ id: tag.id, name: tag.name }))
+			.sort((a, b) => a.name.localeCompare(b.name));
+	}
+
+	/** Same rule as the backend: « Cuisine » and « cuisine » are one tag for one reader. */
+	function findTag(name: string): DemoState['tags'][number] | undefined {
+		return state.tags.find((tag) => tag.name.toLowerCase() === name.toLowerCase());
+	}
+
+	function tagSummary(tag: DemoState['tags'][number]): Tag {
+		return { id: tag.id, name: tag.name, article_count: tag.article_ids.length };
+	}
+
+	function tagSuggestions(articleId: string): TagSuggestion[] {
+		const carried = new Set(tagsOf(articleId).map((tag) => tag.name.toLowerCase()));
+		const fromKeywords: TagSuggestion[] = (seedArticle(articleId)?.keywords ?? [])
+			.filter((term) => !carried.has(term.toLowerCase()))
+			.slice(0, 3)
+			.map((term) => ({ name: term, source: 'keyword' }));
+		const taken = new Set([...carried, ...fromKeywords.map((item) => item.name.toLowerCase())]);
+		const used: TagSuggestion[] = [...state.tags]
+			.sort((a, b) => b.article_ids.length - a.article_ids.length)
+			.filter((tag) => tag.article_ids.length > 0 && !taken.has(tag.name.toLowerCase()))
+			.slice(0, 5)
+			.map((tag) => ({ name: tag.name, source: 'used' }));
+		return [...fromKeywords, ...used];
+	}
+
 	function toSummary(id: string): ArticleSummary | null {
 		const article = seedArticle(id);
 		if (!article) return null;
@@ -316,8 +370,11 @@ export function createDemoClient(): LumiaClient {
 			url: `https://exemple.test/${article.id}`,
 			summary: article.summary,
 			image_url: null,
+			enclosure_url: null,
+			enclosure_type: null,
 			published_at: article.published_at,
 			reading_minutes: readingMinutes(article.paragraphs),
+			tags: tagsOf(id),
 			relevance_score: toRelevance(rawScore(article)),
 			read: state_.read,
 			scroll_progress: state_.scroll_progress
@@ -347,6 +404,9 @@ export function createDemoClient(): LumiaClient {
 		if (params.keywordId && !article.keywords.includes(params.keywordId.replace('keyword-', ''))) {
 			return false;
 		}
+		if (params.tagId && !state.tags.some((tag) => tag.id === params.tagId && tag.article_ids.includes(id))) {
+			return false;
+		}
 		if (params.unreadOnly && feedbackFor(id).read) return false;
 		if (params.query) {
 			const haystack = [article.title, article.summary, ...article.paragraphs]
@@ -357,6 +417,41 @@ export function createDemoClient(): LumiaClient {
 		return true;
 	}
 
+	function searchMatches(search: DemoState['savedSearches'][number], id: string): boolean {
+		return matches(id, {
+			query: search.query,
+			feedId: search.feed_id ?? undefined,
+			folderId: search.folder_id ?? undefined
+		});
+	}
+
+	function withUnreadCount(search: DemoState['savedSearches'][number]): SavedSearch {
+		const unread = state.articleIds.filter(
+			(id) => searchMatches(search, id) && !feedbackFor(id).read
+		);
+		return { ...search, unread_count: unread.length };
+	}
+
+	/** The demo has no worker, so turning an alert on notifies about what already matches. */
+	function notifyExistingMatches(search: DemoState['savedSearches'][number]): void {
+		for (const id of sortedIds()) {
+			const article = seedArticle(id);
+			const known = state.notifications.some(
+				(item) => item.saved_search_id === search.id && item.article_id === id
+			);
+			if (!article || known || !searchMatches(search, id)) continue;
+			state.notifications.unshift({
+				id: nextId('notification'),
+				saved_search_id: search.id,
+				saved_search_name: search.name,
+				article_id: id,
+				article_title: article.title,
+				read: false,
+				created_at: new Date().toISOString()
+			});
+		}
+	}
+
 	function page(ids: string[], limit = 20, offset = 0): string[] {
 		return ids.slice(offset, offset + limit);
 	}
@@ -364,7 +459,23 @@ export function createDemoClient(): LumiaClient {
 	function playlistDetail(playlistId: string): PlaylistDetail {
 		const playlist = state.playlists.find((candidate) => candidate.id === playlistId);
 		if (!playlist) throw new Error('playlist introuvable');
-		return { id: playlist.id, name: playlist.name, articles: summaries(playlist.article_ids) };
+		return {
+			id: playlist.id,
+			name: playlist.name,
+			role: 'owner',
+			owner_name: state.me.username,
+			articles: summaries(playlist.article_ids),
+			authorship: playlist.article_ids.map((articleId) => ({
+				article_id: articleId,
+				added_by: state.me.username
+			}))
+		};
+	}
+
+	function playlistMembers(playlistId: string): PlaylistMembers {
+		const playlist = state.playlists.find((candidate) => candidate.id === playlistId);
+		if (!playlist) throw new Error('playlist introuvable');
+		return { owner_name: state.me.username, members: [...(playlist.members ?? [])] };
 	}
 
 	function playlistSummary(playlist: DemoState['playlists'][number]): PlaylistSummary {
@@ -372,6 +483,8 @@ export function createDemoClient(): LumiaClient {
 		return {
 			id: playlist.id,
 			name: playlist.name,
+			role: 'owner',
+			owner_name: state.me.username,
 			item_count: articles.length,
 			total_reading_minutes: articles.reduce((total, article) => total + article.reading_minutes, 0)
 		};
@@ -1002,6 +1115,112 @@ export function createDemoClient(): LumiaClient {
 				return settle(undefined);
 			}
 		},
+		savedSearch: {
+			listSavedSearches: async () =>
+				settle(
+					[...state.savedSearches]
+						.sort((a, b) => a.name.localeCompare(b.name))
+						.map(withUnreadCount)
+				),
+			createSavedSearch: async (input) => {
+				if (state.savedSearches.some((candidate) => candidate.name === input.name)) {
+					throw new ApiError(409, 'nom déjà pris');
+				}
+				const search = {
+					id: nextId('search'),
+					name: input.name,
+					query: input.query,
+					feed_id: input.feed_id ?? null,
+					folder_id: input.folder_id ?? null,
+					alert: input.alert ?? false
+				};
+				state.savedSearches = [...state.savedSearches, search];
+				if (search.alert) notifyExistingMatches(search);
+				persist();
+				return settle(withUnreadCount(search));
+			},
+			updateSavedSearch: async (searchId, update) => {
+				const search = state.savedSearches.find((candidate) => candidate.id === searchId);
+				if (!search) throw new ApiError(404, 'recherche introuvable');
+				if (update.name !== undefined) search.name = update.name;
+				if (update.alert !== undefined) search.alert = update.alert;
+				if (search.alert) notifyExistingMatches(search);
+				persist();
+				return settle(withUnreadCount(search));
+			},
+			deleteSavedSearch: async (searchId: string) => {
+				state.savedSearches = state.savedSearches.filter((search) => search.id !== searchId);
+				state.notifications = state.notifications.filter((item) => item.saved_search_id !== searchId);
+				persist();
+				return settle(undefined);
+			},
+			listNotifications: async (limit = 30, offset = 0) =>
+				settle({
+					unread_count: state.notifications.filter((item) => !item.read).length,
+					items: state.notifications.slice(offset, offset + limit)
+				}),
+			markNotificationsRead: async (ids?: string[]) => {
+				for (const item of state.notifications) {
+					if (ids === undefined || ids.includes(item.id)) item.read = true;
+				}
+				persist();
+				return settle(undefined);
+			}
+		},
+		tag: {
+			listTags: async () =>
+				settle([...state.tags].sort((a, b) => a.name.localeCompare(b.name)).map(tagSummary)),
+			createTag: async (name: string) => {
+				const clean = name.trim();
+				if (findTag(clean)) throw new ApiError(409, { detail: 'tag_name_taken' });
+				const tag = { id: nextId('tag'), name: clean, article_ids: [] };
+				state.tags = [...state.tags, tag];
+				persist();
+				return settle(tagSummary(tag));
+			},
+			renameTag: async (tagId: string, name: string) => {
+				const tag = state.tags.find((candidate) => candidate.id === tagId);
+				if (!tag) throw new ApiError(404, null);
+				const clean = name.trim();
+				const clash = findTag(clean);
+				if (clash && clash.id !== tag.id) throw new ApiError(409, { detail: 'tag_name_taken' });
+				tag.name = clean;
+				persist();
+				return settle(tagSummary(tag));
+			},
+			deleteTag: async (tagId: string) => {
+				if (!state.tags.some((tag) => tag.id === tagId)) throw new ApiError(404, null);
+				state.tags = state.tags.filter((tag) => tag.id !== tagId);
+				persist();
+				return settle(undefined);
+			},
+			tagArticle: async (articleId: string, name: string) => {
+				if (!seedArticle(articleId)) throw new ApiError(404, null);
+				const clean = name.trim();
+				let tag = findTag(clean);
+				if (!tag) {
+					tag = { id: nextId('tag'), name: clean, article_ids: [] };
+					state.tags = [...state.tags, tag];
+				}
+				if (!tag.article_ids.includes(articleId)) tag.article_ids.push(articleId);
+				persist();
+				return settle(tagsOf(articleId));
+			},
+			untagArticle: async (articleId: string, tagId: string) => {
+				const tag = state.tags.find((candidate) => candidate.id === tagId);
+				if (!tag) throw new ApiError(404, null);
+				tag.article_ids = tag.article_ids.filter((id) => id !== articleId);
+				persist();
+				return settle(tagsOf(articleId));
+			},
+			getSuggestions: async (articleId: string) => settle(tagSuggestions(articleId)),
+			// The demo has no model behind it, so the answer is the same as on an account with no
+			// provider: unavailable rather than invented.
+			getAiSuggestions: async () => {
+				await settle(undefined);
+				throw new ApiError(503, { detail: 'no_ai_provider' });
+			}
+		},
 		playlist: {
 			/** The demo has no worker to build a book: it answers as if the file was ready at once. */
 			exportPlaylistEpub: async (playlistId: string) =>
@@ -1066,6 +1285,26 @@ export function createDemoClient(): LumiaClient {
 				return settle(playlistDetail(playlist.id));
 			},
 			getPlaylist: async (playlistId: string) => settle(playlistDetail(playlistId)),
+			listMembers: async (playlistId: string) => settle(playlistMembers(playlistId)),
+			shareWith: async (playlistId: string, email: string, role: PlaylistMemberRole) => {
+				const playlist = state.playlists.find((candidate) => candidate.id === playlistId);
+				if (!playlist) throw new Error('playlist introuvable');
+				const userId = `demo-${email.trim().toLowerCase()}`;
+				const others = (playlist.members ?? []).filter((member) => member.user_id !== userId);
+				playlist.members = [
+					...others,
+					{ user_id: userId, username: email.split('@')[0], role }
+				];
+				persist();
+				return settle(playlistMembers(playlistId));
+			},
+			removeMember: async (playlistId: string, userId: string) => {
+				const playlist = state.playlists.find((candidate) => candidate.id === playlistId);
+				if (!playlist) throw new Error('playlist introuvable');
+				playlist.members = (playlist.members ?? []).filter((member) => member.user_id !== userId);
+				persist();
+				return settle(undefined);
+			},
 			renamePlaylist: async (playlistId: string, name: string) => {
 				const playlist = state.playlists.find((candidate) => candidate.id === playlistId);
 				if (!playlist) throw new Error('playlist introuvable');

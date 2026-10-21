@@ -29,6 +29,7 @@
 	type SwipeAction = 'like' | 'dislike' | 'favorite' | 'save';
 
 	let exiting = $state<SwipeAction | null>(null);
+	let announcement = $state('');
 	let pointerStart = { x: 0, y: 0, time: 0 };
 	/** A gesture born inside the scrollable text belongs to the scroller until it proves horizontal. */
 	let fromScrollArea = false;
@@ -36,6 +37,13 @@
 
 	const visible = $derived(articles.slice(currentIndex, currentIndex + 3));
 	const current = $derived(articles[currentIndex]);
+
+	const ACTION_LABEL_KEYS = {
+		like: 'swipe.like',
+		dislike: 'swipe.no',
+		favorite: 'swipe.favorite',
+		save: 'swipe.readLater'
+	} as const;
 
 	const SWIPE_THRESHOLD = 110;
 	/** How far the card flies off once a direction is committed. */
@@ -125,6 +133,7 @@
 		else dragY = EXIT_DISTANCE;
 
 		const article = current;
+		if (article) announcement = t('swipe.done', { action: t(ACTION_LABEL_KEYS[action]), title: article.title });
 		setTimeout(() => {
 			if (article) {
 				if (action === 'like') onLike(article);
@@ -145,12 +154,23 @@
 	// Keyboard alternative to the swipe gesture: the arrow keys mirror the four drag directions
 	// (right/left/up/down = like/dislike/favorite/save), reusing the same commit() so both paths
 	// share the exit animation and the one-shot-per-article guard.
+	function isScrollingText(): boolean {
+		return document.activeElement?.closest('[data-test-swipe-scroll]') != null;
+	}
+
+	// Up and down are how a keyboard reader scrolls the summary: while it has focus they keep doing that.
+	function verticalAction(action: SwipeAction): () => void {
+		return () => {
+			if (!isScrollingText()) commit(action);
+		};
+	}
+
 	$effect(() =>
 		bindShortcuts({
 			arrowright: () => commit('like'),
 			arrowleft: () => commit('dislike'),
-			arrowup: () => commit('favorite'),
-			arrowdown: () => commit('save')
+			arrowup: verticalAction('favorite'),
+			arrowdown: verticalAction('save')
 		})
 	);
 
@@ -179,6 +199,7 @@
 					onpointerup={isTop ? onPointerUp : undefined}
 					onpointercancel={isTop ? onPointerUp : undefined}
 					aria-hidden={isTop ? undefined : 'true'}
+					inert={!isTop}
 				>
 					<div
 						class="relative w-full shrink-0 overflow-hidden transition-[height] duration-200 {isTop &&
@@ -285,6 +306,7 @@
 		<p aria-live="polite" class="sr-only">
 			{t('swipe.remaining', { title: current.title, count: articles.length - currentIndex })}
 		</p>
+		<p data-test-swipe-announcement aria-live="polite" class="sr-only">{announcement}</p>
 
 		<p data-test-swipe-hint class="sr-only text-xs text-muted-foreground sm:not-sr-only">
 			{t('swipe.hint')}

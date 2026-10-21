@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword, ArticleShare
@@ -9,7 +9,7 @@ from api.domain.export.models import ExportJob
 from api.domain.feed.models import Feed, Folder
 from api.domain.highlight.models import Highlight
 from api.domain.newsletter.models import NewsletterInbox
-from api.domain.playlist.models import Playlist, PlaylistItem
+from api.domain.playlist.models import Playlist, PlaylistItem, PlaylistMember
 from api.domain.recommendation.models import (
     UserArticleFeedback,
     UserAuthorScore,
@@ -18,6 +18,8 @@ from api.domain.recommendation.models import (
     UserFilterRule,
     UserKeywordScore,
 )
+from api.domain.saved_search.models import AlertNotification, SavedSearch
+from api.domain.tag.models import ArticleTag, Tag
 from api.domain.user.exceptions import LastAdminError
 from api.domain.user.models import MagicLinkToken, RecoveryCode, RefreshToken, Role, User
 
@@ -37,10 +39,13 @@ async def delete_account(session: AsyncSession, user_id: UUID) -> None:
     article_ids = list(
         await session.scalars(select(Article.id).where(Article.feed_id.in_(feed_ids)))
     )
+    tag_ids = list(await session.scalars(select(Tag.id).where(Tag.user_id == user_id)))
     playlist_ids = list(
         await session.scalars(select(Playlist.id).where(Playlist.user_id == user_id))
     )
 
+    await session.execute(delete(AlertNotification).where(AlertNotification.user_id == user_id))
+    await session.execute(delete(SavedSearch).where(SavedSearch.user_id == user_id))
     await session.execute(
         delete(PlaylistItem).where(
             PlaylistItem.playlist_id.in_(playlist_ids) | PlaylistItem.article_id.in_(article_ids)
@@ -51,6 +56,22 @@ async def delete_account(session: AsyncSession, user_id: UUID) -> None:
             (Highlight.user_id == user_id) | Highlight.article_id.in_(article_ids)
         )
     )
+    await session.execute(
+        update(PlaylistItem)
+        .where(PlaylistItem.added_by_user_id == user_id)
+        .values(added_by_user_id=None)
+    )
+    await session.execute(
+        delete(PlaylistMember).where(
+            PlaylistMember.playlist_id.in_(playlist_ids) | (PlaylistMember.user_id == user_id)
+        )
+    )
+    await session.execute(
+        delete(ArticleTag).where(
+            ArticleTag.tag_id.in_(tag_ids) | ArticleTag.article_id.in_(article_ids)
+        )
+    )
+    await session.execute(delete(Tag).where(Tag.id.in_(tag_ids)))
     await session.execute(
         delete(UserArticleFeedback).where(
             (UserArticleFeedback.user_id == user_id)

@@ -133,3 +133,30 @@ describe('playlist export', () => {
 		expect(last()).toMatchObject({ path: '/exports/job-1/download', auth: true });
 	});
 });
+
+describe('the sharing', () => {
+	it('lists who a playlist is shared with', async () => {
+		const { playlists, last } = api([{ owner_name: 'admin', members: [] }]);
+		await playlists.listMembers('playlist-1');
+		expect(last()).toMatchObject({ path: '/playlists/playlist-1/members', method: 'GET' });
+	});
+
+	it('shares with an email and a role, which also changes a role already held', async () => {
+		const { playlists, last } = api([{ owner_name: 'admin', members: [] }]);
+		await playlists.shareWith('playlist-1', 'ada@example.com', 'editor');
+		expect(last()).toMatchObject({
+			path: '/playlists/playlist-1/members',
+			method: 'PUT',
+			body: { email: 'ada@example.com', role: 'editor' }
+		});
+	});
+
+	it('removes a member by user id', async () => {
+		const { playlists, last } = api([undefined]);
+		await playlists.removeMember('playlist-1', 'user-2');
+		expect(last()).toMatchObject({
+			path: '/playlists/playlist-1/members/user-2',
+			method: 'DELETE'
+		});
+	});
+});

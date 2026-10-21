@@ -27,6 +27,7 @@ describe('listArticles', () => {
 		['authorId', 'author-1', 'author_id=author-1'],
 		['categoryId', 'cat-1', 'category_id=cat-1'],
 		['keywordId', 'kw-1', 'keyword_id=kw-1'],
+		['tagId', 'tag-1', 'tag_id=tag-1'],
 		['query', 'kiosque', 'q=kiosque'],
 		['sort', 'relevance', 'sort=relevance'],
 		['limit', 50, 'limit=50'],

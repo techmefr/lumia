@@ -538,6 +538,25 @@ describe('the playlists', () => {
 		});
 	});
 
+	it('shares one by email, changes the role on a second share and removes the member', async () => {
+		const created = await demo.playlist.createPlaylist('Trajet');
+		await demo.playlist.shareWith(created.id, 'Ada@Example.com', 'viewer');
+		const changed = await demo.playlist.shareWith(created.id, 'ada@example.com', 'editor');
+		expect(changed.members).toEqual([
+			{ user_id: 'demo-ada@example.com', username: 'ada', role: 'editor' }
+		]);
+
+		await demo.playlist.removeMember(created.id, 'demo-ada@example.com');
+		await expect(demo.playlist.listMembers(created.id)).resolves.toMatchObject({ members: [] });
+	});
+
+	it('attributes every item to the demo account', async () => {
+		const [playlist] = await demo.playlist.listPlaylists();
+		const detail = await demo.playlist.getPlaylist(playlist.id);
+		expect(detail.authorship).toHaveLength(detail.articles.length);
+		expect(detail.authorship.every((item) => item.added_by === detail.owner_name)).toBe(true);
+	});
+
 	it('deletes one', async () => {
 		const created = await demo.playlist.createPlaylist('Trajet');
 		await demo.playlist.deletePlaylist(created.id);
@@ -786,6 +805,96 @@ describe('public sharing', () => {
 	});
 });
 
+describe('the tags', () => {
+	async function firstArticleId(): Promise<string> {
+		return (await demo.article.listArticles())[0].id;
+	}
+
+	it('starts with none', async () => {
+		await expect(demo.tag.listTags()).resolves.toEqual([]);
+	});
+
+	it('creates the tag on first use and shows it on the article and in the list', async () => {
+		const id = await firstArticleId();
+		const tags = await demo.tag.tagArticle(id, ' Cuisine ');
+		expect(tags.map((tag) => tag.name)).toEqual(['Cuisine']);
+		expect((await demo.article.getArticle(id)).tags).toEqual(tags);
+		expect((await demo.article.listArticles())[0].tags).toEqual(tags);
+		await expect(demo.tag.listTags()).resolves.toMatchObject([
+			{ name: 'Cuisine', article_count: 1 }
+		]);
+	});
+
+	it('treats a name that differs only by case as the same tag', async () => {
+		const id = await firstArticleId();
+		await demo.tag.tagArticle(id, 'Cuisine');
+		const tags = await demo.tag.tagArticle(id, 'cuisine');
+		expect(tags).toHaveLength(1);
+		await expect(demo.tag.createTag('CUISINE')).rejects.toMatchObject({ status: 409 });
+	});
+
+	it('filters the list by tag, alongside the other filters', async () => {
+		const [first, second] = await demo.article.listArticles();
+		const [tag] = await demo.tag.tagArticle(first.id, 'Cuisine');
+		await expect(demo.article.listArticles({ tagId: tag.id })).resolves.toMatchObject([
+			{ id: first.id }
+		]);
+		await expect(
+			demo.article.listArticles({ tagId: tag.id, feedId: second.feed_id === first.feed_id ? 'none' : second.feed_id })
+		).resolves.toEqual([]);
+	});
+
+	it('untags an article without deleting the tag', async () => {
+		const id = await firstArticleId();
+		const [tag] = await demo.tag.tagArticle(id, 'Cuisine');
+		await expect(demo.tag.untagArticle(id, tag.id)).resolves.toEqual([]);
+		await expect(demo.tag.listTags()).resolves.toMatchObject([{ article_count: 0 }]);
+	});
+
+	it('renames a tag, refusing a name another tag has', async () => {
+		const created = await demo.tag.createTag('Cuisine');
+		await demo.tag.createTag('Voyage');
+		await expect(demo.tag.renameTag(created.id, 'voyage')).rejects.toMatchObject({ status: 409 });
+		await expect(demo.tag.renameTag(created.id, 'Recettes')).resolves.toMatchObject({
+			name: 'Recettes'
+		});
+	});
+
+	it('deletes a tag and takes it off its articles', async () => {
+		const id = await firstArticleId();
+		const [tag] = await demo.tag.tagArticle(id, 'Cuisine');
+		await demo.tag.deleteTag(tag.id);
+		expect((await demo.article.getArticle(id)).tags).toEqual([]);
+		await expect(demo.tag.deleteTag(tag.id)).rejects.toMatchObject({ status: 404 });
+	});
+
+	it('refuses an unknown tag or article', async () => {
+		await expect(demo.tag.tagArticle('nope', 'x')).rejects.toMatchObject({ status: 404 });
+		await expect(demo.tag.untagArticle('a', 'nope')).rejects.toMatchObject({ status: 404 });
+		await expect(demo.tag.renameTag('nope', 'x')).rejects.toMatchObject({ status: 404 });
+	});
+
+	it('suggests the article keywords first, then the tags already in use, never what it carries', async () => {
+		const [first, second] = await demo.article.listArticles();
+		await demo.tag.tagArticle(second.id, 'Voyage');
+		const own = SEED_ARTICLES.find((article) => article.id === first.id)!;
+		const suggestions = await demo.tag.getSuggestions(first.id);
+		expect(suggestions.filter((item) => item.source === 'keyword').map((item) => item.name)).toEqual(
+			own.keywords.slice(0, 3)
+		);
+		expect(suggestions.filter((item) => item.source === 'used').map((item) => item.name)).toEqual([
+			'Voyage'
+		]);
+		await demo.tag.tagArticle(first.id, own.keywords[0]);
+		const after = await demo.tag.getSuggestions(first.id);
+		expect(after.map((item) => item.name.toLowerCase())).not.toContain(own.keywords[0].toLowerCase());
+	});
+
+	it('answers the model suggestions as unavailable, since the demo has no model', async () => {
+		await expect(demo.tag.getAiSuggestions('a')).rejects.toMatchObject({ status: 503 });
+	});
+});
+
 describe('the newsletter inbox', () => {
 	it('starts without an address, issues one, and closes it again', async () => {
 		await expect(demo.newsletter.getInboxStatus()).resolves.toMatchObject({ active: false });
@@ -800,5 +909,116 @@ describe('the newsletter inbox', () => {
 			active: false,
 			created_at: null
 		});
+	});
+});
+
+describe('the saved searches', () => {
+	const WORD = SEED_ARTICLES[0].title.split(' ')[0].toLowerCase();
+
+	async function matchingCount(query: string): Promise<number> {
+		return (await demo.article.listArticles({ query, limit: 100 })).length;
+	}
+
+	async function unreadMatches(query: string, feedId?: string) {
+		return demo.article.listArticles({ query, feedId, unreadOnly: true, limit: 100 });
+	}
+
+	it('starts with none', async () => {
+		await expect(demo.savedSearch.listSavedSearches()).resolves.toEqual([]);
+	});
+
+	it('counts the unread articles a search matches', async () => {
+		const created = await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD });
+		expect(created.unread_count).toBe((await unreadMatches(WORD)).length);
+		expect(created.unread_count).toBeGreaterThan(0);
+	});
+
+	it('lowers the count once a match is read', async () => {
+		const created = await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD });
+		const [first] = await unreadMatches(WORD);
+		await demo.recommendation.sendFeedback(first.id, { read: true });
+		const [listed] = await demo.savedSearch.listSavedSearches();
+		expect(listed.unread_count).toBe(created.unread_count - 1);
+	});
+
+	it('narrows the count to a feed', async () => {
+		const feedId = SEED_ARTICLES[0].feed_id;
+		const created = await demo.savedSearch.createSavedSearch({
+			name: 'Un flux',
+			query: WORD,
+			feed_id: feedId
+		});
+		const inFeed = await unreadMatches(WORD, feedId);
+		expect(created.feed_id).toBe(feedId);
+		expect(created.unread_count).toBe(inFeed.length);
+	});
+
+	it('refuses a name already used', async () => {
+		await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD });
+		await expect(
+			demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD })
+		).rejects.toMatchObject({ status: 409 });
+	});
+
+	it('lists them by name', async () => {
+		await demo.savedSearch.createSavedSearch({ name: 'B', query: WORD });
+		await demo.savedSearch.createSavedSearch({ name: 'A', query: WORD });
+		const names = (await demo.savedSearch.listSavedSearches()).map((search) => search.name);
+		expect(names).toEqual(['A', 'B']);
+	});
+
+	it('notifies about the existing matches when created as an alert', async () => {
+		await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD, alert: true });
+		const { items, unread_count } = await demo.savedSearch.listNotifications();
+		expect(items).toHaveLength(await matchingCount(WORD));
+		expect(unread_count).toBe(items.length);
+		expect(items[0].saved_search_name).toBe('Mot');
+	});
+
+	it('stays quiet for a search that is not an alert', async () => {
+		await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD });
+		const { items } = await demo.savedSearch.listNotifications();
+		expect(items).toEqual([]);
+	});
+
+	it('promotes a search to an alert without notifying twice on a second promotion', async () => {
+		const created = await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD });
+		const promoted = await demo.savedSearch.updateSavedSearch(created.id, { alert: true });
+		await demo.savedSearch.updateSavedSearch(created.id, { name: 'Renamed' });
+		expect(promoted.alert).toBe(true);
+		const { items } = await demo.savedSearch.listNotifications();
+		expect(items).toHaveLength(await matchingCount(WORD));
+	});
+
+	it('refuses to update a search that does not exist', async () => {
+		await expect(
+			demo.savedSearch.updateSavedSearch('nope', { alert: true })
+		).rejects.toMatchObject({ status: 404 });
+	});
+
+	it('pages the notifications', async () => {
+		await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD, alert: true });
+		const page = await demo.savedSearch.listNotifications(1, 1);
+		expect(page.items).toHaveLength(1);
+	});
+
+	it('marks given notifications, then all of them, read', async () => {
+		await demo.savedSearch.createSavedSearch({ name: 'Mot', query: WORD, alert: true });
+		const { items } = await demo.savedSearch.listNotifications();
+		await demo.savedSearch.markNotificationsRead([items[0].id]);
+		expect((await demo.savedSearch.listNotifications()).unread_count).toBe(items.length - 1);
+		await demo.savedSearch.markNotificationsRead();
+		expect((await demo.savedSearch.listNotifications()).unread_count).toBe(0);
+	});
+
+	it('takes the notifications of a deleted search with it', async () => {
+		const created = await demo.savedSearch.createSavedSearch({
+			name: 'Mot',
+			query: WORD,
+			alert: true
+		});
+		await demo.savedSearch.deleteSavedSearch(created.id);
+		await expect(demo.savedSearch.listSavedSearches()).resolves.toEqual([]);
+		await expect(demo.savedSearch.listNotifications()).resolves.toMatchObject({ items: [] });
 	});
 });

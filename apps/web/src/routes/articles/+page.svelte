@@ -17,6 +17,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import Search from '@lucide/svelte/icons/search';
 	import CheckCheck from '@lucide/svelte/icons/check-check';
+	import BellPlus from '@lucide/svelte/icons/bell-plus';
 	import Plus from '@lucide/svelte/icons/plus';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import LayoutTemplate from '@lucide/svelte/icons/layout-template';
@@ -45,8 +46,9 @@
 	let authorId = $state<string | undefined>(undefined);
 	let categoryId = $state<string | undefined>(undefined);
 	let keywordId = $state<string | undefined>(undefined);
+	let tagId = $state<string | undefined>(undefined);
 	// Kept as kind + name rather than a formatted string, so the chip follows a language change.
-	let filterKind = $state<'author' | 'category' | 'keyword' | null>(null);
+	let filterKind = $state<'author' | 'category' | 'keyword' | 'tag' | null>(null);
 	let filterName = $state('');
 	let searchInput = $state('');
 	let appliedQuery = $state('');
@@ -74,7 +76,9 @@
 				? t('articles.filterCategory', { name: filterName })
 				: filterKind === 'keyword'
 					? t('articles.filterKeyword', { name: filterName })
-					: null
+					: filterKind === 'tag'
+						? t('tags.filter', { name: filterName })
+						: null
 	);
 
 	const currentScope = $derived(
@@ -92,6 +96,7 @@
 			authorId,
 			categoryId,
 			keywordId,
+			tagId,
 			query: appliedQuery.length >= 2 ? appliedQuery : undefined,
 			unreadOnly: unreadOnly || undefined,
 			sort,
@@ -151,6 +156,7 @@
 		authorId = undefined;
 		categoryId = undefined;
 		keywordId = undefined;
+		tagId = undefined;
 		filterKind = null;
 		void loadArticles();
 	}
@@ -164,7 +170,7 @@
 	function selectFolder(folderId: string) {
 		selectedFolderId = selectedFolderId === folderId ? '' : folderId;
 		selectedFeedId = '';
-		authorId = categoryId = keywordId = undefined;
+		authorId = categoryId = keywordId = tagId = undefined;
 		filterKind = null;
 		void loadArticles();
 	}
@@ -172,7 +178,7 @@
 	function selectFeed(feedId: string) {
 		selectedFeedId = selectedFeedId === feedId ? '' : feedId;
 		selectedFolderId = '';
-		authorId = categoryId = keywordId = undefined;
+		authorId = categoryId = keywordId = tagId = undefined;
 		filterKind = null;
 		void loadArticles();
 	}
@@ -191,6 +197,22 @@
 		appliedQuery = searchInput.trim();
 		syncSearchToUrl(appliedQuery);
 		void loadArticles();
+	}
+
+	async function saveSearch() {
+		try {
+			await lumia.savedSearch.createSavedSearch({
+				name: appliedQuery,
+				query: appliedQuery,
+				feed_id: selectedFeedId || undefined,
+				folder_id: selectedFolderId || undefined
+			});
+			toast(t('alerts.created'), {
+				action: { label: t('common.open'), run: () => goto(`${base}/alerts`) }
+			});
+		} catch {
+			toast(t('alerts.saveFailed'), { tone: 'destructive' });
+		}
 	}
 
 	function clearSearch() {
@@ -372,6 +394,7 @@
 		authorId = search.get('author_id') ?? undefined;
 		categoryId = search.get('category_id') ?? undefined;
 		keywordId = search.get('keyword_id') ?? undefined;
+		tagId = search.get('tag_id') ?? undefined;
 		if (authorId) {
 			filterKind = 'author';
 			filterName = search.get('author_name') ?? '';
@@ -381,6 +404,9 @@
 		} else if (keywordId) {
 			filterKind = 'keyword';
 			filterName = search.get('keyword_term') ?? '';
+		} else if (tagId) {
+			filterKind = 'tag';
+			filterName = search.get('tag_name') ?? '';
 		}
 		const initialQuery = search.get('q') ?? '';
 		searchInput = initialQuery;
@@ -550,6 +576,16 @@
 				{t('articles.search')}
 			</Button>
 			{#if appliedQuery}
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					onclick={saveSearch}
+					data-test-search-save
+				>
+					<BellPlus class="size-4" />
+					{t('alerts.saveThis')}
+				</Button>
 				<Button
 					type="button"
 					variant="ghost"

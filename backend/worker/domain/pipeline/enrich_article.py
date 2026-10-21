@@ -14,6 +14,7 @@ from api.domain.user.models import Instance, ReadingLang, User
 from api.domain.user.providers import chat_client_for, translator_for
 from api.technical.logging.external import EXTERNAL_CALL_FAILED_EVENT, describe_error
 from api.technical.net.canonical_url import canonical_url
+from worker.domain.alerts.notify_alerts import notify_matching_alerts
 from worker.domain.extraction.stemming import stem_for_lang
 from worker.domain.extraction.tfidf import extract_keywords
 from worker.domain.summarizer.extractive import summarize_extractive
@@ -88,7 +89,7 @@ async def enrich_article(
                 translator if translator is not None else translator_for(user),
                 translated_cache,
             )
-            await _create_article_if_new(
+            created = await _create_article_if_new(
                 session,
                 feed=feed,
                 raw_article=raw_article,
@@ -102,6 +103,8 @@ async def enrich_article(
                 original_lang=lang,
                 keyword_lang=lang,
             )
+            if created is not None:
+                await notify_matching_alerts(session, created, user_id=feed.user_id)
 
         await session.commit()
 
@@ -181,7 +184,7 @@ async def _create_article_if_new(
     keywords: list[tuple[str, float]],
     original_lang: Lang,
     keyword_lang: Lang,
-) -> None:
+) -> Article | None:
     existing = await session.scalar(
         select(Article)
         .join(Feed, Article.feed_id == Feed.id)
@@ -196,7 +199,7 @@ async def _create_article_if_new(
         # A mirror or an aggregator often reposts an old piece with today's date; the reader
         # should keep seeing it where the original landed.
         existing.published_at = min(existing.published_at, raw_article.published_at)
-        return
+        return None
 
     article = Article(
         feed_id=feed.id,
@@ -208,6 +211,8 @@ async def _create_article_if_new(
         content=content,
         summary=summary,
         image_url=image_url,
+        enclosure_url=raw_article.enclosure_url,
+        enclosure_type=raw_article.enclosure_type,
         original_lang=original_lang,
         published_at=raw_article.published_at,
     )
@@ -217,6 +222,7 @@ async def _create_article_if_new(
     for term, weight in keywords:
         keyword = await _get_or_create_keyword(session, term, keyword_lang)
         session.add(ArticleKeyword(article_id=article.id, keyword_id=keyword.id, weight=weight))
+    return article
 
 
 async def _get_or_create_author(session: AsyncSession, name: str | None) -> Author | None:

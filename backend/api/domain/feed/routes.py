@@ -28,6 +28,7 @@ from api.domain.feed.schemas import (
     UnreadCountsResponse,
 )
 from api.domain.feed.unread_service import count_unread
+from api.domain.saved_search.saved_search_service import delete_searches_scoped_to
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.technical.db import get_db_session
@@ -103,6 +104,7 @@ async def delete_folder(
 
     # Deleting a folder must not take its feeds (and their articles) with it — unfile them.
     await session.execute(update(Feed).where(Feed.folder_id == folder.id).values(folder_id=None))
+    await delete_searches_scoped_to(session, folder_id=folder.id)
     await session.delete(folder)
     await session.commit()
 
@@ -426,5 +428,6 @@ async def delete_feed(
     feed = await session.scalar(select(Feed).where(Feed.id == feed_id, Feed.user_id == user.id))
     if feed is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    await delete_searches_scoped_to(session, feed_id=feed.id)
     await session.delete(feed)
     await session.commit()

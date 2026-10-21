@@ -7,6 +7,7 @@
 		youtubeEmbedUrl,
 		type ArticleDetail,
 		type ArticleTranslation,
+		type TagRef,
 		type OrbitPosition
 	} from '@lumia/core';
 	import { Button, Card, CardContent, Badge, GlareHover, ReadingProgress, Skeleton, toast } from '@lumia/ui';
@@ -33,12 +34,14 @@
 	import { readableText } from '$technical/speech/readable-text';
 	import { articleAudio } from '$technical/speech/server-voice';
 	import { player } from '$domain/audio/audio-player.svelte';
+	import PlayIcon from '@lucide/svelte/icons/play';
 	import { clearKaraoke, highlightChunk } from '$technical/speech/karaoke';
 	import AddToPlaylist from '$domain/playlist/add-to-playlist.svelte';
 	import ExportEpubButton from '$domain/article/export-epub-button.svelte';
 	import ShareArticleButton from '$domain/article/share-article-button.svelte';
 	import TranslateButton from '$domain/article/translate-button.svelte';
 	import RelatedArticles from '$domain/article/related-articles.svelte';
+	import ArticleTags from '$domain/tag/article-tags.svelte';
 	import OrbitButton, { type OrbitAction } from '$domain/article/orbit-button.svelte';
 	import { ArticleHighlights } from '$domain/highlight/article-highlights.svelte';
 	import HighlightCard from '$domain/highlight/highlight-card.svelte';
@@ -395,6 +398,14 @@
 					<GlareHover class="absolute inset-0" glareColor="#ffffff" glareOpacity={0.3} glareSize={220} />
 				</div>
 			{/if}
+			{#if article.enclosure_url}
+				<div class="px-6 pt-6 print:hidden">
+					<Button data-test-play-episode onclick={() => article && player.play([article])}>
+						<PlayIcon class="size-4" />
+						{t('player.listenEpisode')}
+					</Button>
+				</div>
+			{/if}
 			<CardContent class="pt-6">
 				<!-- Same name as the card's title, so the tile grows into the article rather than
 					 cross-fading with it. -->
@@ -520,6 +531,14 @@
 						</a>
 					{/each}
 				</div>
+
+				<ArticleTags
+					articleId={article.id}
+					tags={article.tags}
+					onchange={(next: TagRef[]) => {
+						if (article) article.tags = next;
+					}}
+				/>
 
 				{#if translation}
 					<p class="mt-3 text-xs text-muted-foreground print:hidden" data-test-translated-notice>

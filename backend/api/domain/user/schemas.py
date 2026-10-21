@@ -176,6 +176,14 @@ class ExportedFilterRule(BaseModel):
     mode: FilterMode
 
 
+class ExportedSavedSearch(BaseModel):
+    name: str
+    query: str
+    alert: bool
+    feed: str | None
+    folder: str | None
+
+
 class ExportedArticle(BaseModel):
     title: str
     url: str
@@ -189,6 +197,11 @@ class ExportedShare(BaseModel):
     article_title: str
     article_url: str
     created_at: datetime
+
+
+class ExportedTag(BaseModel):
+    name: str
+    articles: list[ExportedArticle]
 
 
 class ExportedPlaylist(BaseModel):
@@ -208,8 +221,10 @@ class AccountExportResponse(BaseModel):
     account: ExportedAccount
     feeds: list[ExportedFeed]
     filter_rules: list[ExportedFilterRule]
+    saved_searches: list[ExportedSavedSearch]
     playlists: list[ExportedPlaylist]
     highlights: list[ExportedHighlight]
+    tags: list[ExportedTag]
     saved: list[ExportedArticle]
     favorites: list[ExportedArticle]
     shares: list[ExportedShare]
