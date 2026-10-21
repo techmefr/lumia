@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { ApiError, secondFactorFailure, type MagicLinkPurpose, type SecondFactor } from '@lumia/core';
+	import { createSignInFlow, type MagicLinkPurpose, type SignInOutcome, type SignInStep } from '@lumia/core';
 	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '@lumia/ui';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import LogIn from '@lucide/svelte/icons/log-in';
@@ -21,27 +21,25 @@
 	// showing any form, rather than making the user re-enter it anywhere.
 	let verifyingToken = $state(false);
 
-	// The second factor is a step, not a field: it is asked for only once the backend says this
-	// account has one. The first factor stays in memory for the retry — the same request carries
-	// both, so there is no half-signed-in state on the server to keep track of.
-	let challenge = $state<'none' | 'code' | 'recovery'>('none');
-	let pendingMagicToken = $state<string | null>(null);
+	// The second factor is a step the shared flow decides on, once the backend says this account
+	// has one; the page only draws it.
+	const flow = createSignInFlow(lumia.user);
+	let challenge = $state<SignInStep>('credentials');
 	let totpCode = $state('');
 	let recoveryCode = $state('');
 
-	function secondFactor(): SecondFactor {
-		return challenge === 'recovery'
-			? { recovery_code: recoveryCode.trim() }
-			: { totp_code: totpCode.trim() };
+	function failureMessage(outcome: SignInOutcome): string | null {
+		if (outcome === 'wrong_code') return t('login.totpInvalid');
+		if (outcome === 'bad_credentials') return t('login.badCredentials');
+		if (outcome === 'failed') return t('login.failed');
+		return null;
 	}
 
-	/** Returns true when the failure was the second factor, and moves the form on to asking for it. */
-	function handledAsChallenge(err: unknown): boolean {
-		const failure = secondFactorFailure(err);
-		if (failure === null) return false;
-		if (challenge === 'none') challenge = 'code';
-		error = failure === 'totp_required' ? null : t('login.totpInvalid');
-		return true;
+	async function run(attempt: () => Promise<SignInOutcome>): Promise<boolean> {
+		const outcome = await attempt();
+		challenge = flow.step;
+		error = failureMessage(outcome);
+		return outcome === 'signed_in';
 	}
 
 	// The same form and the same token either way; only the mail, and the screen its link opens,
@@ -61,18 +59,12 @@
 		error = null;
 		loading = true;
 		try {
-			if (pendingMagicToken) {
-				await lumia.user.verifyMagicLink(pendingMagicToken, secondFactor());
-			} else {
-				await lumia.user.login(email, password, challenge === 'none' ? {} : secondFactor());
-			}
-			await goto(base + '/articles');
-		} catch (err) {
-			if (handledAsChallenge(err)) return;
-			error =
-				err instanceof ApiError && err.status === 401
-					? t('login.badCredentials')
-					: t('login.failed');
+			const signedIn = await run(() =>
+				challenge === 'credentials'
+					? flow.signIn(email, password)
+					: flow.submitSecondFactor(challenge === 'recovery' ? recoveryCode : totpCode)
+			);
+			if (signedIn) await goto(base + '/articles');
 		} finally {
 			loading = false;
 		}
@@ -96,19 +88,15 @@
 		const token = page.url.searchParams.get('magic_token');
 		if (!token) return;
 		verifyingToken = true;
-		lumia.user
-			.verifyMagicLink(token)
-			.then(() => goto(base + '/articles'))
-			.catch((err: unknown) => {
+		flow
+			.signInWithMagicLink(token)
+			.then((outcome) => {
+				challenge = flow.step;
+				if (outcome === 'signed_in') return goto(base + '/articles');
+				if (outcome !== 'challenge') error = t('login.magicLinkInvalid');
+			})
+			.finally(() => {
 				verifyingToken = false;
-				// A magic link proves control of the mailbox, which is exactly what the second
-				// factor is there to stop being enough on its own.
-				if (secondFactorFailure(err) !== null) {
-					pendingMagicToken = token;
-					handledAsChallenge(err);
-					return;
-				}
-				error = t('login.magicLinkInvalid');
 			});
 	});
 </script>
@@ -123,7 +111,7 @@
 			<CardDescription>{t('login.tagline')}</CardDescription>
 		</CardHeader>
 		<CardContent>
-			{#if challenge !== 'none'}
+			{#if challenge !== 'credentials'}
 				<form data-test-totp-form class="flex flex-col gap-4" onsubmit={submit}>
 					<div class="flex items-center gap-2 text-sm font-medium">
 						<ShieldCheck class="size-4 text-primary" />
@@ -168,7 +156,8 @@
 					data-test-toggle-recovery
 					type="button"
 					onclick={() => {
-						challenge = challenge === 'code' ? 'recovery' : 'code';
+						flow.toggleRecovery();
+						challenge = flow.step;
 						error = null;
 					}}
 					class="mt-4 block w-full text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
