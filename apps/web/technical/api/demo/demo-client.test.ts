@@ -598,6 +598,19 @@ describe('the profile', () => {
 		expect(me.translation_api_key_set).toBe(true);
 		expect(JSON.stringify(me)).not.toContain('dl-secret');
 	});
+
+	it('records that a speech key was set the same way', async () => {
+		const me = await demo.user.updateMe({ tts_provider: 'openai', tts_api_key: 'tts-secret' });
+		expect(me.tts_api_key_set).toBe(true);
+		expect(JSON.stringify(me)).not.toContain('tts-secret');
+	});
+
+	it('answers an audio request like an install with no speech provider', async () => {
+		await expect(demo.article.getArticleAudio('article-1')).rejects.toMatchObject({
+			status: 503,
+			body: { detail: 'no_tts_provider' }
+		});
+	});
 });
 
 describe('the session state', () => {

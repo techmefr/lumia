@@ -648,6 +648,21 @@ export const fr = {
 	'ai.loading': 'Chargement des réglages…',
 	'ai.summaryKeyDeleted': 'Clé de résumé supprimée.',
 	'ai.deeplKeyDeleted': 'Clé DeepL supprimée.',
+	'tts.title': 'Voix naturelle',
+	'tts.intro':
+		"Fais lire les articles à voix haute par un fournisseur de synthèse vocale plutôt que par la voix de ton appareil. Sans fournisseur, la voix du navigateur est utilisée.",
+	'tts.provider': 'Fournisseur de synthèse vocale',
+	'tts.providerNone': 'Aucun — voix du navigateur',
+	'tts.providerCustom': 'Endpoint compatible OpenAI (auto-hébergé)',
+	'tts.voice': 'Voix',
+	'tts.voiceDefault': 'laisser vide = par défaut',
+	'tts.endpointHint':
+		"Le serveur doit être joignable depuis l'instance Lumia ; les adresses privées sont refusées sauf si l'opérateur les autorise.",
+	'tts.keyDeleted': 'Clé de synthèse vocale supprimée.',
+	'tts.loading': 'Chargement des réglages de voix…',
+	'tts.loadFailed': 'Impossible de charger les réglages de voix.',
+	'tts.saveFailed': 'Enregistrement impossible. Vérifie la clé et réessaie.',
+	'tts.saved': 'Réglages de voix enregistrés.',
 
 	'admin.title': 'Administration',
 	'admin.intro': "Réservé à l'administration de l'instance : quotas, comptes et demandes d'accès.",

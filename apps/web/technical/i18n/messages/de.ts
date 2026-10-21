@@ -646,6 +646,21 @@ export const de: Catalogue = {
 	'ai.loading': 'Einstellungen werden geladen…',
 	'ai.summaryKeyDeleted': 'Schlüssel für die Zusammenfassung gelöscht.',
 	'ai.deeplKeyDeleted': 'DeepL-Schlüssel gelöscht.',
+	'tts.title': 'Natürliche Stimme',
+	'tts.intro':
+		'Artikel mit einem Sprachanbieter statt mit der Stimme deines Geräts vorlesen lassen. Ohne Anbieter wird die Stimme des Browsers verwendet.',
+	'tts.provider': 'Sprachanbieter',
+	'tts.providerNone': 'Keiner — Browserstimme',
+	'tts.providerCustom': 'OpenAI-kompatibler Endpunkt (selbst gehostet)',
+	'tts.voice': 'Stimme',
+	'tts.voiceDefault': 'leer lassen für den Standard',
+	'tts.endpointHint':
+		'Der Server muss von der Lumia-Instanz erreichbar sein; private Adressen werden abgelehnt, sofern der Betreiber sie nicht erlaubt.',
+	'tts.keyDeleted': 'Sprachschlüssel gelöscht.',
+	'tts.loading': 'Spracheinstellungen werden geladen …',
+	'tts.loadFailed': 'Die Spracheinstellungen konnten nicht geladen werden.',
+	'tts.saveFailed': 'Speichern nicht möglich. Prüfe den Schlüssel und versuche es erneut.',
+	'tts.saved': 'Spracheinstellungen gespeichert.',
 
 	'admin.title': 'Verwaltung',
 	'admin.intro': 'Nur für die Instanzverwaltung: Kontingente, Konten und Zugangsanfragen.',

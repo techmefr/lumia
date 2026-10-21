@@ -142,6 +142,24 @@ describe('translateArticle', () => {
 	});
 });
 
+describe('getArticleAudio', () => {
+	it('asks for the audio of that article, with the session', async () => {
+		const { articles, last } = api([new Blob(['mp3'])]);
+		await articles.getArticleAudio('article-1');
+		expect(last()).toMatchObject({
+			path: '/articles/article-1/audio',
+			method: 'GET',
+			auth: true
+		});
+	});
+
+	it('hands back the file the server built', async () => {
+		const audio = new Blob(['mp3'], { type: 'audio/mpeg' });
+		const { articles } = api([audio]);
+		expect(await articles.getArticleAudio('article-1')).toBe(audio);
+	});
+});
+
 describe('exportArticleEpub', () => {
 	it('asks for the epub of that article, with the session', async () => {
 		const { articles, last } = api([new Blob(['epub'])]);

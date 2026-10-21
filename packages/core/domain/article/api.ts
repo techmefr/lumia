@@ -128,6 +128,14 @@ export function createArticleApi(http: HttpClient) {
 		});
 	}
 
+	/**
+	 * The article read by the account's own speech provider, as audio. Refused with
+	 * `no_tts_provider` when none is configured, which is the cue to use the browser voice.
+	 */
+	async function getArticleAudio(articleId: string): Promise<Blob> {
+		return http.requestBlob(`/articles/${articleId}/audio`);
+	}
+
 	return {
 		listArticles,
 		getArticle,
@@ -137,6 +145,7 @@ export function createArticleApi(http: HttpClient) {
 		getReadingListImportProgress,
 		translateArticle,
 		exportArticleEpub,
+		getArticleAudio,
 		getShareStatus,
 		createShare,
 		revokeShare,

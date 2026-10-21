@@ -143,3 +143,41 @@ async def test_patch_me_updates_the_preferred_language(client: httpx.AsyncClient
 
     reread = await client.get("/me", headers=headers)
     assert reread.json()["preferred_language"] == "en"
+
+
+async def test_patch_me_stores_the_speech_provider_without_ever_returning_its_key(
+    client: httpx.AsyncClient,
+) -> None:
+    headers = await _onboarded_headers(client)
+
+    response = await client.patch(
+        "/me",
+        headers=headers,
+        json={
+            "tts_provider": "custom",
+            "tts_api_key": "tts-secret",
+            "tts_endpoint_url": "https://voice.example.test/v1",
+            "tts_model": "kokoro",
+            "tts_voice": "af_bella",
+        },
+    )
+
+    body = response.json()
+    assert body["tts_provider"] == "custom"
+    assert body["tts_endpoint_url"] == "https://voice.example.test/v1"
+    assert body["tts_model"] == "kokoro"
+    assert body["tts_voice"] == "af_bella"
+    assert body["tts_api_key_set"] is True
+    assert "tts-secret" not in response.text
+    assert "tts-secret" not in (await client.get("/me", headers=headers)).text
+
+
+async def test_patch_me_clears_the_speech_key(client: httpx.AsyncClient) -> None:
+    headers = await _onboarded_headers(client)
+    await client.patch(
+        "/me", headers=headers, json={"tts_provider": "openai", "tts_api_key": "tts-secret"}
+    )
+
+    cleared = await client.patch("/me", headers=headers, json={"tts_api_key": ""})
+
+    assert cleared.json()["tts_api_key_set"] is False

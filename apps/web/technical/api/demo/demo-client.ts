@@ -176,7 +176,12 @@ function initialState(): DemoState {
 			ai_model: null,
 			ai_api_key_set: false,
 			translation_provider: null,
-			translation_api_key_set: false
+			translation_api_key_set: false,
+			tts_provider: null,
+			tts_endpoint_url: null,
+			tts_model: null,
+			tts_voice: null,
+			tts_api_key_set: false
 		},
 		instance: {
 			max_accounts: 5,
@@ -503,12 +508,13 @@ export function createDemoClient(): LumiaClient {
 			disableTotp: async () => settle(undefined),
 			getMe: async () => settle({ ...state.me }),
 			updateMe: async (payload: MeUpdate) => {
-				const { ai_api_key, translation_api_key, ...rest } = payload;
+				const { ai_api_key, translation_api_key, tts_api_key, ...rest } = payload;
 				state.me = { ...state.me, ...rest } as Me;
 				if (ai_api_key !== undefined) state.me.ai_api_key_set = Boolean(ai_api_key);
 				if (translation_api_key !== undefined) {
 					state.me.translation_api_key_set = Boolean(translation_api_key);
 				}
+				if (tts_api_key !== undefined) state.me.tts_api_key_set = Boolean(tts_api_key);
 				persist();
 				return settle({ ...state.me });
 			},
@@ -748,6 +754,11 @@ export function createDemoClient(): LumiaClient {
 					image_url: null,
 					language: 'fr'
 				});
+			},
+			/** The demo has no speech provider, so it answers like an install with none configured. */
+			getArticleAudio: async (): Promise<Blob> => {
+				await settle(null);
+				throw new ApiError(503, { detail: 'no_tts_provider' });
 			},
 			/** A one-line stand-in: the demo has no article body to pack, but the button must work. */
 			exportArticleEpub: async () =>

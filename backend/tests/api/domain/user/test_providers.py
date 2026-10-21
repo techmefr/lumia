@@ -2,13 +2,14 @@ from collections.abc import Iterator
 
 import pytest
 
-from api.domain.user.models import AIProvider, TranslationProvider, User
-from api.domain.user.providers import chat_client_for, translator_for
+from api.domain.user.models import AIProvider, TranslationProvider, TtsProvider, User
+from api.domain.user.providers import chat_client_for, speech_synthesizer_for, translator_for
 from api.technical.crypto.secret_box import encrypt_secret
 from config.deepl import get_deepl_config
 from worker.technical.ai.anthropic_client import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
 from worker.technical.ai.anthropic_client import AnthropicChatClient
 from worker.technical.ai.llm_client import OpenAiCompatibleChatClient
+from worker.technical.speech.openai_speech import OpenAiSpeechSynthesizer
 from worker.technical.translation.deepl_client import DeeplTranslator
 from worker.technical.translation.llm_translator import LlmTranslator
 
@@ -141,3 +142,40 @@ def test_chat_client_for_an_anthropic_user_uses_the_messages_client() -> None:
     assert isinstance(client, AnthropicChatClient)
     assert client._api_key == "sk-ant-secret"
     assert client._model == ANTHROPIC_DEFAULT_MODEL
+
+
+def test_speech_synthesizer_for_an_account_without_a_key_is_none() -> None:
+    assert speech_synthesizer_for(_user(tts_provider=TtsProvider.OPENAI)) is None
+    assert speech_synthesizer_for(_user()) is None
+
+
+def test_speech_synthesizer_for_openai_uses_its_own_endpoint_and_defaults() -> None:
+    synthesizer = speech_synthesizer_for(
+        _user(tts_provider=TtsProvider.OPENAI, tts_api_key_encrypted=encrypt_secret("sk-tts"))
+    )
+
+    assert isinstance(synthesizer, OpenAiSpeechSynthesizer)
+    assert synthesizer.base_url == "https://api.openai.com/v1"
+    assert synthesizer.cache_key == "https://api.openai.com/v1|tts-1|alloy"
+    assert synthesizer._api_key == "sk-tts"
+
+
+def test_speech_synthesizer_for_a_custom_endpoint_uses_the_accounts_url_model_and_voice() -> None:
+    synthesizer = speech_synthesizer_for(
+        _user(
+            tts_provider=TtsProvider.CUSTOM,
+            tts_api_key_encrypted=encrypt_secret("k"),
+            tts_endpoint_url="https://voice.example.test/v1/",
+            tts_model="kokoro",
+            tts_voice="af_bella",
+        )
+    )
+
+    assert isinstance(synthesizer, OpenAiSpeechSynthesizer)
+    assert synthesizer.cache_key == "https://voice.example.test/v1|kokoro|af_bella"
+
+
+def test_speech_synthesizer_for_a_custom_provider_without_a_url_is_none() -> None:
+    user = _user(tts_provider=TtsProvider.CUSTOM, tts_api_key_encrypted=encrypt_secret("k"))
+
+    assert speech_synthesizer_for(user) is None

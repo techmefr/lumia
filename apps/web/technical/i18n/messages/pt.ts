@@ -646,6 +646,21 @@ export const pt: Catalogue = {
 	'ai.loading': 'A carregar as definições…',
 	'ai.summaryKeyDeleted': 'Chave do resumo eliminada.',
 	'ai.deeplKeyDeleted': 'Chave DeepL eliminada.',
+	'tts.title': 'Voz natural',
+	'tts.intro':
+		'Ouve os artigos em voz alta com um fornecedor de voz em vez da voz do teu dispositivo. Sem fornecedor, é usada a voz do navegador.',
+	'tts.provider': 'Fornecedor de voz',
+	'tts.providerNone': 'Nenhum — voz do navegador',
+	'tts.providerCustom': 'Endpoint compatível com OpenAI (alojado por ti)',
+	'tts.voice': 'Voz',
+	'tts.voiceDefault': 'deixa vazio para o valor predefinido',
+	'tts.endpointHint':
+		'O servidor tem de ser acessível a partir da instância do Lumia; os endereços privados são recusados, a menos que o operador os permita.',
+	'tts.keyDeleted': 'Chave de voz eliminada.',
+	'tts.loading': 'A carregar as definições de voz…',
+	'tts.loadFailed': 'Não foi possível carregar as definições de voz.',
+	'tts.saveFailed': 'Não foi possível guardar. Verifica a chave e tenta de novo.',
+	'tts.saved': 'Definições de voz guardadas.',
 
 	'admin.title': 'Administração',
 	'admin.intro': 'Reservado à administração da instância: quotas, contas e pedidos de acesso.',

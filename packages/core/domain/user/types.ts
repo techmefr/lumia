@@ -3,6 +3,8 @@ export type Theme = 'light' | 'dark' | 'system';
 export type OrbitPosition = 'left' | 'right';
 export type AIProvider = 'mistral' | 'openai' | 'anthropic' | 'gemma' | 'custom';
 export type TranslationProvider = 'deepl';
+/** The speech provider behind the natural voice: OpenAI itself, or any server speaking its speech API. */
+export type TtsProvider = 'openai' | 'custom';
 /** The reading language, which the backend translates foreign articles into. */
 export type PreferredLanguage =
 	| 'fr'
@@ -76,6 +78,11 @@ export interface Me {
 	ai_api_key_set: boolean;
 	translation_provider: TranslationProvider | null;
 	translation_api_key_set: boolean;
+	tts_provider: TtsProvider | null;
+	tts_endpoint_url: string | null;
+	tts_model: string | null;
+	tts_voice: string | null;
+	tts_api_key_set: boolean;
 }
 
 export interface MeUpdate {
@@ -93,4 +100,10 @@ export interface MeUpdate {
 	ai_model?: string | null;
 	translation_provider?: TranslationProvider | null;
 	translation_api_key?: string | null;
+	tts_provider?: TtsProvider | null;
+	/** An empty string or null removes the stored key. */
+	tts_api_key?: string | null;
+	tts_endpoint_url?: string | null;
+	tts_model?: string | null;
+	tts_voice?: string | null;
 }

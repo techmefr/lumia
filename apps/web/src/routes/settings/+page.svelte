@@ -9,6 +9,7 @@
 	import Orbit from '@lucide/svelte/icons/orbit';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import AiSettings from '$domain/settings/ai-settings.svelte';
+	import TtsSettings from '$domain/settings/tts-settings.svelte';
 	import PasswordSettings from '$domain/settings/password-settings.svelte';
 	import TotpSettings from '$domain/settings/totp-settings.svelte';
 	import FilterRules from '$domain/settings/filter-rules.svelte';
@@ -425,6 +426,8 @@
 	<FilterRules />
 
 	<AiSettings />
+
+	<TtsSettings />
 
 	{#if isAdmin}
 		<InstanceAdmin />
