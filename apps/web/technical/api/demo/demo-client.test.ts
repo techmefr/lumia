@@ -632,6 +632,25 @@ describe('the profile', () => {
 	});
 });
 
+describe('the article chat', () => {
+	const articleId = SEED_ARTICLES[0].id;
+
+	it('has no conversation to show', async () => {
+		await expect(demo.chat.listChat(articleId)).resolves.toEqual([]);
+	});
+
+	it('answers like an account with no AI provider', async () => {
+		await expect(demo.chat.sendChat(articleId, { message: 'Pourquoi ?' })).rejects.toMatchObject({
+			status: 503,
+			body: { detail: 'no_ai_provider' }
+		});
+	});
+
+	it('clears without error', async () => {
+		await expect(demo.chat.clearChat(articleId)).resolves.toBeUndefined();
+	});
+});
+
 describe('the highlights', () => {
 	const articleId = SEED_ARTICLES[0].id;
 	const draft = { quote: 'un passage', prefix: 'avant ', suffix: ' après', start_offset: 6, end_offset: 16 };

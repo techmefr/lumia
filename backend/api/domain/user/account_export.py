@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
 from api.domain.article.models import Article, ArticleShare
+from api.domain.chat.models import ChatMessage
 from api.domain.feed.models import Feed, Folder
 from api.domain.highlight.models import Highlight
 from api.domain.playlist.models import Playlist
@@ -14,6 +15,7 @@ from api.domain.user.schemas import (
     AccountExportResponse,
     ExportedAccount,
     ExportedArticle,
+    ExportedChatMessage,
     ExportedFeed,
     ExportedFilterRule,
     ExportedHighlight,
@@ -56,6 +58,20 @@ async def export_account(session: AsyncSession, user: User) -> AccountExportResp
             .order_by(Highlight.created_at, Highlight.id)
         )
     )
+
+    chat_messages = list(
+        await session.scalars(
+            select(ChatMessage)
+            .where(ChatMessage.user_id == user.id)
+            .order_by(ChatMessage.created_at, ChatMessage.id)
+        )
+    )
+    chat_articles = {
+        article.id: article
+        for article in await session.scalars(
+            select(Article).where(Article.id.in_({m.article_id for m in chat_messages}))
+        )
+    }
 
     return AccountExportResponse(
         account=ExportedAccount(
@@ -105,6 +121,16 @@ async def export_account(session: AsyncSession, user: User) -> AccountExportResp
             for highlight in highlights
         ],
         tags=await _exported_tags(session, user),
+        chat_messages=[
+            ExportedChatMessage(
+                article_title=chat_articles[message.article_id].title,
+                article_url=chat_articles[message.article_id].url,
+                role=message.role,
+                content=message.content,
+                created_at=message.created_at,
+            )
+            for message in chat_messages
+        ],
         saved=await _articles_where(session, user, UserArticleFeedback.saved),
         favorites=await _articles_where(session, user, UserArticleFeedback.favorite),
         shares=[

@@ -824,5 +824,21 @@ export const zh: Catalogue = {
 	'tags.deleteConfirm': '删除标签 {name}？它将从 {count} 篇文章中移除。',
 	'tags.nameTaken': '已存在同名标签。',
 	'tags.renamed': '标签已重命名。',
-	'tags.deleted': '标签已删除。'
+	'tags.deleted': '标签已删除。',
+	'chat.title': '与 AI 讨论',
+	'chat.open': '讨论这篇文章',
+	'chat.close': '关闭对话',
+	'chat.empty': '就这篇文章提问，或从快捷操作开始。',
+	'chat.you': '你',
+	'chat.assistant': '助手',
+	'chat.inputLabel': '你的问题',
+	'chat.send': '发送',
+	'chat.sending': '发送中…',
+	'chat.summarize': '总结',
+	'chat.explain': '简单解释',
+	'chat.clear': '清除对话',
+	'chat.loadFailed': '无法加载对话。',
+	'chat.unavailable': '请在设置中配置 AI 提供商和密钥，以便讨论文章。',
+	'chat.failed': '助手无法回答，请重试。',
+	'chat.thinking': '助手正在输入…'
 };

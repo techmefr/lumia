@@ -44,6 +44,7 @@
 	import ArticleTags from '$domain/tag/article-tags.svelte';
 	import OrbitButton, { type OrbitAction } from '$domain/article/orbit-button.svelte';
 	import { ArticleHighlights } from '$domain/highlight/article-highlights.svelte';
+	import ArticleChat from '$domain/chat/article-chat.svelte';
 	import HighlightCard from '$domain/highlight/highlight-card.svelte';
 
 	/** Below this, "reading" is really just landing on the page; don't record it as progress. */
@@ -558,6 +559,8 @@
 		</Card>
 
 		<RelatedArticles articleId={article.id} />
+
+		<ArticleChat articleId={article.id} />
 
 		{#if highlights.items.length > 0}
 			<section data-test-highlights aria-labelledby="article-highlights-title" class="flex flex-col gap-3">

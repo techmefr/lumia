@@ -855,5 +855,21 @@ export const de: Catalogue = {
 	'tags.deleteConfirm': 'Tag {name} löschen? Er wird von {count} Artikeln entfernt.',
 	'tags.nameTaken': 'Ein Tag mit diesem Namen gibt es bereits.',
 	'tags.renamed': 'Tag umbenannt.',
-	'tags.deleted': 'Tag gelöscht.'
+	'tags.deleted': 'Tag gelöscht.',
+	'chat.title': 'Mit der KI sprechen',
+	'chat.open': 'Über diesen Artikel sprechen',
+	'chat.close': 'Unterhaltung schließen',
+	'chat.empty': 'Stelle eine Frage zu diesem Artikel oder beginne mit einer Schnellaktion.',
+	'chat.you': 'Du',
+	'chat.assistant': 'Assistent',
+	'chat.inputLabel': 'Deine Frage',
+	'chat.send': 'Senden',
+	'chat.sending': 'Wird gesendet…',
+	'chat.summarize': 'Zusammenfassen',
+	'chat.explain': 'Einfach erklären',
+	'chat.clear': 'Unterhaltung löschen',
+	'chat.loadFailed': 'Die Unterhaltung konnte nicht geladen werden.',
+	'chat.unavailable': 'Richte in den Einstellungen einen KI-Anbieter mit Schlüssel ein, um über Artikel zu sprechen.',
+	'chat.failed': 'Der Assistent konnte nicht antworten. Versuche es erneut.',
+	'chat.thinking': 'Der Assistent schreibt…'
 };

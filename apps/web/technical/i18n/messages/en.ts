@@ -844,5 +844,21 @@ export const en: Catalogue = {
 	'tags.deleteConfirm': 'Delete the tag {name}? It will be removed from {count} articles.',
 	'tags.nameTaken': 'A tag with this name already exists.',
 	'tags.renamed': 'Tag renamed.',
-	'tags.deleted': 'Tag deleted.'
+	'tags.deleted': 'Tag deleted.',
+	'chat.title': 'Discuss with AI',
+	'chat.open': 'Discuss this article',
+	'chat.close': 'Close the conversation',
+	'chat.empty': 'Ask a question about this article, or start with a quick action.',
+	'chat.you': 'You',
+	'chat.assistant': 'Assistant',
+	'chat.inputLabel': 'Your question',
+	'chat.send': 'Send',
+	'chat.sending': 'Sending…',
+	'chat.summarize': 'Summarise',
+	'chat.explain': 'Explain simply',
+	'chat.clear': 'Clear the conversation',
+	'chat.loadFailed': 'Could not load the conversation.',
+	'chat.unavailable': 'Set up an AI provider and key in your settings to discuss articles.',
+	'chat.failed': 'The assistant could not answer. Try again.',
+	'chat.thinking': 'The assistant is writing…'
 };

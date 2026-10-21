@@ -20,6 +20,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 from api.domain.article import models as article_models  # noqa: F401
 from api.domain.audio import models as audio_models  # noqa: F401
+from api.domain.chat import models as chat_models  # noqa: F401
 from api.domain.export import models as export_models  # noqa: F401
 from api.domain.feed import models as feed_models  # noqa: F401
 from api.domain.highlight import models as highlight_models  # noqa: F401

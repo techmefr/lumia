@@ -4,6 +4,7 @@ from zoneinfo import available_timezones
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from api.domain.chat.models import ChatRole
 from api.domain.feed.models import SourceType
 from api.domain.recommendation.models import FilterMode
 from api.domain.user.models import (
@@ -217,6 +218,14 @@ class ExportedHighlight(BaseModel):
     created_at: datetime
 
 
+class ExportedChatMessage(BaseModel):
+    article_title: str
+    article_url: str
+    role: ChatRole
+    content: str
+    created_at: datetime
+
+
 class AccountExportResponse(BaseModel):
     account: ExportedAccount
     feeds: list[ExportedFeed]
@@ -225,6 +234,7 @@ class AccountExportResponse(BaseModel):
     playlists: list[ExportedPlaylist]
     highlights: list[ExportedHighlight]
     tags: list[ExportedTag]
+    chat_messages: list[ExportedChatMessage]
     saved: list[ExportedArticle]
     favorites: list[ExportedArticle]
     shares: list[ExportedShare]

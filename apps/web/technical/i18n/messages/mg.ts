@@ -858,5 +858,21 @@ export const mg: Catalogue = {
 	'tags.deleteConfirm': 'Fafana ve ny tag {name}? Horesahina amin\'ny lahatsoratra {count} izy.',
 	'tags.nameTaken': 'Efa misy tag mitondra io anarana io.',
 	'tags.renamed': 'Voaova anarana ny tag.',
-	'tags.deleted': 'Voafafa ny tag.'
+	'tags.deleted': 'Voafafa ny tag.',
+	'chat.title': 'Mitenena amin\'ny AI',
+	'chat.open': 'Mitenena momba ity lahatsoratra ity',
+	'chat.close': 'Akatony ny resaka',
+	'chat.empty': 'Manontania momba ity lahatsoratra ity, na manomboka amin\'ny hetsika haingana.',
+	'chat.you': 'Ianao',
+	'chat.assistant': 'Mpanampy',
+	'chat.inputLabel': 'Ny fanontanianao',
+	'chat.send': 'Alefa',
+	'chat.sending': 'Eo am-pandefasana…',
+	'chat.summarize': 'Fintina',
+	'chat.explain': 'Ampazavao tsotra',
+	'chat.clear': 'Fafao ny resaka',
+	'chat.loadFailed': 'Tsy azo nalaina ny resaka.',
+	'chat.unavailable': 'Alefaso ao amin\'ny fikandrana ny mpamatsy AI sy ny fanalahidiny mba hiresahana momba ny lahatsoratra.',
+	'chat.failed': 'Tsy nahavaly ny mpanampy. Andramo indray.',
+	'chat.thinking': 'Mpanampy mamorona…'
 };
