@@ -306,6 +306,8 @@ export const en: Catalogue = {
 	'player.expand': 'Show details',
 	'player.collapse': 'Hide details',
 	'player.close': 'Close the player',
+	'player.enclosureFailed': 'Could not play this episode from its source.',
+	'player.listenEpisode': 'Play the episode',
 	'player.seek': 'Position in the article',
 	'player.seekValue': '{percent}% read aloud',
 	'playlists.title': 'Playlists',

@@ -95,6 +95,8 @@ def to_summary(
         url=article.url,
         summary=article.summary,
         image_url=article.image_url,
+        enclosure_url=article.enclosure_url,
+        enclosure_type=article.enclosure_type,
         published_at=article.published_at,
         reading_minutes=estimate_reading_minutes(article.content),
         read=state.read,

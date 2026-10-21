@@ -313,6 +313,8 @@ export const es: Catalogue = {
 	'player.expand': 'Mostrar detalles',
 	'player.collapse': 'Ocultar detalles',
 	'player.close': 'Cerrar el reproductor',
+	'player.enclosureFailed': 'No se pudo reproducir este episodio desde su origen.',
+	'player.listenEpisode': 'Reproducir el episodio',
 	'player.seek': 'Posición en el artículo',
 	'player.seekValue': '{percent} % leído',
 	'playlists.title': 'Listas',

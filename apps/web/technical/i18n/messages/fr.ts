@@ -316,6 +316,8 @@ export const fr = {
 	'player.expand': 'Afficher les détails',
 	'player.collapse': 'Masquer les détails',
 	'player.close': 'Fermer le lecteur',
+	'player.enclosureFailed': 'Impossible de lire cet épisode depuis sa source.',
+	'player.listenEpisode': "Écouter l'épisode",
 	'player.seek': "Position dans l'article",
 	'player.seekValue': '{percent} % lu',
 	'playlists.title': 'Playlists',

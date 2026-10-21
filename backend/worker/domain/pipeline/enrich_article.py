@@ -211,6 +211,8 @@ async def _create_article_if_new(
         content=content,
         summary=summary,
         image_url=image_url,
+        enclosure_url=raw_article.enclosure_url,
+        enclosure_type=raw_article.enclosure_type,
         original_lang=original_lang,
         published_at=raw_article.published_at,
     )

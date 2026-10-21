@@ -370,6 +370,8 @@ export function createDemoClient(): LumiaClient {
 			url: `https://exemple.test/${article.id}`,
 			summary: article.summary,
 			image_url: null,
+			enclosure_url: null,
+			enclosure_type: null,
 			published_at: article.published_at,
 			reading_minutes: readingMinutes(article.paragraphs),
 			tags: tagsOf(id),

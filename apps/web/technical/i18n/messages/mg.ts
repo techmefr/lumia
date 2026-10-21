@@ -315,6 +315,8 @@ export const mg: Catalogue = {
 	'player.expand': 'Asehoy ny antsipiriany',
 	'player.collapse': 'Afeno ny antsipiriany',
 	'player.close': 'Akatony ny mpilalao',
+	'player.enclosureFailed': "Tsy afaka nampihoatra ity fizarana ity avy amin'ny loharano.",
+	'player.listenEpisode': 'Henoy ny fizarana',
 	'player.seek': "Toerana ao amin'ny lahatsoratra",
 	'player.seekValue': '{percent}% no vakiana',
 	'playlists.title': 'Lisitra',
