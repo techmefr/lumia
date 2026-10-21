@@ -145,11 +145,18 @@ confiance à ce qui arrive sur `/webhooks/miniflux`. Renseigne-la une fois dans 
 premier `docker compose up`, la même valeur des deux côtés — le docker-compose la relie déjà aux
 deux.
 
-Tu as déjà ta propre instance Miniflux plutôt que celle fournie ? Pointe `MINIFLUX_BASE_URL` dessus
-et configure son webhook de la même façon ; voir
-[l'issue #1](https://github.com/techmefr/lumia/issues/1) pour la marche à suivre et les limites
-actuelles (les flux déjà présents dans Miniflux ne se rattachent pas encore à Lumia tout seuls —
-[l'issue #11](https://github.com/techmefr/lumia/issues/11) suit ce sujet).
+Tu as déjà ton propre Miniflux ? Passe le Miniflux fourni avec le second fichier compose :
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.external-miniflux.yml up -d
+```
+
+Renseigne `MINIFLUX_BASE_URL`, `MINIFLUX_USERNAME` et `MINIFLUX_PASSWORD` dans `.env` avec ton
+instance, et dans ses réglages Integrations, pointe le webhook sur
+`http://lumia-backend-api:8000/webhooks/miniflux` avec le même `MINIFLUX_WEBHOOK_SECRET` (utilise
+l'adresse à laquelle Miniflux joint l'API s'il ne partage pas de réseau Docker avec Lumia). Les flux
+déjà présents dans ton Miniflux sont listés dans Lumia, tu coches ceux à rattacher : rien n'est copié
+côté Miniflux. Voir [l'issue #1](https://github.com/techmefr/lumia/issues/1) pour la discussion.
 
 Pour y accéder depuis un téléphone ou une tablette du même réseau, utilise l'adresse locale de la
 machine, pas `localhost`. La [page de présentation](https://techmefr.github.io/lumia/) sait retenir
