@@ -655,6 +655,16 @@ export function createDemoClient(): LumiaClient {
 				};
 				return settle(detail);
 			},
+			getRelatedArticles: async (articleId: string) => {
+				const own = new Set(seedArticle(articleId)?.keywords ?? []);
+				const shared = (id: string) =>
+					(seedArticle(id)?.keywords ?? []).filter((term) => own.has(term)).length;
+				const ids = sortedIds()
+					.filter((id) => id !== articleId && shared(id) > 0)
+					.sort((a, b) => shared(b) - shared(a))
+					.slice(0, 5);
+				return settle(summaries(ids));
+			},
 			// The demo build fetches no page, so a reading list is accepted and has nothing to import.
 			importReadingList: async () => settle({ import_id: 'demo', total: 0 }),
 			getReadingListImportProgress: async () =>

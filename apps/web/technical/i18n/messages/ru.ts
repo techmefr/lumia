@@ -441,6 +441,7 @@ export const ru: Catalogue = {
 	'article.translating': 'Перевод…',
 	'article.showOriginal': 'Показать оригинал',
 	'article.translatedNotice': 'Машинный перевод',
+	'article.related': 'Похожие статьи',
 	'article.translateUnavailable': 'Для этого языка не настроен сервис перевода.',
 	'article.translateFailed': 'Перевод не удался. Статья остаётся на своём языке.',
 	'article.exportEpub': 'Экспорт в EPUB',

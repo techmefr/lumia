@@ -21,7 +21,7 @@ vi.mock('$technical/api/client', () => ({
 	isDemo: false,
 	lumia: {
 		user: { isAuthenticated: vi.fn(() => true), getMe: vi.fn() },
-		article: { getArticle: vi.fn(), translateArticle: vi.fn() },
+		article: { getArticle: vi.fn(), translateArticle: vi.fn(), getRelatedArticles: vi.fn() },
 		playlist: { listPlaylists: vi.fn(), addArticle: vi.fn(), createPlaylist: vi.fn() },
 		recommendation: { sendFeedback: vi.fn() }
 	}
@@ -69,6 +69,7 @@ beforeEach(() => {
 	api.user.isAuthenticated.mockReturnValue(true);
 	api.user.getMe.mockResolvedValue(me());
 	api.article.getArticle.mockResolvedValue(articleDetail('article-1'));
+	api.article.getRelatedArticles.mockResolvedValue([]);
 	api.recommendation.sendFeedback.mockResolvedValue(undefined);
 	api.playlist.listPlaylists.mockResolvedValue([]);
 });

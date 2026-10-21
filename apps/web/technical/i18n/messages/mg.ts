@@ -445,6 +445,7 @@ export const mg: Catalogue = {
 	'article.translating': 'Eo am-pandikana…',
 	'article.showOriginal': 'Hijery ny tany am-boalohany',
 	'article.translatedNotice': 'Fandikan-teny automatika',
+	'article.related': 'Lahatsoratra mifandraika',
 	'article.translateUnavailable': 'Tsy misy serivisy fandikan-teny voaomana ho an\'ity teny ity.',
 	'article.translateFailed': 'Tsy nahomby ny fandikana. Mijanona amin\'ny teniny ny lahatsoratra.',
 	'article.exportEpub': 'Alaina ho EPUB',

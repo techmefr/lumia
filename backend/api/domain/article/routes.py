@@ -18,6 +18,7 @@ from api.domain.article.import_progress import ProgressRedis, read_progress, sta
 from api.domain.article.models import Article, ArticleKeyword
 from api.domain.article.reading_list_parser import ReadingListSource, parse_reading_list
 from api.domain.article.reading_time import estimate_reading_minutes
+from api.domain.article.related_service import find_related_articles
 from api.domain.article.save_url_service import save_url
 from api.domain.article.schemas import (
     ArticleDetailResponse,
@@ -344,6 +345,17 @@ async def get_article(
         content=article.content,
         keywords=keywords,
     )
+
+
+@router.get("/articles/{article_id}/related", response_model=list[ArticleSummaryResponse])
+async def list_related_articles(
+    article_id: UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[ArticleSummaryResponse]:
+    article = await load_own_article(session, article_id, user)
+    related = await find_related_articles(session, user.id, article)
+    return await to_summaries(session, user.id, related)
 
 
 @router.get("/articles/{article_id}/export.epub")

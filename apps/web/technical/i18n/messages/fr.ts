@@ -446,6 +446,7 @@ export const fr = {
 	'article.translating': 'Traduction…',
 	'article.showOriginal': 'Voir l\'original',
 	'article.translatedNotice': 'Traduction automatique',
+	'article.related': 'Articles similaires',
 	'article.translateUnavailable': 'Aucun service de traduction configuré pour cette langue.',
 	'article.translateFailed': 'La traduction a échoué. L\'article reste dans sa langue.',
 	'article.exportEpub': 'Exporter en EPUB',

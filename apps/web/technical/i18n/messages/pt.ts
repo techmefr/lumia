@@ -444,6 +444,7 @@ export const pt: Catalogue = {
 	'article.translating': 'A traduzir…',
 	'article.showOriginal': 'Ver o original',
 	'article.translatedNotice': 'Tradução automática',
+	'article.related': 'Artigos relacionados',
 	'article.translateUnavailable': 'Nenhum serviço de tradução configurado para esta língua.',
 	'article.translateFailed': 'A tradução falhou. O artigo permanece na sua língua.',
 	'article.exportEpub': 'Exportar como EPUB',
