@@ -31,6 +31,7 @@ from api.domain.playlist import models as playlist_models  # noqa: F401
 from api.domain.recommendation import models as recommendation_models  # noqa: F401
 from api.domain.saved_search import models as saved_search_models  # noqa: F401
 from api.domain.user import models as user_models  # noqa: F401
+from api.domain.webhook import models as webhook_models  # noqa: F401
 from api.technical.orm import Base
 from config.database import DatabaseConfig
 

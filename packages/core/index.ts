@@ -11,6 +11,7 @@ import { createRecommendationApi } from './domain/recommendation/api';
 import { createSavedSearchApi } from './domain/saved-search/api';
 import { createTagApi } from './domain/tag/api';
 import { createUserApi } from './domain/user/api';
+import { createWebhookApi } from './domain/webhook/api';
 
 export * from './technical/http-client';
 export * from './technical/token-store';
@@ -40,6 +41,8 @@ export * from './domain/saved-search/types';
 export * from './domain/saved-search/api';
 export * from './domain/tag/types';
 export * from './domain/tag/api';
+export * from './domain/webhook/types';
+export * from './domain/webhook/api';
 
 export function createLumiaClient(baseUrl: string, tokenStore: TokenStore = createLocalStorageTokenStore()) {
 	const http = createHttpClient({ baseUrl, tokenStore });
@@ -55,7 +58,8 @@ export function createLumiaClient(baseUrl: string, tokenStore: TokenStore = crea
 		highlight: createHighlightApi(http),
 		chat: createChatApi(http),
 		savedSearch: createSavedSearchApi(http),
-		tag: createTagApi(http)
+		tag: createTagApi(http),
+		webhook: createWebhookApi(http)
 	};
 }
 

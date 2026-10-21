@@ -17,6 +17,7 @@
 	import TagManager from '$domain/settings/tag-manager.svelte';
 	import NotificationSettings from '$domain/settings/notification-settings.svelte';
 	import DigestSettings from '$domain/settings/digest-settings.svelte';
+	import OutboundWebhooks from '$domain/settings/outbound-webhooks.svelte';
 	import InstanceAdmin from '$domain/settings/instance-admin.svelte';
 	import { lumia } from '$technical/api/client';
 	import {
@@ -426,6 +427,8 @@
 	<NotificationSettings />
 
 	<DigestSettings />
+
+	<OutboundWebhooks />
 
 	<FilterRules />
 
