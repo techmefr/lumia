@@ -736,7 +736,7 @@ export const zh: Catalogue = {
 	'share.revoked': '公开链接已删除。',
 	'share.failed': '无法更改公开链接，请稍后再试。',
 	'share.noindexNote': '已要求搜索引擎不要索引分享页面。',
-	'print.button': '打印',
+	'print.button': '打印 / 保存为 PDF',
 	'print.sourceLabel': '来源：',
 	'print.publishedLabel': '发布于：',
 	'publicShare.loading': '正在加载文章',

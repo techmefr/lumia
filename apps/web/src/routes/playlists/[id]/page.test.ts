@@ -304,3 +304,21 @@ describe('a shared playlist', () => {
 		);
 	});
 });
+
+describe('printing', () => {
+	it('hands the page to the browser print dialog', async () => {
+		const print = vi.fn();
+		vi.stubGlobal('print', print);
+		const view = await loaded([articleSummary('a')]);
+
+		await fireEvent.click(view.container.querySelector<HTMLButtonElement>('[data-test-print-button]')!);
+
+		expect(print).toHaveBeenCalledOnce();
+	});
+
+	it('keeps the row controls off the paper copy', async () => {
+		const view = await loaded([articleSummary('a')]);
+
+		expect(view.rows()[0]?.querySelector('button')?.parentElement?.className).toContain('print:hidden');
+	});
+});

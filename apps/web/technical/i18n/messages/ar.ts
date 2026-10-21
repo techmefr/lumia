@@ -750,7 +750,7 @@ export const ar: Catalogue = {
 	'share.revoked': 'تمت إزالة الرابط العام.',
 	'share.failed': 'تعذّر تغيير الرابط العام. حاول مرة أخرى لاحقًا.',
 	'share.noindexNote': 'يُطلب من محركات البحث عدم فهرسة الصفحات المشتركة.',
-	'print.button': 'طباعة',
+	'print.button': 'طباعة / حفظ بصيغة PDF',
 	'print.sourceLabel': 'المصدر:',
 	'print.publishedLabel': 'تاريخ النشر:',
 	'publicShare.loading': 'جارٍ تحميل المقال',

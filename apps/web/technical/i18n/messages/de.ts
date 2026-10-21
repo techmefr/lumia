@@ -767,7 +767,7 @@ export const de: Catalogue = {
 	'share.revoked': 'Öffentlicher Link entfernt.',
 	'share.failed': 'Der öffentliche Link konnte nicht geändert werden. Versuchen Sie es später erneut.',
 	'share.noindexNote': 'Suchmaschinen werden gebeten, geteilte Seiten nicht zu indexieren.',
-	'print.button': 'Drucken',
+	'print.button': 'Drucken / als PDF speichern',
 	'print.sourceLabel': 'Quelle:',
 	'print.publishedLabel': 'Veröffentlicht:',
 	'publicShare.loading': 'Artikel wird geladen',

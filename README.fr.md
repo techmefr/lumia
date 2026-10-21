@@ -44,6 +44,7 @@ lecture et la synthèse vocale sur un vrai appareil avant d'installer quoi que c
   dossier/flux/auteur/mot-clé.
 - **Playlists** — des files d'articles ordonnées avec leur durée totale, réordonnables, écoutables
   d'un bout à l'autre.
+- **Exports** — un article ou une playlist en JSON ou EPUB, et en PDF via la boîte d'impression du navigateur.
 - **Pagination** sur toutes les listes, 24 articles à la fois.
 
 ### Faire entrer les articles

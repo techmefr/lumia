@@ -41,6 +41,7 @@ text-to-speech on a real device before installing anything.
   filters.
 - **Playlists** — ordered queues of articles with a total duration, reorderable, readable aloud
   end to end.
+- **Exports** — an article or a playlist as JSON or EPUB, and as PDF through the browser's print dialog.
 - **Paging** on every list, 24 articles at a time.
 
 ### Getting articles in

@@ -764,7 +764,7 @@ export const ru: Catalogue = {
 	'share.revoked': 'Публичная ссылка удалена.',
 	'share.failed': 'Не удалось изменить публичную ссылку. Повторите попытку позже.',
 	'share.noindexNote': 'Поисковым системам предписано не индексировать страницы с общим доступом.',
-	'print.button': 'Печать',
+	'print.button': 'Печать / сохранить в PDF',
 	'print.sourceLabel': 'Источник:',
 	'print.publishedLabel': 'Опубликовано:',
 	'publicShare.loading': 'Загрузка статьи',
