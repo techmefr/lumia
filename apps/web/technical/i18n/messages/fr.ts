@@ -773,7 +773,7 @@ export const fr = {
 	'share.revoked': 'Lien public supprimé.',
 	'share.failed': "Le lien public n'a pas pu être modifié. Réessayez plus tard.",
 	'share.noindexNote': 'Les moteurs de recherche ont pour consigne de ne pas indexer les pages partagées.',
-	'print.button': 'Imprimer',
+	'print.button': 'Imprimer / enregistrer en PDF',
 	'print.sourceLabel': 'Source :',
 	'print.publishedLabel': 'Publié :',
 	'publicShare.loading': "Chargement de l'article",

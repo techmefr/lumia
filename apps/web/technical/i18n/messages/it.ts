@@ -771,7 +771,7 @@ export const it: Catalogue = {
 	'share.revoked': 'Link pubblico rimosso.',
 	'share.failed': 'Non è stato possibile modificare il link pubblico. Riprovate più tardi.',
 	'share.noindexNote': 'Ai motori di ricerca è chiesto di non indicizzare le pagine condivise.',
-	'print.button': 'Stampa',
+	'print.button': 'Stampa / salva come PDF',
 	'print.sourceLabel': 'Fonte:',
 	'print.publishedLabel': 'Pubblicato:',
 	'publicShare.loading': "Caricamento dell'articolo",

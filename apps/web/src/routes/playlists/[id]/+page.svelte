@@ -11,6 +11,7 @@
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Clock from '@lucide/svelte/icons/clock';
+	import Printer from '@lucide/svelte/icons/printer';
 	import ExportPlaylistButton from '$domain/playlist/export-playlist-button.svelte';
 	import PlaylistSharing from '../../../../domain/playlist/playlist-sharing.svelte';
 	import { lumia } from '$technical/api/client';
@@ -85,7 +86,7 @@
 <div class="flex flex-col gap-6 pb-6">
 	<a
 		href="{base}/playlists"
-		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline"
+		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline print:hidden"
 	>
 		<ArrowLeft class="size-4" />
 		{t('playlists.all')}
@@ -110,7 +111,18 @@
 					</Badge>
 				{/if}
 			</h1>
-			<ExportPlaylistButton playlistId={playlist.id} name={playlist.name} />
+			<div class="flex flex-wrap items-center gap-2 print:hidden">
+				<ExportPlaylistButton playlistId={playlist.id} name={playlist.name} />
+				<button
+					type="button"
+					data-test-print-button
+					onclick={() => window.print()}
+					class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+				>
+					<Printer class="size-4" aria-hidden="true" />
+					{t('print.button')}
+				</button>
+			</div>
 			<span class="flex items-center gap-1.5 text-sm text-muted-foreground">
 				<Clock class="size-4" />
 				{playlist.articles.length > 1
@@ -122,7 +134,7 @@
 		</div>
 
 		{#if player.supported && playlist.articles.length > 0}
-			<div>
+			<div class="print:hidden">
 				<Button data-test-listen-all onclick={() => playFrom(0)}>
 					<Play class="size-4" />
 					{t('playlists.listenAll')}
@@ -131,7 +143,7 @@
 		{/if}
 
 		{#if !player.supported}
-			<p class="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+			<p class="rounded-lg border border-dashed p-3 text-sm text-muted-foreground print:hidden">
 				{t('playlists.noSpeech')}
 			</p>
 		{/if}
@@ -145,11 +157,13 @@
 			<ol class="flex flex-col gap-2">
 				{#each playlist.articles as article, index (article.id)}
 					<li>
-						<Card class={player.current?.id === article.id ? 'border-primary' : ''}>
+						<Card
+							class="{player.current?.id === article.id ? 'border-primary' : ''} print:border-0 print:shadow-none"
+						>
 							<CardContent class="flex flex-wrap items-center gap-3 py-3">
 								<span class="w-6 shrink-0 text-sm text-muted-foreground">{index + 1}</span>
 								<a href="{base}/articles/{article.id}" class="flex min-w-0 flex-1 flex-col gap-0.5">
-									<span class="truncate font-medium">{article.title}</span>
+									<span class="truncate font-medium print:whitespace-normal">{article.title}</span>
 									<span class="text-xs text-muted-foreground">
 										{article.source_label} · {t('common.minutes', {
 											count: article.reading_minutes
@@ -162,7 +176,7 @@
 										{/if}
 									</span>
 								</a>
-								<div class="flex items-center gap-0.5">
+								<div class="flex items-center gap-0.5 print:hidden">
 									<Button size="sm" variant="ghost" onclick={() => playFrom(index)}>
 										<Play class="size-4" />
 										<span class="sr-only">{t('playlists.listen', { title: article.title })}</span>
@@ -202,10 +216,12 @@
 
 		{/if}
 
-		<PlaylistSharing
-			playlistId={playlist.id}
-			role={playlist.role}
-			onleave={() => goto(`${base}/playlists`)}
-		/>
+		<div class="print:hidden">
+			<PlaylistSharing
+				playlistId={playlist.id}
+				role={playlist.role}
+				onleave={() => goto(`${base}/playlists`)}
+			/>
+		</div>
 	{/if}
 </div>

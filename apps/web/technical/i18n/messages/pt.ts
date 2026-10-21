@@ -771,7 +771,7 @@ export const pt: Catalogue = {
 	'share.revoked': 'Ligação pública removida.',
 	'share.failed': 'Não foi possível alterar a ligação pública. Tente novamente mais tarde.',
 	'share.noindexNote': 'Pede-se aos motores de pesquisa que não indexem as páginas partilhadas.',
-	'print.button': 'Imprimir',
+	'print.button': 'Imprimir / guardar como PDF',
 	'print.sourceLabel': 'Fonte:',
 	'print.publishedLabel': 'Publicado:',
 	'publicShare.loading': 'A carregar o artigo',

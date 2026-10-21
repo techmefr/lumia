@@ -774,7 +774,7 @@ export const mg: Catalogue = {
 	'share.revoked': 'Nofafana ny rohy.',
 	'share.failed': 'Tsy nety niova ny rohy. Andramo indray any aoriana.',
 	'share.noindexNote': 'Angatahina tsy hanasokajy ny pejy zaraina ny milina fikarohana.',
-	'print.button': 'Pirinty',
+	'print.button': 'Pirinty / tehirizo ho PDF',
 	'print.sourceLabel': 'Loharano:',
 	'print.publishedLabel': 'Navoaka:',
 	'publicShare.loading': 'Mampiditra ny lahatsoratra',

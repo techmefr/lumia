@@ -760,7 +760,7 @@ export const en: Catalogue = {
 	'share.revoked': 'Public link removed.',
 	'share.failed': 'The public link could not be changed. Try again later.',
 	'share.noindexNote': 'Search engines are asked not to index shared pages.',
-	'print.button': 'Print',
+	'print.button': 'Print / save as PDF',
 	'print.sourceLabel': 'Source:',
 	'print.publishedLabel': 'Published:',
 	'publicShare.loading': 'Loading the article',
