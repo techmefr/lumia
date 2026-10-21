@@ -1,0 +1,27 @@
+{
+	"name": "create-lumia",
+	"version": "0.0.1",
+	"description": "Set up, check and start a self-hosted Lumia instance",
+	"license": "AGPL-3.0-only",
+	"type": "module",
+	"bin": { "create-lumia": "./dist/index.js" },
+	"files": ["dist"],
+	"engines": { "node": ">=20" },
+	"scripts": {
+		"build": "tsup",
+		"check": "tsc --noEmit",
+		"test": "vitest run",
+		"test:coverage": "vitest run --coverage"
+	},
+	"dependencies": {
+		"citty": "^0.1.6",
+		"consola": "^3.4.2"
+	},
+	"devDependencies": {
+		"@types/node": "^24.0.0",
+		"@vitest/coverage-v8": "^5.0.0",
+		"tsup": "^8.5.0",
+		"typescript": "^6.0.3",
+		"vitest": "^5.0.0"
+	}
+}

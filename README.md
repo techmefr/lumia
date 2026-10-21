@@ -140,6 +140,10 @@ if it's reached from a domain or a LAN address instead.
 whatever reaches `/webhooks/miniflux`. Set it once in `.env` before the first `docker compose up`,
 the same value on both sides — the compose file already wires it to both.
 
+The [`create-lumia`](packages/create-lumia/README.md) CLI automates the setup from a checkout:
+`init` writes `.env` with generated secrets, `doctor` checks docker, ports and `.env`, `up` starts the
+stack with the right compose files. It is not published to npm yet.
+
 Already running your own Miniflux? Skip the bundled one with the second compose file:
 
 ```bash
