@@ -1,7 +1,7 @@
 """add export jobs
 
 Revision ID: a9d41e7b3c60
-Revises: a4d82f9e1b36
+Revises: a3e9b7d21c64
 Create Date: 2026-10-21 11:30:00.000000
 
 """
@@ -15,7 +15,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "a9d41e7b3c60"
-down_revision: str | Sequence[str] | None = "a4d82f9e1b36"
+down_revision: str | Sequence[str] | None = "a3e9b7d21c64"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
