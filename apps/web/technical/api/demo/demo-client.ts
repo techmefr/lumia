@@ -675,7 +675,10 @@ export function createDemoClient(): LumiaClient {
 			translateArticle: async (): Promise<ArticleTranslation> => {
 				await settle(null);
 				throw new ApiError(503, { detail: 'no_translation_provider' });
-			}
+			},
+			/** A one-line stand-in: the demo has no article body to pack, but the button must work. */
+			exportArticleEpub: async () =>
+				settle(new Blob(['Lumia demo'], { type: 'application/epub+zip' }))
 		},
 		recommendation: {
 			getEtincelle: async (limit = 20, offset = 0) => {

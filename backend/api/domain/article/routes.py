@@ -3,10 +3,12 @@ from typing import Any, Literal
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import ColumnElement, Select, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.domain.article.epub_export import EpubChapter, build_epub
+from api.domain.article.export_filename import attachment_header
 from api.domain.article.models import Article, ArticleKeyword
 from api.domain.article.reading_time import estimate_reading_minutes
 from api.domain.article.save_url_service import save_url
@@ -37,6 +39,7 @@ from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.domain.user.providers import get_translator
 from api.technical.db import get_db_session
+from api.technical.net.image_fetcher import ImageFetcher, get_image_fetcher
 from worker.technical.content_extraction import (
     PageExtractor,
     PageFetchError,
@@ -259,6 +262,35 @@ async def get_article(
         ).model_dump(),
         content=article.content,
         keywords=keywords,
+    )
+
+
+@router.get("/articles/{article_id}/export.epub")
+async def export_article_epub(
+    article_id: UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+    images: ImageFetcher = Depends(get_image_fetcher),
+) -> Response:
+    article = await _load_own_article(session, article_id, user)
+    book = await build_epub(
+        title=article.title,
+        language=article.original_lang.value,
+        chapters=[
+            EpubChapter(
+                title=article.title,
+                author=article.author.name if article.author else None,
+                url=article.url,
+                published_at=article.published_at,
+                html=article.content,
+            )
+        ],
+        images=images,
+    )
+    return Response(
+        content=book,
+        media_type="application/epub+zip",
+        headers={"Content-Disposition": attachment_header(article.title, "epub")},
     )
 
 

@@ -29,6 +29,7 @@
 	import { readableText } from '$technical/speech/readable-text';
 	import { clearKaraoke, highlightChunk } from '$technical/speech/karaoke';
 	import AddToPlaylist from '$domain/playlist/add-to-playlist.svelte';
+	import ExportEpubButton from '$domain/article/export-epub-button.svelte';
 	import TranslateButton from '$domain/article/translate-button.svelte';
 	import OrbitButton, { type OrbitAction } from '$domain/article/orbit-button.svelte';
 
@@ -346,6 +347,7 @@
 						{translation}
 						onchange={(next) => (translation = next)}
 					/>
+					<ExportEpubButton articleId={article.id} title={article.title} />
 					<!-- Also in the orbit menu, deliberately. The orbit button is a thumb-zone
 					     affordance; reading aloud is a headline feature and should not cost an
 					     extra tap on a pointer device. -->

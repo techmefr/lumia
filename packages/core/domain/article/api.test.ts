@@ -111,3 +111,21 @@ describe('translateArticle', () => {
 		expect(await articles.translateArticle('article-1', 'de')).toEqual(translation);
 	});
 });
+
+describe('exportArticleEpub', () => {
+	it('asks for the epub of that article, with the session', async () => {
+		const { articles, last } = api([new Blob(['epub'])]);
+		await articles.exportArticleEpub('article-1');
+		expect(last()).toMatchObject({
+			path: '/articles/article-1/export.epub',
+			method: 'GET',
+			auth: true
+		});
+	});
+
+	it('hands back the file the server built', async () => {
+		const book = new Blob(['epub'], { type: 'application/epub+zip' });
+		const { articles } = api([book]);
+		expect(await articles.exportArticleEpub('article-1')).toBe(book);
+	});
+});

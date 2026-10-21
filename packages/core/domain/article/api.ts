@@ -65,7 +65,12 @@ export function createArticleApi(http: HttpClient) {
 		});
 	}
 
-	return { listArticles, getArticle, saveUrl, translateArticle };
+	/** The article as an EPUB, pictures embedded, ready to hand to an e-reader. */
+	async function exportArticleEpub(articleId: string): Promise<Blob> {
+		return http.requestBlob(`/articles/${articleId}/export.epub`);
+	}
+
+	return { listArticles, getArticle, saveUrl, translateArticle, exportArticleEpub };
 }
 
 export type ArticleApi = ReturnType<typeof createArticleApi>;
