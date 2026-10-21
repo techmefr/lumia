@@ -1020,6 +1020,8 @@ describe('the saved searches', () => {
 		await demo.savedSearch.deleteSavedSearch(created.id);
 		await expect(demo.savedSearch.listSavedSearches()).resolves.toEqual([]);
 		await expect(demo.savedSearch.listNotifications()).resolves.toMatchObject({ items: [] });
+	});
+});
 
 describe('the fever key', () => {
 	it('is never active, since the demo has no server for a reader app to sync from', async () => {
