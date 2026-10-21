@@ -785,3 +785,20 @@ describe('public sharing', () => {
 		await expect(demo.article.getPublicArticle('made-up')).rejects.toMatchObject({ status: 404 });
 	});
 });
+
+describe('the newsletter inbox', () => {
+	it('starts without an address, issues one, and closes it again', async () => {
+		await expect(demo.newsletter.getInboxStatus()).resolves.toMatchObject({ active: false });
+		const created = await demo.newsletter.createInbox();
+		expect(created.token).toContain('not-a-real-address');
+		await expect(demo.newsletter.getInboxStatus()).resolves.toEqual({
+			active: true,
+			created_at: created.created_at
+		});
+		await demo.newsletter.revokeInbox();
+		await expect(demo.newsletter.getInboxStatus()).resolves.toEqual({
+			active: false,
+			created_at: null
+		});
+	});
+});

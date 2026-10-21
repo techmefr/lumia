@@ -13,6 +13,7 @@ from api.domain.feed.routes import router as feed_router
 from api.domain.highlight.routes import router as highlight_router
 from api.domain.instance.provisioning_service import provision_admin_from_env
 from api.domain.instance.routes import router as instance_router
+from api.domain.newsletter.routes import router as newsletter_router
 from api.domain.playlist.routes import router as playlist_router
 from api.domain.recommendation.routes import router as recommendation_router
 from api.domain.user.routes import router as user_router
@@ -65,4 +66,5 @@ app.include_router(playlist_router)
 app.include_router(recommendation_router)
 app.include_router(article_router)
 app.include_router(article_share_router)
+app.include_router(newsletter_router)
 app.include_router(webhook_router)

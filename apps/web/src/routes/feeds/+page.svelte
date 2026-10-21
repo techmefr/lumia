@@ -36,6 +36,7 @@
 	import FeedSidebar from '$domain/feed/feed-sidebar.svelte';
 	import DiscoverFeeds from '$domain/feed/discover-feeds.svelte';
 	import InstanceFeeds from '$domain/feed/instance-feeds.svelte';
+	import NewsletterInbox from '$domain/feed/newsletter-inbox.svelte';
 	import ReadingListImport from '$domain/feed/reading-list-import.svelte';
 
 	let folders = $state<Folder[]>([]);
@@ -631,6 +632,8 @@
 				</Card>
 
 				<ReadingListImport />
+
+				<NewsletterInbox />
 
 				<Card class="magic-bento-cell">
 					<CardHeader>

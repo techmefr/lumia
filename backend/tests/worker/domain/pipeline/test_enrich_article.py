@@ -638,3 +638,26 @@ async def test_enrich_article_keeps_the_description_of_a_youtube_video(
     article = await session.scalar(select(Article).where(Article.feed_id == feed.id))
     assert article is not None
     assert article.content == FRENCH_CONTENT
+
+
+class _ExplodingContentExtractor:
+    async def extract(self, url: str, fallback_html: str) -> str:
+        raise AssertionError("a mailed article has no page to re-crawl")
+
+
+async def test_enrich_article_keeps_a_mailed_newsletter_as_received(session: AsyncSession) -> None:
+    feed = await _create_feed(session, external_feed_id="newsletters:abc")
+    feed.source_type = SourceType.MANUAL
+    await session.commit()
+    raw = _raw_article(
+        source_type="manual",
+        feed_external_id="newsletters:abc",
+        url="urn:lumia:newsletter:deadbeef",
+    )
+
+    await enrich_article({}, raw, content_extractor=_ExplodingContentExtractor())
+
+    article = await session.scalar(select(Article).where(Article.feed_id == feed.id))
+    assert article is not None
+    assert article.content == FRENCH_CONTENT
+    assert article.url == "urn:lumia:newsletter:deadbeef"

@@ -25,6 +25,8 @@ import type {
 	MarkReadScope,
 	Me,
 	MeUpdate,
+	NewsletterInboxCreated,
+	NewsletterInboxStatus,
 	PlaylistDetail,
 	PublicArticle,
 	PlaylistSummary,
@@ -443,8 +445,29 @@ export function createDemoClient(): LumiaClient {
 		persist();
 	}
 
+	/** Held for the session only: the demo has no mailbox to deliver to, so it only plays the flow. */
+	let newsletterInboxCreatedAt: string | null = null;
+
 	return {
 		tokenStore,
+		newsletter: {
+			getInboxStatus: async (): Promise<NewsletterInboxStatus> =>
+				settle({
+					active: newsletterInboxCreatedAt !== null,
+					created_at: newsletterInboxCreatedAt
+				}),
+			createInbox: async (): Promise<NewsletterInboxCreated> => {
+				newsletterInboxCreatedAt = Temporal.Now.instant().toString();
+				return settle({
+					token: `demo-${nextId('newsletter')}-not-a-real-address-0000`,
+					created_at: newsletterInboxCreatedAt
+				});
+			},
+			revokeInbox: async () => {
+				newsletterInboxCreatedAt = null;
+				return settle(undefined);
+			}
+		},
 		instance: {
 			getAccessMode: async () => settle(state.instance.access_mode),
 			getSettings: async () => settle({ ...state.instance }),

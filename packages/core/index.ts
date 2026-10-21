@@ -4,6 +4,7 @@ import { createArticleApi } from './domain/article/api';
 import { createFeedApi } from './domain/feed/api';
 import { createHighlightApi } from './domain/highlight/api';
 import { createInstanceApi } from './domain/instance/api';
+import { createNewsletterApi } from './domain/newsletter/api';
 import { createPlaylistApi } from './domain/playlist/api';
 import { createRecommendationApi } from './domain/recommendation/api';
 import { createUserApi } from './domain/user/api';
@@ -25,6 +26,8 @@ export * from './domain/recommendation/api';
 export * from './domain/highlight/types';
 export * from './domain/highlight/api';
 export * from './domain/highlight/anchor';
+export * from './domain/newsletter/types';
+export * from './domain/newsletter/api';
 export * from './domain/playlist/types';
 export * from './domain/playlist/api';
 
@@ -36,6 +39,7 @@ export function createLumiaClient(baseUrl: string, tokenStore: TokenStore = crea
 		instance: createInstanceApi(http),
 		feed: createFeedApi(http),
 		article: createArticleApi(http),
+		newsletter: createNewsletterApi(http),
 		recommendation: createRecommendationApi(http),
 		playlist: createPlaylistApi(http),
 		highlight: createHighlightApi(http)

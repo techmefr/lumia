@@ -36,10 +36,12 @@ async def enrich_article(
     content_extractor: ContentExtractor | None = None,
 ) -> None:
     content_extractor = content_extractor or TrafilaturaContentExtractor()
-    # A watch page has no article body to extract; the feed already carries the description.
+    # A watch page has no article body to extract, and a mailed newsletter has no page to
+    # re-crawl: both already carry their content.
     clean_content = (
         raw_article.content
         if youtube_video_id(raw_article.url) is not None
+        or raw_article.source_type == SourceType.MANUAL
         else await content_extractor.extract(raw_article.url, raw_article.content)
     )
     raw_article = replace(raw_article, content=clean_content)
