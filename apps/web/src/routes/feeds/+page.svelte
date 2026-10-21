@@ -579,12 +579,17 @@
 								<Label for="new-feed-url">{t('feeds.urlLabel')}</Label>
 								<Input
 									id="new-feed-url"
-									type="url"
+									type="text"
+									inputmode="url"
 									bind:value={newFeedUrl}
+									aria-describedby="new-feed-url-hint"
 									placeholder={t('feeds.urlPlaceholder')}
 									required
 									disabled={addingFeed}
 								/>
+								<p id="new-feed-url-hint" class="text-sm text-muted-foreground">
+									{t('feeds.urlHint')}
+								</p>
 							</div>
 							<div class="flex flex-col gap-1.5">
 								<Label for="new-feed-folder">{t('feeds.folder')}</Label>

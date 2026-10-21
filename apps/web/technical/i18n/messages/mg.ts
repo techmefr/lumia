@@ -222,6 +222,7 @@ export const mg: Catalogue = {
 	'feeds.addFailed': 'Tsy afaka nanampy ity fantsona ity — hamarino ny rohy.',
 	'feeds.urlLabel': 'Rohin’ny fantsona',
 	'feeds.urlPlaceholder': 'https://ohatra.com/feed.xml',
+	'feeds.urlHint': "Mety ihany koa amin'ny mombamomba Mastodon na Bluesky, subreddit na mpampiasa Reddit, na fikarohana Google News: apetaho ny adiresiny na endrika fohy toy ny r/python, @user@mastodon.social na news:climate.",
 	'feeds.importTitle': 'Hampiditra avy amin’ny Feedly',
 	'feeds.importDescription':
 		'Alefaso amin’ny endrika OPML ny fantsonao avy amin’ny Feedly, avy eo ampidiro eto ilay rakitra.',

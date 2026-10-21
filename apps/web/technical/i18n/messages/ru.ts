@@ -220,6 +220,7 @@ export const ru: Catalogue = {
 	'feeds.addFailed': 'Не удалось добавить эту ленту — проверь адрес.',
 	'feeds.urlLabel': 'Адрес ленты',
 	'feeds.urlPlaceholder': 'https://primer.com/feed.xml',
+	'feeds.urlHint': 'Работает также с профилем Mastodon или Bluesky, сабреддитом или пользователем Reddit и поиском Google Новостей: вставь адрес или короткую форму, например r/python, @user@mastodon.social или news:климат.',
 	'feeds.importTitle': 'Импорт из Feedly',
 	'feeds.importDescription': 'Выгрузи свои ленты из Feedly в OPML, затем импортируй файл здесь.',
 	'feeds.importing': 'Импорт…',

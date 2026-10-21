@@ -216,6 +216,7 @@ export const en: Catalogue = {
 	'feeds.addFailed': 'Could not add this feed — check the URL.',
 	'feeds.urlLabel': 'Feed URL',
 	'feeds.urlPlaceholder': 'https://example.com/feed.xml',
+	'feeds.urlHint': 'Also works with a Mastodon or Bluesky profile, a Reddit subreddit or user, or a Google News search: paste its address or a short form such as r/python, @user@mastodon.social or news:climate.',
 	'feeds.importTitle': 'Import from Feedly',
 	'feeds.importDescription': 'Export your feeds as OPML from Feedly, then import the file here.',
 	'feeds.importing': 'Importing…',

@@ -217,6 +217,7 @@ export const ar: Catalogue = {
 	'feeds.addFailed': 'تعذّرت إضافة هذه الخلاصة — تحقّق من الرابط.',
 	'feeds.urlLabel': 'رابط الخلاصة',
 	'feeds.urlPlaceholder': 'https://example.com/feed.xml',
+	'feeds.urlHint': 'يعمل أيضاً مع ملف Mastodon أو Bluesky الشخصي أو subreddit أو مستخدم Reddit أو بحث أخبار Google: الصق عنوانه أو صيغة مختصرة مثل r/python أو @user@mastodon.social أو news:climate.',
 	'feeds.importTitle': 'الاستيراد من Feedly',
 	'feeds.importDescription': 'صدّر خلاصاتك بصيغة OPML من Feedly ثم استورد الملف هنا.',
 	'feeds.importing': 'جارٍ الاستيراد…',

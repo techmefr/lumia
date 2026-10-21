@@ -48,6 +48,12 @@ text-to-speech on a real device before installing anything.
 - **OPML import** (a Feedly export works as-is): one folder per category, each feed registered with
   Miniflux.
 - **Add a feed by URL**, with the real feed title resolved from the source.
+- **Social sources, through their public RSS**: paste a Mastodon profile or hashtag, a Bluesky
+  profile, a Reddit subreddit or user, or a Google News search (or a short form such as `r/python`,
+  `@user@mastodon.social`, `#tag@mastodon.social`, `@alice.bsky.social`, `news:climate`). No API key
+  and no account are needed. Reddit is fetched with an honest User-Agent and Miniflux backs off on
+  429/Retry-After; its public RSS is meant for non-commercial personal use, so keep it to your own
+  reading.
 - **Save any page by URL**, Pocket-style: the page is extracted and filed on a per-user
   "Enregistrés" feed. Re-saving the same URL returns the existing article rather than duplicating it.
 - **Translation** of foreign-language articles (DeepL).

@@ -221,6 +221,7 @@ export const pt: Catalogue = {
 	'feeds.addFailed': 'Não foi possível adicionar esta fonte — verifica o URL.',
 	'feeds.urlLabel': 'URL da fonte',
 	'feeds.urlPlaceholder': 'https://exemplo.com/feed.xml',
+	'feeds.urlHint': 'Também funciona com um perfil do Mastodon ou Bluesky, um subreddit ou utilizador do Reddit, ou uma pesquisa do Google Notícias: cola o endereço ou uma forma curta como r/python, @user@mastodon.social ou news:clima.',
 	'feeds.importTitle': 'Importar do Feedly',
 	'feeds.importDescription':
 		'Exporta as tuas fontes em OPML a partir do Feedly e importa o ficheiro aqui.',

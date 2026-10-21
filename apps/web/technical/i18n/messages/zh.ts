@@ -212,6 +212,7 @@ export const zh: Catalogue = {
 	'feeds.addFailed': '无法添加该订阅源 — 请检查地址。',
 	'feeds.urlLabel': '订阅源地址',
 	'feeds.urlPlaceholder': 'https://example.com/feed.xml',
+	'feeds.urlHint': '也支持 Mastodon 或 Bluesky 个人主页、Reddit 子版块或用户、Google 新闻搜索：粘贴其地址或简写，例如 r/python、@user@mastodon.social 或 news:气候。',
 	'feeds.importTitle': '从 Feedly 导入',
 	'feeds.importDescription': '在 Feedly 中把订阅源导出为 OPML，然后在此导入文件。',
 	'feeds.importing': '正在导入…',
