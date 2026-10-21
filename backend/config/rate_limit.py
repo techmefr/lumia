@@ -29,6 +29,10 @@ class RateLimitConfig(BaseSettings):
     feed_refresh_window_minutes: int = 15
     feed_refresh_all_max_attempts: int = 3
     feed_refresh_all_window_minutes: int = 60
+    # The one unauthenticated read route: the address is the only identifier a visitor has, and the
+    # cap is there to make walking the token space as pointless as it already is improbable.
+    public_share_max_attempts: int = 60
+    public_share_window_minutes: int = 15
     # The shipped nginx sets X-Forwarded-For; a deployment that exposes the API directly must turn
     # this off, or a caller can pick their own address by sending the header themselves.
     trust_proxy_headers: bool = True

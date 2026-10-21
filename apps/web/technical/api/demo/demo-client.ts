@@ -3,6 +3,8 @@ import type {
 	AccessRequestStatus,
 	AccountUsage,
 	ArticleDetail,
+	ArticleShareCreated,
+	ArticleShareStatus,
 	ArticleScope,
 	ArticleSummary,
 	ArticleTranslation,
@@ -22,6 +24,7 @@ import type {
 	Me,
 	MeUpdate,
 	PlaylistDetail,
+	PublicArticle,
 	PlaylistSummary,
 	TokenStore,
 	UnreadCounts
@@ -77,6 +80,8 @@ interface DemoState {
 	scores: Scores;
 	me: Me;
 	instance: InstanceSettings;
+	/** Live public links, keyed by token. The real backend keeps a hash; the demo has nothing to protect. */
+	shares: Record<string, { article_id: string; created_at: string }>;
 	accessRequests: AccessRequest[];
 	nextId: number;
 }
@@ -174,8 +179,10 @@ function initialState(): DemoState {
 			max_accounts: 5,
 			disk_quota_mb: 1000,
 			access_mode: 'on_approval',
+			public_sharing_enabled: true,
 			account_count: 1
 		},
+		shares: {},
 		accessRequests: [
 			{
 				id: 'demo-request-1',
@@ -406,6 +413,12 @@ export function createDemoClient(): LumiaClient {
 		setAccessToken: () => {},
 		clear: () => {}
 	};
+
+	function revokeShares(articleId: string): void {
+		for (const [token, share] of Object.entries(state.shares)) {
+			if (share.article_id === articleId) delete state.shares[token];
+		}
+	}
 
 	function decideRequest(requestId: string, status: AccessRequestStatus): void {
 		const pending = state.accessRequests.find(
@@ -675,6 +688,49 @@ export function createDemoClient(): LumiaClient {
 			translateArticle: async (): Promise<ArticleTranslation> => {
 				await settle(null);
 				throw new ApiError(503, { detail: 'no_translation_provider' });
+			},
+			getShareStatus: async (articleId: string): Promise<ArticleShareStatus> => {
+				const entry = Object.values(state.shares).find((share) => share.article_id === articleId);
+				const enabled = state.instance.public_sharing_enabled;
+				return settle({
+					enabled,
+					shared: enabled && entry !== undefined,
+					created_at: entry?.created_at ?? null
+				});
+			},
+			createShare: async (articleId: string): Promise<ArticleShareCreated> => {
+				if (!state.instance.public_sharing_enabled) {
+					await settle(null);
+					throw new ApiError(403, { detail: 'public_sharing_disabled' });
+				}
+				revokeShares(articleId);
+				const token = `demo-share-${nextId('share')}-${articleId}`;
+				const created_at = Temporal.Now.instant().toString();
+				state.shares[token] = { article_id: articleId, created_at };
+				persist();
+				return settle({ token, created_at });
+			},
+			revokeShare: async (articleId: string) => {
+				revokeShares(articleId);
+				persist();
+				return settle(undefined);
+			},
+			getPublicArticle: async (token: string): Promise<PublicArticle> => {
+				const entry = state.instance.public_sharing_enabled ? state.shares[token] : undefined;
+				const article = entry ? seedArticle(entry.article_id) : undefined;
+				if (!article) {
+					await settle(null);
+					throw new ApiError(404, { detail: 'Not Found' });
+				}
+				return settle({
+					title: article.title,
+					content: article.paragraphs.map((paragraph) => `<p>${paragraph}</p>`).join(''),
+					url: `https://example.test/${article.id}`,
+					published_at: article.published_at,
+					author_name: article.author_name,
+					image_url: null,
+					language: 'fr'
+				});
 			},
 			/** A one-line stand-in: the demo has no article body to pack, but the button must work. */
 			exportArticleEpub: async () =>

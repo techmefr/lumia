@@ -86,9 +86,9 @@ describe('the app shell', () => {
 		expect(view.mobileNav()).not.toBeNull();
 	});
 
-	// Sign-in and onboarding are reachable without a session, so the chrome they would offer leads
+	// Sign-in, onboarding and a shared article are reachable without a session, so the chrome they would offer leads
 	// nowhere; the whole screen is the form.
-	it.each(['/login', '/onboarding'])('drops the chrome on %s', (route) => {
+	it.each(['/login', '/onboarding', '/share/a-public-token'])('drops the chrome on %s', (route) => {
 		pathname = route;
 		const view = layout();
 
@@ -135,6 +135,13 @@ describe('the width the page is given', () => {
 	// and gets the whole display.
 	it('narrows to a reading measure on an article', () => {
 		pathname = '/articles/article-1';
+		const view = layout();
+
+		expect(view.main().className).toContain('max-w-reading');
+	});
+
+	it('gives a shared article the same reading measure', () => {
+		pathname = '/share/a-public-token';
 		const view = layout();
 
 		expect(view.main().className).toContain('max-w-reading');

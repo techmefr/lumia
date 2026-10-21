@@ -19,17 +19,20 @@
 	import Share2 from '@lucide/svelte/icons/share-2';
 	import Check from '@lucide/svelte/icons/check';
 	import Clock from '@lucide/svelte/icons/clock';
+	import Printer from '@lucide/svelte/icons/printer';
 	import Gauge from '@lucide/svelte/icons/gauge';
 	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import Square from '@lucide/svelte/icons/square';
 	import { lumia } from '$technical/api/client';
-	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
+	import { getLocale, t, type MessageKey } from '$technical/i18n/i18n.svelte';
+	import { formatDateInUserTimezone } from '$technical/time/format-date';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { SPEECH_FAILURE_MESSAGES, SpeechReader } from '$technical/speech/speech.svelte';
 	import { readableText } from '$technical/speech/readable-text';
 	import { clearKaraoke, highlightChunk } from '$technical/speech/karaoke';
 	import AddToPlaylist from '$domain/playlist/add-to-playlist.svelte';
 	import ExportEpubButton from '$domain/article/export-epub-button.svelte';
+	import ShareArticleButton from '$domain/article/share-article-button.svelte';
 	import TranslateButton from '$domain/article/translate-button.svelte';
 	import OrbitButton, { type OrbitAction } from '$domain/article/orbit-button.svelte';
 
@@ -267,14 +270,16 @@
 </script>
 
 {#if article}
-	<ReadingProgress {progress} label={t('common.readingProgress')} />
+	<div class="print:hidden">
+		<ReadingProgress {progress} label={t('common.readingProgress')} />
+	</div>
 {/if}
 
 <div class="mx-auto flex w-full flex-col gap-4 pb-24">
 	<a
 		data-test-article-back
 		href="{base}/articles"
-		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline"
+		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline print:hidden"
 	>
 		<ArrowLeft class="size-4" />
 		{t('article.back')}
@@ -292,7 +297,7 @@
 	{:else if error}
 		<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{:else if article}
-		<Card class="animate-in overflow-hidden fade-in zoom-in-95 slide-in-from-bottom-3 duration-500 ease-out">
+		<Card class="animate-in overflow-hidden print:border-0 print:shadow-none fade-in zoom-in-95 slide-in-from-bottom-3 duration-500 ease-out">
 			{#if article.image_url}
 				<div
 					class="relative overflow-hidden"
@@ -317,7 +322,14 @@
 				>
 					{translation?.title ?? article.title}
 				</h1>
-				<div class="mt-1 flex flex-wrap items-center justify-between gap-2">
+				<p data-test-print-source class="mt-1 hidden break-all text-sm print:block">
+					{t('print.sourceLabel')}
+					{article.url}
+					<br />
+					{t('print.publishedLabel')}
+					{formatDateInUserTimezone(article.published_at, getLocale(), { dateStyle: 'long' })}
+				</p>
+				<div class="mt-1 flex flex-wrap items-center justify-between gap-2 print:hidden">
 					<div class="flex items-center gap-3">
 						<a
 							href={article.url}
@@ -348,6 +360,16 @@
 						onchange={(next) => (translation = next)}
 					/>
 					<ExportEpubButton articleId={article.id} title={article.title} />
+					<ShareArticleButton articleId={article.id} />
+					<button
+						type="button"
+						data-test-print-button
+						onclick={() => window.print()}
+						class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+					>
+						<Printer class="size-4" aria-hidden="true" />
+						{t('print.button')}
+					</button>
 					<!-- Also in the orbit menu, deliberately. The orbit button is a thumb-zone
 					     affordance; reading aloud is a headline feature and should not cost an
 					     extra tap on a pointer device. -->
@@ -368,7 +390,7 @@
 					{/if}
 				</div>
 
-				<div class="mt-3 flex flex-wrap items-center gap-1.5">
+				<div class="mt-3 flex flex-wrap items-center gap-1.5 print:hidden">
 					<a href="{base}/articles?feed_id={article.feed_id}">
 						<Badge variant="secondary" class="transition-transform hover:-translate-y-0.5">
 							{article.source_label}
@@ -414,7 +436,7 @@
 				</div>
 
 				{#if translation}
-					<p class="mt-3 text-xs text-muted-foreground" data-test-translated-notice>
+					<p class="mt-3 text-xs text-muted-foreground print:hidden" data-test-translated-notice>
 						{t('article.translatedNotice')}
 					</p>
 				{/if}
@@ -431,7 +453,7 @@
 		</Card>
 
 		<div
-			class="fixed inset-x-0 z-40 flex justify-center border-t bg-background/90 p-3 backdrop-blur"
+			class="fixed inset-x-0 z-40 flex justify-center border-t bg-background/90 p-3 backdrop-blur print:hidden"
 			style="bottom: var(--bottom-nav-h, 0px)"
 		>
 			<div class="flex w-full max-w-3xl gap-1.5 sm:gap-2">
@@ -457,6 +479,8 @@
 			</div>
 		</div>
 
-		<OrbitButton position={orbitPosition} actions={orbitActions} />
+		<div class="print:hidden">
+			<OrbitButton position={orbitPosition} actions={orbitActions} />
+		</div>
 	{/if}
 </div>

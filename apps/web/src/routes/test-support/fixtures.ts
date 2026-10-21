@@ -97,5 +97,5 @@ export function me(overrides: Partial<Me> = {}): Me {
 }
 
 export function instanceSettings(overrides: Partial<InstanceSettings> = {}): InstanceSettings {
-	return { max_accounts: 10, disk_quota_mb: 500, access_mode: 'on_approval', account_count: 1, ...overrides };
+	return { max_accounts: 10, disk_quota_mb: 500, access_mode: 'on_approval', public_sharing_enabled: false, account_count: 1, ...overrides };
 }

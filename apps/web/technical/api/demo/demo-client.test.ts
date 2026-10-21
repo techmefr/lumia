@@ -634,3 +634,64 @@ describe('the session state', () => {
 		for (const feed of SEED_FEEDS) expect(xml).toContain(feed.url);
 	});
 });
+
+describe('public sharing', () => {
+	const articleId = SEED_ARTICLES[0].id;
+
+	it('opens a shared article without exposing the library', async () => {
+		const { token } = await demo.article.createShare(articleId);
+
+		const shared = await demo.article.getPublicArticle(token);
+
+		expect(shared.title).toBe(SEED_ARTICLES[0].title);
+		expect(Object.keys(shared).sort()).toEqual([
+			'author_name',
+			'content',
+			'image_url',
+			'language',
+			'published_at',
+			'title',
+			'url'
+		]);
+	});
+
+	it('reports the link as live, then as gone once revoked', async () => {
+		const { token } = await demo.article.createShare(articleId);
+		expect(await demo.article.getShareStatus(articleId)).toMatchObject({
+			enabled: true,
+			shared: true
+		});
+
+		await demo.article.revokeShare(articleId);
+
+		expect(await demo.article.getShareStatus(articleId)).toMatchObject({ shared: false });
+		await expect(demo.article.getPublicArticle(token)).rejects.toMatchObject({ status: 404 });
+	});
+
+	it('retires the old link when a new one is made', async () => {
+		const first = await demo.article.createShare(articleId);
+		const second = await demo.article.createShare(articleId);
+
+		await expect(demo.article.getPublicArticle(first.token)).rejects.toMatchObject({
+			status: 404
+		});
+		await expect(demo.article.getPublicArticle(second.token)).resolves.toBeDefined();
+	});
+
+	it('refuses to create a link while the admin has sharing off, and closes the live ones', async () => {
+		const { token } = await demo.article.createShare(articleId);
+
+		await demo.instance.updateSettings({ public_sharing_enabled: false });
+
+		await expect(demo.article.createShare(articleId)).rejects.toMatchObject({ status: 403 });
+		await expect(demo.article.getPublicArticle(token)).rejects.toMatchObject({ status: 404 });
+		expect(await demo.article.getShareStatus(articleId)).toMatchObject({
+			enabled: false,
+			shared: false
+		});
+	});
+
+	it('does not know a token it never issued', async () => {
+		await expect(demo.article.getPublicArticle('made-up')).rejects.toMatchObject({ status: 404 });
+	});
+});

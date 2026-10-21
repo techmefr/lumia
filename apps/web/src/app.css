@@ -377,3 +377,37 @@
 	padding: 0.5em 0.75em;
 	text-align: left;
 }
+
+/* The article view on paper: the body, its pictures and where it came from. Everything interactive
+   is hidden at the element (`print:hidden`); what is left to do here is make the text readable on a
+   page and let a printed link say where it points, since nothing can be clicked. */
+@media print {
+	@page {
+		margin: 1.5cm;
+	}
+
+	body {
+		background: #fff;
+		color: #000;
+	}
+
+	[data-test-article-content] a[href^='http']::after,
+	[data-test-public-content] a[href^='http']::after {
+		content: ' (' attr(href) ')';
+		font-size: 0.85em;
+		overflow-wrap: anywhere;
+	}
+
+	[data-test-article-content] img,
+	[data-test-public-content] img {
+		max-width: 100%;
+		height: auto;
+		break-inside: avoid;
+	}
+
+	h1,
+	h2,
+	h3 {
+		break-after: avoid;
+	}
+}

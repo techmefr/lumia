@@ -24,6 +24,7 @@ async def update_instance_settings(
     max_accounts: int | None = None,
     disk_quota_mb: int | None = None,
     access_mode: AccessMode | None = None,
+    public_sharing_enabled: bool | None = None,
 ) -> Instance:
     """Applies the admin's new numbers, refusing a cap the instance is already past.
 
@@ -39,5 +40,7 @@ async def update_instance_settings(
         instance.disk_quota_mb = disk_quota_mb
     if access_mode is not None:
         instance.access_mode = access_mode
+    if public_sharing_enabled is not None:
+        instance.public_sharing_enabled = public_sharing_enabled
     await session.commit()
     return instance

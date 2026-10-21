@@ -89,6 +89,9 @@ class Instance(Base, TimestampMixin):
     # Per account, not for the whole instance: what it caps is how much one reader may store.
     disk_quota_mb: Mapped[int]
     access_mode: Mapped[AccessMode] = mapped_column(default=AccessMode.CLOSED)
+    # Off until an admin turns it on: a share link is the one thing an instance serves without
+    # authentication, so a fresh install exposes nothing.
+    public_sharing_enabled: Mapped[bool] = mapped_column(default=False)
     oidc_issuer: Mapped[str | None] = mapped_column(default=None)
     oidc_client_id: Mapped[str | None] = mapped_column(default=None)
     oidc_client_secret_encrypted: Mapped[str | None] = mapped_column(default=None)

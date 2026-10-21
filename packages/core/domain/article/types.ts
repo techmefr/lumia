@@ -47,3 +47,29 @@ export interface ArticleTranslation {
 	title: string;
 	content: string;
 }
+
+export interface ArticleShareStatus {
+	/** Whether the instance admin allows public links at all. */
+	enabled: boolean;
+	/** Whether the article has a live link right now. */
+	shared: boolean;
+	created_at: string | null;
+}
+
+export interface ArticleShareCreated {
+	/** Shown once: the backend keeps only a hash, so a lost link is replaced rather than recovered. */
+	token: string;
+	created_at: string;
+}
+
+/** What a public link opens. Deliberately no feed, account or article id. */
+export interface PublicArticle {
+	title: string;
+	/** Sanitized by the backend before it leaves the instance. */
+	content: string;
+	url: string;
+	published_at: string;
+	author_name: string | null;
+	image_url: string | null;
+	language: string;
+}

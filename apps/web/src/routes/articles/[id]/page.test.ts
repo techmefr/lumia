@@ -310,3 +310,27 @@ describe('following the reader down the page', () => {
 		expect(payloads).not.toContainEqual({ read: true });
 	});
 });
+
+describe('printing', () => {
+	it('hands the page to the browser print dialog', async () => {
+		const print = vi.fn();
+		vi.stubGlobal('print', print);
+		const view = await loaded();
+
+		await fireEvent.click(view.container.querySelector<HTMLButtonElement>('[data-test-print-button]')!);
+
+		expect(print).toHaveBeenCalledOnce();
+	});
+
+	it('carries the source address and the date for the paper copy', async () => {
+		api.article.getArticle.mockResolvedValue(
+			articleDetail('article-1', { url: 'https://example.test/papier', published_at: '2026-08-09T08:30:00Z' })
+		);
+		const view = await loaded();
+
+		const source = view.container.querySelector('[data-test-print-source]')?.textContent ?? '';
+
+		expect(source).toContain('https://example.test/papier');
+		expect(source).toMatch(/2026/);
+	});
+});

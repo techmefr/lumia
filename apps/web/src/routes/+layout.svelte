@@ -49,12 +49,17 @@
 		return page.url.pathname === full || page.url.pathname.startsWith(`${full}/`);
 	}
 
-	const mainPadding = $derived(isAuthRoute(page.url.pathname) ? '' : 'pb-20 sm:pb-6');
+	// A shared article is opened by someone with no account: the navigation would lead nowhere.
+	function isChromeless(pathname: string): boolean {
+		return isAuthRoute(pathname) || pathname.startsWith(`${base}/share/`);
+	}
+
+	const mainPadding = $derived(isChromeless(page.url.pathname) ? '' : 'pb-20 sm:pb-6');
 
 	// An article body is the one screen whose width is a measure rather than a container; every
 	// other screen is a list, a grid or a form and gets the whole display.
 	function isReadingRoute(pathname: string): boolean {
-		return pathname.startsWith(`${base}/articles/`);
+		return pathname.startsWith(`${base}/articles/`) || pathname.startsWith(`${base}/share/`);
 	}
 
 	const mainWidth = $derived(isReadingRoute(page.url.pathname) ? 'max-w-reading' : 'max-w-app');
@@ -145,12 +150,12 @@
 <ClickSpark sparkColor="var(--primary)" sparkCount={6} sparkRadius={14} sparkSize={7} duration={320}>
 
 {#if isDemo}
-	<DemoBanner />
+	<div class="print:hidden"><DemoBanner /></div>
 {/if}
 
-{#if !isAuthRoute(page.url.pathname)}
-	<a href="#main-content" class="skip-link">{t('nav.skipToContent')}</a>
-	<header class="sticky top-0 z-30 animate-in border-b bg-card/95 backdrop-blur fade-in slide-in-from-top-2 duration-300">
+{#if !isChromeless(page.url.pathname)}
+	<a href="#main-content" class="skip-link print:hidden">{t('nav.skipToContent')}</a>
+	<header class="sticky top-0 z-30 animate-in print:hidden border-b bg-card/95 backdrop-blur fade-in slide-in-from-top-2 duration-300">
 		<nav
 			aria-label={t('nav.main')}
 			class="mx-auto flex w-full max-w-app flex-wrap items-center gap-1 px-4 py-3"
@@ -190,7 +195,7 @@
 		id="main-content"
 		data-test-main
 		tabindex="-1"
-		class="mx-auto w-full {mainWidth} px-4 py-6 outline-none sm:px-6 {mainPadding}"
+		class="mx-auto w-full {mainWidth} px-4 py-6 outline-none sm:px-6 print:max-w-none print:p-0 {mainPadding}"
 		in:fly={{ y: 16, duration: 260, delay: 120 }}
 		out:fade={{ duration: 120 }}
 	>
@@ -198,11 +203,11 @@
 	</main>
 {/key}
 
-{#if !isAuthRoute(page.url.pathname)}
+{#if !isChromeless(page.url.pathname)}
 	<nav
 		bind:this={bottomNavEl}
 		aria-label={t('nav.mobile')}
-		class="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t bg-card/95 py-1.5 backdrop-blur sm:hidden"
+		class="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t bg-card/95 py-1.5 backdrop-blur sm:hidden print:hidden"
 	>
 		{#each navLinks as link (link.href)}
 			<a
@@ -227,6 +232,8 @@
 	<ShortcutsHelp onClose={() => (helpOpen = false)} />
 {/if}
 
-<Toaster closeLabel={t('common.dismissNotification')} />
+<div class="print:hidden">
+	<Toaster closeLabel={t('common.dismissNotification')} />
+</div>
 
 </ClickSpark>

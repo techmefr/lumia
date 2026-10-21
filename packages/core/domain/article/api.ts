@@ -1,5 +1,12 @@
 import type { HttpClient } from '../../technical/http-client';
-import type { ArticleDetail, ArticleSummary, ArticleTranslation } from './types';
+import type {
+	ArticleDetail,
+	ArticleShareCreated,
+	ArticleShareStatus,
+	ArticleSummary,
+	ArticleTranslation,
+	PublicArticle
+} from './types';
 
 export interface ListArticlesParams {
 	folderId?: string;
@@ -70,7 +77,37 @@ export function createArticleApi(http: HttpClient) {
 		return http.requestBlob(`/articles/${articleId}/export.epub`);
 	}
 
-	return { listArticles, getArticle, saveUrl, translateArticle, exportArticleEpub };
+	async function getShareStatus(articleId: string): Promise<ArticleShareStatus> {
+		return http.request<ArticleShareStatus>(`/articles/${articleId}/share`);
+	}
+
+	/** Issues a new public link, retiring the previous one. The token comes back only here. */
+	async function createShare(articleId: string): Promise<ArticleShareCreated> {
+		return http.request<ArticleShareCreated>(`/articles/${articleId}/share`, { method: 'POST' });
+	}
+
+	async function revokeShare(articleId: string): Promise<void> {
+		await http.request<void>(`/articles/${articleId}/share`, { method: 'DELETE' });
+	}
+
+	/** The one call a visitor makes: no session, the token in the path is the whole credential. */
+	async function getPublicArticle(token: string): Promise<PublicArticle> {
+		return http.request<PublicArticle>(`/public/articles/${encodeURIComponent(token)}`, {
+			auth: false
+		});
+	}
+
+	return {
+		listArticles,
+		getArticle,
+		saveUrl,
+		translateArticle,
+		exportArticleEpub,
+		getShareStatus,
+		createShare,
+		revokeShare,
+		getPublicArticle
+	};
 }
 
 export type ArticleApi = ReturnType<typeof createArticleApi>;

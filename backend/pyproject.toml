@@ -24,6 +24,7 @@ dependencies = [
     "defusedxml>=0.7",
     "langdetect>=1.0.9",
     "lxml>=5.0",
+    "nh3>=0.3.7",
 ]
 
 [dependency-groups]

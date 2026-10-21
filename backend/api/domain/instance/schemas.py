@@ -11,6 +11,7 @@ class InstanceSettingsResponse(BaseModel):
     max_accounts: int
     disk_quota_mb: int
     access_mode: AccessMode
+    public_sharing_enabled: bool
     account_count: int
 
 
@@ -18,6 +19,7 @@ class InstanceSettingsUpdateRequest(BaseModel):
     max_accounts: int | None = Field(default=None, ge=1)
     disk_quota_mb: int | None = Field(default=None, ge=1)
     access_mode: AccessMode | None = None
+    public_sharing_enabled: bool | None = None
 
 
 class InstanceAccessModeResponse(BaseModel):
