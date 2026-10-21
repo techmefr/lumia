@@ -980,6 +980,23 @@ export function createDemoClient(): LumiaClient {
 			}
 		},
 		playlist: {
+			/** The demo has no worker to build a book: it answers as if the file was ready at once. */
+			exportPlaylistEpub: async (playlistId: string) =>
+				settle({
+					id: `export-${playlistId}`,
+					kind: 'playlist_epub' as const,
+					status: 'ready' as const,
+					file_name: 'Lumia demo.epub'
+				}),
+			getExport: async (jobId: string) =>
+				settle({
+					id: jobId,
+					kind: 'playlist_epub' as const,
+					status: 'ready' as const,
+					file_name: 'Lumia demo.epub'
+				}),
+			downloadExport: async () =>
+				settle(new Blob(['Lumia demo'], { type: 'application/epub+zip' })),
 			listPlaylists: async () => settle(state.playlists.map(playlistSummary)),
 			createPlaylist: async (name: string) => {
 				const playlist = { id: nextId('playlist'), name, article_ids: [] };

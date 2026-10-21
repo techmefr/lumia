@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword, ArticleShare
 from api.domain.audio.models import ArticleAudio
+from api.domain.export.models import ExportJob
 from api.domain.feed.models import Feed, Folder
 from api.domain.highlight.models import Highlight
 from api.domain.playlist.models import Playlist, PlaylistItem
@@ -29,6 +30,7 @@ async def delete_account(session: AsyncSession, user_id: UUID) -> None:
     domain wants — the rows that point at articles go before the articles themselves.
     """
     await _refuse_to_orphan_the_instance(session, user_id)
+    await session.execute(delete(ExportJob).where(ExportJob.user_id == user_id))
 
     feed_ids = list(await session.scalars(select(Feed.id).where(Feed.user_id == user_id)))
     article_ids = list(

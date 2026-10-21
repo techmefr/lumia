@@ -111,3 +111,25 @@ describe('the items', () => {
 		expect(last().body).toEqual({ article_ids: [] });
 	});
 });
+
+describe('playlist export', () => {
+	it('asks the backend to build the playlist as a book', async () => {
+		const { playlists, last } = api([{ id: 'job-1', kind: 'playlist_epub', status: 'pending' }]);
+		const job = await playlists.exportPlaylistEpub('list-1');
+		expect(last()).toMatchObject({ path: '/playlists/list-1/export-epub', method: 'POST' });
+		expect(job.id).toBe('job-1');
+	});
+
+	it('reads the state of a job by its id', async () => {
+		const { playlists, last } = api([{ id: 'job-1', status: 'ready' }]);
+		await playlists.getExport('job-1');
+		expect(last()).toMatchObject({ path: '/exports/job-1', method: 'GET' });
+	});
+
+	it('downloads the finished file with the session', async () => {
+		const book = new Blob(['epub']);
+		const { playlists, last } = api([book]);
+		expect(await playlists.downloadExport('job-1')).toBe(book);
+		expect(last()).toMatchObject({ path: '/exports/job-1/download', auth: true });
+	});
+});
