@@ -426,6 +426,7 @@ export const en: Catalogue = {
 	'article.loading': 'Loading the article',
 	'article.notFound': 'Article not found.',
 	'article.readSource': 'Read the source',
+	'article.videoPlayer': 'Video player',
 	'article.readingTime': '{count} min read',
 	'article.relevanceTitle': 'Relevance estimated from what you read',
 	'article.relevance': '{score}/100',

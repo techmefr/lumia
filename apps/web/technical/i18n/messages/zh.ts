@@ -416,6 +416,7 @@ export const zh: Catalogue = {
 	'article.loading': '正在加载文章',
 	'article.notFound': '找不到该文章。',
 	'article.readSource': '阅读原文',
+	'article.videoPlayer': '视频播放器',
 	'article.readingTime': '阅读约 {count} 分钟',
 	'article.relevanceTitle': '根据你的阅读估算的相关度',
 	'article.relevance': '{score}/100',

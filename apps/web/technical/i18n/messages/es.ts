@@ -436,6 +436,7 @@ export const es: Catalogue = {
 	'article.loading': 'Cargando el artículo',
 	'article.notFound': 'Artículo no encontrado.',
 	'article.readSource': 'Leer la fuente',
+	'article.videoPlayer': 'Reproductor de vídeo',
 	'article.readingTime': '{count} min de lectura',
 	'article.relevanceTitle': 'Relevancia estimada según tus lecturas',
 	'article.relevance': '{score}/100',

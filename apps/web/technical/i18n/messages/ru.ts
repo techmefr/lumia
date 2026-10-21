@@ -434,6 +434,7 @@ export const ru: Catalogue = {
 	'article.loading': 'Загрузка статьи',
 	'article.notFound': 'Статья не найдена.',
 	'article.readSource': 'Читать источник',
+	'article.videoPlayer': 'Видеоплеер',
 	'article.readingTime': '{count} мин чтения',
 	'article.relevanceTitle': 'Релевантность по твоим чтениям',
 	'article.relevance': '{score}/100',

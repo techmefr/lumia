@@ -618,3 +618,23 @@ async def test_enrich_article_stores_again_once_the_account_is_back_under_quota(
     article = await session.scalar(select(Article))
     assert article is not None
     assert article.external_entry_id == "123"
+
+
+async def test_enrich_article_keeps_the_description_of_a_youtube_video(
+    session: AsyncSession,
+) -> None:
+    feed = await _create_feed(session)
+
+    class _ExplodingExtractor:
+        async def extract(self, url: str, fallback_html: str) -> str:
+            raise AssertionError("a watch page must not be fetched")
+
+    await enrich_article(
+        {},
+        _raw_article(url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"),
+        content_extractor=_ExplodingExtractor(),
+    )
+
+    article = await session.scalar(select(Article).where(Article.feed_id == feed.id))
+    assert article is not None
+    assert article.content == FRENCH_CONTENT

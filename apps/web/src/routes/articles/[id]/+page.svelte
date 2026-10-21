@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import {
 		sanitizeArticleHtml,
+		youtubeEmbedUrl,
 		type ArticleDetail,
 		type ArticleTranslation,
 		type OrbitPosition
@@ -57,6 +58,8 @@
 	// The stored side of the orbit button. Right is the model's default, and the fallback when the
 	// preference cannot be read: the button has to appear either way.
 	let orbitPosition = $state<OrbitPosition>('right');
+
+	const videoEmbedUrl = $derived(article ? youtubeEmbedUrl(article.url) : null);
 
 	const speech = new SpeechReader();
 
@@ -298,7 +301,20 @@
 		<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 	{:else if article}
 		<Card class="animate-in overflow-hidden print:border-0 print:shadow-none fade-in zoom-in-95 slide-in-from-bottom-3 duration-500 ease-out">
-			{#if article.image_url}
+			{#if videoEmbedUrl}
+				<div class="aspect-video w-full bg-black print:hidden">
+					<iframe
+						data-test-video-player
+						src={videoEmbedUrl}
+						title={t('article.videoPlayer')}
+						class="size-full"
+						allow="encrypted-media; picture-in-picture; fullscreen"
+						referrerpolicy="strict-origin-when-cross-origin"
+						loading="lazy"
+						allowfullscreen
+					></iframe>
+				</div>
+			{:else if article.image_url}
 				<div
 					class="relative overflow-hidden"
 					style={`view-transition-name: article-image-${article.id};`}

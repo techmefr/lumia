@@ -38,6 +38,7 @@ function articlePage() {
 		error: () => q('[role="alert"]'),
 		heading: () => q('[data-test-article-heading]'),
 		content: () => q('[data-test-article-content]'),
+		video: () => q<HTMLIFrameElement>('[data-test-video-player]'),
 		like: () => q<HTMLButtonElement>('[data-test-like]')!,
 		dislike: () => q<HTMLButtonElement>('[data-test-dislike]')!,
 		orbitToggle: () => q<HTMLButtonElement>('[data-test-orbit-toggle]')!,
@@ -82,6 +83,25 @@ afterEach(() => {
 });
 
 describe('opening an article', () => {
+	it('embeds a youtube video through the cookie-free player', async () => {
+		api.article.getArticle.mockResolvedValue(
+			articleDetail('article-1', { url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' })
+		);
+
+		const view = await loaded();
+
+		expect(view.video()?.getAttribute('src')).toBe(
+			'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ'
+		);
+		expect(view.video()?.getAttribute('title')).toBeTruthy();
+	});
+
+	it('shows no player for an ordinary article', async () => {
+		const view = await loaded();
+
+		expect(view.video()).toBeNull();
+	});
+
 	it('shows a placeholder while the body is on its way', async () => {
 		let release: (value: ArticleDetail) => void = () => {};
 		api.article.getArticle.mockReturnValue(new Promise((resolve) => (release = resolve)));

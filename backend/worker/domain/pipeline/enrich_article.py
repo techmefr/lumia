@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword, Author, Category, Keyword, Lang
 from api.domain.feed.models import Feed, SourceType
+from api.domain.feed.youtube_channel import youtube_video_id
 from api.domain.instance.usage_service import has_disk_quota_room
 from api.domain.user.models import Instance, ReadingLang, User
 from api.domain.user.providers import chat_client_for, translator_for
@@ -35,7 +36,12 @@ async def enrich_article(
     content_extractor: ContentExtractor | None = None,
 ) -> None:
     content_extractor = content_extractor or TrafilaturaContentExtractor()
-    clean_content = await content_extractor.extract(raw_article.url, raw_article.content)
+    # A watch page has no article body to extract; the feed already carries the description.
+    clean_content = (
+        raw_article.content
+        if youtube_video_id(raw_article.url) is not None
+        else await content_extractor.extract(raw_article.url, raw_article.content)
+    )
     raw_article = replace(raw_article, content=clean_content)
     plain_text = strip_html(raw_article.content)
     image_url = extract_first_image(raw_article.content)
