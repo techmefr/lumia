@@ -1,7 +1,7 @@
 """add outbound webhooks and their deliveries
 
 Revision ID: c4e8a2f61b93
-Revises: a3d9e1f5b742
+Revises: c4b8e2a1d695
 Create Date: 2026-10-21 12:00:00.000000
 
 """
@@ -15,7 +15,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "c4e8a2f61b93"
-down_revision: str | Sequence[str] | None = "a3d9e1f5b742"
+down_revision: str | Sequence[str] | None = "c4b8e2a1d695"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
