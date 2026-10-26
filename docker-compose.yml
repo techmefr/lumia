@@ -22,7 +22,7 @@ services:
       - internal
 
   redis:
-    image: redis:8.10.1-alpine
+    image: redis:8.10.2-alpine
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -45,7 +45,7 @@ services:
       - internal
 
   miniflux:
-    image: miniflux/miniflux:2.3.3
+    image: miniflux/miniflux:2.3.4
     restart: unless-stopped
     depends_on:
       - miniflux-postgres
