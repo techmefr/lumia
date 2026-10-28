@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lumia</string>
+    <string name="library_root">Lumia playlists</string>
+    <string name="settings_instance">Instance API address</string>
+    <string name="settings_instance_hint">https://lumia.example.com/api</string>
+    <string name="settings_email">Email</string>
+    <string name="settings_password">Password</string>
+    <string name="settings_sign_in">Sign in</string>
+    <string name="settings_sign_out">Sign out</string>
+    <string name="settings_signed_in">Signed in. Your playlists are available in Android Auto.</string>
+    <string name="settings_signed_out">Sign in to listen to your playlists in the car.</string>
+    <string name="settings_invalid_instance">Enter a valid http or https address.</string>
+    <string name="settings_bad_credentials">Wrong email or password.</string>
+    <string name="settings_second_factor">This account uses a second factor, which is not supported here yet.</string>
+    <string name="settings_failed">Could not reach the instance. Try again later.</string>
+</resources>

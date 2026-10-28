@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lumia</string>
+    <string name="library_root">Playlists Lumia</string>
+    <string name="settings_instance">Adresse de l\'API de l\'instance</string>
+    <string name="settings_instance_hint">https://lumia.exemple.fr/api</string>
+    <string name="settings_email">E-mail</string>
+    <string name="settings_password">Mot de passe</string>
+    <string name="settings_sign_in">Se connecter</string>
+    <string name="settings_sign_out">Se déconnecter</string>
+    <string name="settings_signed_in">Connecté. Tes playlists sont disponibles dans Android Auto.</string>
+    <string name="settings_signed_out">Connecte-toi pour écouter tes playlists en voiture.</string>
+    <string name="settings_invalid_instance">Saisis une adresse http ou https valide.</string>
+    <string name="settings_bad_credentials">E-mail ou mot de passe incorrect.</string>
+    <string name="settings_second_factor">Ce compte utilise un second facteur, pas encore pris en charge ici.</string>
+    <string name="settings_failed">Impossible de joindre l\'instance. Réessaie plus tard.</string>
+</resources>
