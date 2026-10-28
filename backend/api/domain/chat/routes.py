@@ -71,6 +71,7 @@ async def send_chat_message(
             article=article,
             message=payload.message,
             action=payload.action,
+            passage=payload.passage,
         )
     except ChatUnavailableError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="chat_failed") from exc

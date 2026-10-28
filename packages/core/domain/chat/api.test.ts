@@ -35,4 +35,16 @@ describe('the chat api', () => {
 		await chat.clearChat('article-1');
 		expect(last()).toMatchObject({ path: '/articles/article-1/chat', method: 'DELETE' });
 	});
+
+	it('sends a passage with a typed question', async () => {
+		const { chat, last } = api();
+		await chat.sendChat('article-1', { message: 'Why?', passage: 'the ink' });
+		expect(last()).toMatchObject({ body: { message: 'Why?', passage: 'the ink' } });
+	});
+
+	it('sends the diagram action', async () => {
+		const { chat, last } = api();
+		await chat.sendChat('article-1', { action: 'diagram' });
+		expect(last()).toMatchObject({ method: 'POST', body: { action: 'diagram' } });
+	});
 });

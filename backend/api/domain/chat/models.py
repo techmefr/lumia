@@ -15,6 +15,7 @@ class ChatRole(StrEnum):
 class ChatAction(StrEnum):
     SUMMARIZE = "summarize"
     EXPLAIN = "explain"
+    DIAGRAM = "diagram"
 
 
 class ChatMessage(Base, TimestampMixin):
@@ -28,3 +29,4 @@ class ChatMessage(Base, TimestampMixin):
     role: Mapped[ChatRole]
     content: Mapped[str] = mapped_column(Text)
     action: Mapped[ChatAction | None] = mapped_column(default=None)
+    passage: Mapped[str | None] = mapped_column(Text, default=None)
