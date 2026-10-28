@@ -8,6 +8,7 @@
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
+	import { readSavedList } from '$technical/offline/offline-reads';
 	import ArticleGrid from '$domain/article/article-grid.svelte';
 
 	const PAGE_SIZE = 24;
@@ -20,15 +21,17 @@
 	let error = $state<MessageKey | null>(null);
 	let newUrl = $state('');
 	let savingUrl = $state(false);
+	let offline = $state(false);
 	let saveError = $state<MessageKey | null>(null);
 
 	async function load() {
 		loading = true;
 		error = null;
 		try {
-			const loaded = await lumia.recommendation.getSaved(PAGE_SIZE, 0);
-			articles = loaded;
-			hasMore = loaded.length === PAGE_SIZE;
+			const listing = await readSavedList(() => lumia.recommendation.getSaved(PAGE_SIZE, 0));
+			articles = listing.articles;
+			offline = listing.offline;
+			hasMore = !listing.offline && listing.articles.length === PAGE_SIZE;
 		} catch {
 			error = 'readLater.loadFailed';
 		} finally {
@@ -111,6 +114,12 @@
 			</form>
 		</CardContent>
 	</Card>
+
+	{#if offline}
+		<p data-test-offline-list-notice role="status" class="text-sm text-muted-foreground">
+			{t('offline.listNotice', { count: articles.length })}
+		</p>
+	{/if}
 
 	{#if error}
 		<p data-test-list-error role="alert" class="text-sm text-destructive">{t(error)}</p>

@@ -27,6 +27,8 @@
 	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import Square from '@lucide/svelte/icons/square';
 	import { lumia } from '$technical/api/client';
+	import { feedbackGateway } from '$technical/offline/feedback-gateway';
+	import { readArticle } from '$technical/offline/offline-reads';
 	import { getLocale, t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { formatDateInUserTimezone } from '$technical/time/format-date';
 	import { requireAuth } from '$technical/auth/require-auth';
@@ -84,7 +86,7 @@
 	async function toggleSentiment(choice: 'like' | 'dislike') {
 		if (!article) return;
 		sentiment = sentiment === choice ? null : choice;
-		await lumia.recommendation.sendFeedback(article.id, { sentiment });
+		await feedbackGateway.submit(article.id, { sentiment });
 		toast(
 			sentiment === null
 				? t('article.opinionRemoved')
@@ -97,14 +99,14 @@
 	async function toggleSaved() {
 		if (!article) return;
 		saved = !saved;
-		await lumia.recommendation.sendFeedback(article.id, { saved });
+		await feedbackGateway.submit(article.id, { saved });
 		toast(saved ? t('article.savedToast') : t('article.unsavedToast'));
 	}
 
 	async function toggleFavorite() {
 		if (!article) return;
 		favorite = !favorite;
-		await lumia.recommendation.sendFeedback(article.id, { favorite });
+		await feedbackGateway.submit(article.id, { favorite });
 		toast(favorite ? t('article.favoritedToast') : t('article.unfavoritedToast'));
 	}
 
@@ -257,7 +259,7 @@
 
 	function persistProgress(value: number) {
 		if (!article) return;
-		void lumia.recommendation.sendFeedback(article.id, { scroll_progress: value });
+		void feedbackGateway.submit(article.id, { scroll_progress: value });
 	}
 
 	function onScroll() {
@@ -266,7 +268,7 @@
 
 		if (!markedRead && progress >= AUTO_READ_PROGRESS && article) {
 			markedRead = true;
-			void lumia.recommendation.sendFeedback(article.id, { read: true });
+			void feedbackGateway.submit(article.id, { read: true });
 		}
 
 		// Throttle: a scroll fires dozens of times a second and each save is a request.
@@ -315,8 +317,7 @@
 			})
 			.catch(() => {});
 
-		lumia.article
-			.getArticle(articleId)
+		readArticle(() => lumia.article.getArticle(articleId), articleId)
 			.then(async (loaded) => {
 				article = loaded;
 				saved = false;

@@ -6,6 +6,10 @@ import { setLocale } from '$technical/i18n/i18n.svelte';
 import type { ArticleDetail } from '@lumia/core';
 import { toasts } from '@lumia/ui';
 import { articleDetail, highlight, me } from '../../test-support/fixtures';
+import { connectivity } from '$technical/offline/connectivity.svelte';
+import { putStoredArticles } from '$technical/offline/article-store';
+import { listPendingFeedback } from '$technical/offline/feedback-queue';
+import { freshOfflineDatabase } from '../../../../test-support/fresh-offline-database';
 import ArticlePage from './+page.svelte';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
@@ -576,5 +580,50 @@ describe('highlights in the article', () => {
 
 		expect(view.content()?.textContent).toContain('Sur le papier');
 		expect(view.error()).toBeNull();
+	});
+});
+
+describe('an article without network', () => {
+	beforeEach(() => {
+		freshOfflineDatabase();
+		connectivity.online = false;
+		api.article.getArticle.mockRejectedValue(new TypeError('Failed to fetch'));
+	});
+
+	afterEach(() => {
+		connectivity.online = true;
+	});
+
+	it('opens the downloaded copy', async () => {
+		await putStoredArticles([
+			{
+				id: 'article-1',
+				article: articleDetail('article-1', { title: 'Lu dans le métro' }),
+				listedAs: 'saved'
+			}
+		]);
+
+		const view = await loaded();
+
+		expect(view.heading()?.textContent).toContain('Lu dans le métro');
+	});
+
+	it('says the article is unavailable when it was never downloaded', async () => {
+		const view = articlePage();
+
+		await waitFor(() => expect(view.error()).not.toBeNull());
+	});
+
+	it('keeps a vote for later instead of calling the server', async () => {
+		await putStoredArticles([
+			{ id: 'article-1', article: articleDetail('article-1'), listedAs: 'saved' }
+		]);
+		const view = await loaded();
+
+		await fireEvent.click(view.like());
+
+		await waitFor(async () => expect(await listPendingFeedback()).toHaveLength(1));
+		expect((await listPendingFeedback())[0].update).toEqual({ sentiment: 'like' });
+		expect(api.recommendation.sendFeedback).not.toHaveBeenCalled();
 	});
 });

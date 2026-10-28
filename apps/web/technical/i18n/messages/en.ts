@@ -909,5 +909,15 @@ export const en: Catalogue = {
 	'webhooks.saveFailed': 'The webhook could not be saved. Try again later.',
 	'webhooks.urlBlocked': 'This address is refused: it must be a public http or https address.',
 	'webhooks.limitReached': 'You have reached the maximum number of webhooks.',
-	'webhooks.eventsRequired': 'Choose at least one event.'
+	'webhooks.eventsRequired': 'Choose at least one event.',
+
+	'offline.banner': "Offline: only the reading list and the unread articles already downloaded can be read. Your votes, reading and read marks will be sent when the network is back.",
+	'offline.listNotice': "Offline: {count} articles downloaded on this device.",
+	'offline.articleUnavailable': "This article was not downloaded, so it cannot be read offline.",
+	'offline.settingsTitle': "Offline reading",
+	'offline.settingsDescription': "The reading list and unread articles are downloaded to this device, with their images, so they stay readable without a network.",
+	'offline.limitLabel': "Maximum number of downloaded articles",
+	'offline.limitOff': "Disabled",
+	'offline.limitOption': "{count} articles",
+	'offline.limitSaved': "Offline setting saved."
 };

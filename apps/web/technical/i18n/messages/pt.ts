@@ -920,5 +920,15 @@ export const pt: Catalogue = {
 	'webhooks.saveFailed': 'Não foi possível guardar o webhook. Tenta mais tarde.',
 	'webhooks.urlBlocked': 'Este endereço é recusado: tem de ser um endereço http ou https público.',
 	'webhooks.limitReached': 'Atingiste o número máximo de webhooks.',
-	'webhooks.eventsRequired': 'Escolhe pelo menos um evento.'
+	'webhooks.eventsRequired': 'Escolhe pelo menos um evento.',
+
+	'offline.banner': "Offline: só a lista de leitura e os artigos não lidos já descarregados podem ser lidos. Os teus votos, a leitura e as marcas de lido serão enviados quando a rede voltar.",
+	'offline.listNotice': "Offline: {count} artigos descarregados neste dispositivo.",
+	'offline.articleUnavailable': "Este artigo não foi descarregado e não pode ser lido offline.",
+	'offline.settingsTitle': "Leitura offline",
+	'offline.settingsDescription': "A lista de leitura e os artigos não lidos são descarregados para este dispositivo, com as imagens, para continuarem legíveis sem rede.",
+	'offline.limitLabel': "Número máximo de artigos descarregados",
+	'offline.limitOff': "Desativado",
+	'offline.limitOption': "{count} artigos",
+	'offline.limitSaved': "Definição offline guardada."
 };

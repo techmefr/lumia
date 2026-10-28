@@ -15,6 +15,7 @@
 	import TotpSettings from '$domain/settings/totp-settings.svelte';
 	import FilterRules from '$domain/settings/filter-rules.svelte';
 	import TagManager from '$domain/settings/tag-manager.svelte';
+	import OfflineSettings from '$domain/settings/offline-settings.svelte';
 	import NotificationSettings from '$domain/settings/notification-settings.svelte';
 	import DigestSettings from '$domain/settings/digest-settings.svelte';
 	import OutboundWebhooks from '$domain/settings/outbound-webhooks.svelte';
@@ -425,6 +426,8 @@
 	<FeverSettings />
 
 	<NotificationSettings />
+
+	<OfflineSettings />
 
 	<DigestSettings />
 
