@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { goto } from '$app/navigation';
 import { lumia } from '$technical/api/client';
 import { articleDetail, articleSummary } from '../test-support/fixtures';
+import { freshOfflineDatabase } from '../../../test-support/fresh-offline-database';
+import { putStoredArticles } from '$technical/offline/article-store';
 import ReadLaterPage from './+page.svelte';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
@@ -130,5 +132,33 @@ describe('saving a url by hand', () => {
 		await fireEvent.submit(view.saveForm());
 
 		expect(api.article.saveUrl).not.toHaveBeenCalled();
+	});
+});
+
+describe('the read-later list without network', () => {
+	beforeEach(freshOfflineDatabase);
+
+	it('shows the downloaded reading list and says how many articles are available', async () => {
+		await putStoredArticles([
+			{ id: 'saved-9', article: articleDetail('saved-9'), listedAs: 'saved' },
+			{ id: 'unread-9', article: articleDetail('unread-9'), listedAs: 'unread' }
+		]);
+		api.recommendation.getSaved.mockRejectedValue(new TypeError('Failed to fetch'));
+
+		const view = readLaterPage();
+
+		await waitFor(() => expect(view.card('saved-9')).not.toBeNull());
+		expect(view.card('unread-9')).toBeNull();
+		expect(view.container.querySelector('[data-test-offline-list-notice]')?.textContent).toContain('1');
+		expect(view.listError()).toBeNull();
+		expect(view.loadMore()).toBeNull();
+	});
+
+	it('still reports a failure when nothing was ever downloaded', async () => {
+		api.recommendation.getSaved.mockRejectedValue(new TypeError('Failed to fetch'));
+		const view = readLaterPage();
+
+		await waitFor(() => expect(view.listError()).not.toBeNull());
+		expect(view.container.querySelector('[data-test-offline-list-notice]')).toBeNull();
 	});
 });

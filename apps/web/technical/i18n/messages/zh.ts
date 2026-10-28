@@ -889,5 +889,15 @@ export const zh: Catalogue = {
 	'webhooks.saveFailed': '无法保存 Webhook，请稍后再试。',
 	'webhooks.urlBlocked': '该地址被拒绝：必须是公开的 http 或 https 地址。',
 	'webhooks.limitReached': '已达到 Webhook 数量上限。',
-	'webhooks.eventsRequired': '请至少选择一个事件。'
+	'webhooks.eventsRequired': '请至少选择一个事件。',
+
+	'offline.banner': "离线：只能阅读已下载的待读列表和未读文章。你的点赞、阅读进度和已读标记将在网络恢复后发送。",
+	'offline.listNotice': "离线：此设备上已下载 {count} 篇文章。",
+	'offline.articleUnavailable': "这篇文章尚未下载，无法离线阅读。",
+	'offline.settingsTitle': "离线阅读",
+	'offline.settingsDescription': "待读列表和未读文章会连同图片下载到此设备，以便在没有网络时阅读。",
+	'offline.limitLabel': "下载文章的最大数量",
+	'offline.limitOff': "已停用",
+	'offline.limitOption': "{count} 篇文章",
+	'offline.limitSaved': "离线设置已保存。"
 };
