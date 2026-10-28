@@ -913,5 +913,14 @@ export const en: Catalogue = {
 	'instance.label': 'Your Lumia instance address',
 	'instance.hint': 'The API address of your instance, for example https://lumia.example.com/api.',
 	'instance.invalid': 'Enter a valid http or https address.',
-	'instance.save': 'Save instance'
+	'instance.save': 'Save instance',
+	'offline.banner': "Offline: only the reading list and the unread articles already downloaded can be read. Your votes, reading and read marks will be sent when the network is back.",
+	'offline.listNotice': "Offline: {count} articles downloaded on this device.",
+	'offline.articleUnavailable': "This article was not downloaded, so it cannot be read offline.",
+	'offline.settingsTitle': "Offline reading",
+	'offline.settingsDescription': "The reading list and unread articles are downloaded to this device, with their images, so they stay readable without a network.",
+	'offline.limitLabel': "Maximum number of downloaded articles",
+	'offline.limitOff': "Disabled",
+	'offline.limitOption': "{count} articles",
+	'offline.limitSaved': "Offline setting saved."
 };

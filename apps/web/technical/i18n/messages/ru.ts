@@ -921,5 +921,14 @@ export const ru: Catalogue = {
 	'instance.label': 'Адрес вашего экземпляра Lumia',
 	'instance.hint': 'Адрес API вашего экземпляра, например https://lumia.example.com/api.',
 	'instance.invalid': 'Введите корректный адрес http или https.',
-	'instance.save': 'Сохранить экземпляр'
+	'instance.save': 'Сохранить экземпляр',
+	'offline.banner': "Офлайн: доступны только список для чтения и уже загруженные непрочитанные статьи. Твои оценки, чтение и отметки о прочтении будут отправлены, когда сеть вернётся.",
+	'offline.listNotice': "Офлайн: на этом устройстве загружено статей: {count}.",
+	'offline.articleUnavailable': "Эта статья не была загружена и недоступна офлайн.",
+	'offline.settingsTitle': "Чтение офлайн",
+	'offline.settingsDescription': "Список для чтения и непрочитанные статьи загружаются на это устройство вместе с изображениями, чтобы их можно было читать без сети.",
+	'offline.limitLabel': "Максимальное число загруженных статей",
+	'offline.limitOff': "Отключено",
+	'offline.limitOption': "Статей: {count}",
+	'offline.limitSaved': "Офлайн-настройка сохранена."
 };

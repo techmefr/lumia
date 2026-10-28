@@ -15,6 +15,16 @@ MANUAL_FEED_TITLE = "Enregistrés"
 _MANUAL_EXTERNAL_ID = "manual"
 
 
+async def find_saved_article(session: AsyncSession, user: User, url: str) -> Article | None:
+    feed = await _get_or_create_manual_feed(session, user)
+    existing: Article | None = await session.scalar(
+        select(Article).where(
+            Article.feed_id == feed.id, Article.canonical_url == canonical_url(url)
+        )
+    )
+    return existing
+
+
 async def save_url(
     session: AsyncSession,
     user: User,
@@ -29,11 +39,7 @@ async def save_url(
     """
     feed = await _get_or_create_manual_feed(session, user)
 
-    existing = await session.scalar(
-        select(Article).where(
-            Article.feed_id == feed.id, Article.canonical_url == canonical_url(url)
-        )
-    )
+    existing = await find_saved_article(session, user, url)
     if existing is not None:
         await _mark_saved(session, user, existing)
         return await _reload(session, existing)

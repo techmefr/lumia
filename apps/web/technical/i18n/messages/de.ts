@@ -924,5 +924,14 @@ export const de: Catalogue = {
 	'instance.label': 'Adresse deiner Lumia-Instanz',
 	'instance.hint': 'Die API-Adresse deiner Instanz, zum Beispiel https://lumia.beispiel.de/api.',
 	'instance.invalid': 'Gib eine gültige http- oder https-Adresse ein.',
-	'instance.save': 'Instanz speichern'
+	'instance.save': 'Instanz speichern',
+	'offline.banner': "Offline: Nur die Leseliste und bereits heruntergeladene ungelesene Artikel sind lesbar. Deine Bewertungen, dein Lesefortschritt und Gelesen-Markierungen werden gesendet, sobald das Netz wieder da ist.",
+	'offline.listNotice': "Offline: {count} Artikel auf diesem Gerät heruntergeladen.",
+	'offline.articleUnavailable': "Dieser Artikel wurde nicht heruntergeladen und ist offline nicht lesbar.",
+	'offline.settingsTitle': "Offline lesen",
+	'offline.settingsDescription': "Die Leseliste und ungelesene Artikel werden samt Bildern auf dieses Gerät geladen, damit sie ohne Netz lesbar bleiben.",
+	'offline.limitLabel': "Maximale Anzahl heruntergeladener Artikel",
+	'offline.limitOff': "Deaktiviert",
+	'offline.limitOption': "{count} Artikel",
+	'offline.limitSaved': "Offline-Einstellung gespeichert."
 };

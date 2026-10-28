@@ -17,12 +17,14 @@
 	import AlertBell from '$domain/alerts/alert-bell.svelte';
 	import SettingsMenu from '$domain/navigation/settings-menu.svelte';
 	import DemoBanner from '$domain/navigation/demo-banner.svelte';
+	import OfflineBanner from '$domain/offline/offline-banner.svelte';
 	import ShortcutsHelp from '$domain/navigation/shortcuts-help.svelte';
 	import PlayerBar from '$domain/audio/player-bar.svelte';
 	import { player } from '$domain/audio/audio-player.svelte';
 	import { refreshPermission, watchUnread } from '$technical/notifications/notification-store.svelte.js';
 	import { bindSequenceShortcuts, bindShortcuts } from '$technical/keyboard/shortcuts';
 	import { NAVIGATION_PREFIX, NAVIGATION_SHORTCUTS } from '$technical/keyboard/shortcut-catalogue';
+	import { runOfflineSync, startOfflineSync } from '$technical/offline/offline-runner';
 	import { initLocale, t } from '$technical/i18n/i18n.svelte.js';
 
 	let { children } = $props();
@@ -109,6 +111,13 @@
 		};
 	});
 
+	onMount(() => startOfflineSync());
+
+	$effect(() => {
+		void page.url.pathname;
+		void runOfflineSync();
+	});
+
 	onMount(() => {
 		initLocale();
 		// Owned by the layout so a single poll covers every screen, and it stops with the app.
@@ -160,6 +169,8 @@
 {#if isDemo}
 	<div class="print:hidden"><DemoBanner /></div>
 {/if}
+
+<OfflineBanner />
 
 {#if !isChromeless(page.url.pathname)}
 	<a href="#main-content" class="skip-link print:hidden">{t('nav.skipToContent')}</a>

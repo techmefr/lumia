@@ -927,5 +927,14 @@ export const mg: Catalogue = {
 	'instance.label': "Adiresin'ny Lumia anao",
 	'instance.hint': "Ny adiresin'ny API an'ny Lumia anao, ohatra https://lumia.example.com/api.",
 	'instance.invalid': 'Ampidiro adiresy http na https mety.',
-	'instance.save': 'Tehirizo ny Lumia'
+	'instance.save': 'Tehirizo ny Lumia',
+	'offline.banner': "Tsy misy aterineto: ny lisitry ny hovakiana sy ny lahatsoratra tsy voavaky efa voakarakara ihany no azo vakiana. Halefa rehefa miverina ny tambajotra ny vokatrao, ny famakiananao ary ny marika voavaky.",
+	'offline.listNotice': "Tsy misy aterineto: lahatsoratra {count} no voakarakara amin'ity fitaovana ity.",
+	'offline.articleUnavailable': "Tsy voakarakara io lahatsoratra io, ka tsy azo vakiana raha tsy misy aterineto.",
+	'offline.settingsTitle': "Famakiana tsy misy aterineto",
+	'offline.settingsDescription': "Alaina amin'ity fitaovana ity miaraka amin'ny sary ny lisitry ny hovakiana sy ny lahatsoratra tsy voavaky, mba ho azo vakiana tsy misy tambajotra.",
+	'offline.limitLabel': "Isa ambony indrindra amin'ny lahatsoratra alaina",
+	'offline.limitOff': "Tsy mandeha",
+	'offline.limitOption': "Lahatsoratra {count}",
+	'offline.limitSaved': "Voatahiry ny fandrindrana tsy misy aterineto."
 };

@@ -926,7 +926,16 @@ export const fr = {
 	'instance.label': 'Adresse de ton instance Lumia',
 	'instance.hint': "L'adresse de l'API de ton instance, par exemple https://lumia.exemple.fr/api.",
 	'instance.invalid': 'Saisis une adresse http ou https valide.',
-	'instance.save': "Enregistrer l'instance"
+	'instance.save': "Enregistrer l'instance",
+	'offline.banner': "Hors ligne : seuls la liste à lire et les articles non lus déjà téléchargés sont lisibles. Tes votes, ta lecture et tes marquages seront envoyés au retour du réseau.",
+	'offline.listNotice': "Hors ligne : {count} articles téléchargés sur cet appareil.",
+	'offline.articleUnavailable': "Cet article n'a pas été téléchargé, il n'est pas lisible hors ligne.",
+	'offline.settingsTitle': "Lecture hors ligne",
+	'offline.settingsDescription': "La liste à lire et les articles non lus sont téléchargés sur cet appareil, avec leurs images, pour rester lisibles sans réseau.",
+	'offline.limitLabel': "Nombre maximal d'articles téléchargés",
+	'offline.limitOff': "Désactivé",
+	'offline.limitOption': "{count} articles",
+	'offline.limitSaved': "Réglage hors ligne enregistré."
 } as const;
 
 export type MessageKey = keyof typeof fr;

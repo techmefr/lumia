@@ -923,5 +923,14 @@ export const es: Catalogue = {
 	'instance.label': 'Dirección de tu instancia de Lumia',
 	'instance.hint': 'La dirección de la API de tu instancia, por ejemplo https://lumia.ejemplo.com/api.',
 	'instance.invalid': 'Introduce una dirección http o https válida.',
-	'instance.save': 'Guardar instancia'
+	'instance.save': 'Guardar instancia',
+	'offline.banner': "Sin conexión: solo se pueden leer la lista de lectura y los artículos no leídos ya descargados. Tus votos, tu lectura y tus marcas se enviarán al volver la red.",
+	'offline.listNotice': "Sin conexión: {count} artículos descargados en este dispositivo.",
+	'offline.articleUnavailable': "Este artículo no se descargó, no se puede leer sin conexión.",
+	'offline.settingsTitle': "Lectura sin conexión",
+	'offline.settingsDescription': "La lista de lectura y los artículos no leídos se descargan en este dispositivo, con sus imágenes, para seguir siendo legibles sin red.",
+	'offline.limitLabel': "Número máximo de artículos descargados",
+	'offline.limitOff': "Desactivado",
+	'offline.limitOption': "{count} artículos",
+	'offline.limitSaved': "Ajuste sin conexión guardado."
 };

@@ -8,7 +8,8 @@ import type {
 	PublicArticle,
 	ReadingListImportProgress,
 	ReadingListImportStarted,
-	ReadingListSource
+	ReadingListSource,
+	SavedArticle
 } from './types';
 
 export interface ListArticlesParams {
@@ -63,8 +64,8 @@ export function createArticleApi(http: HttpClient) {
 	}
 
 	/** Saves an arbitrary web page as a readable article on the user's "Enregistrés" feed. */
-	async function saveUrl(url: string): Promise<ArticleSummary> {
-		return http.request<ArticleSummary>('/articles/save-url', { method: 'POST', body: { url } });
+	async function saveUrl(url: string): Promise<SavedArticle> {
+		return http.request<SavedArticle>('/articles/save-url', { method: 'POST', body: { url } });
 	}
 
 	/**

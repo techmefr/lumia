@@ -924,5 +924,14 @@ export const pt: Catalogue = {
 	'instance.label': 'Endereço da tua instância Lumia',
 	'instance.hint': 'O endereço da API da tua instância, por exemplo https://lumia.exemplo.pt/api.',
 	'instance.invalid': 'Introduz um endereço http ou https válido.',
-	'instance.save': 'Guardar instância'
+	'instance.save': 'Guardar instância',
+	'offline.banner': "Offline: só a lista de leitura e os artigos não lidos já descarregados podem ser lidos. Os teus votos, a leitura e as marcas de lido serão enviados quando a rede voltar.",
+	'offline.listNotice': "Offline: {count} artigos descarregados neste dispositivo.",
+	'offline.articleUnavailable': "Este artigo não foi descarregado e não pode ser lido offline.",
+	'offline.settingsTitle': "Leitura offline",
+	'offline.settingsDescription': "A lista de leitura e os artigos não lidos são descarregados para este dispositivo, com as imagens, para continuarem legíveis sem rede.",
+	'offline.limitLabel': "Número máximo de artigos descarregados",
+	'offline.limitOff': "Desativado",
+	'offline.limitOption': "{count} artigos",
+	'offline.limitSaved': "Definição offline guardada."
 };

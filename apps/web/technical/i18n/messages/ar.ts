@@ -907,5 +907,14 @@ export const ar: Catalogue = {
 	'instance.label': 'عنوان نسخة Lumia الخاصة بك',
 	'instance.hint': 'عنوان واجهة API لنسختك، مثل https://lumia.example.com/api.',
 	'instance.invalid': 'أدخل عنوان http أو https صالحًا.',
-	'instance.save': 'حفظ النسخة'
+	'instance.save': 'حفظ النسخة',
+	'offline.banner': "دون اتصال: لا يمكن قراءة سوى قائمة القراءة والمقالات غير المقروءة التي تم تنزيلها. سيتم إرسال تقييماتك وقراءتك وعلامات القراءة عند عودة الشبكة.",
+	'offline.listNotice': "دون اتصال: {count} مقالات منزّلة على هذا الجهاز.",
+	'offline.articleUnavailable': "لم يتم تنزيل هذه المقالة، لذا لا يمكن قراءتها دون اتصال.",
+	'offline.settingsTitle': "القراءة دون اتصال",
+	'offline.settingsDescription': "يتم تنزيل قائمة القراءة والمقالات غير المقروءة على هذا الجهاز مع صورها لتبقى مقروءة دون شبكة.",
+	'offline.limitLabel': "الحد الأقصى لعدد المقالات المنزّلة",
+	'offline.limitOff': "معطّل",
+	'offline.limitOption': "{count} مقالات",
+	'offline.limitSaved': "تم حفظ إعداد القراءة دون اتصال."
 };
