@@ -36,5 +36,22 @@ export const en: Catalogue = {
 	'login.useRecovery': 'Use a recovery code',
 	'login.backToCode': 'Use the authenticator code',
 	'login.recoveryCode': 'Recovery code',
-	'login.recoveryHint': 'One of the codes you saved when you turned this on. Each works once.'
+	'login.recoveryHint': 'One of the codes you saved when you turned this on. Each works once.',
+	'popup.openReader': 'Open the reader',
+	'reader.title': 'Lumia reader',
+	'reader.feedFilter': 'Feed',
+	'reader.allFeeds': 'All feeds',
+	'reader.unreadOnly': 'Unread only',
+	'reader.loading': 'Loading…',
+	'reader.loadMore': 'Load more',
+	'reader.empty': 'Nothing to read for this filter.',
+	'reader.loadFailed': 'Could not load the articles.',
+	'reader.articleFailed': 'Could not load the article.',
+	'reader.retry': 'Try again',
+	'reader.back': 'Back to the list',
+	'reader.openOriginal': 'Open the original page',
+	'reader.read': 'read',
+	'reader.minutes': '{count} min',
+	'reader.relevanceTitle': 'Relevance for you',
+	'reader.scoreSuffix': 'out of 100 for relevance'
 };

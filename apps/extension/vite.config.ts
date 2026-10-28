@@ -45,6 +45,7 @@ export default defineConfig({
 			input: {
 				popup: resolvePath('./popup/index.html'),
 				options: resolvePath('./options/index.html'),
+				sidepanel: resolvePath('./sidepanel/index.html'),
 				background: resolvePath('./background/background.ts')
 			},
 			output: {
@@ -57,11 +58,11 @@ export default defineConfig({
 	test: {
 		environment: 'jsdom',
 		setupFiles: ['./vitest-setup.ts'],
-		include: ['{domain,technical,popup,options,background}/**/*.test.ts', 'manifest.test.ts'],
+		include: ['{domain,technical,popup,options,sidepanel,background}/**/*.test.ts', 'manifest.test.ts'],
 		exclude: ['**/node_modules/**'],
 		coverage: {
 			provider: 'v8',
-			include: ['{domain,technical,popup,options,background}/**/*.{ts,svelte}', 'manifest.ts'],
+			include: ['{domain,technical,popup,options,sidepanel,background}/**/*.{ts,svelte}', 'manifest.ts'],
 			exclude: ['**/*.test.ts', 'technical/i18n/messages/**', '**/main.ts'],
 			reporter: ['text', 'lcov'],
 			thresholds: { lines: 80, functions: 80, statements: 80, branches: 80 }

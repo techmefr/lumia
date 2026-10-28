@@ -142,6 +142,8 @@ Outbound webhooks (`api/domain/webhook/`) are the other direction: a reader regi
 
 The extension signs in with the account credentials through `createSignInFlow`, like the other clients, and keeps its own access and refresh tokens in `chrome.storage.local` (`technical/storage/extension-token-store.ts`), not in the page storage of the app. A dedicated, individually revocable app token would be simpler to revoke but needs a new backend surface; signing out from the extension, or revoking the sessions from the account settings, already cuts it off. The instance address is per device, stored next to the tokens, and the browser's host permission for that origin is requested when the address is saved, so the manifest asks for no host access up front.
 
+The reader (`sidepanel/`) is `chrome.sidePanel` on Chrome and `sidebar_action` on Firefox, opened from the popup or `Alt+Shift+K`. It builds its client with the same `openLumiaClient` as the popup and the background script, so there is one session: when it is missing or expires the panel sends the reader to the settings instead of holding a second login. The list and the reading view are `ArticleCard` and `sanitizeArticleHtml` from the shared packages, in one column that fits a 350 px panel; the view is a `#article/<id>` hash so the browser's own back navigation works.
+
 ## Bounded contexts
 
 | Context | Responsibility |

@@ -20,6 +20,14 @@ describe('createTranslator', () => {
 		expect(createTranslator(['fr-FR'])('save.saved')).toBe(fr['save.saved']);
 	});
 
+	it('substitutes named placeholders', () => {
+		expect(createTranslator(['en'])('reader.minutes', { count: 7 })).toBe('7 min');
+	});
+
+	it('leaves a placeholder alone when no value is given for it', () => {
+		expect(createTranslator(['en'])('reader.minutes', { other: 1 })).toBe('{count} min');
+	});
+
 	it('has the same keys in every catalogue, so no language shows a raw key', () => {
 		expect(Object.keys(en).sort()).toEqual(Object.keys(fr).sort());
 	});

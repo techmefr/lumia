@@ -19,6 +19,7 @@ export * from './technical/ui/toast.svelte.js';
 export { default as ArticleCard } from './domain/article-card.svelte';
 export { default as ArticleCardSkeleton } from './domain/article-card-skeleton.svelte';
 export { default as ArticleHero } from './domain/article-hero.svelte';
+export { accentHueForFeed } from './domain/accent-hue.js';
 export { default as GlareHover } from './technical/effects/glare-hover.svelte';
 export { default as GradualBlur } from './technical/effects/gradual-blur.svelte';
 export { default as ClickSpark } from './technical/effects/click-spark.svelte';
