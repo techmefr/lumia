@@ -43,4 +43,20 @@ describe('buildManifest', () => {
 		expect(manifest.action.default_popup).toBe('popup/index.html');
 		expect(manifest.options_ui.page).toBe('options/index.html');
 	});
+
+	it('declares the reader panel the way each browser expects it', () => {
+		const chrome = buildManifest('chrome', '1');
+		const firefox = buildManifest('firefox', '1');
+		expect(chrome.side_panel).toEqual({ default_path: 'sidepanel/index.html' });
+		expect(chrome.permissions).toContain('sidePanel');
+		expect('sidebar_action' in chrome).toBe(false);
+		expect(firefox.sidebar_action).toMatchObject({ default_panel: 'sidepanel/index.html' });
+		expect(firefox.permissions).not.toContain('sidePanel');
+		expect('side_panel' in firefox).toBe(false);
+	});
+
+	it('binds a keyboard shortcut to the reader', () => {
+		const { commands } = buildManifest('chrome', '1');
+		expect(commands['open-reader'].suggested_key.default).toBe('Alt+Shift+K');
+	});
 });

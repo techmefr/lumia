@@ -4,6 +4,8 @@
 	import MessageCircle from '@lucide/svelte/icons/message-circle';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
+	import { diagramSource } from '$domain/chat/diagram-source';
+	import MermaidDiagram from '$domain/chat/mermaid-diagram.svelte';
 
 	interface Props {
 		articleId: string;
@@ -12,12 +14,14 @@
 	const { articleId }: Props = $props();
 
 	const MAX_MESSAGE_CHARS = 2000;
-	const ACTIONS: ChatAction[] = ['summarize', 'explain'];
+	const ACTIONS: ChatAction[] = ['summarize', 'explain', 'diagram'];
+	const MAX_PASSAGE_CHARS = 4000;
 
 	let open = $state(false);
 	let loaded = $state(false);
 	let messages = $state<ChatMessage[]>([]);
 	let draft = $state('');
+	let passage = $state<string | null>(null);
 	let pending = $state(false);
 	let error = $state<MessageKey | null>(null);
 
@@ -33,13 +37,29 @@
 		}
 	}
 
+	function takeSelection() {
+		const selected = window.getSelection()?.toString().trim() ?? '';
+		if (!selected) {
+			error = 'chat.noSelection';
+			return;
+		}
+		passage = selected.slice(0, MAX_PASSAGE_CHARS);
+		error = null;
+	}
+
+	function withPassage(request: ChatRequest): ChatRequest {
+		if (passage === null || ('action' in request && request.action === 'diagram')) return request;
+		return { ...request, passage } as ChatRequest;
+	}
+
 	async function send(request: ChatRequest) {
 		if (pending) return;
 		pending = true;
 		error = null;
 		try {
-			messages = [...messages, ...(await lumia.chat.sendChat(articleId, request))];
+			messages = [...messages, ...(await lumia.chat.sendChat(articleId, withPassage(request)))];
 			draft = '';
+			passage = null;
 		} catch (failure) {
 			error =
 				failure instanceof ApiError && failure.status === 503
@@ -104,6 +124,14 @@
 								<span class="sr-only">:</span></span
 							>
 							{label(message)}
+							{#if message.passage}
+								<blockquote data-test-chat-passage class="mt-1 border-s-2 ps-2 text-muted-foreground">
+									{message.passage}
+								</blockquote>
+							{/if}
+							{#if message.role === 'assistant' && diagramSource(message.content)}
+								<MermaidDiagram source={diagramSource(message.content) ?? ''} />
+							{/if}
 						</li>
 					{/each}
 				</ul>
@@ -116,7 +144,37 @@
 				<p role="alert" class="text-sm text-destructive" data-test-chat-error>{t(error)}</p>
 			{/if}
 
+			<p class="text-xs text-muted-foreground" data-test-chat-privacy>{t('chat.privacy')}</p>
+
+			{#if passage}
+				<div class="flex items-start gap-2 rounded-md border p-2 text-sm" data-test-chat-selected-passage>
+					<div class="flex-1">
+						<p class="font-medium">{t('chat.passageLabel')}</p>
+						<p class="line-clamp-3 text-muted-foreground">{passage}</p>
+					</div>
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						data-test-chat-passage-remove
+						onclick={() => (passage = null)}
+					>
+						{t('chat.removePassage')}
+					</Button>
+				</div>
+			{/if}
+
 			<div class="flex flex-wrap gap-2">
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					disabled={pending}
+					data-test-chat-use-passage
+					onclick={takeSelection}
+				>
+					{t('chat.usePassage')}
+				</Button>
 				{#each ACTIONS as action (action)}
 					<Button
 						type="button"

@@ -153,7 +153,7 @@ async def test_a_quick_action_is_stored_with_its_action(
 
 @pytest.mark.parametrize(
     "payload",
-    [{}, {"message": "  "}, {"message": "hi", "action": "explain"}, {"action": "diagram"}],
+    [{}, {"message": "  "}, {"message": "hi", "action": "explain"}, {"action": "translate"}],
 )
 async def test_a_request_must_carry_exactly_a_message_or_a_known_action(
     client: httpx.AsyncClient, model: RecordingChatClient, payload: dict[str, str]
@@ -347,3 +347,87 @@ async def test_deleting_the_account_deletes_its_threads(
         await delete_account(session, admin_id)
 
         assert (await session.scalars(select(ChatMessage))).all() == []
+
+
+async def test_a_diagram_action_asks_for_a_mermaid_block_and_is_stored(
+    client: httpx.AsyncClient, model: RecordingChatClient
+) -> None:
+    headers = await _headers(client)
+    article_id = await _seed_article()
+    model.answer = "```mermaid\nflowchart TD\n  A --> B\n```"
+
+    response = await client.post(
+        f"/articles/{article_id}/chat", headers=headers, json={"action": "diagram"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()[0]["action"] == "diagram"
+    assert response.json()[1]["content"] == model.answer
+    assert "Mermaid" in model.calls[0][1]
+
+
+async def test_a_passage_is_quoted_to_the_model_and_kept_with_the_turn(
+    client: httpx.AsyncClient, model: RecordingChatClient
+) -> None:
+    headers = await _headers(client)
+    article_id = await _seed_article()
+
+    response = await client.post(
+        f"/articles/{article_id}/chat",
+        headers=headers,
+        json={"action": "explain", "passage": "  l encre  "},
+    )
+
+    assert response.status_code == 200
+    assert response.json()[0]["passage"] == "l encre"
+    assert "<<<PASSAGE\nl encre\nPASSAGE>>>" in model.calls[0][1]
+    assert "reader\x27s passage" in model.calls[0][1]
+
+
+async def test_a_typed_question_can_carry_a_passage(
+    client: httpx.AsyncClient, model: RecordingChatClient
+) -> None:
+    headers = await _headers(client)
+    article_id = await _seed_article()
+
+    response = await client.post(
+        f"/articles/{article_id}/chat",
+        headers=headers,
+        json={"message": "What does this mean?", "passage": "le papier"},
+    )
+
+    assert response.status_code == 200
+    assert "<<<PASSAGE\nle papier" in model.calls[0][1]
+
+
+async def test_a_turn_without_a_passage_quotes_none(
+    client: httpx.AsyncClient, model: RecordingChatClient
+) -> None:
+    headers = await _headers(client)
+    article_id = await _seed_article()
+
+    response = await client.post(
+        f"/articles/{article_id}/chat", headers=headers, json={"message": "Why?"}
+    )
+
+    assert response.json()[0]["passage"] is None
+    assert "<<<PASSAGE" not in model.calls[0][1]
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"action": "diagram", "passage": "le papier"},
+        {"action": "summarize", "passage": "x" * 4_001},
+    ],
+)
+async def test_a_passage_is_refused_with_a_diagram_or_over_the_cap(
+    client: httpx.AsyncClient, model: RecordingChatClient, payload: dict[str, str]
+) -> None:
+    headers = await _headers(client)
+    article_id = await _seed_article()
+
+    response = await client.post(f"/articles/{article_id}/chat", headers=headers, json=payload)
+
+    assert response.status_code == 422
+    assert model.calls == []

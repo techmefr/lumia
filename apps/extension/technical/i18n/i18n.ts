@@ -15,7 +15,17 @@ export function resolveLocale(preferred: readonly string[]): string {
 
 export function createTranslator(preferred: readonly string[]) {
 	const catalogue = CATALOGUES[resolveLocale(preferred)];
-	return (key: MessageKey): string => catalogue[key];
+	return (key: MessageKey, params?: Record<string, string | number>): string => {
+		const template = catalogue[key];
+		if (!params) return template;
+		return template.replace(/\{(\w+)\}/g, (match, name: string) =>
+			name in params ? String(params[name]) : match
+		);
+	};
 }
 
-export const t = createTranslator(typeof navigator === 'undefined' ? [] : navigator.languages);
+export const languages = typeof navigator === 'undefined' ? [] : navigator.languages;
+
+export const locale = resolveLocale(languages);
+
+export const t = createTranslator(languages);

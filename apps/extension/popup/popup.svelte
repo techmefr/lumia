@@ -3,8 +3,10 @@
 	import { Button } from '@lumia/ui';
 	import BookmarkCheck from '@lucide/svelte/icons/bookmark-check';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import BookOpen from '@lucide/svelte/icons/book-open';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import type { ExtensionApi } from '$technical/browser/extension-api';
+	import { openReaderPanel } from '$technical/browser/reader-panel';
 	import { openLumiaClient } from '$technical/api/lumia-session';
 	import { t } from '$technical/i18n/i18n';
 	import { savePage, type SaveOutcome } from '$domain/save/save-page';
@@ -49,4 +51,8 @@
 			</Button>
 		{/if}
 	{/if}
+	<Button data-test-open-reader variant="outline" onclick={() => openReaderPanel(extension)}>
+		<BookOpen aria-hidden="true" />
+		{t('popup.openReader')}
+	</Button>
 </main>

@@ -6,13 +6,28 @@ export function buildManifest(target: ExtensionTarget, version: string) {
 			? { scripts: ['background.js'], type: 'module' }
 			: { service_worker: 'background.js', type: 'module' };
 
+	const readerPanel =
+		target === 'firefox'
+			? {
+					browser_specific_settings: { gecko: { id: 'lumia@techme.fr' } },
+					sidebar_action: {
+						default_title: '__MSG_extensionName__',
+						default_panel: 'sidepanel/index.html',
+						open_at_install: false
+					}
+				}
+			: { side_panel: { default_path: 'sidepanel/index.html' } };
+
 	return {
 		manifest_version: 3,
 		name: '__MSG_extensionName__',
 		description: '__MSG_extensionDescription__',
 		version,
 		default_locale: 'en',
-		permissions: ['storage', 'activeTab', 'contextMenus'],
+		permissions:
+			target === 'chrome'
+				? ['storage', 'activeTab', 'contextMenus', 'sidePanel']
+				: ['storage', 'activeTab', 'contextMenus'],
 		optional_host_permissions: ['http://*/*', 'https://*/*'],
 		background,
 		action: { default_title: '__MSG_extensionName__', default_popup: 'popup/index.html' },
@@ -21,10 +36,12 @@ export function buildManifest(target: ExtensionTarget, version: string) {
 			'save-page': {
 				suggested_key: { default: 'Alt+Shift+L' },
 				description: '__MSG_commandSavePage__'
+			},
+			'open-reader': {
+				suggested_key: { default: 'Alt+Shift+K' },
+				description: '__MSG_commandOpenReader__'
 			}
 		},
-		...(target === 'firefox'
-			? { browser_specific_settings: { gecko: { id: 'lumia@techme.fr' } } }
-			: {})
+		...readerPanel
 	};
 }

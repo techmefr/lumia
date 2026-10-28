@@ -36,6 +36,8 @@ export interface ExtensionApi {
 	};
 	tabs: { query(query: { active: boolean; currentWindow: boolean }): Promise<ExtensionTab[]> };
 	permissions: { request(permissions: { origins: string[] }): Promise<boolean> };
+	sidePanel?: { open(options: { windowId: number }): Promise<void> };
+	sidebarAction?: { open(): Promise<void> };
 }
 
 export function getExtension(): ExtensionApi {
