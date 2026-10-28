@@ -44,6 +44,10 @@ export interface Keyword {
 	term: string;
 }
 
+export interface SavedArticle extends ArticleSummary {
+	already_saved?: boolean;
+}
+
 export interface ArticleDetail extends ArticleSummary {
 	content: string;
 	keywords: Keyword[];
