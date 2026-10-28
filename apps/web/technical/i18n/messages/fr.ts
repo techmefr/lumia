@@ -922,7 +922,17 @@ export const fr = {
 	'webhooks.saveFailed': 'Le webhook n\'a pas pu être enregistré. Réessaie plus tard.',
 	'webhooks.urlBlocked': 'Cette adresse est refusée : elle doit être une adresse http ou https publique.',
 	'webhooks.limitReached': 'Tu as atteint le nombre maximal de webhooks.',
-	'webhooks.eventsRequired': 'Choisis au moins un événement.'
+	'webhooks.eventsRequired': 'Choisis au moins un événement.',
+
+	'offline.banner': "Hors ligne : seuls la liste à lire et les articles non lus déjà téléchargés sont lisibles. Tes votes, ta lecture et tes marquages seront envoyés au retour du réseau.",
+	'offline.listNotice': "Hors ligne : {count} articles téléchargés sur cet appareil.",
+	'offline.articleUnavailable': "Cet article n'a pas été téléchargé, il n'est pas lisible hors ligne.",
+	'offline.settingsTitle': "Lecture hors ligne",
+	'offline.settingsDescription': "La liste à lire et les articles non lus sont téléchargés sur cet appareil, avec leurs images, pour rester lisibles sans réseau.",
+	'offline.limitLabel': "Nombre maximal d'articles téléchargés",
+	'offline.limitOff': "Désactivé",
+	'offline.limitOption': "{count} articles",
+	'offline.limitSaved': "Réglage hors ligne enregistré."
 } as const;
 
 export type MessageKey = keyof typeof fr;
