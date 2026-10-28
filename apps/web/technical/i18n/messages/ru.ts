@@ -917,5 +917,9 @@ export const ru: Catalogue = {
 	'webhooks.saveFailed': 'Не удалось сохранить вебхук. Повторите попытку позже.',
 	'webhooks.urlBlocked': 'Этот адрес отклонён: он должен быть публичным адресом http или https.',
 	'webhooks.limitReached': 'Достигнуто максимальное число вебхуков.',
-	'webhooks.eventsRequired': 'Выберите хотя бы одно событие.'
+	'webhooks.eventsRequired': 'Выберите хотя бы одно событие.',
+	'instance.label': 'Адрес вашего экземпляра Lumia',
+	'instance.hint': 'Адрес API вашего экземпляра, например https://lumia.example.com/api.',
+	'instance.invalid': 'Введите корректный адрес http или https.',
+	'instance.save': 'Сохранить экземпляр'
 };

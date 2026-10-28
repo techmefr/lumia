@@ -922,7 +922,11 @@ export const fr = {
 	'webhooks.saveFailed': 'Le webhook n\'a pas pu être enregistré. Réessaie plus tard.',
 	'webhooks.urlBlocked': 'Cette adresse est refusée : elle doit être une adresse http ou https publique.',
 	'webhooks.limitReached': 'Tu as atteint le nombre maximal de webhooks.',
-	'webhooks.eventsRequired': 'Choisis au moins un événement.'
+	'webhooks.eventsRequired': 'Choisis au moins un événement.',
+	'instance.label': 'Adresse de ton instance Lumia',
+	'instance.hint': "L'adresse de l'API de ton instance, par exemple https://lumia.exemple.fr/api.",
+	'instance.invalid': 'Saisis une adresse http ou https valide.',
+	'instance.save': "Enregistrer l'instance"
 } as const;
 
 export type MessageKey = keyof typeof fr;

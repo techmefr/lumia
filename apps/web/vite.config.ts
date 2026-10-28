@@ -15,7 +15,7 @@ const basePath = (process.env.BASE_PATH ?? '') as '' | `/${string}`;
 // the test run: forcing it on the real build would drop the SSR entry points sveltekit needs.
 const testResolve = process.env.VITEST ? { conditions: ['browser'] } : undefined;
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
 	plugins: [
 		tailwindcss(),
 		sveltekit({
@@ -43,7 +43,7 @@ export default defineConfig({
 				mode: 'hash',
 				directives: {
 					'script-src': ['self'],
-					'connect-src': ['self'],
+					'connect-src': mode === 'mobile' ? ['self', 'https:', 'http:'] : ['self'],
 					// Article images and feed icons come from whatever host the feed points at,
 					// http included: plenty of feeds still serve their images that way.
 					'img-src': ['self', 'data:', 'https:', 'http:'],
@@ -104,4 +104,4 @@ export default defineConfig({
 			thresholds: { lines: 93, functions: 93, statements: 92, branches: 78 }
 		}
 	}
-});
+}));

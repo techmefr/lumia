@@ -909,5 +909,9 @@ export const en: Catalogue = {
 	'webhooks.saveFailed': 'The webhook could not be saved. Try again later.',
 	'webhooks.urlBlocked': 'This address is refused: it must be a public http or https address.',
 	'webhooks.limitReached': 'You have reached the maximum number of webhooks.',
-	'webhooks.eventsRequired': 'Choose at least one event.'
+	'webhooks.eventsRequired': 'Choose at least one event.',
+	'instance.label': 'Your Lumia instance address',
+	'instance.hint': 'The API address of your instance, for example https://lumia.example.com/api.',
+	'instance.invalid': 'Enter a valid http or https address.',
+	'instance.save': 'Save instance'
 };

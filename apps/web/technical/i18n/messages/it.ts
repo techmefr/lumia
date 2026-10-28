@@ -920,5 +920,9 @@ export const it: Catalogue = {
 	'webhooks.saveFailed': 'Impossibile salvare il webhook. Riprova più tardi.',
 	'webhooks.urlBlocked': 'Questo indirizzo è rifiutato: deve essere un indirizzo http o https pubblico.',
 	'webhooks.limitReached': 'Hai raggiunto il numero massimo di webhook.',
-	'webhooks.eventsRequired': 'Scegli almeno un evento.'
+	'webhooks.eventsRequired': 'Scegli almeno un evento.',
+	'instance.label': 'Indirizzo della tua istanza Lumia',
+	'instance.hint': "L'indirizzo dell'API della tua istanza, ad esempio https://lumia.esempio.it/api.",
+	'instance.invalid': 'Inserisci un indirizzo http o https valido.',
+	'instance.save': 'Salva istanza'
 };

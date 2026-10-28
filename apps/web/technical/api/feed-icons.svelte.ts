@@ -1,4 +1,4 @@
-import { isDemo, lumia } from './client';
+import { apiBaseUrl, isDemo, lumia } from './client';
 
 /**
  * Feed icons are proxied by the API behind bearer auth, and an `<img src>` cannot carry an
@@ -25,7 +25,7 @@ class FeedIconStore {
 		}
 		this.pending.add(feedId);
 		try {
-			const base = import.meta.env.VITE_API_BASE_URL;
+			const base = apiBaseUrl;
 			const token = lumia.tokenStore.getAccessToken();
 			const response = await fetch(`${base}/feeds/${feedId}/icon`, {
 				headers: token ? { authorization: `Bearer ${token}` } : {}

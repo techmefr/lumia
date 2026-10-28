@@ -889,5 +889,9 @@ export const zh: Catalogue = {
 	'webhooks.saveFailed': '无法保存 Webhook，请稍后再试。',
 	'webhooks.urlBlocked': '该地址被拒绝：必须是公开的 http 或 https 地址。',
 	'webhooks.limitReached': '已达到 Webhook 数量上限。',
-	'webhooks.eventsRequired': '请至少选择一个事件。'
+	'webhooks.eventsRequired': '请至少选择一个事件。',
+	'instance.label': '你的 Lumia 实例地址',
+	'instance.hint': '你的实例的 API 地址，例如 https://lumia.example.com/api。',
+	'instance.invalid': '请输入有效的 http 或 https 地址。',
+	'instance.save': '保存实例'
 };

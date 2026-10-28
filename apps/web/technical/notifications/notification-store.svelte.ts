@@ -9,6 +9,12 @@
 
 import { Temporal } from 'temporal-polyfill';
 import { t } from '../i18n/i18n.svelte';
+import { isNativePlatform } from '$technical/platform/native-platform';
+import {
+	checkNativePermission,
+	requestNativePermission,
+	showNativeNotification
+} from './native-notifier';
 
 const SETTINGS_KEY = 'lumia-notifications';
 const BASELINE_KEY = 'lumia-notifications-baseline';
@@ -63,15 +69,36 @@ export function updateNotificationSettings(patch: Partial<NotificationSettings>)
 /** 'unsupported' distinguishes a browser without the API from one that refused. */
 export type PermissionState = 'unsupported' | 'default' | 'granted' | 'denied';
 
+let nativePermission = $state<PermissionState>('default');
+
 export function permissionState(): PermissionState {
+	if (isNativePlatform()) return nativePermission;
 	if (typeof Notification === 'undefined') return 'unsupported';
 	return Notification.permission as Exclude<PermissionState, 'unsupported'>;
 }
 
+export async function refreshPermission(): Promise<PermissionState> {
+	if (!isNativePlatform()) return permissionState();
+	nativePermission = await checkNativePermission();
+	return nativePermission;
+}
+
 export async function requestPermission(): Promise<PermissionState> {
+	if (isNativePlatform()) {
+		nativePermission = await requestNativePermission();
+		return nativePermission;
+	}
 	if (typeof Notification === 'undefined') return 'unsupported';
 	// Must be called from a user gesture, which is why this is not done on mount.
 	return (await Notification.requestPermission()) as Exclude<PermissionState, 'unsupported'>;
+}
+
+function notify(message: string): void {
+	if (isNativePlatform()) {
+		void showNativeNotification('Lumia', message).catch(() => {});
+		return;
+	}
+	new Notification('Lumia', { body: message, tag: 'lumia-unread' });
 }
 
 /**
@@ -166,7 +193,7 @@ export function watchUnread(fetchTotal: () => Promise<number>): () => void {
 				timeZone
 			);
 			writeBaseline(total);
-			if (message) new Notification('Lumia', { body: message, tag: 'lumia-unread' });
+			if (message) notify(message);
 		} catch {
 			/* offline or logged out: the next tick tries again */
 		}

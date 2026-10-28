@@ -923,5 +923,9 @@ export const mg: Catalogue = {
 	'webhooks.saveFailed': 'Tsy voatahiry ny webhook. Andramo indray any aoriana.',
 	'webhooks.urlBlocked': 'Nolavina io adiresy io: tsy maintsy adiresy http na https mivelatra.',
 	'webhooks.limitReached': 'Tonga amin\'ny isa ambony indrindra amin\'ny webhook ianao.',
-	'webhooks.eventsRequired': 'Misafidiana hetsika iray farafahakeliny.'
+	'webhooks.eventsRequired': 'Misafidiana hetsika iray farafahakeliny.',
+	'instance.label': "Adiresin'ny Lumia anao",
+	'instance.hint': "Ny adiresin'ny API an'ny Lumia anao, ohatra https://lumia.example.com/api.",
+	'instance.invalid': 'Ampidiro adiresy http na https mety.',
+	'instance.save': 'Tehirizo ny Lumia'
 };

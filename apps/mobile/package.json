@@ -1,0 +1,21 @@
+{
+	"name": "mobile",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"build:web": "pnpm --filter web build:mobile",
+		"sync": "pnpm build:web && cap sync",
+		"android": "pnpm sync && cap open android",
+		"ios": "pnpm sync && cap open ios"
+	},
+	"dependencies": {
+		"@capacitor/android": "^8.5.3",
+		"@capacitor/core": "^8.5.3",
+		"@capacitor/ios": "^8.5.3",
+		"@capacitor/local-notifications": "^8.3.1"
+	},
+	"devDependencies": {
+		"@capacitor/cli": "^8.5.3"
+	}
+}

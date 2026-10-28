@@ -10,6 +10,8 @@
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Mail from '@lucide/svelte/icons/mail';
 	import { lumia } from '$technical/api/client';
+	import InstanceUrlForm from '$domain/instance/instance-url-form.svelte';
+	import { isNativePlatform } from '$technical/platform/native-platform';
 	import { t } from '$technical/i18n/i18n.svelte.js';
 
 	let email = $state('');
@@ -253,6 +255,11 @@
 						>{t('login.createAdmin')}</a
 					>
 				</p>
+			{/if}
+			{#if isNativePlatform()}
+				<div class="mt-6 border-t pt-4">
+					<InstanceUrlForm />
+				</div>
 			{/if}
 		</CardContent>
 	</Card>

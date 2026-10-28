@@ -20,7 +20,7 @@
 	import ShortcutsHelp from '$domain/navigation/shortcuts-help.svelte';
 	import PlayerBar from '$domain/audio/player-bar.svelte';
 	import { player } from '$domain/audio/audio-player.svelte';
-	import { watchUnread } from '$technical/notifications/notification-store.svelte.js';
+	import { refreshPermission, watchUnread } from '$technical/notifications/notification-store.svelte.js';
 	import { bindSequenceShortcuts, bindShortcuts } from '$technical/keyboard/shortcuts';
 	import { NAVIGATION_PREFIX, NAVIGATION_SHORTCUTS } from '$technical/keyboard/shortcut-catalogue';
 	import { initLocale, t } from '$technical/i18n/i18n.svelte.js';
@@ -112,6 +112,7 @@
 	onMount(() => {
 		initLocale();
 		// Owned by the layout so a single poll covers every screen, and it stops with the app.
+		void refreshPermission();
 		return watchUnread(async () => (await lumia.feed.getUnreadCounts()).total);
 	});
 

@@ -903,5 +903,9 @@ export const ar: Catalogue = {
 	'webhooks.saveFailed': 'تعذر حفظ الخطاف. حاول مرة أخرى لاحقًا.',
 	'webhooks.urlBlocked': 'هذا العنوان مرفوض: يجب أن يكون عنوان http أو https عامًا.',
 	'webhooks.limitReached': 'لقد بلغت الحد الأقصى لعدد الخطافات.',
-	'webhooks.eventsRequired': 'اختر حدثًا واحدًا على الأقل.'
+	'webhooks.eventsRequired': 'اختر حدثًا واحدًا على الأقل.',
+	'instance.label': 'عنوان نسخة Lumia الخاصة بك',
+	'instance.hint': 'عنوان واجهة API لنسختك، مثل https://lumia.example.com/api.',
+	'instance.invalid': 'أدخل عنوان http أو https صالحًا.',
+	'instance.save': 'حفظ النسخة'
 };

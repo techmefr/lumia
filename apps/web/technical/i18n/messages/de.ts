@@ -920,5 +920,9 @@ export const de: Catalogue = {
 	'webhooks.saveFailed': 'Der Webhook konnte nicht gespeichert werden. Versuche es später erneut.',
 	'webhooks.urlBlocked': 'Diese Adresse wird abgelehnt: Sie muss eine öffentliche http- oder https-Adresse sein.',
 	'webhooks.limitReached': 'Du hast die maximale Anzahl an Webhooks erreicht.',
-	'webhooks.eventsRequired': 'Wähle mindestens ein Ereignis.'
+	'webhooks.eventsRequired': 'Wähle mindestens ein Ereignis.',
+	'instance.label': 'Adresse deiner Lumia-Instanz',
+	'instance.hint': 'Die API-Adresse deiner Instanz, zum Beispiel https://lumia.beispiel.de/api.',
+	'instance.invalid': 'Gib eine gültige http- oder https-Adresse ein.',
+	'instance.save': 'Instanz speichern'
 };
