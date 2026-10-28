@@ -1,5 +1,6 @@
 {
 	"extensionName": { "message": "Lumia" },
 	"extensionDescription": { "message": "Save the page you are reading to your Lumia instance in one click." },
-	"commandSavePage": { "message": "Save the current page to Lumia" }
+	"commandSavePage": { "message": "Save the current page to Lumia" },
+	"commandOpenReader": { "message": "Open the Lumia reader" }
 }

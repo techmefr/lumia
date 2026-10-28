@@ -88,3 +88,59 @@
 		@apply font-serif;
 	}
 }
+
+.reader-content {
+	overflow-wrap: anywhere;
+	line-height: 1.65;
+}
+
+.reader-content > * + * {
+	margin-top: 0.9em;
+}
+
+.reader-content img,
+.reader-content video,
+.reader-content iframe,
+.reader-content svg {
+	max-width: 100%;
+	height: auto;
+}
+
+.reader-content pre,
+.reader-content table {
+	display: block;
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.reader-content a {
+	color: var(--primary);
+	text-decoration: underline;
+}
+
+.reader-content h1,
+.reader-content h2,
+.reader-content h3 {
+	font-size: 1.15em;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.reader-content ul,
+.reader-content ol {
+	padding-inline-start: 1.25em;
+}
+
+.reader-content ul {
+	list-style: disc;
+}
+
+.reader-content ol {
+	list-style: decimal;
+}
+
+.reader-content blockquote {
+	border-inline-start: 3px solid var(--border);
+	padding-inline-start: 0.75em;
+	color: var(--muted-foreground);
+}

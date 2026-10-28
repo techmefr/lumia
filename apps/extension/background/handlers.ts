@@ -1,4 +1,5 @@
 import type { ExtensionApi } from '$technical/browser/extension-api';
+import { openReaderPanel } from '$technical/browser/reader-panel';
 import { openLumiaClient } from '$technical/api/lumia-session';
 import { t } from '$technical/i18n/i18n';
 import { savePage } from '$domain/save/save-page';
@@ -6,6 +7,7 @@ import { NEEDS_SETTINGS, OUTCOME_MESSAGE, showOutcomeBadge } from '$domain/save/
 
 export const SAVE_LINK_MENU_ID = 'save-link';
 export const SAVE_PAGE_COMMAND = 'save-page';
+export const OPEN_READER_COMMAND = 'open-reader';
 
 export function createSaveAndNotify(extension: ExtensionApi) {
 	return async function saveAndNotify(url: string | undefined): Promise<void> {
@@ -32,6 +34,10 @@ export function registerBackground(extension: ExtensionApi): void {
 	});
 
 	extension.commands.onCommand.addListener((command) => {
+		if (command === OPEN_READER_COMMAND) {
+			void openReaderPanel(extension);
+			return;
+		}
 		if (command !== SAVE_PAGE_COMMAND) return;
 		void extension.tabs
 			.query({ active: true, currentWindow: true })

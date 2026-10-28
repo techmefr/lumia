@@ -34,7 +34,24 @@ export const fr = {
 	'login.useRecovery': 'Utiliser un code de secours',
 	'login.backToCode': "Utiliser le code de l'application",
 	'login.recoveryCode': 'Code de secours',
-	'login.recoveryHint': "Un des codes notés à l'activation. Chacun ne sert qu'une fois."
+	'login.recoveryHint': "Un des codes notés à l'activation. Chacun ne sert qu'une fois.",
+	'popup.openReader': 'Ouvrir le lecteur',
+	'reader.title': 'Lecteur Lumia',
+	'reader.feedFilter': 'Flux',
+	'reader.allFeeds': 'Tous les flux',
+	'reader.unreadOnly': 'Non lus seulement',
+	'reader.loading': 'Chargement…',
+	'reader.loadMore': 'Voir plus',
+	'reader.empty': 'Aucun article à lire pour ce filtre.',
+	'reader.loadFailed': 'Impossible de charger les articles.',
+	'reader.articleFailed': "Impossible de charger l'article.",
+	'reader.retry': 'Réessayer',
+	'reader.back': 'Retour à la liste',
+	'reader.openOriginal': "Ouvrir la page d'origine",
+	'reader.read': 'lu',
+	'reader.minutes': '{count} min',
+	'reader.relevanceTitle': 'Pertinence pour vous',
+	'reader.scoreSuffix': 'sur 100 en pertinence'
 };
 
 export type MessageKey = keyof typeof fr;

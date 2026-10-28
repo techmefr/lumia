@@ -2,7 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFakeExtension } from '$test-support/fake-extension';
 import { stubFetch } from '$test-support/stub-fetch';
 import { en } from '$technical/i18n/messages/en';
-import { registerBackground, SAVE_LINK_MENU_ID, SAVE_PAGE_COMMAND } from './handlers';
+import {
+	OPEN_READER_COMMAND,
+	registerBackground,
+	SAVE_LINK_MENU_ID,
+	SAVE_PAGE_COMMAND
+} from './handlers';
 
 const SIGNED_IN = {
 	'lumia.instance_url': 'https://lumia.test',
@@ -104,5 +109,24 @@ describe('keyboard shortcut', () => {
 		fake.fire.command(SAVE_PAGE_COMMAND);
 		await settle();
 		expect(fake.badge.title).toBe(en['save.unsupported']);
+	});
+});
+
+describe('reader shortcut', () => {
+	it('opens the reader panel', async () => {
+		const fake = createFakeExtension({ sidePanel: true });
+		registerBackground(fake.extension);
+		fake.fire.command(OPEN_READER_COMMAND);
+		await settle();
+		expect(fake.panelOpens).toHaveLength(1);
+	});
+
+	it('does not save anything while doing so', async () => {
+		const fake = createFakeExtension({ sidebarAction: true, stored: SIGNED_IN, tabs: [{ url: 'https://blog.test/' }] });
+		const { requests } = stubFetch([]);
+		registerBackground(fake.extension);
+		fake.fire.command(OPEN_READER_COMMAND);
+		await settle();
+		expect(requests).toEqual([]);
 	});
 });

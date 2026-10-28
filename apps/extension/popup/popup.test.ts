@@ -28,7 +28,7 @@ describe('Popup', () => {
 		expect(await screen.findByText(en['save.saved'])).toBeInTheDocument();
 		expect(requests[0].body).toEqual({ url: 'https://blog.test/post' });
 		expect(screen.getByRole('status')).toHaveTextContent(en['save.saved']);
-		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.queryByRole('button', { name: en['popup.openSettings'] })).toBeNull();
 	});
 
 	it('shows a status while the page is being saved', () => {
@@ -56,7 +56,7 @@ describe('Popup', () => {
 		stubFetch([{ status: 400 }]);
 		render(Popup, { extension: fake.extension });
 		expect(await screen.findByRole('alert')).toHaveTextContent(en['save.failed']);
-		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.queryByRole('button', { name: en['popup.openSettings'] })).toBeNull();
 	});
 
 	it('leads to the settings when there is no instance yet', async () => {
@@ -72,5 +72,14 @@ describe('Popup', () => {
 		const fake = createFakeExtension({ stored: SIGNED_IN, tabs: [{ url: 'chrome://extensions' }] });
 		render(Popup, { extension: fake.extension });
 		expect(await screen.findByRole('alert')).toHaveTextContent(en['save.unsupported']);
+	});
+
+	it('opens the reader panel from a button, whatever the save said', async () => {
+		const fake = createFakeExtension({ sidePanel: true, tabs: [{ url: 'chrome://extensions' }] });
+		render(Popup, { extension: fake.extension });
+
+		await userEvent.click(screen.getByRole('button', { name: en['popup.openReader'] }));
+
+		expect(fake.panelOpens).toHaveLength(1);
 	});
 });
