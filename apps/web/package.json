@@ -20,16 +20,16 @@
 	"dependencies": {
 		"@capacitor/core": "^8.5.3",
 		"@capacitor/local-notifications": "^8.3.1",
-		"@lucide/svelte": "^1.45.0",
+		"@lucide/svelte": "^1.61.0",
 		"@lumia/core": "workspace:*",
 		"@lumia/ui": "workspace:*",
-		"bits-ui": "^2.19.2",
+		"bits-ui": "^2.20.2",
 		"clsx": "^2.1.1",
 		"mermaid": "^12.2.0",
 		"qrcode": "^1.5.4",
 		"tailwind-merge": "^3.7.0",
 		"tailwind-variants": "^3.3.1",
-		"temporal-polyfill": "^1.0.5"
+		"temporal-polyfill": "^1.0.6"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.14.0",

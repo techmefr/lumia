@@ -11,12 +11,12 @@
 		"test:coverage": "vitest run --coverage"
 	},
 	"dependencies": {
-		"@lucide/svelte": "^1.45.0",
-		"bits-ui": "^2.19.2",
+		"@lucide/svelte": "^1.61.0",
+		"bits-ui": "^2.20.2",
 		"clsx": "^2.1.1",
 		"tailwind-merge": "^3.7.0",
 		"tailwind-variants": "^3.3.1",
-		"temporal-polyfill": "^1.0.5"
+		"temporal-polyfill": "^1.0.6"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
