@@ -931,5 +931,15 @@ export const mg: Catalogue = {
 	'webhooks.saveFailed': 'Tsy voatahiry ny webhook. Andramo indray any aoriana.',
 	'webhooks.urlBlocked': 'Nolavina io adiresy io: tsy maintsy adiresy http na https mivelatra.',
 	'webhooks.limitReached': 'Tonga amin\'ny isa ambony indrindra amin\'ny webhook ianao.',
-	'webhooks.eventsRequired': 'Misafidiana hetsika iray farafahakeliny.'
+	'webhooks.eventsRequired': 'Misafidiana hetsika iray farafahakeliny.',
+
+	'offline.banner': "Tsy misy aterineto: ny lisitry ny hovakiana sy ny lahatsoratra tsy voavaky efa voakarakara ihany no azo vakiana. Halefa rehefa miverina ny tambajotra ny vokatrao, ny famakiananao ary ny marika voavaky.",
+	'offline.listNotice': "Tsy misy aterineto: lahatsoratra {count} no voakarakara amin'ity fitaovana ity.",
+	'offline.articleUnavailable': "Tsy voakarakara io lahatsoratra io, ka tsy azo vakiana raha tsy misy aterineto.",
+	'offline.settingsTitle': "Famakiana tsy misy aterineto",
+	'offline.settingsDescription': "Alaina amin'ity fitaovana ity miaraka amin'ny sary ny lisitry ny hovakiana sy ny lahatsoratra tsy voavaky, mba ho azo vakiana tsy misy tambajotra.",
+	'offline.limitLabel': "Isa ambony indrindra amin'ny lahatsoratra alaina",
+	'offline.limitOff': "Tsy mandeha",
+	'offline.limitOption': "Lahatsoratra {count}",
+	'offline.limitSaved': "Voatahiry ny fandrindrana tsy misy aterineto."
 };

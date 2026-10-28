@@ -40,6 +40,12 @@ jobs:
       - name: Test the app
         run: pnpm --filter web test:coverage
 
+      - name: Check, test and build the browser extension
+        run: |
+          pnpm --filter extension check
+          pnpm --filter extension test:coverage
+          pnpm --filter extension build
+
       - name: Check, test and build the create-lumia CLI
         run: |
           pnpm --filter create-lumia check

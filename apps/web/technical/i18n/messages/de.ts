@@ -928,5 +928,15 @@ export const de: Catalogue = {
 	'webhooks.saveFailed': 'Der Webhook konnte nicht gespeichert werden. Versuche es später erneut.',
 	'webhooks.urlBlocked': 'Diese Adresse wird abgelehnt: Sie muss eine öffentliche http- oder https-Adresse sein.',
 	'webhooks.limitReached': 'Du hast die maximale Anzahl an Webhooks erreicht.',
-	'webhooks.eventsRequired': 'Wähle mindestens ein Ereignis.'
+	'webhooks.eventsRequired': 'Wähle mindestens ein Ereignis.',
+
+	'offline.banner': "Offline: Nur die Leseliste und bereits heruntergeladene ungelesene Artikel sind lesbar. Deine Bewertungen, dein Lesefortschritt und Gelesen-Markierungen werden gesendet, sobald das Netz wieder da ist.",
+	'offline.listNotice': "Offline: {count} Artikel auf diesem Gerät heruntergeladen.",
+	'offline.articleUnavailable': "Dieser Artikel wurde nicht heruntergeladen und ist offline nicht lesbar.",
+	'offline.settingsTitle': "Offline lesen",
+	'offline.settingsDescription': "Die Leseliste und ungelesene Artikel werden samt Bildern auf dieses Gerät geladen, damit sie ohne Netz lesbar bleiben.",
+	'offline.limitLabel': "Maximale Anzahl heruntergeladener Artikel",
+	'offline.limitOff': "Deaktiviert",
+	'offline.limitOption': "{count} Artikel",
+	'offline.limitSaved': "Offline-Einstellung gespeichert."
 };

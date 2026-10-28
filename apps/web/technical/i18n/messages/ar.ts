@@ -911,5 +911,15 @@ export const ar: Catalogue = {
 	'webhooks.saveFailed': 'تعذر حفظ الخطاف. حاول مرة أخرى لاحقًا.',
 	'webhooks.urlBlocked': 'هذا العنوان مرفوض: يجب أن يكون عنوان http أو https عامًا.',
 	'webhooks.limitReached': 'لقد بلغت الحد الأقصى لعدد الخطافات.',
-	'webhooks.eventsRequired': 'اختر حدثًا واحدًا على الأقل.'
+	'webhooks.eventsRequired': 'اختر حدثًا واحدًا على الأقل.',
+
+	'offline.banner': "دون اتصال: لا يمكن قراءة سوى قائمة القراءة والمقالات غير المقروءة التي تم تنزيلها. سيتم إرسال تقييماتك وقراءتك وعلامات القراءة عند عودة الشبكة.",
+	'offline.listNotice': "دون اتصال: {count} مقالات منزّلة على هذا الجهاز.",
+	'offline.articleUnavailable': "لم يتم تنزيل هذه المقالة، لذا لا يمكن قراءتها دون اتصال.",
+	'offline.settingsTitle': "القراءة دون اتصال",
+	'offline.settingsDescription': "يتم تنزيل قائمة القراءة والمقالات غير المقروءة على هذا الجهاز مع صورها لتبقى مقروءة دون شبكة.",
+	'offline.limitLabel': "الحد الأقصى لعدد المقالات المنزّلة",
+	'offline.limitOff': "معطّل",
+	'offline.limitOption': "{count} مقالات",
+	'offline.limitSaved': "تم حفظ إعداد القراءة دون اتصال."
 };

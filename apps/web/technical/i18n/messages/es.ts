@@ -927,5 +927,15 @@ export const es: Catalogue = {
 	'webhooks.saveFailed': 'No se pudo guardar el webhook. Inténtalo más tarde.',
 	'webhooks.urlBlocked': 'Esta dirección se rechaza: debe ser una dirección http o https pública.',
 	'webhooks.limitReached': 'Has alcanzado el número máximo de webhooks.',
-	'webhooks.eventsRequired': 'Elige al menos un evento.'
+	'webhooks.eventsRequired': 'Elige al menos un evento.',
+
+	'offline.banner': "Sin conexión: solo se pueden leer la lista de lectura y los artículos no leídos ya descargados. Tus votos, tu lectura y tus marcas se enviarán al volver la red.",
+	'offline.listNotice': "Sin conexión: {count} artículos descargados en este dispositivo.",
+	'offline.articleUnavailable': "Este artículo no se descargó, no se puede leer sin conexión.",
+	'offline.settingsTitle': "Lectura sin conexión",
+	'offline.settingsDescription': "La lista de lectura y los artículos no leídos se descargan en este dispositivo, con sus imágenes, para seguir siendo legibles sin red.",
+	'offline.limitLabel': "Número máximo de artículos descargados",
+	'offline.limitOff': "Desactivado",
+	'offline.limitOption': "{count} artículos",
+	'offline.limitSaved': "Ajuste sin conexión guardado."
 };

@@ -96,6 +96,13 @@ describe('saveUrl', () => {
 		});
 	});
 
+	it('hands back whether the page was already in the list', async () => {
+		const { articles } = api([{ id: 'article-9', already_saved: true }]);
+		await expect(articles.saveUrl('https://blog.test/post')).resolves.toMatchObject({
+			already_saved: true
+		});
+	});
+
 	it('sends it authenticated: an article is saved onto someone in particular', async () => {
 		const { articles, last } = api([{ id: 'article-9' }]);
 		await articles.saveUrl('https://blog.test/post');
