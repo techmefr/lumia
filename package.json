@@ -9,7 +9,8 @@
       "devalue": "^5.9.3",
       "source-map-js": "^1.2.2",
       "vite": "^8.3.3",
-      "dompurify": "^3.4.16"
+      "dompurify": "^3.4.16",
+      "undici": "^8.12.2"
     }
   },
   "workspaces": [
