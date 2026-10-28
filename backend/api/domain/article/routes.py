@@ -20,7 +20,7 @@ from api.domain.article.models import Article, ArticleKeyword
 from api.domain.article.reading_list_parser import ReadingListSource, parse_reading_list
 from api.domain.article.reading_time import estimate_reading_minutes
 from api.domain.article.related_service import find_related_articles
-from api.domain.article.save_url_service import save_url
+from api.domain.article.save_url_service import find_saved_article, save_url
 from api.domain.article.schemas import (
     ArticleDetailResponse,
     ArticleSummaryResponse,
@@ -28,6 +28,7 @@ from api.domain.article.schemas import (
     KeywordResponse,
     ReadingListImportProgressResponse,
     ReadingListImportStartedResponse,
+    SavedArticleResponse,
     SaveUrlRequest,
     TranslateArticleRequest,
 )
@@ -197,7 +198,7 @@ async def _ensure_room_to_save(session: AsyncSession, user: User) -> None:
 
 @router.post(
     "/articles/save-url",
-    response_model=ArticleSummaryResponse,
+    response_model=SavedArticleResponse,
     status_code=status.HTTP_201_CREATED,
 )
 async def save_article_url(
@@ -205,14 +206,15 @@ async def save_article_url(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
     page_extractor: PageExtractor = Depends(get_page_extractor),
-) -> ArticleSummaryResponse:
+) -> SavedArticleResponse:
+    already_saved = await find_saved_article(session, user, payload.url) is not None
     await _ensure_room_to_save(session, user)
 
     try:
         article = await save_url(session, user, payload.url, page_extractor=page_extractor)
     except PageFetchError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
-    return to_summary(article)
+    return SavedArticleResponse(**to_summary(article).model_dump(), already_saved=already_saved)
 
 
 async def _read_capped(file: UploadFile) -> bytes:

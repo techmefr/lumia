@@ -40,6 +40,10 @@ class ArticleDetailResponse(ArticleSummaryResponse):
     keywords: list[KeywordResponse]
 
 
+class SavedArticleResponse(ArticleSummaryResponse):
+    already_saved: bool = False
+
+
 class SaveUrlRequest(BaseModel):
     url: str
 

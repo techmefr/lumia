@@ -1,0 +1,5 @@
+{
+	"extensionName": { "message": "Lumia" },
+	"extensionDescription": { "message": "Enregistrez la page que vous lisez dans votre instance Lumia en un clic." },
+	"commandSavePage": { "message": "Enregistrer la page courante dans Lumia" }
+}

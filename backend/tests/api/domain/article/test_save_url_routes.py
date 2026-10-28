@@ -126,3 +126,18 @@ async def test_save_url_requires_authentication(client: httpx.AsyncClient) -> No
     _use(_FakePageExtractor(PAGE))
     response = await client.post("/articles/save-url", json={"url": "https://example.com/post"})
     assert response.status_code == 401
+
+
+async def test_save_url_flags_a_page_that_was_already_saved(client: httpx.AsyncClient) -> None:
+    headers = await _headers(client)
+    _use(_FakePageExtractor(PAGE))
+
+    first = await client.post(
+        "/articles/save-url", json={"url": "https://example.com/post"}, headers=headers
+    )
+    second = await client.post(
+        "/articles/save-url", json={"url": "https://example.com/post"}, headers=headers
+    )
+
+    assert first.json()["already_saved"] is False
+    assert second.json()["already_saved"] is True
