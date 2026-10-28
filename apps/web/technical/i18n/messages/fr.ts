@@ -931,7 +931,10 @@ export const fr = {
 	'webhooks.urlBlocked': 'Cette adresse est refusée : elle doit être une adresse http ou https publique.',
 	'webhooks.limitReached': 'Tu as atteint le nombre maximal de webhooks.',
 	'webhooks.eventsRequired': 'Choisis au moins un événement.',
-
+	'instance.label': 'Adresse de ton instance Lumia',
+	'instance.hint': "L'adresse de l'API de ton instance, par exemple https://lumia.exemple.fr/api.",
+	'instance.invalid': 'Saisis une adresse http ou https valide.',
+	'instance.save': "Enregistrer l'instance",
 	'offline.banner': "Hors ligne : seuls la liste à lire et les articles non lus déjà téléchargés sont lisibles. Tes votes, ta lecture et tes marquages seront envoyés au retour du réseau.",
 	'offline.listNotice': "Hors ligne : {count} articles téléchargés sur cet appareil.",
 	'offline.articleUnavailable': "Cet article n'a pas été téléchargé, il n'est pas lisible hors ligne.",

@@ -912,7 +912,10 @@ export const ar: Catalogue = {
 	'webhooks.urlBlocked': 'هذا العنوان مرفوض: يجب أن يكون عنوان http أو https عامًا.',
 	'webhooks.limitReached': 'لقد بلغت الحد الأقصى لعدد الخطافات.',
 	'webhooks.eventsRequired': 'اختر حدثًا واحدًا على الأقل.',
-
+	'instance.label': 'عنوان نسخة Lumia الخاصة بك',
+	'instance.hint': 'عنوان واجهة API لنسختك، مثل https://lumia.example.com/api.',
+	'instance.invalid': 'أدخل عنوان http أو https صالحًا.',
+	'instance.save': 'حفظ النسخة',
 	'offline.banner': "دون اتصال: لا يمكن قراءة سوى قائمة القراءة والمقالات غير المقروءة التي تم تنزيلها. سيتم إرسال تقييماتك وقراءتك وعلامات القراءة عند عودة الشبكة.",
 	'offline.listNotice': "دون اتصال: {count} مقالات منزّلة على هذا الجهاز.",
 	'offline.articleUnavailable': "لم يتم تنزيل هذه المقالة، لذا لا يمكن قراءتها دون اتصال.",

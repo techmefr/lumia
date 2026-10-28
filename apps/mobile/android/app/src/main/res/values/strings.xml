@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Lumia</string>
+    <string name="title_activity_main">Lumia</string>
+    <string name="package_name">app.lumia.reader</string>
+    <string name="custom_url_scheme">app.lumia.reader</string>
+</resources>

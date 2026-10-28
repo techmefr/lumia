@@ -8,10 +8,12 @@
 		INTERVAL_OPTIONS,
 		getNotificationSettings,
 		permissionState,
+		refreshPermission,
 		requestPermission,
 		updateNotificationSettings,
 		type PermissionState
 	} from '$technical/notifications/notification-store.svelte.js';
+	import { isNativePlatform } from '$technical/platform/native-platform';
 	import { t } from '$technical/i18n/i18n.svelte.js';
 
 	const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
@@ -61,6 +63,12 @@
 		threshold = settings.threshold;
 		quietFromHour = settings.quietFromHour;
 		quietToHour = settings.quietToHour;
+		if (isNativePlatform()) {
+			void refreshPermission().then((state) => {
+				permission = state;
+				enabled = settings.enabled && state === 'granted';
+			});
+		}
 	});
 </script>
 

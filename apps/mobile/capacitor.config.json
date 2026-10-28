@@ -1,0 +1,8 @@
+{
+	"appId": "app.lumia.reader",
+	"appName": "Lumia",
+	"webDir": "../web/build",
+	"server": {
+		"androidScheme": "https"
+	}
+}

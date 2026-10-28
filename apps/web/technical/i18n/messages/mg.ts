@@ -932,7 +932,10 @@ export const mg: Catalogue = {
 	'webhooks.urlBlocked': 'Nolavina io adiresy io: tsy maintsy adiresy http na https mivelatra.',
 	'webhooks.limitReached': 'Tonga amin\'ny isa ambony indrindra amin\'ny webhook ianao.',
 	'webhooks.eventsRequired': 'Misafidiana hetsika iray farafahakeliny.',
-
+	'instance.label': "Adiresin'ny Lumia anao",
+	'instance.hint': "Ny adiresin'ny API an'ny Lumia anao, ohatra https://lumia.example.com/api.",
+	'instance.invalid': 'Ampidiro adiresy http na https mety.',
+	'instance.save': 'Tehirizo ny Lumia',
 	'offline.banner': "Tsy misy aterineto: ny lisitry ny hovakiana sy ny lahatsoratra tsy voavaky efa voakarakara ihany no azo vakiana. Halefa rehefa miverina ny tambajotra ny vokatrao, ny famakiananao ary ny marika voavaky.",
 	'offline.listNotice': "Tsy misy aterineto: lahatsoratra {count} no voakarakara amin'ity fitaovana ity.",
 	'offline.articleUnavailable': "Tsy voakarakara io lahatsoratra io, ka tsy azo vakiana raha tsy misy aterineto.",

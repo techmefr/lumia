@@ -929,7 +929,10 @@ export const it: Catalogue = {
 	'webhooks.urlBlocked': 'Questo indirizzo è rifiutato: deve essere un indirizzo http o https pubblico.',
 	'webhooks.limitReached': 'Hai raggiunto il numero massimo di webhook.',
 	'webhooks.eventsRequired': 'Scegli almeno un evento.',
-
+	'instance.label': 'Indirizzo della tua istanza Lumia',
+	'instance.hint': "L'indirizzo dell'API della tua istanza, ad esempio https://lumia.esempio.it/api.",
+	'instance.invalid': 'Inserisci un indirizzo http o https valido.',
+	'instance.save': 'Salva istanza',
 	'offline.banner': "Offline: sono leggibili solo la lista di lettura e gli articoli non letti già scaricati. I tuoi voti, la lettura e i segni di lettura saranno inviati al ritorno della rete.",
 	'offline.listNotice': "Offline: {count} articoli scaricati su questo dispositivo.",
 	'offline.articleUnavailable': "Questo articolo non è stato scaricato e non è leggibile offline.",

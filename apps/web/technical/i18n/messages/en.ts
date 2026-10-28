@@ -918,7 +918,10 @@ export const en: Catalogue = {
 	'webhooks.urlBlocked': 'This address is refused: it must be a public http or https address.',
 	'webhooks.limitReached': 'You have reached the maximum number of webhooks.',
 	'webhooks.eventsRequired': 'Choose at least one event.',
-
+	'instance.label': 'Your Lumia instance address',
+	'instance.hint': 'The API address of your instance, for example https://lumia.example.com/api.',
+	'instance.invalid': 'Enter a valid http or https address.',
+	'instance.save': 'Save instance',
 	'offline.banner': "Offline: only the reading list and the unread articles already downloaded can be read. Your votes, reading and read marks will be sent when the network is back.",
 	'offline.listNotice': "Offline: {count} articles downloaded on this device.",
 	'offline.articleUnavailable': "This article was not downloaded, so it cannot be read offline.",

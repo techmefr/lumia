@@ -898,7 +898,10 @@ export const zh: Catalogue = {
 	'webhooks.urlBlocked': '该地址被拒绝：必须是公开的 http 或 https 地址。',
 	'webhooks.limitReached': '已达到 Webhook 数量上限。',
 	'webhooks.eventsRequired': '请至少选择一个事件。',
-
+	'instance.label': '你的 Lumia 实例地址',
+	'instance.hint': '你的实例的 API 地址，例如 https://lumia.example.com/api。',
+	'instance.invalid': '请输入有效的 http 或 https 地址。',
+	'instance.save': '保存实例',
 	'offline.banner': "离线：只能阅读已下载的待读列表和未读文章。你的点赞、阅读进度和已读标记将在网络恢复后发送。",
 	'offline.listNotice': "离线：此设备上已下载 {count} 篇文章。",
 	'offline.articleUnavailable': "这篇文章尚未下载，无法离线阅读。",

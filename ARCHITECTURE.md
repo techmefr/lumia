@@ -20,7 +20,7 @@ lumia/
 │   ├── extension/        WebExtension (Chrome + Firefox)
 │   │   ├── popup/        Quick-save (Pocket-style)
 │   │   └── sidepanel/    Full reader
-│   └── auto/             Android Auto (Kotlin, audio only)
+│   └── auto/             Android Auto (Kotlin, audio only, own Gradle project)
 │       └── MediaBrowserService talks to the same FastAPI backend
 │
 └── backend/              Single deployable unit: lumia-backend

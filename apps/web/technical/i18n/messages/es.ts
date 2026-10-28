@@ -928,7 +928,10 @@ export const es: Catalogue = {
 	'webhooks.urlBlocked': 'Esta dirección se rechaza: debe ser una dirección http o https pública.',
 	'webhooks.limitReached': 'Has alcanzado el número máximo de webhooks.',
 	'webhooks.eventsRequired': 'Elige al menos un evento.',
-
+	'instance.label': 'Dirección de tu instancia de Lumia',
+	'instance.hint': 'La dirección de la API de tu instancia, por ejemplo https://lumia.ejemplo.com/api.',
+	'instance.invalid': 'Introduce una dirección http o https válida.',
+	'instance.save': 'Guardar instancia',
 	'offline.banner': "Sin conexión: solo se pueden leer la lista de lectura y los artículos no leídos ya descargados. Tus votos, tu lectura y tus marcas se enviarán al volver la red.",
 	'offline.listNotice': "Sin conexión: {count} artículos descargados en este dispositivo.",
 	'offline.articleUnavailable': "Este artículo no se descargó, no se puede leer sin conexión.",
