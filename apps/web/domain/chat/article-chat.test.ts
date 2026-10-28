@@ -5,6 +5,10 @@ import { lumia } from '$technical/api/client';
 import { setLocale } from '$technical/i18n/i18n.svelte';
 import ArticleChat from './article-chat.svelte';
 
+vi.mock('mermaid', () => ({
+	default: { initialize: vi.fn(), render: vi.fn().mockResolvedValue({ svg: '<svg></svg>' }) }
+}));
+
 vi.mock('$technical/api/client', () => ({
 	isDemo: false,
 	lumia: { chat: { listChat: vi.fn(), sendChat: vi.fn(), clearChat: vi.fn() } }
@@ -13,7 +17,7 @@ vi.mock('$technical/api/client', () => ({
 const api = vi.mocked(lumia.chat);
 
 function turn(id: string, role: ChatMessage['role'], content: string, action: ChatMessage['action'] = null) {
-	return { id, role, content, action, created_at: '2026-10-21T10:00:00Z' } satisfies ChatMessage;
+	return { id, role, content, action, passage: null, created_at: '2026-10-21T10:00:00Z' } satisfies ChatMessage;
 }
 
 type Props = Parameters<typeof ArticleChat>[1];
@@ -126,5 +130,73 @@ describe('the article chat', () => {
 		api.listChat.mockRejectedValue(new Error('network'));
 		const view = await openChat();
 		await waitFor(() => expect(view.q('[role="alert"]')?.textContent).toContain('Could not load'));
+	});
+
+	it('asks for a diagram without any passage and draws the answer', async () => {
+		api.sendChat.mockResolvedValue([
+			turn('1', 'user', 'Draw it.', 'diagram'),
+			turn('2', 'assistant', '```mermaid\ngraph LR\n  A --> B\n```')
+		]);
+		const view = await openChat();
+
+		await fireEvent.click(view.q('[data-test-chat-action="diagram"]')!);
+
+		await waitFor(() => expect(view.q('[data-test-chat-diagram]')).not.toBeNull());
+		expect(api.sendChat).toHaveBeenCalledWith('article-1', { action: 'diagram' });
+		expect(view.messages()[0].textContent).toContain('Draw a diagram');
+	});
+
+	it('tells the reader what leaves the instance', async () => {
+		const view = await openChat();
+		expect(view.q('[data-test-chat-privacy]')?.textContent).toContain('AI provider');
+	});
+
+	it('asks for a selection when nothing is selected', async () => {
+		vi.spyOn(window, 'getSelection').mockReturnValue({ toString: () => '  ' } as Selection);
+		const view = await openChat();
+
+		await fireEvent.click(view.q('[data-test-chat-use-passage]')!);
+
+		expect(view.q('[role="alert"]')?.textContent).toContain('Select some text');
+		expect(view.q('[data-test-chat-selected-passage]')).toBeNull();
+	});
+
+	it('sends the selected passage with the next question, then forgets it', async () => {
+		vi.spyOn(window, 'getSelection').mockReturnValue({ toString: () => ' the ink ' } as Selection);
+		api.sendChat.mockResolvedValue([
+			{ ...turn('1', 'user', 'Explain the reader passage.', 'explain'), passage: 'the ink' },
+			turn('2', 'assistant', 'Ink is paint.')
+		]);
+		const view = await openChat();
+
+		await fireEvent.click(view.q('[data-test-chat-use-passage]')!);
+		expect(view.q('[data-test-chat-selected-passage]')?.textContent).toContain('the ink');
+		await fireEvent.click(view.q('[data-test-chat-action="explain"]')!);
+
+		await waitFor(() => expect(view.messages()).toHaveLength(2));
+		expect(api.sendChat).toHaveBeenCalledWith('article-1', { action: 'explain', passage: 'the ink' });
+		expect(view.q('[data-test-chat-selected-passage]')).toBeNull();
+		expect(view.q('[data-test-chat-passage]')?.textContent).toContain('the ink');
+	});
+
+	it('lets the reader drop the selected passage before sending', async () => {
+		vi.spyOn(window, 'getSelection').mockReturnValue({ toString: () => 'ink' } as Selection);
+		const view = await openChat();
+		await fireEvent.click(view.q('[data-test-chat-use-passage]')!);
+
+		await fireEvent.click(view.q('[data-test-chat-passage-remove]')!);
+
+		expect(view.q('[data-test-chat-selected-passage]')).toBeNull();
+	});
+
+	it('does not attach the passage to a diagram request', async () => {
+		vi.spyOn(window, 'getSelection').mockReturnValue({ toString: () => 'ink' } as Selection);
+		api.sendChat.mockResolvedValue([turn('1', 'user', 'Draw it.', 'diagram'), turn('2', 'assistant', 'Done.')]);
+		const view = await openChat();
+		await fireEvent.click(view.q('[data-test-chat-use-passage]')!);
+
+		await fireEvent.click(view.q('[data-test-chat-action="diagram"]')!);
+
+		await waitFor(() => expect(api.sendChat).toHaveBeenCalledWith('article-1', { action: 'diagram' }));
 	});
 });

@@ -7,6 +7,7 @@ class ChatConfig(BaseSettings):
     """Ceilings on the article chat, which spends the reader's own key on every message."""
 
     chat_max_message_chars: int = 2_000
+    chat_max_passage_chars: int = 4_000
     # What the model is shown of the article: the opening carries the subject, and the rest is
     # the reader's bill.
     chat_max_article_chars: int = 12_000

@@ -27,6 +27,18 @@ ACTION_PROMPTS = {
         "Explain the article in simple words, as to someone new to the subject, "
         "defining any technical term."
     ),
+    ChatAction.DIAGRAM: (
+        "Draw the structure of the article as one Mermaid diagram (a flowchart, sequence or "
+        "mind map, whichever fits best). Reply with the diagram only, in a single fenced block "
+        "opened with three backticks and the word mermaid, with short plain labels."
+    ),
+}
+PASSAGE_ACTION_PROMPTS = {
+    ChatAction.SUMMARIZE: "Summarise the reader's passage in three sentences at most.",
+    ChatAction.EXPLAIN: (
+        "Explain the reader's passage in simple words, defining any technical term, "
+        "using the rest of the article only for context."
+    ),
 }
 
 
@@ -66,16 +78,18 @@ async def send(
     article: Article,
     message: str | None,
     action: ChatAction | None,
+    passage: str | None = None,
 ) -> list[ChatMessage]:
     """Asks the reader's model about the article and keeps both turns.
 
+    A passage the reader selected travels with the question, quoted like the article.
     The model is given no tools and nothing but this article and this reader's thread, so text
     planted in an article can at worst skew the answer the reader is reading.
     """
     config = get_chat_config()
-    question = ACTION_PROMPTS[action] if action is not None else (message or "")
+    question = _question(action, message, passage)
     history = await _thread(session, user_id, article.id)
-    prompt = _prompt(article, history[-config.chat_history_turns * 2 :], question)
+    prompt = _prompt(article, history[-config.chat_history_turns * 2 :], question, passage)
     try:
         answer = await client.complete(system=SYSTEM_PROMPT, user=prompt)
     except (LlmApiError, httpx.HTTPError) as exc:
@@ -87,6 +101,7 @@ async def send(
         role=ChatRole.USER,
         content=question,
         action=action,
+        passage=passage,
     )
     answered = ChatMessage(
         user_id=user_id, article_id=article.id, role=ChatRole.ASSISTANT, content=answer
@@ -98,11 +113,22 @@ async def send(
     return [asked, answered]
 
 
-def _prompt(article: Article, history: list[ChatMessage], question: str) -> str:
+def _question(action: ChatAction | None, message: str | None, passage: str | None) -> str:
+    if action is None:
+        return message or ""
+    if passage is not None and action in PASSAGE_ACTION_PROMPTS:
+        return PASSAGE_ACTION_PROMPTS[action]
+    return ACTION_PROMPTS[action]
+
+
+def _prompt(
+    article: Article, history: list[ChatMessage], question: str, passage: str | None
+) -> str:
     text = f"{article.title}\n\n{strip_html(article.content)}"
     turns = "\n".join(f"{turn.role.value}: {turn.content}" for turn in history)
+    quoted = f"<<<PASSAGE\n{passage}\nPASSAGE>>>\n" if passage is not None else ""
     return (
-        f"<<<ARTICLE\n{text[: get_chat_config().chat_max_article_chars]}\nARTICLE>>>\n"
+        f"{quoted}<<<ARTICLE\n{text[: get_chat_config().chat_max_article_chars]}\nARTICLE>>>\n"
         f"<<<EARLIER_TURNS\n{turns}\nEARLIER_TURNS>>>\n"
         f"Reader question: {question}"
     )
