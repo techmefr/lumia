@@ -134,7 +134,7 @@ async def _count_pending(session: AsyncSession, instance_id: UUID) -> int:
     )
 
 
-def _pending(instance_id: UUID) -> Select[tuple[Invitation]]:
+def _pending(instance_id: UUID) -> Select[Invitation]:
     return select(Invitation).where(
         Invitation.instance_id == instance_id,
         Invitation.accepted_at.is_(None),

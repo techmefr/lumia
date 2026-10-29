@@ -6,7 +6,7 @@ from api.domain.feed.models import Feed
 from api.domain.saved_search.models import SavedSearch
 
 
-def articles_matching(search: SavedSearch, *, muted_terms: list[str]) -> Select[tuple[Article]]:
+def articles_matching(search: SavedSearch, *, muted_terms: list[str]) -> Select[Article]:
     """The reader's articles a saved search selects, built from the pieces `GET /articles` uses.
 
     Muted terms apply too: an alert on a topic the reader also muted would otherwise notify about

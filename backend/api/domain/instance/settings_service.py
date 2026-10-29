@@ -11,7 +11,7 @@ from api.domain.user.models import Instance
 
 
 async def get_instance(session: AsyncSession) -> Instance:
-    instance = await session.scalar(select(Instance))
+    instance = (await session.scalars(select(Instance))).first()
     if instance is None:
         raise InstanceNotProvisionedError
     return instance

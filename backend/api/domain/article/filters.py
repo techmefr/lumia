@@ -8,7 +8,7 @@ from api.domain.article.search_config import SEARCH_REGCONFIGS
 from api.domain.recommendation.models import UserArticleFeedback
 
 
-def exclude_muted_terms(query: Select[tuple[Article]], terms: list[str]) -> Select[tuple[Article]]:
+def exclude_muted_terms(query: Select[Article], terms: list[str]) -> Select[Article]:
     """Drops the articles a mute rule matches, in SQL.
 
     Same reach as `matches_any_term` — the title and the summary, never the stored HTML — but done
@@ -46,7 +46,7 @@ def search_condition(q: str) -> ColumnElement[bool]:
     return Article.search_vector.op("@@")(combined)
 
 
-def apply_unread_only(query: Select[tuple[Article]], user_id: UUID) -> Select[tuple[Article]]:
+def apply_unread_only(query: Select[Article], user_id: UUID) -> Select[Article]:
     """Keeps articles with no read feedback row for this user — absence of a row means unread."""
     read_rows = select(UserArticleFeedback.article_id).where(
         UserArticleFeedback.user_id == user_id,

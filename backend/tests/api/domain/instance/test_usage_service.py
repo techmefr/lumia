@@ -57,7 +57,7 @@ async def _store_article(session: AsyncSession, user: User, content: str) -> Non
 
 
 async def _current_admin(session: AsyncSession) -> User:
-    admin = await session.scalar(select(User))
+    admin = (await session.scalars(select(User))).first()
     assert admin is not None
     return admin
 
@@ -88,7 +88,7 @@ async def test_the_quota_is_reached_when_the_stored_text_fills_it(
     session: AsyncSession, admin_headers: dict[str, str]
 ) -> None:
     admin = await _current_admin(session)
-    instance = await session.scalar(select(Instance))
+    instance = (await session.scalars(select(Instance))).first()
     assert instance is not None
     instance.disk_quota_mb = 1
     await session.commit()
@@ -110,7 +110,7 @@ async def test_saving_a_url_is_refused_once_the_account_quota_is_full(
         )
         assert first.status_code == 201
 
-        instance = await session.scalar(select(Instance))
+        instance = (await session.scalars(select(Instance))).first()
         assert instance is not None
         instance.disk_quota_mb = 1
         await session.commit()
