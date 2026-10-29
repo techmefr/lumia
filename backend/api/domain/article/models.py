@@ -16,6 +16,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from api.domain.article.search_config import search_vector_expression
 from api.domain.feed.models import Feed
+from api.domain.instance.usage_triggers import keep_stored_bytes_in_step
 from api.technical.net.canonical_url import canonical_url
 from api.technical.orm import Base, TimestampMixin
 
@@ -108,6 +109,9 @@ class Article(Base, TimestampMixin):
     category: Mapped[Category | None] = relationship(lazy="selectin")
     feed: Mapped["Feed"] = relationship(lazy="selectin")
     keyword_links: Mapped[list["ArticleKeyword"]] = relationship(lazy="selectin", viewonly=True)
+
+
+keep_stored_bytes_in_step(Article.__table__)
 
 
 class ArticleKeyword(Base):
