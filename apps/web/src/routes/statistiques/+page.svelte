@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { Popularity, ReadingStatistics } from '@lumia/core';
-	import { Button } from '@lumia/ui';
-	import ChartColumn from '@lucide/svelte/icons/chart-column';
+	import { Button, Icon } from '@lumia/ui';
+	import { ChartColumnIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { safeHttpHref } from '$technical/url/safe-href';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
@@ -50,7 +50,7 @@
 <div class="flex flex-col gap-6">
 	<div>
 		<h1 class="flex items-center gap-2 text-2xl font-semibold">
-			<ChartColumn class="size-6 text-primary" />
+			<Icon icon={ChartColumnIcon} class="size-6 text-primary" />
 			{t('stats.title')}
 		</h1>
 		<p class="text-sm text-muted-foreground">{t('stats.intro')}</p>

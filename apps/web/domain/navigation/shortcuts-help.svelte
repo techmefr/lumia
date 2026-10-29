@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { base } from '$technical/paths/base';
-	import { Button } from '@lumia/ui';
-	import X from '@lucide/svelte/icons/x';
+	import { Button, Icon } from '@lumia/ui';
+	import { Cancel01Icon } from '@hugeicons/core-free-icons';
 	import {
 		HELP_SHORTCUTS,
 		NAVIGATION_SHORTCUTS,
@@ -90,7 +90,7 @@
 				aria-label={t('common.close')}
 				onclick={onClose}
 			>
-				<X class="size-4" />
+				<Icon icon={Cancel01Icon} class="size-4" />
 			</Button>
 		</div>
 

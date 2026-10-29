@@ -13,7 +13,7 @@
 		"check": "svelte-check --tsconfig ./tsconfig.json"
 	},
 	"dependencies": {
-		"@lucide/svelte": "^1.64.0",
+		"@hugeicons/core-free-icons": "^4.4.0",
 		"@lumia/core": "workspace:*",
 		"@lumia/ui": "workspace:*",
 		"bits-ui": "^2.20.2",

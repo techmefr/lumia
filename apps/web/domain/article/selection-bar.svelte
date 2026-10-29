@@ -1,14 +1,7 @@
 <script lang="ts">
 	import type { PlaylistSummary } from '@lumia/core';
-	import { Button } from '@lumia/ui';
-	import CheckCheck from '@lucide/svelte/icons/check-check';
-	import Circle from '@lucide/svelte/icons/circle';
-	import Bookmark from '@lucide/svelte/icons/bookmark';
-	import BookmarkX from '@lucide/svelte/icons/bookmark-x';
-	import Star from '@lucide/svelte/icons/star';
-	import StarOff from '@lucide/svelte/icons/star-off';
-	import ListPlus from '@lucide/svelte/icons/list-plus';
-	import X from '@lucide/svelte/icons/x';
+	import { Button, Icon } from '@lumia/ui';
+	import { Bookmark01Icon, BookmarkRemove01Icon, Cancel01Icon, CircleIcon, PlayListAddIcon, StarIcon, StarOffIcon, TickDouble01Icon } from '@hugeicons/core-free-icons';
 	import { t } from '$technical/i18n/i18n.svelte';
 
 	interface Props {
@@ -79,7 +72,7 @@
 
 	<div class="flex flex-wrap items-center gap-2" role="group" aria-label={t('selection.actions')}>
 		<Button data-test-selection-read variant="outline" size="sm" {disabled} onclick={onMarkRead}>
-			<CheckCheck class="size-4" />
+			<Icon icon={TickDouble01Icon} class="size-4" />
 			{t('selection.markRead')}
 		</Button>
 		<Button
@@ -89,15 +82,15 @@
 			{disabled}
 			onclick={onMarkUnread}
 		>
-			<Circle class="size-4" />
+			<Icon icon={CircleIcon} class="size-4" />
 			{t('selection.markUnread')}
 		</Button>
 		<Button data-test-selection-save variant="outline" size="sm" {disabled} onclick={onSave}>
-			<Bookmark class="size-4" />
+			<Icon icon={Bookmark01Icon} class="size-4" />
 			{t('selection.save')}
 		</Button>
 		<Button data-test-selection-unsave variant="outline" size="sm" {disabled} onclick={onUnsave}>
-			<BookmarkX class="size-4" />
+			<Icon icon={BookmarkRemove01Icon} class="size-4" />
 			{t('selection.unsave')}
 		</Button>
 		<Button
@@ -107,7 +100,7 @@
 			{disabled}
 			onclick={onFavorite}
 		>
-			<Star class="size-4" />
+			<Icon icon={StarIcon} class="size-4" />
 			{t('selection.favorite')}
 		</Button>
 		<Button
@@ -117,7 +110,7 @@
 			{disabled}
 			onclick={onUnfavorite}
 		>
-			<StarOff class="size-4" />
+			<Icon icon={StarOffIcon} class="size-4" />
 			{t('selection.unfavorite')}
 		</Button>
 
@@ -142,13 +135,13 @@
 				disabled={disabled || !playlistId}
 				onclick={addToPlaylist}
 			>
-				<ListPlus class="size-4" />
+				<Icon icon={PlayListAddIcon} class="size-4" />
 				{t('selection.addToPlaylist')}
 			</Button>
 		{/if}
 
 		<Button data-test-selection-close variant="ghost" size="sm" onclick={onClose}>
-			<X class="size-4" />
+			<Icon icon={Cancel01Icon} class="size-4" />
 			{t('selection.close')}
 		</Button>
 	</div>

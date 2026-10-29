@@ -6,13 +6,8 @@
 	import { fly } from 'svelte/transition';
 	import { goto, onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
-	import { Button, ClickSpark, Toaster } from '@lumia/ui';
-	import Newspaper from '@lucide/svelte/icons/newspaper';
-	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import Rss from '@lucide/svelte/icons/rss';
-	import Bookmark from '@lucide/svelte/icons/bookmark';
-	import ListMusic from '@lucide/svelte/icons/list-music';
-	import Settings from '@lucide/svelte/icons/settings';
+	import { Button, ClickSpark, Toaster, Icon } from '@lumia/ui';
+	import { Bookmark01Icon, NewspaperIcon, PlayListIcon, RssIcon, Settings01Icon, SparklesIcon } from '@hugeicons/core-free-icons';
 	import { isDemo, lumia } from '$technical/api/client';
 	import AlertBell from '$domain/alerts/alert-bell.svelte';
 	import SettingsMenu from '$domain/navigation/settings-menu.svelte';
@@ -46,11 +41,11 @@
 
 	// Derived rather than a constant: the labels have to follow a language change.
 	const navLinks = $derived([
-		{ href: '/articles', label: t('nav.articles'), icon: Newspaper },
-		{ href: '/etincelle', label: t('nav.etincelle'), icon: Sparkles },
-		{ href: '/feeds', label: t('nav.feeds'), icon: Rss },
-		{ href: '/a-lire-plus-tard', label: t('nav.readLater'), icon: Bookmark },
-		{ href: '/playlists', label: t('nav.playlists'), icon: ListMusic }
+		{ href: '/articles', label: t('nav.articles'), icon: NewspaperIcon },
+		{ href: '/etincelle', label: t('nav.etincelle'), icon: SparklesIcon },
+		{ href: '/feeds', label: t('nav.feeds'), icon: RssIcon },
+		{ href: '/a-lire-plus-tard', label: t('nav.readLater'), icon: Bookmark01Icon },
+		{ href: '/playlists', label: t('nav.playlists'), icon: PlayListIcon }
 	]);
 
 	// `page.url.pathname` carries the base path, so the comparison has to carry it too.
@@ -192,7 +187,7 @@
 			class="mx-auto flex w-full max-w-app flex-wrap items-center gap-1 px-4 py-3"
 		>
 			<a href="{base}/articles" class="mr-4 flex items-center gap-1.5 font-serif text-lg font-semibold">
-				<Sparkles class="size-5 text-primary transition-transform duration-300 hover:rotate-12" />
+				<Icon icon={SparklesIcon} class="size-5 text-primary transition-transform duration-300 hover:rotate-12" />
 				Lumia
 			</a>
 			<div class="hidden items-center gap-1 sm:flex">
@@ -204,7 +199,7 @@
 						href={base + link.href}
 						aria-current={isActive(link.href) ? 'page' : undefined}
 					>
-						<link.icon class="size-4" />
+						<Icon icon={link.icon} class="size-4" />
 						{link.label}
 					</Button>
 				{/each}
@@ -214,7 +209,7 @@
 				<SettingsMenu
 					href="{base}/settings"
 					label={t('nav.settings')}
-					icon={Settings}
+					icon={Settings01Icon}
 					entries={settingsEntries}
 				/>
 			</div>
@@ -250,7 +245,7 @@
 					? 'font-semibold text-primary'
 					: 'text-muted-foreground'}"
 			>
-				<link.icon class="size-5 transition-transform {isActive(link.href) ? '-translate-y-0.5' : ''}" />
+				<Icon icon={link.icon} class="size-5 transition-transform {isActive(link.href) ? '-translate-y-0.5' : ''}" />
 				{link.label}
 			</a>
 		{/each}

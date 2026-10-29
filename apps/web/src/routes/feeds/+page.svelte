@@ -4,8 +4,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { Feed, Folder } from '@lumia/core';
-	import {
-		Badge,
+	import { Badge,
 		Button,
 		Card,
 		CardContent,
@@ -15,19 +14,8 @@
 		Input,
 		Label,
 		MagicBento,
-		Separator
-	} from '@lumia/ui';
-	import Upload from '@lucide/svelte/icons/upload';
-	import Download from '@lucide/svelte/icons/download';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import FolderPlus from '@lucide/svelte/icons/folder-plus';
-	import Plus from '@lucide/svelte/icons/plus';
-	import Rss from '@lucide/svelte/icons/rss';
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import Newspaper from '@lucide/svelte/icons/newspaper';
-	import Shuffle from '@lucide/svelte/icons/shuffle';
-	import Pencil from '@lucide/svelte/icons/pencil';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+		Separator, Icon } from '@lumia/ui';
+	import { Add01Icon, Delete02Icon, Download01Icon, FolderAddIcon, InboxIcon, NewspaperIcon, PencilEdit02Icon, RefreshIcon, RssIcon, ShuffleIcon, Upload01Icon } from '@hugeicons/core-free-icons';
 	import { toast } from '@lumia/ui';
 	import { lumia } from '$technical/api/client';
 	import { safeHttpHref } from '$technical/url/safe-href';
@@ -331,7 +319,7 @@
 				disabled={refreshingAll}
 				onclick={refreshEverything}
 			>
-				<RefreshCw class="size-4" />
+				<Icon icon={RefreshIcon} class="size-4" />
 				{refreshingAll ? t('feeds.refreshingAll') : t('feeds.refreshAll')}
 			</Button>
 		</div>
@@ -348,7 +336,7 @@
 			<Card>
 				<CardHeader>
 					<CardTitle class="flex items-center gap-2">
-						<Rss class="size-4 text-primary" />
+						<Icon icon={RssIcon} class="size-4 text-primary" />
 						{selectedFeed.title}
 					</CardTitle>
 					<CardDescription>
@@ -373,11 +361,11 @@
 
 					<div class="flex flex-wrap items-center gap-2">
 						<Button data-test-view-articles onclick={viewArticles}>
-							<Newspaper class="size-4" />
+							<Icon icon={NewspaperIcon} class="size-4" />
 							{t('feeds.viewArticles')}
 						</Button>
 						<Button data-test-swipe-mode variant="secondary" onclick={readInSwipeMode}>
-							<Shuffle class="size-4" />
+							<Icon icon={ShuffleIcon} class="size-4" />
 							{t('feeds.swipeMode')}
 						</Button>
 						{#if selectedFeed.source_type === 'miniflux'}
@@ -387,14 +375,14 @@
 								disabled={refreshingFeedId === selectedFeed.id}
 								onclick={() => refreshFeed(selectedFeed!.id)}
 							>
-								<RefreshCw class="size-4" />
+								<Icon icon={RefreshIcon} class="size-4" />
 								{refreshingFeedId === selectedFeed.id
 									? t('feeds.refreshing')
 									: t('feeds.refreshFeed')}
 							</Button>
 						{/if}
 						<Button data-test-feed-remove variant="ghost" onclick={() => removeFeed(selectedFeed!.id)}>
-							<Trash2 class="size-4" />
+							<Icon icon={Delete02Icon} class="size-4" />
 							{t('feeds.removeFeed')}
 						</Button>
 					</div>
@@ -463,7 +451,7 @@
 									feedRenameValue = selectedFeed!.title;
 								}}
 							>
-								<Pencil class="size-4" />
+								<Icon icon={PencilEdit02Icon} class="size-4" />
 								{t('common.rename')}
 							</Button>
 						{/if}
@@ -497,11 +485,11 @@
 				<CardContent class="flex flex-col gap-4">
 					<div class="flex flex-wrap items-center gap-2">
 						<Button data-test-view-articles onclick={viewArticles}>
-							<Newspaper class="size-4" />
+							<Icon icon={NewspaperIcon} class="size-4" />
 							{t('feeds.viewFolderArticles')}
 						</Button>
 						<Button data-test-swipe-mode variant="secondary" onclick={readInSwipeMode}>
-							<Shuffle class="size-4" />
+							<Icon icon={ShuffleIcon} class="size-4" />
 							{t('feeds.swipeMode')}
 						</Button>
 					</div>
@@ -534,11 +522,11 @@
 									folderRenameValue = selectedFolder!.name;
 								}}
 							>
-								<Pencil class="size-4" />
+								<Icon icon={PencilEdit02Icon} class="size-4" />
 								{t('feeds.renameFolder')}
 							</Button>
 							<Button data-test-folder-delete size="sm" variant="ghost" onclick={() => removeFolder(selectedFolder!)}>
-								<Trash2 class="size-4" />
+								<Icon icon={Delete02Icon} class="size-4" />
 								{t('feeds.deleteFolder')}
 							</Button>
 							<span class="text-xs text-muted-foreground">{t('feeds.folderFeedsKept')}</span>
@@ -554,7 +542,7 @@
 				<CardContent>
 					{#if feedsInSelectedFolder.length === 0}
 						<p class="flex items-center gap-2 text-sm text-muted-foreground">
-							<Inbox class="size-4" />
+							<Icon icon={InboxIcon} class="size-4" />
 							{t('feeds.folderEmpty')}
 						</p>
 					{:else}
@@ -566,7 +554,7 @@
 									class="flex items-center justify-between gap-4 py-3 text-left"
 								>
 									<div class="flex items-center gap-3">
-										<Rss class="size-4 shrink-0 text-primary" />
+										<Icon icon={RssIcon} class="size-4 shrink-0 text-primary" />
 										<span class="font-medium">{feed.title}</span>
 									</div>
 								</button>
@@ -618,7 +606,7 @@
 								</select>
 							</div>
 							<Button type="submit" disabled={addingFeed}>
-								<Plus class="size-4" />
+								<Icon icon={Add01Icon} class="size-4" />
 								{addingFeed ? t('common.adding') : t('common.add')}
 							</Button>
 						</form>
@@ -634,7 +622,7 @@
 						<label
 							class="flex w-fit cursor-pointer items-center gap-2 rounded-md border border-dashed border-input px-4 py-2 text-sm hover:bg-accent"
 						>
-							<Upload class="size-4" />
+							<Icon icon={Upload01Icon} class="size-4" />
 							{importing ? t('feeds.importing') : t('feeds.importChoose')}
 							<input
 								data-test-opml-input
@@ -665,7 +653,7 @@
 							onclick={exportOpml}
 							data-test-id="export-opml-button"
 						>
-							<Download class="size-4" />
+							<Icon icon={Download01Icon} class="size-4" />
 							{exporting ? t('feeds.exporting') : t('feeds.exportButton')}
 						</Button>
 					</CardContent>
@@ -682,7 +670,7 @@
 								<Input id="new-folder-name" type="text" bind:value={newFolderName} required />
 							</div>
 							<Button type="submit" variant="secondary">
-								<FolderPlus class="size-4" />
+								<Icon icon={FolderAddIcon} class="size-4" />
 								{t('feeds.create')}
 							</Button>
 						</form>
@@ -698,7 +686,7 @@
 							<p role="status" class="text-sm text-muted-foreground">{t('common.loading')}</p>
 						{:else if feeds.length === 0}
 							<p data-test-feeds-empty class="flex items-center gap-2 text-sm text-muted-foreground">
-								<Inbox class="size-4" />
+								<Icon icon={InboxIcon} class="size-4" />
 								{t('feeds.empty')}
 							</p>
 						{:else}
@@ -711,7 +699,7 @@
 										style={`animation-delay: ${index * 40}ms`}
 									>
 										<div class="flex items-center gap-3">
-											<Rss class="size-4 shrink-0 text-primary" />
+											<Icon icon={RssIcon} class="size-4 shrink-0 text-primary" />
 											<div class="flex flex-col gap-1">
 												<span class="font-medium">{feed.title}</span>
 												<a href={safeHttpHref(feed.url)} target="_blank" rel="noopener noreferrer" class="text-xs text-muted-foreground hover:underline">
@@ -729,7 +717,7 @@
 												aria-label={t('feeds.removeFeed')}
 												onclick={() => removeFeed(feed.id)}
 											>
-												<Trash2 class="size-4" />
+												<Icon icon={Delete02Icon} class="size-4" />
 											</Button>
 										</div>
 									</div>

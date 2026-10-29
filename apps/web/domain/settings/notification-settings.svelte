@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Button, Card, CardContent, Label, toast } from '@lumia/ui';
-	import Bell from '@lucide/svelte/icons/bell';
-	import BellOff from '@lucide/svelte/icons/bell-off';
-	import Moon from '@lucide/svelte/icons/moon';
+	import { Button, Card, CardContent, Label, toast, Icon } from '@lumia/ui';
+	import { Moon02Icon, Notification01Icon, NotificationOff01Icon } from '@hugeicons/core-free-icons';
 	import {
 		INTERVAL_OPTIONS,
 		getNotificationSettings,
@@ -76,7 +74,7 @@
 	<CardContent class="flex flex-col gap-5 pt-6">
 		<div>
 			<h2 class="flex items-center gap-2 text-lg font-semibold">
-				<Bell class="size-5 text-primary" />
+				<Icon icon={Notification01Icon} class="size-5 text-primary" />
 				{t('notifications.title')}
 			</h2>
 			<p class="mt-1 text-sm text-muted-foreground">{t('notifications.intro')}</p>
@@ -84,12 +82,12 @@
 
 		{#if permission === 'unsupported'}
 			<p data-test-notif-unsupported class="flex items-center gap-2 text-sm text-muted-foreground">
-				<BellOff class="size-4" />
+				<Icon icon={NotificationOff01Icon} class="size-4" />
 				{t('notifications.unsupported')}
 			</p>
 		{:else if permission === 'denied'}
 			<p data-test-notif-denied class="flex items-center gap-2 text-sm text-destructive">
-				<BellOff class="size-4" />
+				<Icon icon={NotificationOff01Icon} class="size-4" />
 				{t('notifications.denied')}
 			</p>
 		{/if}
@@ -102,10 +100,10 @@
 			onclick={toggle}
 		>
 			{#if enabled}
-				<BellOff class="size-4" />
+				<Icon icon={NotificationOff01Icon} class="size-4" />
 				{t('notifications.disable')}
 			{:else}
-				<Bell class="size-4" />
+				<Icon icon={Notification01Icon} class="size-4" />
 				{t('notifications.enable')}
 			{/if}
 		</Button>
@@ -151,7 +149,7 @@
 
 		<fieldset class="flex flex-col gap-2">
 			<legend class="mb-1 flex items-center gap-2 text-sm font-medium">
-				<Moon class="size-4" />
+				<Icon icon={Moon02Icon} class="size-4" />
 				{t('notifications.quietHours')}
 			</legend>
 			<div class="flex flex-wrap items-end gap-2">

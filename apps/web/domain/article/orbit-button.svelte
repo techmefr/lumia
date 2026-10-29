@@ -1,10 +1,10 @@
 <script lang="ts" module>
-	import type { Component } from 'svelte';
+	import type { IconSvgElement } from '@lumia/ui';
 
 	export interface OrbitAction {
 		id: string;
 		label: string;
-		icon: Component;
+		icon: IconSvgElement;
 		/** Set only on actions that toggle, which makes the item a checkbox rather than a command. */
 		active?: boolean;
 		run: () => void;
@@ -14,8 +14,8 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import type { OrbitPosition } from '@lumia/core';
-	import Orbit from '@lucide/svelte/icons/orbit';
-	import X from '@lucide/svelte/icons/x';
+	import { Cancel01Icon, Orbit01Icon } from '@hugeicons/core-free-icons';
+	import { Icon } from '@lumia/ui';
 	import { t } from '$technical/i18n/i18n.svelte';
 
 	interface Props {
@@ -154,7 +154,7 @@
 						? 'text-primary'
 						: 'text-foreground'} {isLeft ? 'flex-row' : 'flex-row-reverse'}"
 				>
-					<action.icon class="size-5 shrink-0" />
+					<Icon icon={action.icon} class="size-5 shrink-0" />
 					<span>{action.label}</span>
 				</button>
 			{/each}
@@ -172,9 +172,9 @@
 		class="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
 	>
 		{#if open}
-			<X class="size-6" />
+			<Icon icon={Cancel01Icon} class="size-6" />
 		{:else}
-			<Orbit class="size-6" />
+			<Icon icon={Orbit01Icon} class="size-6" />
 		{/if}
 	</button>
 </div>

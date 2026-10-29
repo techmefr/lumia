@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { FilterMode, FilterRule } from '@lumia/core';
-	import { Button, Card, CardContent, Input, toast } from '@lumia/ui';
-	import TrendingUp from '@lucide/svelte/icons/trending-up';
-	import VolumeX from '@lucide/svelte/icons/volume-x';
-	import X from '@lucide/svelte/icons/x';
+	import { Button, Card, CardContent, Input, toast, Icon } from '@lumia/ui';
+	import { Cancel01Icon, ChartIncreaseIcon, VolumeMute01Icon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte.js';
 
@@ -92,10 +90,10 @@
 		{/if}
 
 		<div class="flex flex-col gap-3">
-			{#each [{ label: t('rules.boosted'), icon: TrendingUp, list: boosted }, { label: t('rules.muted'), icon: VolumeX, list: muted }] as group (group.label)}
+			{#each [{ label: t('rules.boosted'), icon: ChartIncreaseIcon, list: boosted }, { label: t('rules.muted'), icon: VolumeMute01Icon, list: muted }] as group (group.label)}
 				<div data-test-rule-group class="flex flex-col gap-1.5">
 					<span class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-						<group.icon class="size-3.5" />
+						<Icon icon={group.icon} class="size-3.5" />
 						{group.label}
 					</span>
 					{#if group.list.length === 0}
@@ -112,7 +110,7 @@
 										class="flex min-h-8 items-center gap-1.5 rounded-full bg-secondary px-3 text-sm text-secondary-foreground transition-colors hover:bg-secondary/70"
 									>
 										{rule.term}
-										<X class="size-3.5" />
+										<Icon icon={Cancel01Icon} class="size-3.5" />
 										<span class="sr-only">{t('rules.removeOne', { term: rule.term })}</span>
 									</button>
 								</li>

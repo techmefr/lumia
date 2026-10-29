@@ -4,17 +4,15 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { ApiError, secondFactorFailure } from '@lumia/core';
-	import {
-		Button,
+	import { Button,
 		Card,
 		CardContent,
 		CardDescription,
 		CardHeader,
 		CardTitle,
 		Input,
-		Label
-	} from '@lumia/ui';
-	import KeyRound from '@lucide/svelte/icons/key-round';
+		Label, Icon } from '@lumia/ui';
+	import { Key01Icon } from '@hugeicons/core-free-icons';
 	import { MIN_PASSWORD_LENGTH } from '$technical/auth/password';
 	import { lumia } from '$technical/api/client';
 	import { stripQueryParam } from '$technical/url/strip-query-param';
@@ -82,7 +80,7 @@
 			<div
 				class="mb-1 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary"
 			>
-				<KeyRound class="size-5" />
+				<Icon icon={Key01Icon} class="size-5" />
 			</div>
 			<CardTitle class="font-serif text-xl">{t('reset.title')}</CardTitle>
 			<CardDescription>{t('reset.intro')}</CardDescription>

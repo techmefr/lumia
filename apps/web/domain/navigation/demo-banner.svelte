@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { base } from '$technical/paths/base';
-	import FlaskConical from '@lucide/svelte/icons/flask-conical';
+	import { FlaskConicalIcon } from '@hugeicons/core-free-icons';
+	import { Icon } from '@lumia/ui';
 	import { resetDemo } from '$technical/api/demo/demo-client';
 	import { t } from '$technical/i18n/i18n.svelte';
 
@@ -16,7 +17,7 @@
 	class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b bg-primary/10 px-4 py-1.5 text-center text-xs text-foreground"
 >
 	<span class="flex items-center gap-1.5 font-medium">
-		<FlaskConical class="size-3.5 text-primary" />
+		<Icon icon={FlaskConicalIcon} class="size-3.5 text-primary" />
 		{t('demo.notice')}
 	</span>
 	<button

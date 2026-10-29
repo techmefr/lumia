@@ -2,12 +2,8 @@
 	import { base } from '$technical/paths/base';
 	import { onMount } from 'svelte';
 	import type { ArticleSummary } from '@lumia/core';
-	import { Button } from '@lumia/ui';
-	import X from '@lucide/svelte/icons/x';
-	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import Clock from '@lucide/svelte/icons/clock';
-	import Gauge from '@lucide/svelte/icons/gauge';
+	import { Button, Icon } from '@lumia/ui';
+	import { ArrowLeft01Icon, ArrowRight01Icon, Cancel01Icon, Clock01Icon, DashboardSpeed01Icon } from '@hugeicons/core-free-icons';
 	import { accentHueForFeed } from './accent-hue';
 	import { getLocale, t } from '$technical/i18n/i18n.svelte';
 	import { formatDateInUserTimezone } from '$technical/time/format-date';
@@ -140,7 +136,7 @@
 			{t('flip.hint')}
 		</span>
 		<Button data-test-flip-close variant="ghost" size="sm" onclick={onClose}>
-			<X class="size-4" />
+			<Icon icon={Cancel01Icon} class="size-4" />
 			{t('common.close')}
 		</Button>
 	</div>
@@ -182,12 +178,12 @@
 					{/if}
 					<div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
 						<span class="flex items-center gap-1">
-							<Clock class="size-3.5" />
+							<Icon icon={Clock01Icon} class="size-3.5" />
 							{t('common.minutes', { count: current.reading_minutes ?? 0 })}
 						</span>
 						{#if current.relevance_score !== 50}
 							<span class="flex items-center gap-1">
-								<Gauge class="size-3.5" />
+								<Icon icon={DashboardSpeed01Icon} class="size-3.5" />
 								{current.relevance_score}/100
 							</span>
 						{/if}
@@ -207,7 +203,7 @@
 				onclick={() => go(-1)}
 				disabled={page === 0}
 			>
-				<ChevronLeft class="size-4" />
+				<Icon icon={ArrowLeft01Icon} class="size-4" />
 				{t('common.previous')}
 			</Button>
 			<Button
@@ -218,7 +214,7 @@
 				disabled={page >= articles.length - 1}
 			>
 				{t('common.next')}
-				<ChevronRight class="size-4" />
+				<Icon icon={ArrowRight01Icon} class="size-4" />
 			</Button>
 		</div>
 	{:else}

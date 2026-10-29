@@ -1,12 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { OrbitPosition } from '@lumia/core';
-	import { Button, Card, CardContent, Label, toast } from '@lumia/ui';
-	import Settings from '@lucide/svelte/icons/settings';
-	import Sun from '@lucide/svelte/icons/sun';
-	import Moon from '@lucide/svelte/icons/moon';
-	import Check from '@lucide/svelte/icons/check';
-	import Orbit from '@lucide/svelte/icons/orbit';
+	import { Button, Card, CardContent, Label, toast, Icon } from '@lumia/ui';
+	import { Moon02Icon, Orbit01Icon, Settings01Icon, Sun03Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import AiSettings from '$domain/settings/ai-settings.svelte';
 	import TtsSettings from '$domain/settings/tts-settings.svelte';
@@ -171,7 +167,7 @@
 
 <div class="mx-auto flex max-w-2xl flex-col gap-6">
 	<h1 class="flex items-center gap-2 text-2xl font-semibold">
-		<Settings class="size-6 text-primary" />
+		<Icon icon={Settings01Icon} class="size-6 text-primary" />
 		{t('settings.title')}
 	</h1>
 
@@ -213,7 +209,7 @@
 						<span
 							class="flex size-10 items-center justify-center rounded-full bg-white text-zinc-900 shadow"
 						>
-							<Sun class="size-5" />
+							<Icon icon={Sun03Icon} class="size-5" />
 						</span>
 						<span class="text-sm font-medium">{t('settings.themeLight')}</span>
 					</label>
@@ -231,7 +227,7 @@
 						<span
 							class="flex size-10 items-center justify-center rounded-full bg-zinc-900 text-white shadow"
 						>
-							<Moon class="size-5" />
+							<Icon icon={Moon02Icon} class="size-5" />
 						</span>
 						<span class="text-sm font-medium">{t('settings.themeDark')}</span>
 					</label>
@@ -269,7 +265,7 @@
 								<span
 									class="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground"
 								>
-									<Orbit class="size-4" />
+									<Icon icon={Orbit01Icon} class="size-4" />
 								</span>
 							</span>
 							<span class="text-sm font-medium">{option.label}</span>
@@ -302,7 +298,7 @@
 							/>
 							<span class="sr-only">{accentLabel(preset.id)}</span>
 							{#if accentHue === preset.hue}
-								<Check class="size-4 text-white drop-shadow" />
+								<Icon icon={Tick02Icon} class="size-4 text-white drop-shadow" />
 							{/if}
 						</label>
 					{/each}

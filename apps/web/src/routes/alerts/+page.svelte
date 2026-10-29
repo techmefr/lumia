@@ -3,8 +3,8 @@
 	import { onMount } from 'svelte';
 	import type { AlertNotification, SavedSearch } from '@lumia/core';
 	import { ApiError } from '@lumia/core';
-	import { Button, Card, CardContent, Input, toast } from '@lumia/ui';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import { Button, Card, CardContent, Input, toast, Icon } from '@lumia/ui';
+	import { Delete02Icon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
@@ -156,7 +156,7 @@
 						class="flex min-h-9 min-w-9 items-center justify-center rounded-md hover:bg-secondary"
 						onclick={() => remove(search)}
 					>
-						<Trash2 class="size-4" />
+						<Icon icon={Delete02Icon} class="size-4" />
 						<span class="sr-only">{t('alerts.remove', { name: search.name })}</span>
 					</button>
 				</li>

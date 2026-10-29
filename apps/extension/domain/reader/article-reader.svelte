@@ -1,9 +1,8 @@
 <script lang="ts">
 	import type { ArticleDetail, LumiaClient } from '@lumia/core';
 	import { sanitizeArticleHtml } from '@lumia/core';
-	import { Button } from '@lumia/ui';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import { Button, Icon } from '@lumia/ui';
+	import { ArrowLeft02Icon, LinkSquare02Icon } from '@hugeicons/core-free-icons';
 	import { locale, t } from '$technical/i18n/i18n';
 	import { isSessionLost } from './reader-session';
 	import { isWebUrl } from './web-url';
@@ -42,7 +41,7 @@
 
 <article class="flex flex-col gap-3">
 	<Button data-test-back variant="ghost" href="#" class="self-start">
-		<ArrowLeft aria-hidden="true" />
+		<Icon icon={ArrowLeft02Icon} />
 		{t('reader.back')}
 	</Button>
 
@@ -75,7 +74,7 @@
 				target="_blank"
 				rel="noopener noreferrer"
 			>
-				<ExternalLink aria-hidden="true" />
+				<Icon icon={LinkSquare02Icon} />
 				{t('reader.openOriginal')}
 			</Button>
 		{/if}

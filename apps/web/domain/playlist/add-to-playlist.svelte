@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PlaylistSummary } from '@lumia/core';
-	import { Button, Input, toast } from '@lumia/ui';
-	import ListPlus from '@lucide/svelte/icons/list-plus';
+	import { Button, Input, toast, Icon } from '@lumia/ui';
+	import { PlayListAddIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte';
 
@@ -85,7 +85,7 @@
 		onclick={openPanel}
 		aria-expanded={open}
 	>
-		<ListPlus class="size-4 shrink-0" />
+		<Icon icon={PlayListAddIcon} class="size-4 shrink-0" />
 		<span class="hidden sm:inline">{t('addToPlaylist.button')}</span>
 	</Button>
 

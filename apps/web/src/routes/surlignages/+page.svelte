@@ -2,8 +2,8 @@
 	import { base } from '$technical/paths/base';
 	import { onMount } from 'svelte';
 	import type { Highlight } from '@lumia/core';
-	import { Skeleton, toast } from '@lumia/ui';
-	import Highlighter from '@lucide/svelte/icons/highlighter';
+	import { Skeleton, toast, Icon } from '@lumia/ui';
+	import { HighlighterIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
@@ -53,7 +53,7 @@
 <div class="flex flex-col gap-6">
 	<div>
 		<h1 class="flex items-center gap-2 text-2xl font-semibold">
-			<Highlighter class="size-6 text-primary" />
+			<Icon icon={HighlighterIcon} class="size-6 text-primary" />
 			{t('highlights.title')}
 		</h1>
 		<p class="text-sm text-muted-foreground">{t('highlights.intro')}</p>

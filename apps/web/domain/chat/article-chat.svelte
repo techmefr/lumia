@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ApiError, type ChatAction, type ChatMessage, type ChatRequest } from '@lumia/core';
-	import { Button, toast } from '@lumia/ui';
-	import MessageCircle from '@lucide/svelte/icons/message-circle';
+	import { Button, toast, Icon } from '@lumia/ui';
+	import { Message01Icon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { diagramSource } from '$domain/chat/diagram-source';
@@ -100,7 +100,7 @@
 			onclick={toggle}
 			class="flex items-center gap-2 rounded-md hover:underline"
 		>
-			<MessageCircle class="size-5" aria-hidden="true" />
+			<Icon icon={Message01Icon} class="size-5" />
 			{open ? t('chat.close') : t('chat.open')}
 		</button>
 	</h2>

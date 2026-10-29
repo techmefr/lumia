@@ -2,10 +2,8 @@
 	import { onMount } from 'svelte';
 	import { base } from '$technical/paths/base';
 	import { ApiError, type Tag, type TagRef, type TagSuggestion } from '@lumia/core';
-	import { Button, Input, toast } from '@lumia/ui';
-	import Plus from '@lucide/svelte/icons/plus';
-	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import X from '@lucide/svelte/icons/x';
+	import { Button, Input, toast, Icon } from '@lumia/ui';
+	import { Add01Icon, Cancel01Icon, SparklesIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte';
 
@@ -125,7 +123,7 @@
 						onclick={() => detach(tag)}
 						class="flex min-h-8 min-w-8 items-center justify-center rounded-r-full hover:bg-secondary/70"
 					>
-						<X class="size-3.5" aria-hidden="true" />
+						<Icon icon={Cancel01Icon} class="size-3.5" />
 						<span class="sr-only">{t('tags.remove', { name: tag.name })}</span>
 					</button>
 				</li>
@@ -150,7 +148,7 @@
 			{/each}
 		</datalist>
 		<Button data-test-tag-submit type="submit" disabled={saving || draft.trim() === ''}>
-			<Plus class="size-4" aria-hidden="true" />
+			<Icon icon={Add01Icon} class="size-4" />
 			{t('common.add')}
 		</Button>
 	</form>
@@ -168,7 +166,7 @@
 					onclick={() => attach(item.name)}
 					class="flex min-h-8 items-center gap-1 rounded-l-full py-1 pr-1 pl-3 hover:text-foreground"
 				>
-					<Plus class="size-3.5" aria-hidden="true" />
+					<Icon icon={Add01Icon} class="size-3.5" />
 					{item.name}
 					<span class="sr-only">{t('tags.accept', { name: item.name })}</span>
 				</button>
@@ -178,7 +176,7 @@
 					onclick={() => dismiss(item)}
 					class="flex min-h-8 min-w-8 items-center justify-center rounded-r-full hover:text-foreground"
 				>
-					<X class="size-3.5" aria-hidden="true" />
+					<Icon icon={Cancel01Icon} class="size-3.5" />
 					<span class="sr-only">{t('tags.dismiss', { name: item.name })}</span>
 				</button>
 			</span>
@@ -191,7 +189,7 @@
 			aria-busy={asking}
 			class="flex min-h-8 items-center gap-1.5 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-60"
 		>
-			<Sparkles class="size-4" aria-hidden="true" />
+			<Icon icon={SparklesIcon} class="size-4" />
 			{t('tags.askAi')}
 		</button>
 	</div>

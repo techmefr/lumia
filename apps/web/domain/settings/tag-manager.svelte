@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { ApiError, type Tag } from '@lumia/core';
-	import { Button, Card, CardContent, Input, toast } from '@lumia/ui';
-	import Pencil from '@lucide/svelte/icons/pencil';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import { Button, Card, CardContent, Input, toast, Icon } from '@lumia/ui';
+	import { Delete02Icon, PencilEdit02Icon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte.js';
 
@@ -109,7 +108,7 @@
 							onclick={() => startRename(tag)}
 							class="flex min-h-8 min-w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
 						>
-							<Pencil class="size-4" aria-hidden="true" />
+							<Icon icon={PencilEdit02Icon} class="size-4" />
 							<span class="sr-only">{t('tags.rename', { name: tag.name })}</span>
 						</button>
 						<button
@@ -118,7 +117,7 @@
 							onclick={() => remove(tag)}
 							class="flex min-h-8 min-w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-destructive"
 						>
-							<Trash2 class="size-4" aria-hidden="true" />
+							<Icon icon={Delete02Icon} class="size-4" />
 							<span class="sr-only">{t('tags.delete', { name: tag.name })}</span>
 						</button>
 					{/if}

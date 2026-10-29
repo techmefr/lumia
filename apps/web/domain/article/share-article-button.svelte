@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { base } from '$technical/paths/base';
 	import { ApiError, type ArticleShareStatus } from '@lumia/core';
-	import { toast } from '@lumia/ui';
-	import Link2 from '@lucide/svelte/icons/link-2';
+	import { toast, Icon } from '@lumia/ui';
+	import { Link01Icon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 
@@ -96,7 +96,7 @@
 		data-test-share-toggle
 		class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 	>
-		<Link2 class="size-4" aria-hidden="true" />
+		<Icon icon={Link01Icon} class="size-4" />
 		{t('share.open')}
 	</button>
 

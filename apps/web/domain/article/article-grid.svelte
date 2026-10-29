@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { base } from '$technical/paths/base';
 	import type { ArticleSummary } from '@lumia/core';
-	import { ArticleCard, ArticleCardSkeleton, ArticleHero, GradualBlur } from '@lumia/ui';
-	import Inbox from '@lucide/svelte/icons/inbox';
+	import { ArticleCard, ArticleCardSkeleton, ArticleHero, GradualBlur, Icon } from '@lumia/ui';
+	import { InboxIcon } from '@hugeicons/core-free-icons';
 	import { accentHueForFeed } from './accent-hue';
 	import { feedIcons } from '$technical/api/feed-icons.svelte';
 	import { getLocale, t } from '$technical/i18n/i18n.svelte';
@@ -89,7 +89,7 @@
 		{@render empty()}
 	{:else}
 		<p data-test-grid-empty class="flex items-center gap-2 text-sm text-muted-foreground">
-			<Inbox class="size-4" />
+			<Icon icon={InboxIcon} class="size-4" />
 			{t('grid.empty')}
 		</p>
 	{/if}

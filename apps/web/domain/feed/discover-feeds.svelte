@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { DiscoverSuggestion, Folder } from '@lumia/core';
-	import { Button, Card, CardContent, Skeleton, toast } from '@lumia/ui';
-	import Compass from '@lucide/svelte/icons/compass';
-	import Plus from '@lucide/svelte/icons/plus';
-	import ExternalLink from '@lucide/svelte/icons/external-link';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import { Button, Card, CardContent, Skeleton, toast, Icon } from '@lumia/ui';
+	import { Add01Icon, Compass01Icon, LinkSquare02Icon, RefreshIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { safeHttpHref } from '$technical/url/safe-href';
 	import { t } from '$technical/i18n/i18n.svelte';
@@ -60,13 +57,13 @@
 		<div class="flex flex-wrap items-start justify-between gap-2">
 			<div>
 				<h2 class="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-					<Compass class="size-4" />
+					<Icon icon={Compass01Icon} class="size-4" />
 					{t('discover.title')}
 				</h2>
 				<p class="mt-1 text-xs text-muted-foreground">{t('discover.intro')}</p>
 			</div>
 			<Button data-test-discover-refresh variant="ghost" size="sm" onclick={load}>
-				<RefreshCw class="size-4" />
+				<Icon icon={RefreshIcon} class="size-4" />
 				{t('discover.refresh')}
 			</Button>
 		</div>
@@ -147,7 +144,7 @@
 								onclick={() => subscribe(suggestion)}
 								disabled={adding === suggestion.url}
 							>
-								<Plus class="size-4" />
+								<Icon icon={Add01Icon} class="size-4" />
 								{adding === suggestion.url ? t('common.adding') : t('discover.subscribe')}
 							</Button>
 							<Button
@@ -158,7 +155,7 @@
 								target="_blank"
 								rel="noopener noreferrer"
 							>
-								<ExternalLink class="size-4" />
+								<Icon icon={LinkSquare02Icon} class="size-4" />
 								<span class="sr-only">{t('discover.view', { title: suggestion.title })}</span>
 							</Button>
 						</div>

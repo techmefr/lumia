@@ -2,9 +2,8 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { sanitizeArticleHtml, type PublicArticle } from '@lumia/core';
-	import { Skeleton } from '@lumia/ui';
-	import ExternalLink from '@lucide/svelte/icons/external-link';
-	import Printer from '@lucide/svelte/icons/printer';
+	import { Skeleton, Icon } from '@lumia/ui';
+	import { LinkSquare02Icon, PrinterIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { safeHttpHref } from '$technical/url/safe-href';
 	import { getLocale, t } from '$technical/i18n/i18n.svelte';
@@ -80,7 +79,7 @@
 					rel="noopener noreferrer nofollow"
 					class="flex w-fit items-center gap-1 text-primary hover:underline"
 				>
-					<ExternalLink class="size-3.5" aria-hidden="true" />
+					<Icon icon={LinkSquare02Icon} class="size-3.5" />
 					{t('publicShare.readSource')}
 				</a>
 				<button
@@ -89,7 +88,7 @@
 					onclick={() => window.print()}
 					class="flex items-center gap-1.5 rounded-md px-2 py-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
 				>
-					<Printer class="size-4" aria-hidden="true" />
+					<Icon icon={PrinterIcon} class="size-4" />
 					{t('print.button')}
 				</button>
 			</p>
