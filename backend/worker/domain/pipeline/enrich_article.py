@@ -4,6 +4,7 @@ from typing import Any
 
 import httpx
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, ArticleKeyword, Author, Category, Keyword, Lang
@@ -216,8 +217,11 @@ async def _create_article_if_new(
         original_lang=original_lang,
         published_at=raw_article.published_at,
     )
-    session.add(article)
-    await session.flush()
+    try:
+        async with session.begin_nested():
+            session.add(article)
+    except IntegrityError:
+        return None
 
     for term, weight in keywords:
         keyword = await _get_or_create_keyword(session, term, keyword_lang)

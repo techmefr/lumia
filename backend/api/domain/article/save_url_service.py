@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, Author
@@ -68,8 +69,15 @@ async def save_url(
         image_url=page.image_url,
         published_at=page.published_at or datetime.now(UTC),
     )
-    session.add(article)
-    await session.flush()
+    try:
+        async with session.begin_nested():
+            session.add(article)
+    except IntegrityError:
+        collided = await find_saved_article(session, user, url)
+        if collided is None:
+            raise
+        await _mark_saved(session, user, collided)
+        return await _reload(session, collided)
     await _mark_saved(session, user, article)
     return await _reload(session, article)
 
