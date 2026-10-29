@@ -117,7 +117,7 @@ async def list_groups(session: AsyncSession, user_id: UUID) -> list[FeverGroup]:
     return groups
 
 
-def _readable_items(user_id: UUID) -> Select[tuple[Article, bool, bool]]:
+def _readable_items(user_id: UUID) -> Select[Article, bool, bool]:
     return (
         select(Article, UserArticleFeedback.read, UserArticleFeedback.saved)
         .join(Feed, Feed.id == Article.feed_id)

@@ -207,7 +207,7 @@ def _to_invitation_response(invitation: Invitation) -> InvitationResponse:
 
 
 async def _current_instance(session: AsyncSession) -> Instance:
-    instance = await session.scalar(select(Instance))
+    instance = (await session.scalars(select(Instance))).first()
     if instance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return instance
@@ -413,7 +413,7 @@ async def reset_forgotten_password(
 
 
 async def _read_sso_instance(session: AsyncSession) -> tuple[Instance, SsoConfiguration]:
-    instance = await session.scalar(select(Instance))
+    instance = (await session.scalars(select(Instance))).first()
     if instance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     try:

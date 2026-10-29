@@ -13,7 +13,7 @@ AUTHOR_WEIGHT = 1.0
 CATEGORY_WEIGHT = 0.5
 
 
-def _shared_keyword_weight(article_id: UUID) -> Select[tuple[UUID, float]]:
+def _shared_keyword_weight(article_id: UUID) -> Select[UUID, float]:
     other = aliased(ArticleKeyword)
     own_keywords = select(ArticleKeyword.keyword_id).where(ArticleKeyword.article_id == article_id)
     return (
