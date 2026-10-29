@@ -68,8 +68,19 @@ export function createHttpClient({ baseUrl, tokenStore }: HttpClientConfig) {
 		return payload.access_token;
 	}
 
+	async function runExclusively(): Promise<string | null> {
+		const staleAccessToken = tokenStore.getAccessToken();
+		const attempt = async () => {
+			await tokenStore.reload?.();
+			const current = tokenStore.getAccessToken();
+			if (current && current !== staleAccessToken) return current;
+			return performRefresh();
+		};
+		return tokenStore.exclusive ? tokenStore.exclusive(attempt) : attempt();
+	}
+
 	function refreshAccessToken(): Promise<string | null> {
-		inFlightRefresh ??= performRefresh().finally(() => {
+		inFlightRefresh ??= runExclusively().finally(() => {
 			inFlightRefresh = null;
 		});
 		return inFlightRefresh;

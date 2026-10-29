@@ -300,6 +300,30 @@ describe('createHttpClient', () => {
 				expect(store.getAccessToken()).toBe('access-1');
 				expect(store.getRefreshToken()).toBe('refresh-1');
 			});
+
+			it('reloads the shared store inside the lock and reuses a token another context already rotated', async () => {
+				const calls = scriptedFetch([json({}, 401), json({ ok: 1 })]);
+				const base = memoryStore({ access: 'access-1', refresh: 'refresh-1' });
+				const order: string[] = [];
+				const store: TokenStore = {
+					...base,
+					reload: async () => {
+						order.push('reload');
+						base.setTokens({ accessToken: 'access-2', refreshToken: 'refresh-2' });
+					},
+					exclusive: async (task) => {
+						order.push('lock');
+						return task();
+					}
+				};
+				const client = createHttpClient({ baseUrl: 'https://lumia.test', tokenStore: store });
+
+				await client.request('/a');
+
+				expect(order).toEqual(['lock', 'reload']);
+				expect(calls.filter((call) => call.url.endsWith('/auth/refresh'))).toHaveLength(0);
+				expect(calls[1].headers.authorization).toBe('Bearer access-2');
+			});
 		});
 	});
 });
