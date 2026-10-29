@@ -5,7 +5,9 @@ from config.auth import AuthConfig
 
 
 @pytest.mark.parametrize("placeholder", ["change-me", "CHANGE-ME", "changeme", " ", ""])
-def test_placeholder_jwt_secret_is_refused(monkeypatch: pytest.MonkeyPatch, placeholder: str) -> None:
+def test_placeholder_jwt_secret_is_refused(
+    monkeypatch: pytest.MonkeyPatch, placeholder: str
+) -> None:
     monkeypatch.setenv("JWT_SECRET", placeholder)
     with pytest.raises(ValidationError):
         AuthConfig()
