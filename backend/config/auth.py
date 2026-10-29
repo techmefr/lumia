@@ -1,6 +1,9 @@
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
+
+PLACEHOLDER_SECRETS = frozenset({"change-me", "changeme", ""})
 
 
 class AuthConfig(BaseSettings):
@@ -11,6 +14,13 @@ class AuthConfig(BaseSettings):
     magic_link_ttl_minutes: int = 15
     oidc_login_ttl_minutes: int = 10
     invitation_ttl_days: int = 7
+
+    @field_validator("jwt_secret")
+    @classmethod
+    def reject_placeholder_secret(cls, value: str) -> str:
+        if value.strip().lower() in PLACEHOLDER_SECRETS:
+            raise ValueError("JWT_SECRET must be replaced with a generated secret")
+        return value
 
 
 @lru_cache
