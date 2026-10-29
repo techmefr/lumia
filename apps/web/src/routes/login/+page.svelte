@@ -12,6 +12,7 @@
 	import { lumia } from '$technical/api/client';
 	import InstanceUrlForm from '$domain/instance/instance-url-form.svelte';
 	import { isNativePlatform } from '$technical/platform/native-platform';
+	import { stripQueryParam } from '$technical/url/strip-query-param';
 	import { t } from '$technical/i18n/i18n.svelte.js';
 
 	let email = $state('');
@@ -81,6 +82,8 @@
 			// either way and there is nothing to branch on here.
 			await lumia.user.requestMagicLink(magicEmail.trim(), magicMode);
 			magicSent = true;
+		} catch {
+			error = t('login.failed');
 		} finally {
 			magicLoading = false;
 		}
@@ -89,6 +92,7 @@
 	onMount(() => {
 		const token = page.url.searchParams.get('magic_token');
 		if (!token) return;
+		stripQueryParam('magic_token');
 		verifyingToken = true;
 		flow
 			.signInWithMagicLink(token)
@@ -96,6 +100,9 @@
 				challenge = flow.step;
 				if (outcome === 'signed_in') return goto(base + '/articles');
 				if (outcome !== 'challenge') error = t('login.magicLinkInvalid');
+			})
+			.catch(() => {
+				error = t('login.magicLinkInvalid');
 			})
 			.finally(() => {
 				verifyingToken = false;
