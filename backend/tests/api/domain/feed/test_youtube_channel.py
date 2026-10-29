@@ -79,3 +79,10 @@ async def test_anything_else_is_left_untouched(url: str) -> None:
 )
 def test_video_id_is_read_from_a_watch_address(url: str, expected: str | None) -> None:
     assert youtube_video_id(url) == expected
+
+
+async def test_a_channel_page_resolving_to_a_private_address_is_never_requested() -> None:
+    with pytest.raises(FeedUnreachableError):
+        await resolve_youtube_feed_url(
+            "https://www.youtube.com/@MrBeast", resolve=lambda host: ["127.0.0.1"]
+        )

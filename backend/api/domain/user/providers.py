@@ -11,6 +11,7 @@ from api.domain.user.models import AIProvider, TranslationProvider, TtsProvider,
 from api.technical.crypto.secret_box import decrypt_secret
 from config.chat import get_chat_config
 from config.deepl import get_deepl_config
+from config.tts import get_tts_config
 from worker.technical.ai.anthropic_client import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
 from worker.technical.ai.anthropic_client import AnthropicChatClient
 from worker.technical.ai.base import ChatClient
@@ -105,6 +106,7 @@ def speech_synthesizer_for(user: User) -> SpeechSynthesizer | None:
         base_url=base_url,
         model=user.tts_model or TTS_DEFAULT_MODEL,
         voice=user.tts_voice or TTS_DEFAULT_VOICE,
+        pin_to_public_addresses=not get_tts_config().tts_allow_private_endpoints,
     )
 
 

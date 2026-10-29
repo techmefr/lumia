@@ -4,6 +4,8 @@ from urllib.parse import parse_qs, urlsplit
 import httpx
 
 from api.domain.feed.exceptions import FeedUnreachableError
+from api.technical.net.pinned_transport import guarded_transport
+from api.technical.net.url_guard import BlockedUrlError, Resolver, resolve_with_system
 
 _YOUTUBE_HOSTS = frozenset({"youtube.com", "www.youtube.com", "m.youtube.com"})
 _CHANNEL_PATH = re.compile(r"^/channel/(UC[\w-]{22})/?")
@@ -29,7 +31,10 @@ def youtube_video_id(url: str) -> str | None:
 
 
 async def resolve_youtube_feed_url(
-    url: str, *, transport: httpx.AsyncBaseTransport | None = None
+    url: str,
+    *,
+    transport: httpx.AsyncBaseTransport | None = None,
+    resolve: Resolver = resolve_with_system,
 ) -> str:
     """Turns a channel address a reader would paste into the channel's own Atom feed.
 
@@ -46,18 +51,24 @@ async def resolve_youtube_feed_url(
     page = _CHANNEL_PAGE_PATH.match(path)
     if page is None:
         return url
-    channel_id = await _channel_id_from_page(f"https://www.youtube.com{page.group(0)}", transport)
+    channel_id = await _channel_id_from_page(
+        f"https://www.youtube.com{page.group(0)}", transport, resolve
+    )
     return _FEED_URL.format(channel_id=channel_id)
 
 
-async def _channel_id_from_page(page_url: str, transport: httpx.AsyncBaseTransport | None) -> str:
+async def _channel_id_from_page(
+    page_url: str, transport: httpx.AsyncBaseTransport | None, resolve: Resolver
+) -> str:
     try:
         async with httpx.AsyncClient(
-            transport=transport, timeout=_PAGE_TIMEOUT_SECONDS, follow_redirects=False
+            transport=guarded_transport(transport, resolve),
+            timeout=_PAGE_TIMEOUT_SECONDS,
+            follow_redirects=False,
         ) as client:
             response = await client.get(page_url)
             response.raise_for_status()
-    except httpx.HTTPError as exc:
+    except (BlockedUrlError, httpx.HTTPError) as exc:
         raise FeedUnreachableError from exc
     match = _FEED_LINK.search(response.text[:_MAX_PAGE_CHARS])
     if match is None:

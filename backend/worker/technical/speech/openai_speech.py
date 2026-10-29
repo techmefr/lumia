@@ -3,6 +3,8 @@ import logging
 import httpx
 
 from api.technical.logging.external import log_external_failure
+from api.technical.net.pinned_transport import guarded_transport
+from api.technical.net.url_guard import Resolver, resolve_with_system
 from worker.technical.speech.base import SpeechApiError, SynthesizedAudio
 
 SERVICE_NAME = "openai-speech"
@@ -47,6 +49,8 @@ class OpenAiSpeechSynthesizer:
         voice: str,
         max_audio_bytes: int = MAX_AUDIO_BYTES,
         transport: httpx.AsyncBaseTransport | None = None,
+        pin_to_public_addresses: bool = False,
+        resolve: Resolver = resolve_with_system,
     ) -> None:
         self._api_key = api_key
         self._base_url = base_url
@@ -54,6 +58,8 @@ class OpenAiSpeechSynthesizer:
         self._voice = voice
         self._max_audio_bytes = max_audio_bytes
         self._transport = transport
+        self._pin = pin_to_public_addresses
+        self._resolve = resolve
 
     @property
     def base_url(self) -> str:
@@ -69,7 +75,9 @@ class OpenAiSpeechSynthesizer:
         async with httpx.AsyncClient(
             base_url=self._base_url,
             headers={"Authorization": f"Bearer {self._api_key}"},
-            transport=self._transport,
+            transport=guarded_transport(self._transport, self._resolve)
+            if self._pin
+            else self._transport,
             timeout=TIMEOUT_SECONDS,
         ) as client:
             for piece in split_for_speech(text):

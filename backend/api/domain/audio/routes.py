@@ -88,6 +88,10 @@ async def get_article_audio(
     )
     try:
         audio = await synthesizer.synthesize(text)
+    except BlockedUrlError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="tts_endpoint_blocked"
+        ) from exc
     except (SpeechApiError, httpx.HTTPError) as exc:
         logger.warning("speech synthesis failed: %s", type(exc).__name__)
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="tts_failed") from exc
