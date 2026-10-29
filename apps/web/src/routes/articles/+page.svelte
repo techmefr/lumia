@@ -105,6 +105,8 @@
 		};
 	}
 
+	let listVersion = 0;
+
 	function setSort(next: 'recent' | 'relevance') {
 		if (sort === next) return;
 		sort = next;
@@ -112,6 +114,8 @@
 	}
 
 	async function loadArticles() {
+		const version = ++listVersion;
+		loadingMore = false;
 		loading = true;
 		error = null;
 		cursor = -1;
@@ -120,27 +124,30 @@
 		selection.clear();
 		try {
 			const loaded = await lumia.article.listArticles(params(0));
+			if (version !== listVersion) return;
 			articles = loaded;
 			// A full page back means there may be more; a short page means we've reached the end.
 			hasMore = loaded.length === PAGE_SIZE;
 		} catch {
-			error = 'articles.loadFailed';
+			if (version === listVersion) error = 'articles.loadFailed';
 		} finally {
-			loading = false;
+			if (version === listVersion) loading = false;
 		}
 	}
 
 	async function loadMore() {
 		if (loadingMore || !hasMore) return;
 		loadingMore = true;
+		const version = listVersion;
 		try {
 			const next = await lumia.article.listArticles(params(articles.length));
+			if (version !== listVersion) return;
 			articles = [...articles, ...next];
 			hasMore = next.length === PAGE_SIZE;
 		} catch {
-			error = 'common.loadMoreFailed';
+			if (version === listVersion) error = 'common.loadMoreFailed';
 		} finally {
-			loadingMore = false;
+			if (version === listVersion) loadingMore = false;
 		}
 	}
 

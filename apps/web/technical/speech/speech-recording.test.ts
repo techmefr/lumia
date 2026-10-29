@@ -155,3 +155,18 @@ describe('SpeechReader with a provider recording', () => {
 		expect(reader.speaking).toBe(false);
 	});
 });
+
+describe('seeking inside a provider recording', () => {
+	it('moves the recording itself rather than starting the browser voice', async () => {
+		const reader = new SpeechReader();
+		reader.speak('Bonjour.', { audio: recording });
+		await settle();
+		const audio = FakeAudio.instances[0];
+
+		reader.seek(0.5);
+
+		expect(audio.currentTime).toBe(5);
+		expect(reader.progress).toBe(0.5);
+		expect(synthesis.spoken).toHaveLength(0);
+	});
+});

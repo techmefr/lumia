@@ -43,6 +43,8 @@ class FeedIconStore {
 				return;
 			}
 			const blob = await response.blob();
+			const previous = this.urls[feedId];
+			if (previous) URL.revokeObjectURL(previous);
 			this.urls = { ...this.urls, [feedId]: URL.createObjectURL(blob) };
 		} catch {
 			this.missing.add(feedId);

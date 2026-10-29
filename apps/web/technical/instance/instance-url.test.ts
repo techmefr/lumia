@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+	instanceHost,
+	isSecureInstanceUrl,
 	getStoredInstanceUrl,
 	normalizeInstanceUrl,
 	resolveApiBaseUrl,
@@ -64,5 +66,28 @@ describe('resolveApiBaseUrl', () => {
 		expect(getStoredInstanceUrl(broken)).toBeNull();
 		expect(() => storeInstanceUrl(broken, 'https://a.example')).not.toThrow();
 		expect(resolveApiBaseUrl('/api', broken)).toBe('/api');
+	});
+});
+
+describe('isSecureInstanceUrl', () => {
+	it('accepts https anywhere', () => {
+		expect(isSecureInstanceUrl('https://lumia.example.com/api')).toBe(true);
+	});
+
+	it('accepts http only on a loopback host', () => {
+		expect(isSecureInstanceUrl('http://localhost:8000')).toBe(true);
+		expect(isSecureInstanceUrl('http://127.0.0.1:8000')).toBe(true);
+		expect(isSecureInstanceUrl('http://192.168.1.10:8000')).toBe(false);
+		expect(isSecureInstanceUrl('http://lumia.example.com')).toBe(false);
+	});
+});
+
+describe('instanceHost', () => {
+	it('returns the host with its port', () => {
+		expect(instanceHost('https://lumia.example.com:8443/api')).toBe('lumia.example.com:8443');
+	});
+
+	it('returns null for a value that is not a url', () => {
+		expect(instanceHost('nope')).toBeNull();
 	});
 });

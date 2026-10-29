@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { copyToClipboard } from '$technical/browser/copy-to-clipboard';
 	import { onMount } from 'svelte';
 	import {
 		ApiError,
@@ -97,8 +98,8 @@
 
 	async function copySecret() {
 		if (!secret) return;
-		await navigator.clipboard.writeText(secret);
-		toast(t('webhooks.secretCopied'));
+		const copied = await copyToClipboard(secret);
+		toast(copied ? t('webhooks.secretCopied') : t('common.copyFailed'), copied ? undefined : { tone: 'destructive' });
 	}
 
 	onMount(load);

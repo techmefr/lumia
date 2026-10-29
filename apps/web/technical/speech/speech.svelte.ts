@@ -163,6 +163,12 @@ export class SpeechReader {
 		if (!this.speaking) return;
 		this.index = this.indexAt(fraction);
 		this.progress = this.index / this.chunks.length;
+		if (this.audio) {
+			const clamped = Math.min(Math.max(fraction, 0), 1);
+			if (this.audio.duration > 0) this.audio.currentTime = clamped * this.audio.duration;
+			this.progress = clamped;
+			return;
+		}
 		if (this.paused) return;
 		this.utterance = null;
 		window.speechSynthesis.cancel();

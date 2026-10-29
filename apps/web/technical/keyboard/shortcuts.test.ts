@@ -262,3 +262,29 @@ describe('shifted shortcuts', () => {
 		expect(seen).toEqual(['search']);
 	});
 });
+
+describe('Enter on a focused control', () => {
+	it.each([
+		['button', '<button id="t">x</button>'],
+		['link', '<a id="t" href="/x">x</a>'],
+		['role=button', '<div id="t" role="button" tabindex="0">x</div>'],
+		['input', '<input id="t" />']
+	])('is left to a %s', (_name, markup) => {
+		document.body.innerHTML = markup;
+		const seen: string[] = [];
+		bind({ enter: () => seen.push('open') });
+
+		press('Enter', {}, document.getElementById('t')!);
+
+		expect(seen).toEqual([]);
+	});
+
+	it('still fires when nothing focusable holds focus', () => {
+		const seen: string[] = [];
+		bind({ enter: () => seen.push('open') });
+
+		press('Enter');
+
+		expect(seen).toEqual(['open']);
+	});
+});

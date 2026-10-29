@@ -67,9 +67,24 @@
 
 	async function copy() {
 		if (!link) return;
-		await navigator.clipboard.writeText(link);
-		toast(t('share.copied'));
+		try {
+			await navigator.clipboard.writeText(link);
+			toast(t('share.copied'));
+		} catch {
+			toast(t('common.copyFailed'), { tone: 'destructive' });
+		}
 	}
+
+	$effect(() => {
+		if (!open) return;
+		function onKeydown(event: KeyboardEvent) {
+			if (event.key !== 'Escape') return;
+			open = false;
+			document.querySelector<HTMLElement>('[data-test-share-toggle]')?.focus();
+		}
+		document.addEventListener('keydown', onKeydown);
+		return () => document.removeEventListener('keydown', onKeydown);
+	});
 </script>
 
 <div class="relative print:hidden" data-test-share>

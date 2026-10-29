@@ -63,18 +63,19 @@ export async function syncOfflineArticles(
 	];
 
 	const pending = new Set((await listPendingFeedback()).map((entry) => entry.articleId));
-	const entries: StoredArticle[] = [];
-	for (const { summary, listedAs } of wanted) {
-		const kept = existing.get(summary.id);
-		if (!kept) {
-			entries.push({ id: summary.id, article: await api.getArticle(summary.id), listedAs });
-			continue;
-		}
-		const article = pending.has(summary.id)
-			? kept.article
-			: { ...kept.article, read: summary.read, scroll_progress: summary.scroll_progress };
-		entries.push({ id: summary.id, article, listedAs });
-	}
+	const settled = await Promise.allSettled(
+		wanted.map(async ({ summary, listedAs }): Promise<StoredArticle> => {
+			const kept = existing.get(summary.id);
+			if (!kept) return { id: summary.id, article: await api.getArticle(summary.id), listedAs };
+			const article = pending.has(summary.id)
+				? kept.article
+				: { ...kept.article, read: summary.read, scroll_progress: summary.scroll_progress };
+			return { id: summary.id, article, listedAs };
+		})
+	);
+	const failure = settled.find((outcome) => outcome.status === 'rejected');
+	if (failure) throw failure.reason;
+	const entries = settled.map((outcome) => (outcome as PromiseFulfilledResult<StoredArticle>).value);
 
 	const wantedIds = new Set(wanted.map(({ summary }) => summary.id));
 	const obsolete = [...existing.keys()].filter((id) => !wantedIds.has(id));

@@ -288,3 +288,29 @@ describe('the second factor', () => {
 		expect(api.login).not.toHaveBeenCalled();
 	});
 });
+
+describe('robustness of the emailed link flow', () => {
+	it('shows an error instead of failing silently when the magic link request is rejected', async () => {
+		api.requestMagicLink.mockRejectedValue(new Error('network'));
+		const view = loginPage();
+		await fireEvent.click(view.forgotPassword());
+
+		await fireEvent.input(view.magicEmail(), { target: { value: 'reader@example.test' } });
+		await fireEvent.submit(view.magicForm()!);
+
+		await waitFor(() => expect(view.error()).not.toBeNull());
+		expect(view.magicSent()).toBeNull();
+	});
+
+	it('removes the token from the address bar once it is read', async () => {
+		window.history.replaceState(null, '', '/login?magic_token=the-token');
+		searchParams = new URLSearchParams({ magic_token: 'the-token' });
+		api.verifyMagicLink.mockResolvedValue(undefined);
+
+		loginPage();
+		await waitFor(() => expect(goto).toHaveBeenCalled());
+
+		expect(window.location.search).toBe('');
+		window.history.replaceState(null, '', '/');
+	});
+});

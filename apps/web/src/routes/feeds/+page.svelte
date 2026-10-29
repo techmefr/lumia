@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { downloadBlob } from '$technical/browser/download-blob';
 	import { base } from '$technical/paths/base';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -29,6 +30,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { toast } from '@lumia/ui';
 	import { lumia } from '$technical/api/client';
+	import { safeHttpHref } from '$technical/url/safe-href';
 	import { t, getLocale, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { resolveFolderName } from '$domain/feed/resolve-folder-name';
@@ -84,9 +86,13 @@
 	async function createFolder(event: SubmitEvent) {
 		event.preventDefault();
 		if (!newFolderName.trim()) return;
-		await lumia.feed.createFolder(newFolderName.trim());
-		newFolderName = '';
-		await load();
+		try {
+			await lumia.feed.createFolder(newFolderName.trim());
+			newFolderName = '';
+			await load();
+		} catch {
+			toast(t('feeds.createFolderFailed'), { tone: 'destructive' });
+		}
 	}
 
 	async function addFeed(event: SubmitEvent) {
@@ -147,7 +153,12 @@
 
 	async function removeFeed(feedId: string) {
 		const feed = feeds.find((candidate) => candidate.id === feedId);
-		await lumia.feed.deleteFeed(feedId);
+		try {
+			await lumia.feed.deleteFeed(feedId);
+		} catch {
+			toast(t('feeds.removeFailed'), { tone: 'destructive' });
+			return;
+		}
 		if (selectedFeedId === feedId) selectedFeedId = '';
 		await load();
 		toast(t('feeds.removedToast', { title: feed?.title ?? t('feeds.fallbackTitle') }), {
@@ -156,8 +167,12 @@
 					? {
 							label: t('feeds.restore'),
 							run: async () => {
-								await lumia.feed.addFeedByUrl(feed.url, feed.folder_id);
-								await load();
+								try {
+									await lumia.feed.addFeedByUrl(feed.url, feed.folder_id);
+									await load();
+								} catch {
+									toast(t('feeds.restoreFailed'), { tone: 'destructive' });
+								}
 							}
 						}
 					: undefined
@@ -178,24 +193,26 @@
 	}
 
 	async function removeFolder(folder: Folder) {
+		const previousFeedIds = feeds
+			.filter((feed) => feed.folder_id === folder.id)
+			.map((feed) => feed.id);
 		try {
 			await lumia.feed.deleteFolder(folder.id);
 			if (selectedFolderId === folder.id) selectedFolderId = '';
 			await load();
-			// Deleting a folder never deletes its feeds, so the undo only has to recreate the folder
-			// and refile what used to be in it.
-			const previousFeedIds = feeds
-				.filter((feed) => feed.folder_id === folder.id)
-				.map((feed) => feed.id);
 			toast(t('feeds.folderDeletedToast', { name: folder.name }), {
 				action: {
 					label: t('common.undo'),
 					run: async () => {
-						const recreated = await lumia.feed.createFolder(folder.name);
-						for (const feedId of previousFeedIds) {
-							await lumia.feed.updateFeed(feedId, { folder_id: recreated.id });
+						try {
+							const recreated = await lumia.feed.createFolder(folder.name);
+							for (const feedId of previousFeedIds) {
+								await lumia.feed.updateFeed(feedId, { folder_id: recreated.id });
+							}
+							await load();
+						} catch {
+							toast(t('feeds.restoreFailed'), { tone: 'destructive' });
 						}
-						await load();
 					}
 				}
 			});
@@ -250,12 +267,7 @@
 		error = null;
 		try {
 			const blob = await lumia.feed.exportOpml();
-			const url = URL.createObjectURL(blob);
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = 'lumia-subscriptions.opml';
-			link.click();
-			URL.revokeObjectURL(url);
+			downloadBlob(blob, 'lumia-subscriptions.opml');
 		} catch {
 			error = 'feeds.exportFailed';
 		} finally {
@@ -340,7 +352,7 @@
 						{selectedFeed.title}
 					</CardTitle>
 					<CardDescription>
-						<a href={selectedFeed.url} target="_blank" rel="noopener noreferrer" class="hover:underline">
+						<a href={safeHttpHref(selectedFeed.url)} target="_blank" rel="noopener noreferrer" class="hover:underline">
 							{selectedFeed.url}
 						</a>
 					</CardDescription>
@@ -702,7 +714,7 @@
 											<Rss class="size-4 shrink-0 text-primary" />
 											<div class="flex flex-col gap-1">
 												<span class="font-medium">{feed.title}</span>
-												<a href={feed.url} target="_blank" rel="noopener noreferrer" class="text-xs text-muted-foreground hover:underline">
+												<a href={safeHttpHref(feed.url)} target="_blank" rel="noopener noreferrer" class="text-xs text-muted-foreground hover:underline">
 													{feed.url}
 												</a>
 											</div>

@@ -12,6 +12,7 @@
 	import { lumia } from '$technical/api/client';
 	import InstanceUrlForm from '$domain/instance/instance-url-form.svelte';
 	import { isNativePlatform } from '$technical/platform/native-platform';
+	import { stripQueryParam } from '$technical/url/strip-query-param';
 	import { t } from '$technical/i18n/i18n.svelte.js';
 
 	let email = $state('');
@@ -75,12 +76,15 @@
 	async function submitMagicLink(event: SubmitEvent) {
 		event.preventDefault();
 		if (magicMode === null) return;
+		error = null;
 		magicLoading = true;
 		try {
 			// The endpoint never reveals whether the address exists, so the message is the same
 			// either way and there is nothing to branch on here.
 			await lumia.user.requestMagicLink(magicEmail.trim(), magicMode);
 			magicSent = true;
+		} catch {
+			error = t('login.failed');
 		} finally {
 			magicLoading = false;
 		}
@@ -89,6 +93,7 @@
 	onMount(() => {
 		const token = page.url.searchParams.get('magic_token');
 		if (!token) return;
+		stripQueryParam('magic_token');
 		verifyingToken = true;
 		flow
 			.signInWithMagicLink(token)
@@ -96,6 +101,9 @@
 				challenge = flow.step;
 				if (outcome === 'signed_in') return goto(base + '/articles');
 				if (outcome !== 'challenge') error = t('login.magicLinkInvalid');
+			})
+			.catch(() => {
+				error = t('login.magicLinkInvalid');
 			})
 			.finally(() => {
 				verifyingToken = false;
@@ -192,6 +200,9 @@
 								autocomplete="email"
 							/>
 						</div>
+						{#if error}
+							<p role="alert" class="text-sm text-destructive">{error}</p>
+						{/if}
 						<Button type="submit" disabled={magicLoading} class="mt-1">
 							<Mail class="size-4" />
 							{magicLoading ? t('login.magicLinkSending') : t('login.magicLinkSubmit')}

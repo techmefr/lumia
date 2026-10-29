@@ -24,6 +24,11 @@
 		<div
 			data-test-toast={item.id}
 			data-test-tone={item.tone}
+			role={item.tone === 'destructive' ? 'alert' : undefined}
+			onmouseenter={() => toasts.pause(item.id)}
+			onmouseleave={() => toasts.resume(item.id)}
+			onfocusin={() => toasts.pause(item.id)}
+			onfocusout={() => toasts.resume(item.id)}
 			transition:fly={{ y: 12, duration: 180 }}
 			class={cn(
 				'pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur',

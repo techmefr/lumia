@@ -1,6 +1,6 @@
 import type { ArticleSummary } from '@lumia/core';
 import { toast } from '@lumia/ui';
-import { t } from '$technical/i18n/i18n.svelte';
+import { getLocale, t } from '$technical/i18n/i18n.svelte';
 import { lumia } from '$technical/api/client';
 import { SpeechReader } from '$technical/speech/speech.svelte';
 import { readableText } from '$technical/speech/readable-text';
@@ -207,6 +207,7 @@ export class AudioPlayer {
 		this.reader.speak(`${article.title}. ${text}`, {
 			rate: this.rate,
 			startAt,
+			lang: getLocale(),
 			audio: articleAudio(article.id),
 			onProgress: (progress) => this.persist(progress),
 			onDone: () => {

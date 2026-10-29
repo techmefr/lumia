@@ -3,7 +3,7 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount, tick } from 'svelte';
-	import { fade, fly } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import { goto, onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Button, ClickSpark, Toaster } from '@lumia/ui';
@@ -228,8 +228,7 @@
 		data-test-main
 		tabindex="-1"
 		class="mx-auto w-full {mainWidth} px-4 py-6 outline-none sm:px-6 print:max-w-none print:p-0 {mainPadding}"
-		in:fly={{ y: 16, duration: 260, delay: 120 }}
-		out:fade={{ duration: 120 }}
+		in:fly={{ y: 16, duration: 260 }}
 	>
 		{@render children()}
 	</main>
