@@ -241,5 +241,89 @@ describe('createHttpClient', () => {
 			const client = createHttpClient({ baseUrl: 'https://lumia.test', tokenStore: memoryStore() });
 			await expect(client.request('/articles')).rejects.toThrow('API error 500');
 		});
+
+		describe('refresh robustness', () => {
+			it('shares one refresh between concurrent 401s, so the rotated token is not burned twice', async () => {
+				const calls = scriptedFetch([
+					json({}, 401),
+					json({}, 401),
+					json({ access_token: 'access-2', refresh_token: 'refresh-2' }),
+					json({ ok: 1 }),
+					json({ ok: 2 })
+				]);
+				const store = memoryStore({ access: 'access-1', refresh: 'refresh-1' });
+				const client = createHttpClient({ baseUrl: 'https://lumia.test', tokenStore: store });
+
+				await Promise.all([client.request('/a'), client.request('/b')]);
+
+				expect(calls.filter((call) => call.url.endsWith('/auth/refresh'))).toHaveLength(1);
+			});
+
+			it('keeps the session when the server fails with a 5xx during refresh', async () => {
+				scriptedFetch([json({}, 401), json({}, 503)]);
+				const store = memoryStore({ access: 'access-1', refresh: 'refresh-1' });
+				const client = createHttpClient({ baseUrl: 'https://lumia.test', tokenStore: store });
+
+				await expect(client.request('/a')).rejects.toBeInstanceOf(ApiError);
+				expect(store.getRefreshToken()).toBe('refresh-1');
+			});
+
+			it('keeps the session when the network drops during refresh', async () => {
+				let call = 0;
+				globalThis.fetch = (async () => {
+					call += 1;
+					if (call === 1) return json({}, 401);
+					throw new TypeError('network down');
+				}) as typeof fetch;
+				const store = memoryStore({ access: 'access-1', refresh: 'refresh-1' });
+				const client = createHttpClient({ baseUrl: 'https://lumia.test', tokenStore: store });
+
+				await expect(client.request('/a')).rejects.toBeInstanceOf(ApiError);
+				expect(store.getRefreshToken()).toBe('refresh-1');
+			});
+
+			it('clears the session on a 403 refresh', async () => {
+				scriptedFetch([json({}, 401), json({}, 403)]);
+				const store = memoryStore({ access: 'access-1', refresh: 'refresh-1' });
+				const client = createHttpClient({ baseUrl: 'https://lumia.test', tokenStore: store });
+
+				await expect(client.request('/a')).rejects.toBeInstanceOf(ApiError);
+				expect(store.getRefreshToken()).toBeNull();
+			});
+
+			it('ignores a refresh answer with the wrong shape and stores nothing', async () => {
+				scriptedFetch([json({}, 401), json({ access_token: 5 })]);
+				const store = memoryStore({ access: 'access-1', refresh: 'refresh-1' });
+				const client = createHttpClient({ baseUrl: 'https://lumia.test', tokenStore: store });
+
+				await expect(client.request('/a')).rejects.toBeInstanceOf(ApiError);
+				expect(store.getAccessToken()).toBe('access-1');
+				expect(store.getRefreshToken()).toBe('refresh-1');
+			});
+
+			it('reloads the shared store inside the lock and reuses a token another context already rotated', async () => {
+				const calls = scriptedFetch([json({}, 401), json({ ok: 1 })]);
+				const base = memoryStore({ access: 'access-1', refresh: 'refresh-1' });
+				const order: string[] = [];
+				const store: TokenStore = {
+					...base,
+					reload: async () => {
+						order.push('reload');
+						base.setTokens({ accessToken: 'access-2', refreshToken: 'refresh-2' });
+					},
+					exclusive: async (task) => {
+						order.push('lock');
+						return task();
+					}
+				};
+				const client = createHttpClient({ baseUrl: 'https://lumia.test', tokenStore: store });
+
+				await client.request('/a');
+
+				expect(order).toEqual(['lock', 'reload']);
+				expect(calls.filter((call) => call.url.endsWith('/auth/refresh'))).toHaveLength(0);
+				expect(calls[1].headers.authorization).toBe('Bearer access-2');
+			});
+		});
 	});
 });

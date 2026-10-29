@@ -15,6 +15,7 @@ export const en: Catalogue = {
 	'settings.instanceLabel': 'Instance address',
 	'settings.instanceHint': 'The address you open Lumia at, for example https://lumia.example.com',
 	'settings.instanceInvalid': 'Enter a full http or https address',
+	'settings.instanceInsecure': "This address is not encrypted (http): your password and session would travel in clear text. Use https unless the instance is on a trusted local network.",
 	'settings.permissionDenied': 'The browser refused access to this address',
 	'settings.instanceSave': 'Save the address',
 	'settings.instanceSaved': 'Address saved',

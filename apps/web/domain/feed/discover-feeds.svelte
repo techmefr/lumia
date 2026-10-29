@@ -7,6 +7,7 @@
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { lumia } from '$technical/api/client';
+	import { safeHttpHref } from '$technical/url/safe-href';
 	import { t } from '$technical/i18n/i18n.svelte';
 
 	interface Props {
@@ -153,7 +154,7 @@
 								data-test-suggestion-site
 								variant="ghost"
 								size="sm"
-								href={suggestion.site_url}
+								href={safeHttpHref(suggestion.site_url)}
 								target="_blank"
 								rel="noopener noreferrer"
 							>

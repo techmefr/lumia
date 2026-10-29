@@ -6,7 +6,9 @@ Create Date: 2026-10-29 09:10:00.000000
 
 """
 
-from collections.abc import Sequence
+import importlib.util
+from collections.abc import Callable, Sequence
+from pathlib import Path
 
 import sqlalchemy as sa
 from sqlalchemy import Connection
@@ -63,9 +65,26 @@ _FEED_MERGE_STATEMENTS = (
 )
 
 
+def _load_article_deduplication() -> Callable[[Connection], None]:
+    path = Path(__file__).with_name("f4d9a1b73c82_one_article_per_canonical_url_in_a_feed.py")
+    spec = importlib.util.spec_from_file_location("article_deduplication", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    deduplicate: Callable[[Connection], None] = module._merge_duplicate_articles
+    return deduplicate
+
+
 def _merge_duplicate_feeds(connection: Connection) -> None:
+    connection.execute(sa.text("DROP INDEX IF EXISTS uq_articles_feed_canonical_url"))
     for statement in _FEED_MERGE_STATEMENTS:
         connection.execute(sa.text(statement))
+    _load_article_deduplication()(connection)
+    connection.execute(
+        sa.text(
+            "CREATE UNIQUE INDEX uq_articles_feed_canonical_url ON articles (feed_id, canonical_url)"
+        )
+    )
 
 
 def _lowercase_emails(connection: Connection) -> None:

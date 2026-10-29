@@ -17,6 +17,13 @@ class FeedIconStore {
 		return null;
 	}
 
+	reset(): void {
+		for (const url of Object.values(this.urls)) URL.revokeObjectURL(url);
+		this.urls = {};
+		this.pending.clear();
+		this.missing.clear();
+	}
+
 	private async load(feedId: string): Promise<void> {
 		// No API in the demo build: the cards fall back to the source initial.
 		if (isDemo) {
@@ -36,6 +43,8 @@ class FeedIconStore {
 				return;
 			}
 			const blob = await response.blob();
+			const previous = this.urls[feedId];
+			if (previous) URL.revokeObjectURL(previous);
 			this.urls = { ...this.urls, [feedId]: URL.createObjectURL(blob) };
 		} catch {
 			this.missing.add(feedId);

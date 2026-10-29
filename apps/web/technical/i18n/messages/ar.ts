@@ -30,6 +30,7 @@ export const ar: Catalogue = {
 	'common.loadMore': 'تحميل المزيد',
 	'common.browseArticles': 'استعراض المقالات',
 	'common.loadMoreFailed': 'تعذّر تحميل المزيد.',
+	'common.copyFailed': 'تعذّر النسخ إلى الحافظة.',
 	'common.undo': 'تراجع',
 	'common.dismissNotification': 'إغلاق الإشعار',
 	'common.readingProgress': 'تقدم القراءة',
@@ -292,6 +293,9 @@ export const ar: Catalogue = {
 	'feeds.deleteFolderFailed': 'تعذّر حذف هذا المجلد.',
 	'feeds.movedToast': 'نُقلت الخلاصة.',
 	'feeds.moveFailed': 'تعذّر نقل هذه الخلاصة.',
+	'feeds.createFolderFailed': 'تعذّر إنشاء هذا المجلد.',
+	'feeds.removeFailed': 'تعذّرت إزالة هذه الخلاصة.',
+	'feeds.restoreFailed': 'تعذّرت الاستعادة.',
 	'feeds.renameFeedFailed': 'تعذّرت إعادة تسمية هذه الخلاصة.',
 
 	'discover.title': 'استكشاف مصادر',
@@ -915,6 +919,8 @@ export const ar: Catalogue = {
 	'instance.label': 'عنوان نسخة Lumia الخاصة بك',
 	'instance.hint': 'عنوان واجهة API لنسختك، مثل https://lumia.example.com/api.',
 	'instance.invalid': 'أدخل عنوان http أو https صالحًا.',
+	'instance.connectingTo': 'الخادم: {host}',
+	'instance.insecure': 'استخدم عنوان https (يُسمح بـ http لـ localhost فقط).',
 	'instance.save': 'حفظ النسخة',
 	'offline.banner': "دون اتصال: لا يمكن قراءة سوى قائمة القراءة والمقالات غير المقروءة التي تم تنزيلها. سيتم إرسال تقييماتك وقراءتك وعلامات القراءة عند عودة الشبكة.",
 	'offline.listNotice': "دون اتصال: {count} مقالات منزّلة على هذا الجهاز.",
@@ -924,5 +930,6 @@ export const ar: Catalogue = {
 	'offline.limitLabel': "الحد الأقصى لعدد المقالات المنزّلة",
 	'offline.limitOff': "معطّل",
 	'offline.limitOption': "{count} مقالات",
-	'offline.limitSaved': "تم حفظ إعداد القراءة دون اتصال."
+	'offline.limitSaved': "تم حفظ إعداد القراءة دون اتصال.",
+	'offline.feedbackDropped': "تعذّر إرسال بعض التغييرات التي أُجريت دون اتصال وتم تجاهلها.",
 };

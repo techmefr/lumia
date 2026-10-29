@@ -157,3 +157,27 @@ describe('dismissing by hand', () => {
 		expect(toasts.toasts).toHaveLength(0);
 	});
 });
+
+describe('pausing and error duration', () => {
+	it('keeps an error up for eight seconds', () => {
+		toast('Failed', { tone: 'destructive' });
+		vi.advanceTimersByTime(7999);
+		expect(toasts.toasts).toHaveLength(1);
+
+		vi.advanceTimersByTime(1);
+		expect(toasts.toasts).toHaveLength(0);
+	});
+
+	it('holds the timer while paused and restarts it on resume', () => {
+		const id = toast('Saved');
+		vi.advanceTimersByTime(1000);
+		toasts.pause(id);
+
+		vi.advanceTimersByTime(60000);
+		expect(toasts.toasts).toHaveLength(1);
+
+		toasts.resume(id);
+		vi.advanceTimersByTime(2000);
+		expect(toasts.toasts).toHaveLength(0);
+	});
+});

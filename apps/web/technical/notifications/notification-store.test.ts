@@ -5,6 +5,7 @@ import {
 	isQuietHour,
 	notificationFor,
 	permissionState,
+	resetNotificationState,
 	requestPermission,
 	updateNotificationSettings,
 	type NotificationSettings
@@ -575,5 +576,19 @@ describe('polling for new articles', () => {
 		await vi.advanceTimersByTimeAsync(15 * 60_000);
 
 		expect(shown).toHaveLength(0);
+	});
+});
+
+describe('resetNotificationState', () => {
+	it('puts the settings back to the defaults and wipes what was stored for the account', () => {
+		updateNotificationSettings({ enabled: true, threshold: 9 });
+		localStorage.setItem('lumia-notifications-baseline', '12');
+
+		resetNotificationState();
+
+		expect(getNotificationSettings().enabled).toBe(false);
+		expect(getNotificationSettings().threshold).toBe(3);
+		expect(localStorage.getItem('lumia-notifications')).toBeNull();
+		expect(localStorage.getItem('lumia-notifications-baseline')).toBeNull();
 	});
 });

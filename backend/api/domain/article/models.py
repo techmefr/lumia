@@ -56,9 +56,15 @@ class Keyword(Base):
     lang: Mapped[Lang]
 
 
+ARTICLE_FEED_CANONICAL_INDEX = "uq_articles_feed_canonical_url"
+
+
 class Article(Base, TimestampMixin):
     __tablename__ = "articles"
-    __table_args__ = (Index("ix_articles_search_vector", "search_vector", postgresql_using="gin"),)
+    __table_args__ = (
+        Index("ix_articles_search_vector", "search_vector", postgresql_using="gin"),
+        Index(ARTICLE_FEED_CANONICAL_INDEX, "feed_id", "canonical_url", unique=True),
+    )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     # The Fever protocol identifies items by an integer and pages with since_id / max_id, which a

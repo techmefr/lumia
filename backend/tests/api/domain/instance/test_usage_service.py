@@ -35,11 +35,7 @@ class _FakePageExtractor:
 
 async def _store_article(session: AsyncSession, user: User, content: str) -> None:
     feed = await session.scalar(
-        select(Feed).where(
-            Feed.user_id == user.id,
-            Feed.source_type == SourceType.MANUAL,
-            Feed.external_feed_id == "manual",
-        )
+        select(Feed).where(Feed.user_id == user.id, Feed.source_type == SourceType.MANUAL)
     )
     if feed is None:
         feed = Feed(

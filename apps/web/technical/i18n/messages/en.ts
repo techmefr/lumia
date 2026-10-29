@@ -30,6 +30,7 @@ export const en: Catalogue = {
 	'common.loadMore': 'Load more',
 	'common.browseArticles': 'Browse articles',
 	'common.loadMoreFailed': 'Could not load more.',
+	'common.copyFailed': 'Could not copy to the clipboard.',
 	'common.undo': 'Undo',
 	'common.dismissNotification': 'Dismiss notification',
 	'common.readingProgress': 'Reading progress',
@@ -292,6 +293,9 @@ export const en: Catalogue = {
 	'feeds.deleteFolderFailed': 'Could not delete this folder.',
 	'feeds.movedToast': 'Feed moved.',
 	'feeds.moveFailed': 'Could not move this feed.',
+	'feeds.createFolderFailed': 'Could not create this folder.',
+	'feeds.removeFailed': 'Could not remove this feed.',
+	'feeds.restoreFailed': 'Could not restore it.',
 	'feeds.renameFeedFailed': 'Could not rename this feed.',
 
 	'discover.title': 'Discover sources',
@@ -921,6 +925,8 @@ export const en: Catalogue = {
 	'instance.label': 'Your Lumia instance address',
 	'instance.hint': 'The API address of your instance, for example https://lumia.example.com/api.',
 	'instance.invalid': 'Enter a valid http or https address.',
+	'instance.connectingTo': 'Server: {host}',
+	'instance.insecure': 'Use an https address (http is only allowed for localhost).',
 	'instance.save': 'Save instance',
 	'offline.banner': "Offline: only the reading list and the unread articles already downloaded can be read. Your votes, reading and read marks will be sent when the network is back.",
 	'offline.listNotice': "Offline: {count} articles downloaded on this device.",
@@ -930,5 +936,6 @@ export const en: Catalogue = {
 	'offline.limitLabel': "Maximum number of downloaded articles",
 	'offline.limitOff': "Disabled",
 	'offline.limitOption': "{count} articles",
-	'offline.limitSaved': "Offline setting saved."
+	'offline.limitSaved': "Offline setting saved.",
+	'offline.feedbackDropped': "Some changes made offline could not be sent and were discarded.",
 };

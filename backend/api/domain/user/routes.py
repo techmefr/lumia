@@ -1,3 +1,4 @@
+import asyncio
 from datetime import timedelta
 from uuid import UUID
 
@@ -104,8 +105,15 @@ from api.technical.auth.oidc_client import (
 from api.technical.crypto.secret_box import decrypt_secret, encrypt_secret
 from api.technical.db import get_db_session
 from api.technical.email.address import normalise_email
+from api.technical.net.url_guard import (
+    BlockedUrlError,
+    Resolver,
+    ensure_public_http_url,
+    get_url_resolver,
+)
 from api.technical.rate_limit.dependencies import client_address, enforce
 from api.technical.rate_limit.limiter import RateLimiter, get_rate_limiter
+from config.chat import get_chat_config
 from config.instance import get_instance_config
 from config.rate_limit import get_rate_limit_config
 
@@ -793,7 +801,17 @@ async def update_me(
     payload: MeUpdateRequest,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
+    resolver: Resolver = Depends(get_url_resolver),
 ) -> MeResponse:
+    if payload.ai_endpoint_url and not get_chat_config().ai_allow_private_endpoints:
+        try:
+            await asyncio.to_thread(
+                ensure_public_http_url, payload.ai_endpoint_url, resolve=resolver
+            )
+        except BlockedUrlError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="ai_endpoint_blocked"
+            ) from exc
     secret_fields = {"ai_api_key", "translation_api_key", "tts_api_key"}
     updates = payload.model_dump(exclude_unset=True, exclude=secret_fields)
     for field, value in updates.items():

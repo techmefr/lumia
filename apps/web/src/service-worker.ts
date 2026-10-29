@@ -6,6 +6,8 @@ import { assets, immutable } from "$app/manifest";
 import {
   IMAGE_CACHE_NAME,
   SYNC_IMAGES_MESSAGE,
+  acceptedImageUrls,
+  isTrustedSource,
 } from "$technical/offline/image-cache";
 
 declare const self: ServiceWorkerGlobalScope;
@@ -105,8 +107,9 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("message", (event) => {
   const data = event.data as { type?: string; urls?: string[] } | undefined;
+  if (!isTrustedSource(event.source as { url?: unknown } | null, self.location.origin)) return;
   if (data?.type === SYNC_IMAGES_MESSAGE && Array.isArray(data.urls)) {
-    event.waitUntil(syncImages(data.urls));
+    event.waitUntil(syncImages(acceptedImageUrls(data.urls)));
   }
 });
 

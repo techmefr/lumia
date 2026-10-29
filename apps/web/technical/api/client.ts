@@ -1,6 +1,7 @@
 import { createLumiaClient, type LumiaClient } from '@lumia/core';
 import { createDemoClient } from './demo/demo-client';
 import { resolveApiBaseUrl } from '$technical/instance/instance-url';
+import { clearOfflineData } from '$technical/offline/offline-data';
 import { isNativePlatform } from '$technical/platform/native-platform';
 
 /**
@@ -13,4 +14,6 @@ export const apiBaseUrl: string = isNativePlatform()
 	? resolveApiBaseUrl(import.meta.env.VITE_API_BASE_URL, localStorage)
 	: import.meta.env.VITE_API_BASE_URL;
 
-export const lumia: LumiaClient = isDemo ? createDemoClient() : createLumiaClient(apiBaseUrl);
+export const lumia: LumiaClient = isDemo ? createDemoClient() : createLumiaClient(apiBaseUrl, undefined, {
+			onSignedOut: clearOfflineData
+		});

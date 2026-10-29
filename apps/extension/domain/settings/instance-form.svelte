@@ -19,6 +19,8 @@
 	let error = $state<string | null>(null);
 	let confirmed = $state(false);
 
+	const insecure = $derived(address.trim().toLowerCase().startsWith('http:'));
+
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		confirmed = false;
@@ -34,7 +36,10 @@
 			error = t('settings.permissionDenied');
 			return;
 		}
-		await writeInstanceUrl(extension.storage.local, instanceUrl);
+		const abandoned = await writeInstanceUrl(extension.storage.local, instanceUrl);
+		if (abandoned !== null) {
+			await extension.permissions.remove({ origins: [hostPermissionPattern(abandoned)] });
+		}
 		address = instanceUrl;
 		error = null;
 		confirmed = true;
@@ -57,6 +62,11 @@
 		/>
 		<p id="instance-hint" class="text-xs text-muted-foreground">{t('settings.instanceHint')}</p>
 	</div>
+	{#if insecure}
+		<p data-test-instance-insecure role="status" class="text-sm text-destructive">
+			{t('settings.instanceInsecure')}
+		</p>
+	{/if}
 	{#if error}
 		<p data-test-instance-error role="alert" class="text-sm text-destructive">{error}</p>
 	{/if}

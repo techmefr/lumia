@@ -696,3 +696,26 @@ describe('acting on a selection of articles', () => {
 		);
 	});
 });
+
+describe('overlapping list requests', () => {
+	beforeEach(() => stubViewport(false));
+
+	it('keeps the answer to the latest request when an older one lands last', async () => {
+		let resolveFirst: (value: ReturnType<typeof article>[]) => void = () => {};
+		vi.mocked(api.article.listArticles)
+			.mockImplementationOnce(() => new Promise((resolve) => (resolveFirst = resolve)))
+			.mockResolvedValue([article('fresh')]);
+		const view = articlesPage();
+		await waitFor(() => expect(view.searchInput()).not.toBeNull());
+
+		await fireEvent.input(view.searchInput() as HTMLInputElement, { target: { value: 'rust' } });
+		await fireEvent.click(view.searchSubmit() as HTMLButtonElement);
+		await waitFor(() => expect(view.card('fresh')).not.toBeNull());
+		resolveFirst([article('stale')]);
+		await Promise.resolve();
+		await Promise.resolve();
+
+		expect(view.card('stale')).toBeNull();
+		expect(view.card('fresh')).not.toBeNull();
+	});
+});

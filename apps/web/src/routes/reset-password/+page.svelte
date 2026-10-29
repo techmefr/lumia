@@ -17,6 +17,7 @@
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import { MIN_PASSWORD_LENGTH } from '$technical/auth/password';
 	import { lumia } from '$technical/api/client';
+	import { stripQueryParam } from '$technical/url/strip-query-param';
 	import { t } from '$technical/i18n/i18n.svelte.js';
 
 	let token = $state<string | null>(null);
@@ -71,6 +72,7 @@
 
 	onMount(() => {
 		token = page.url.searchParams.get('magic_token');
+		stripQueryParam('magic_token');
 	});
 </script>
 

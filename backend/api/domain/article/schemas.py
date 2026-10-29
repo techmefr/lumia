@@ -1,7 +1,8 @@
 from datetime import datetime
+from urllib.parse import urlsplit
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from api.domain.tag.schemas import TagRef
 from api.domain.user.models import ReadingLang
@@ -44,8 +45,19 @@ class SavedArticleResponse(ArticleSummaryResponse):
     already_saved: bool = False
 
 
+MAX_SAVED_URL_LENGTH = 2048
+
+
 class SaveUrlRequest(BaseModel):
-    url: str
+    url: str = Field(max_length=MAX_SAVED_URL_LENGTH)
+
+    @field_validator("url")
+    @classmethod
+    def _require_http_url(cls, value: str) -> str:
+        parts = urlsplit(value)
+        if parts.scheme not in {"http", "https"} or not parts.hostname:
+            raise ValueError("url must be an absolute http or https address")
+        return value
 
 
 class ReadingListImportStartedResponse(BaseModel):

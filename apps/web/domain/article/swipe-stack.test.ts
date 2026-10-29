@@ -428,3 +428,24 @@ describe('scrolling the text rather than swiping the card', () => {
 		expect(view.onFavorite).not.toHaveBeenCalled();
 	});
 });
+
+describe('a parent that removes the voted article from the list', () => {
+	it('does not skip the article behind it', async () => {
+		let removeFirst: () => void = () => {};
+		const onLike = vi.fn(() => removeFirst());
+		const { container, rerender } = render(SwipeStack, {
+			articles: THREE,
+			onLike,
+			onDislike: vi.fn(),
+			onSave: vi.fn(),
+			onFavorite: vi.fn(),
+			onOpen: vi.fn()
+		} as Props);
+		removeFirst = () => void rerender({ articles: THREE.slice(1) } as Partial<Props>);
+
+		await fireEvent.click(container.querySelector<HTMLButtonElement>('[data-test-swipe-like]')!);
+		await settle();
+
+		expect(container.querySelector('h2')?.textContent).toBe('Titre b');
+	});
+});

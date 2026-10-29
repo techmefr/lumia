@@ -34,6 +34,7 @@ export const fr = {
 	'common.loadMore': 'Charger plus',
 	'common.browseArticles': 'Parcourir les articles',
 	'common.loadMoreFailed': 'Impossible de charger la suite.',
+	'common.copyFailed': 'Impossible de copier dans le presse-papiers.',
 	'common.undo': 'Annuler',
 	'common.dismissNotification': 'Fermer la notification',
 	'common.readingProgress': 'Progression de lecture',
@@ -302,6 +303,9 @@ export const fr = {
 	'feeds.deleteFolderFailed': 'Impossible de supprimer ce dossier.',
 	'feeds.movedToast': 'Flux déplacé.',
 	'feeds.moveFailed': 'Impossible de déplacer ce flux.',
+	'feeds.createFolderFailed': 'Impossible de créer ce dossier.',
+	'feeds.removeFailed': 'Impossible de supprimer ce flux.',
+	'feeds.restoreFailed': 'Impossible de le restaurer.',
 	'feeds.renameFeedFailed': 'Impossible de renommer ce flux.',
 
 	'discover.title': 'Découvrir des sources',
@@ -934,6 +938,8 @@ export const fr = {
 	'instance.label': 'Adresse de ton instance Lumia',
 	'instance.hint': "L'adresse de l'API de ton instance, par exemple https://lumia.exemple.fr/api.",
 	'instance.invalid': 'Saisis une adresse http ou https valide.',
+	'instance.connectingTo': 'Serveur : {host}',
+	'instance.insecure': 'Utilise une adresse https (http n’est autorisé que pour localhost).',
 	'instance.save': "Enregistrer l'instance",
 	'offline.banner': "Hors ligne : seuls la liste à lire et les articles non lus déjà téléchargés sont lisibles. Tes votes, ta lecture et tes marquages seront envoyés au retour du réseau.",
 	'offline.listNotice': "Hors ligne : {count} articles téléchargés sur cet appareil.",
@@ -943,7 +949,8 @@ export const fr = {
 	'offline.limitLabel': "Nombre maximal d'articles téléchargés",
 	'offline.limitOff': "Désactivé",
 	'offline.limitOption': "{count} articles",
-	'offline.limitSaved': "Réglage hors ligne enregistré."
+	'offline.limitSaved': "Réglage hors ligne enregistré.",
+	'offline.feedbackDropped': "Certaines modifications faites hors ligne n’ont pas pu être envoyées et ont été abandonnées.",
 } as const;
 
 export type MessageKey = keyof typeof fr;

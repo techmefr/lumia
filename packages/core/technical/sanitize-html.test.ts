@@ -66,3 +66,22 @@ describe('a link out of a feed', () => {
 		expect(clean).not.toContain('target');
 	});
 });
+
+describe('styles in an article', () => {
+	it('strips a style tag', () => {
+		expect(sanitizeArticleHtml('<p>ok</p><style>body{display:none}</style>')).toBe('<p>ok</p>');
+	});
+
+	it('strips an inline style attribute, which could overlay the interface', () => {
+		const clean = sanitizeArticleHtml('<p style="position:fixed;inset:0">ok</p>');
+
+		expect(clean).not.toContain('style');
+		expect(clean).toContain('ok');
+	});
+
+	it('strips a url() so no stylesheet beacon can fire', () => {
+		const clean = sanitizeArticleHtml('<p data-x="url(https://evil.test/p.gif)">ok</p>');
+
+		expect(clean).not.toContain('url(');
+	});
+});

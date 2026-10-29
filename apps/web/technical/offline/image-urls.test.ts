@@ -26,3 +26,14 @@ describe('articleImageUrls', () => {
 		expect(articleImageUrls(articleDetail('a1'))).toEqual([]);
 	});
 });
+
+describe('entities in a src attribute', () => {
+	it('decodes &amp; so the cached address is the one the browser requests', () => {
+		const article = articleDetail('a1', {
+			image_url: null,
+			content: '<img src="https://img.test/p.jpg?w=1&amp;h=2">'
+		});
+
+		expect(articleImageUrls(article)).toEqual(['https://img.test/p.jpg?w=1&h=2']);
+	});
+});

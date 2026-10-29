@@ -30,6 +30,7 @@ export const de: Catalogue = {
 	'common.loadMore': 'Mehr laden',
 	'common.browseArticles': 'Artikel durchsehen',
 	'common.loadMoreFailed': 'Weitere Artikel konnten nicht geladen werden.',
+	'common.copyFailed': 'Kopieren in die Zwischenablage nicht möglich.',
 	'common.undo': 'Rückgängig',
 	'common.dismissNotification': 'Benachrichtigung schließen',
 	'common.readingProgress': 'Lesefortschritt',
@@ -299,6 +300,9 @@ export const de: Catalogue = {
 	'feeds.deleteFolderFailed': 'Dieser Ordner konnte nicht gelöscht werden.',
 	'feeds.movedToast': 'Feed verschoben.',
 	'feeds.moveFailed': 'Dieser Feed konnte nicht verschoben werden.',
+	'feeds.createFolderFailed': 'Dieser Ordner konnte nicht erstellt werden.',
+	'feeds.removeFailed': 'Dieser Feed konnte nicht entfernt werden.',
+	'feeds.restoreFailed': 'Wiederherstellung nicht möglich.',
 	'feeds.renameFeedFailed': 'Dieser Feed konnte nicht umbenannt werden.',
 
 	'discover.title': 'Quellen entdecken',
@@ -932,6 +936,8 @@ export const de: Catalogue = {
 	'instance.label': 'Adresse deiner Lumia-Instanz',
 	'instance.hint': 'Die API-Adresse deiner Instanz, zum Beispiel https://lumia.beispiel.de/api.',
 	'instance.invalid': 'Gib eine gültige http- oder https-Adresse ein.',
+	'instance.connectingTo': 'Server: {host}',
+	'instance.insecure': 'Verwende eine https-Adresse (http ist nur für localhost erlaubt).',
 	'instance.save': 'Instanz speichern',
 	'offline.banner': "Offline: Nur die Leseliste und bereits heruntergeladene ungelesene Artikel sind lesbar. Deine Bewertungen, dein Lesefortschritt und Gelesen-Markierungen werden gesendet, sobald das Netz wieder da ist.",
 	'offline.listNotice': "Offline: {count} Artikel auf diesem Gerät heruntergeladen.",
@@ -941,5 +947,6 @@ export const de: Catalogue = {
 	'offline.limitLabel': "Maximale Anzahl heruntergeladener Artikel",
 	'offline.limitOff': "Deaktiviert",
 	'offline.limitOption': "{count} Artikel",
-	'offline.limitSaved': "Offline-Einstellung gespeichert."
+	'offline.limitSaved': "Offline-Einstellung gespeichert.",
+	'offline.feedbackDropped': "Einige offline vorgenommene Änderungen konnten nicht gesendet werden und wurden verworfen.",
 };

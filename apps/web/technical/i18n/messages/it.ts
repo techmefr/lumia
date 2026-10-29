@@ -30,6 +30,7 @@ export const it: Catalogue = {
 	'common.loadMore': 'Carica altri',
 	'common.browseArticles': 'Sfoglia gli articoli',
 	'common.loadMoreFailed': 'Impossibile caricare il seguito.',
+	'common.copyFailed': 'Impossibile copiare negli appunti.',
 	'common.undo': 'Annulla',
 	'common.dismissNotification': 'Chiudi la notifica',
 	'common.readingProgress': 'Avanzamento della lettura',
@@ -299,6 +300,9 @@ export const it: Catalogue = {
 	'feeds.deleteFolderFailed': 'Impossibile eliminare questa cartella.',
 	'feeds.movedToast': 'Feed spostato.',
 	'feeds.moveFailed': 'Impossibile spostare questo feed.',
+	'feeds.createFolderFailed': 'Impossibile creare questa cartella.',
+	'feeds.removeFailed': 'Impossibile rimuovere questo feed.',
+	'feeds.restoreFailed': 'Impossibile ripristinarlo.',
 	'feeds.renameFeedFailed': 'Impossibile rinominare questo feed.',
 
 	'discover.title': 'Scoprire fonti',
@@ -932,6 +936,8 @@ export const it: Catalogue = {
 	'instance.label': 'Indirizzo della tua istanza Lumia',
 	'instance.hint': "L'indirizzo dell'API della tua istanza, ad esempio https://lumia.esempio.it/api.",
 	'instance.invalid': 'Inserisci un indirizzo http o https valido.',
+	'instance.connectingTo': 'Server: {host}',
+	'instance.insecure': 'Usa un indirizzo https (http è consentito solo per localhost).',
 	'instance.save': 'Salva istanza',
 	'offline.banner': "Offline: sono leggibili solo la lista di lettura e gli articoli non letti già scaricati. I tuoi voti, la lettura e i segni di lettura saranno inviati al ritorno della rete.",
 	'offline.listNotice': "Offline: {count} articoli scaricati su questo dispositivo.",
@@ -941,5 +947,6 @@ export const it: Catalogue = {
 	'offline.limitLabel': "Numero massimo di articoli scaricati",
 	'offline.limitOff': "Disattivato",
 	'offline.limitOption': "{count} articoli",
-	'offline.limitSaved': "Impostazione offline salvata."
+	'offline.limitSaved': "Impostazione offline salvata.",
+	'offline.feedbackDropped': "Alcune modifiche fatte offline non hanno potuto essere inviate e sono state scartate.",
 };

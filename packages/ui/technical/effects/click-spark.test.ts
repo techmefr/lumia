@@ -130,6 +130,20 @@ describe('respecting prefers-reduced-motion', () => {
 	});
 });
 
+describe('clicking under reduced motion', () => {
+	it('queues no sparks when the preference flips on after mount', () => {
+		prefersReducedMotion(false);
+		spark();
+		prefersReducedMotion(true);
+		const frame = vi.spyOn(window, 'requestAnimationFrame');
+
+		document.body.dispatchEvent(new MouseEvent('click', { clientX: 1, clientY: 1, bubbles: true }));
+
+		expect(frame).not.toHaveBeenCalled();
+		frame.mockRestore();
+	});
+});
+
 describe('clicking', () => {
 	it('does not consume the click it decorates', () => {
 		spark();

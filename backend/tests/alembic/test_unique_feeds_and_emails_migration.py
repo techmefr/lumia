@@ -188,3 +188,20 @@ async def test_invitations_and_access_requests_are_lowercased_and_deduplicated(
     assert [(request.email, request.username) for request in remaining] == [
         ("visitor@example.com", "first")
     ]
+
+
+async def test_articles_the_duplicate_feeds_both_held_are_not_duplicated_after_the_merge(
+    session: AsyncSession,
+) -> None:
+    user = await _user(session, "a@example.com")
+    oldest = await _feed(session, user, age_days=10, url="https://example.com/a")
+    newer = await _feed(session, user, age_days=5, url="https://example.com/b")
+    session.add_all([_article(oldest, "same"), _article(newer, "same"), _article(newer, "only")])
+    await session.commit()
+
+    await _run("_merge_duplicate_feeds")
+
+    session.expire_all()
+    articles = (await session.scalars(select(Article))).all()
+    assert sorted(article.external_entry_id for article in articles) == ["only", "same"]
+    assert {article.feed_id for article in articles} == {oldest.id}

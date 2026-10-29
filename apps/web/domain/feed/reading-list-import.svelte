@@ -19,6 +19,7 @@
 	let progress = $state<ReadingListImportProgress | null>(null);
 	let error = $state<MessageKey | null>(null);
 	let pollTimer: ReturnType<typeof setTimeout> | undefined;
+	let destroyed = false;
 
 	const accept = $derived(SOURCES.find((choice) => choice.value === source)?.accept);
 	const running = $derived(starting || (progress !== null && !progress.finished));
@@ -30,6 +31,7 @@
 			error = 'feeds.readingImportFailed';
 			return;
 		}
+		if (destroyed) return;
 		if (!progress.finished) {
 			pollTimer = setTimeout(() => poll(importId), POLL_INTERVAL_MS);
 		}
@@ -58,7 +60,10 @@
 		}
 	}
 
-	onDestroy(() => clearTimeout(pollTimer));
+	onDestroy(() => {
+		destroyed = true;
+		clearTimeout(pollTimer);
+	});
 </script>
 
 <Card class="magic-bento-cell" data-test-reading-import>

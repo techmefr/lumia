@@ -30,6 +30,7 @@ export const pt: Catalogue = {
 	'common.loadMore': 'Carregar mais',
 	'common.browseArticles': 'Ver os artigos',
 	'common.loadMoreFailed': 'Não foi possível carregar mais.',
+	'common.copyFailed': 'Não foi possível copiar para a área de transferência.',
 	'common.undo': 'Desfazer',
 	'common.dismissNotification': 'Fechar a notificação',
 	'common.readingProgress': 'Progresso da leitura',
@@ -300,6 +301,9 @@ export const pt: Catalogue = {
 	'feeds.deleteFolderFailed': 'Não foi possível eliminar esta pasta.',
 	'feeds.movedToast': 'Fonte movida.',
 	'feeds.moveFailed': 'Não foi possível mover esta fonte.',
+	'feeds.createFolderFailed': 'Não foi possível criar esta pasta.',
+	'feeds.removeFailed': 'Não foi possível remover esta fonte.',
+	'feeds.restoreFailed': 'Não foi possível restaurá-la.',
 	'feeds.renameFeedFailed': 'Não foi possível renomear esta fonte.',
 
 	'discover.title': 'Descobrir fontes',
@@ -932,6 +936,8 @@ export const pt: Catalogue = {
 	'instance.label': 'Endereço da tua instância Lumia',
 	'instance.hint': 'O endereço da API da tua instância, por exemplo https://lumia.exemplo.pt/api.',
 	'instance.invalid': 'Introduz um endereço http ou https válido.',
+	'instance.connectingTo': 'Servidor: {host}',
+	'instance.insecure': 'Usa um endereço https (http só é permitido para localhost).',
 	'instance.save': 'Guardar instância',
 	'offline.banner': "Offline: só a lista de leitura e os artigos não lidos já descarregados podem ser lidos. Os teus votos, a leitura e as marcas de lido serão enviados quando a rede voltar.",
 	'offline.listNotice': "Offline: {count} artigos descarregados neste dispositivo.",
@@ -941,5 +947,6 @@ export const pt: Catalogue = {
 	'offline.limitLabel': "Número máximo de artigos descarregados",
 	'offline.limitOff': "Desativado",
 	'offline.limitOption': "{count} artigos",
-	'offline.limitSaved': "Definição offline guardada."
+	'offline.limitSaved': "Definição offline guardada.",
+	'offline.feedbackDropped': "Algumas alterações feitas offline não puderam ser enviadas e foram descartadas.",
 };

@@ -10,7 +10,7 @@ import { createPlaylistApi } from './domain/playlist/api';
 import { createRecommendationApi } from './domain/recommendation/api';
 import { createSavedSearchApi } from './domain/saved-search/api';
 import { createTagApi } from './domain/tag/api';
-import { createUserApi } from './domain/user/api';
+import { createUserApi, type UserApiOptions } from './domain/user/api';
 import { createWebhookApi } from './domain/webhook/api';
 
 export * from './technical/http-client';
@@ -44,11 +44,15 @@ export * from './domain/tag/api';
 export * from './domain/webhook/types';
 export * from './domain/webhook/api';
 
-export function createLumiaClient(baseUrl: string, tokenStore: TokenStore = createLocalStorageTokenStore()) {
+export function createLumiaClient(
+	baseUrl: string,
+	tokenStore: TokenStore = createLocalStorageTokenStore(),
+	options: UserApiOptions = {}
+) {
 	const http = createHttpClient({ baseUrl, tokenStore });
 	return {
 		tokenStore,
-		user: createUserApi(http, tokenStore),
+		user: createUserApi(http, tokenStore, options),
 		instance: createInstanceApi(http),
 		feed: createFeedApi(http),
 		article: createArticleApi(http),

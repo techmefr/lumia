@@ -4,6 +4,7 @@
 	import { Button } from '@lumia/ui';
 	import ChartColumn from '@lucide/svelte/icons/chart-column';
 	import { lumia } from '$technical/api/client';
+	import { safeHttpHref } from '$technical/url/safe-href';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import DailyBars from '$domain/statistics/daily-bars.svelte';
@@ -167,7 +168,7 @@
 								data-test-popular-article
 								class="flex items-baseline justify-between gap-3 text-sm"
 							>
-								<a href={article.url} rel="noopener noreferrer" class="truncate underline">
+								<a href={safeHttpHref(article.url)} target="_blank" rel="noopener noreferrer" class="truncate underline">
 									{article.title}
 								</a>
 								<span class="shrink-0 tabular-nums text-muted-foreground">

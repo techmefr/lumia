@@ -12,6 +12,8 @@ export interface PendingFeedback {
 	articleId: string;
 	update: FeedbackUpdate;
 	revision: number;
+	owner: string | null;
+	attempts: number;
 }
 
 export function mergeFeedback(previous: FeedbackUpdate, next: FeedbackUpdate): FeedbackUpdate {
@@ -22,17 +24,24 @@ export function mergeFeedback(previous: FeedbackUpdate, next: FeedbackUpdate): F
 	return merged;
 }
 
-export async function queueFeedback(articleId: string, update: FeedbackUpdate): Promise<void> {
+export async function queueFeedback(
+	articleId: string,
+	update: FeedbackUpdate,
+	owner: string | null = null
+): Promise<void> {
 	const database = await openOfflineDatabase();
 	const transaction = database.transaction([QUEUE_STORE, ARTICLES_STORE], 'readwrite');
 	const queue = transaction.objectStore(QUEUE_STORE);
 	const articles = transaction.objectStore(ARTICLES_STORE);
 
-	const existing = await requestResult<PendingFeedback | undefined>(queue.get(articleId));
+	const found = await requestResult<PendingFeedback | undefined>(queue.get(articleId));
+	const existing = found && (found.owner ?? null) === owner ? found : undefined;
 	queue.put({
 		articleId,
 		update: existing ? mergeFeedback(existing.update, update) : update,
-		revision: (existing?.revision ?? 0) + 1
+		revision: (found?.revision ?? 0) + 1,
+		owner,
+		attempts: 0
 	} satisfies PendingFeedback);
 
 	const stored = await requestResult<StoredArticle | undefined>(articles.get(articleId));
@@ -60,4 +69,18 @@ export async function clearPendingFeedback(articleId: string, revision: number):
 	const current = await requestResult<PendingFeedback | undefined>(store.get(articleId));
 	if (current && current.revision === revision) store.delete(articleId);
 	await transactionDone(transaction);
+}
+
+export async function recordFailedAttempt(articleId: string, revision: number): Promise<number> {
+	const database = await openOfflineDatabase();
+	const transaction = database.transaction(QUEUE_STORE, 'readwrite');
+	const store = transaction.objectStore(QUEUE_STORE);
+	const current = await requestResult<PendingFeedback | undefined>(store.get(articleId));
+	let attempts = 0;
+	if (current && current.revision === revision) {
+		attempts = (current.attempts ?? 0) + 1;
+		store.put({ ...current, attempts });
+	}
+	await transactionDone(transaction);
+	return attempts;
 }

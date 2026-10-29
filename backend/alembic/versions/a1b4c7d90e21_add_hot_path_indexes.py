@@ -1,7 +1,7 @@
 """add the indexes the hot queries were missing
 
 Revision ID: a1b4c7d90e21
-Revises: d5a7c3e9f201
+Revises: f4d9a1b73c82
 Create Date: 2026-10-29 09:00:00.000000
 
 """
@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from alembic import op
 
 revision: str = "a1b4c7d90e21"
-down_revision: str | Sequence[str] | None = "d5a7c3e9f201"
+down_revision: str | Sequence[str] | None = "f4d9a1b73c82"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

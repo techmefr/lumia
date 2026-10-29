@@ -3,7 +3,7 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount, tick } from 'svelte';
-	import { fade, fly } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import { goto, onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Button, ClickSpark, Toaster } from '@lumia/ui';
@@ -21,7 +21,12 @@
 	import ShortcutsHelp from '$domain/navigation/shortcuts-help.svelte';
 	import PlayerBar from '$domain/audio/player-bar.svelte';
 	import { player } from '$domain/audio/audio-player.svelte';
-	import { refreshPermission, watchUnread } from '$technical/notifications/notification-store.svelte.js';
+	import { feedIcons } from '$technical/api/feed-icons.svelte';
+	import {
+		refreshPermission,
+		resetNotificationState,
+		watchUnread
+	} from '$technical/notifications/notification-store.svelte.js';
 	import { bindSequenceShortcuts, bindShortcuts } from '$technical/keyboard/shortcuts';
 	import { NAVIGATION_PREFIX, NAVIGATION_SHORTCUTS } from '$technical/keyboard/shortcut-catalogue';
 	import { runOfflineSync, startOfflineSync } from '$technical/offline/offline-runner';
@@ -72,7 +77,14 @@
 	const mainWidth = $derived(isReadingRoute(page.url.pathname) ? 'max-w-reading' : 'max-w-app');
 
 	async function logout() {
-		await lumia.user.logout();
+		try {
+			await lumia.user.logout();
+		} catch {
+			void 0;
+		} finally {
+			feedIcons.reset();
+			resetNotificationState();
+		}
 		await goto(base + '/login');
 	}
 
@@ -216,8 +228,7 @@
 		data-test-main
 		tabindex="-1"
 		class="mx-auto w-full {mainWidth} px-4 py-6 outline-none sm:px-6 print:max-w-none print:p-0 {mainPadding}"
-		in:fly={{ y: 16, duration: 260, delay: 120 }}
-		out:fade={{ duration: 120 }}
+		in:fly={{ y: 16, duration: 260 }}
 	>
 		{@render children()}
 	</main>

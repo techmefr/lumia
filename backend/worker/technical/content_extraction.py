@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -7,6 +8,7 @@ import httpx
 import trafilatura
 
 from api.technical.logging.external import describe_error, log_external_failure
+from api.technical.net.pinned_transport import guarded_transport
 from api.technical.net.url_guard import (
     BlockedUrlError,
     Resolver,
@@ -80,10 +82,10 @@ async def fetch_page_html(
     """
     current_url = url
     for _ in range(_MAX_REDIRECTS + 1):
-        ensure_public_http_url(current_url, resolve=resolve)
+        await asyncio.to_thread(ensure_public_http_url, current_url, resolve=resolve)
         async with (
             httpx.AsyncClient(
-                transport=transport,
+                transport=guarded_transport(transport, resolve),
                 timeout=timeout,
                 follow_redirects=False,
                 headers={"User-Agent": _USER_AGENT},

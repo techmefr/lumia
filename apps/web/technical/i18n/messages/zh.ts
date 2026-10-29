@@ -30,6 +30,7 @@ export const zh: Catalogue = {
 	'common.loadMore': '加载更多',
 	'common.browseArticles': '浏览文章',
 	'common.loadMoreFailed': '无法加载更多。',
+	'common.copyFailed': '无法复制到剪贴板。',
 	'common.undo': '撤销',
 	'common.dismissNotification': '关闭通知',
 	'common.readingProgress': '阅读进度',
@@ -287,6 +288,9 @@ export const zh: Catalogue = {
 	'feeds.deleteFolderFailed': '无法删除该文件夹。',
 	'feeds.movedToast': '订阅源已移动。',
 	'feeds.moveFailed': '无法移动该订阅源。',
+	'feeds.createFolderFailed': '无法创建该文件夹。',
+	'feeds.removeFailed': '无法删除该订阅源。',
+	'feeds.restoreFailed': '无法恢复。',
 	'feeds.renameFeedFailed': '无法重命名该订阅源。',
 
 	'discover.title': '发现新来源',
@@ -901,6 +905,8 @@ export const zh: Catalogue = {
 	'instance.label': '你的 Lumia 实例地址',
 	'instance.hint': '你的实例的 API 地址，例如 https://lumia.example.com/api。',
 	'instance.invalid': '请输入有效的 http 或 https 地址。',
+	'instance.connectingTo': '服务器：{host}',
+	'instance.insecure': '请使用 https 地址（仅 localhost 允许 http）。',
 	'instance.save': '保存实例',
 	'offline.banner': "离线：只能阅读已下载的待读列表和未读文章。你的点赞、阅读进度和已读标记将在网络恢复后发送。",
 	'offline.listNotice': "离线：此设备上已下载 {count} 篇文章。",
@@ -910,5 +916,6 @@ export const zh: Catalogue = {
 	'offline.limitLabel': "下载文章的最大数量",
 	'offline.limitOff': "已停用",
 	'offline.limitOption': "{count} 篇文章",
-	'offline.limitSaved': "离线设置已保存。"
+	'offline.limitSaved': "离线设置已保存。",
+	'offline.feedbackDropped': "部分离线所做的更改无法发送，已被丢弃。",
 };

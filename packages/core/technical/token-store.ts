@@ -4,6 +4,9 @@ export interface TokenStore {
 	setTokens(tokens: { accessToken: string; refreshToken: string }): void;
 	setAccessToken(accessToken: string): void;
 	clear(): void;
+	settled?(): Promise<void>;
+	reload?(): Promise<void>;
+	exclusive?<T>(task: () => Promise<T>): Promise<T>;
 }
 
 const ACCESS_KEY = 'lumia.access_token';

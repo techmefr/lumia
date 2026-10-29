@@ -103,3 +103,19 @@ describe('Separator', () => {
 		expect(separator({ class: 'my-4' }).className).toContain('my-4');
 	});
 });
+
+describe('CardTitle', () => {
+	it('is a level three heading by default', () => {
+		const { container } = render(CardTitle);
+
+		const node = container.firstElementChild!;
+		expect(node.getAttribute('role')).toBe('heading');
+		expect(node.getAttribute('aria-level')).toBe('3');
+	});
+
+	it('takes another level', () => {
+		const { container } = render(CardTitle, { level: 1 });
+
+		expect(container.firstElementChild!.getAttribute('aria-level')).toBe('1');
+	});
+});

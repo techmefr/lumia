@@ -21,10 +21,20 @@ function isOverlayOpen(): boolean {
 	return document.querySelector('[role="dialog"], [role="menu"]') !== null;
 }
 
+/** Enter on a focused control activates that control: a shortcut bound to Enter must not also fire. */
+function isActivatingControl(event: KeyboardEvent): boolean {
+	if (event.key !== 'Enter') return false;
+	return (
+		event.target instanceof HTMLElement &&
+		event.target.closest('button, a, [role="button"], summary') !== null
+	);
+}
+
 function isIgnored(event: KeyboardEvent): boolean {
 	if (event.metaKey || event.ctrlKey || event.altKey) return true;
 	if (!areShortcutsEnabled()) return true;
 	if (isTypingTarget(event.target)) return true;
+	if (isActivatingControl(event)) return true;
 	return isOverlayOpen();
 }
 
