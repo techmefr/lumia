@@ -9,6 +9,18 @@
 
 :root {
 	--radius: 0.65rem;
+	/* Named rather than arbitrary: the two fixed decorative layers sit above the app chrome
+	   (sticky header 30, panels 40, dialogs and toasts 50) and must not reorder by accident. */
+	--z-effects: 80;
+	--z-grain: 90;
+	/* Default pair, overridden by [data-font-pair] below. Kept as its own variable so the
+	   tailwind theme can point at it once and the switch stays a single attribute. */
+	--pair-serif: 'Source Serif 4', Georgia, serif;
+	--pair-sans: 'Inter', system-ui, sans-serif;
+}
+
+:root,
+[data-theme='light'] {
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.145 0 0);
 	--card: oklch(1 0 0);
@@ -29,14 +41,6 @@
 	--input: oklch(0.922 0 0);
 	--ring: oklch(0.5 0.2 265);
 	--grain-opacity: 0.05;
-	/* Named rather than arbitrary: the two fixed decorative layers sit above the app chrome
-	   (sticky header 30, panels 40, dialogs and toasts 50) and must not reorder by accident. */
-	--z-effects: 80;
-	--z-grain: 90;
-	/* Default pair, overridden by [data-font-pair] below. Kept as its own variable so the
-	   tailwind theme can point at it once and the switch stays a single attribute. */
-	--pair-serif: 'Source Serif 4', Georgia, serif;
-	--pair-sans: 'Inter', system-ui, sans-serif;
 }
 
 [data-font-pair='magazine'] {
@@ -54,7 +58,8 @@
 	--pair-sans: 'IBM Plex Sans', system-ui, sans-serif;
 }
 
-.dark {
+.dark,
+[data-theme='dark'] {
 	--background: oklch(0.145 0 0);
 	--foreground: oklch(0.985 0 0);
 	--card: oklch(0.205 0 0);
@@ -74,6 +79,121 @@
 	--border: oklch(1 0 0 / 12%);
 	--input: oklch(1 0 0 / 18%);
 	--ring: oklch(0.72 0.17 265);
+	--grain-opacity: 0.08;
+}
+
+[data-theme='dracula'] {
+	--background: #282a36;
+	--foreground: #f8f8f2;
+	--card: #343746;
+	--card-foreground: #f8f8f2;
+	--popover: #343746;
+	--popover-foreground: #f8f8f2;
+	--primary: #bd93f9;
+	--primary-foreground: #282a36;
+	--secondary: #44475a;
+	--secondary-foreground: #f8f8f2;
+	--muted: #44475a;
+	--muted-foreground: #b4b8cf;
+	--accent: #44475a;
+	--accent-foreground: #f8f8f2;
+	--destructive: #ff5555;
+	--destructive-foreground: #282a36;
+	--border: #44475a;
+	--input: #44475a;
+	--ring: #bd93f9;
+	--grain-opacity: 0.08;
+}
+
+[data-theme='alucard'] {
+	--background: #fffbeb;
+	--foreground: #1f1f1f;
+	--card: #f5f0dc;
+	--card-foreground: #1f1f1f;
+	--popover: #f5f0dc;
+	--popover-foreground: #1f1f1f;
+	--primary: #644ac9;
+	--primary-foreground: #fffbeb;
+	--secondary: #e8e3cd;
+	--secondary-foreground: #1f1f1f;
+	--muted: #e8e3cd;
+	--muted-foreground: #5f5a41;
+	--accent: #e1dcf5;
+	--accent-foreground: #1f1f1f;
+	--destructive: #b32d1f;
+	--destructive-foreground: #fffbeb;
+	--border: #cfcfde;
+	--input: #cfcfde;
+	--ring: #644ac9;
+	--grain-opacity: 0.05;
+}
+
+[data-theme='nord'] {
+	--background: #2e3440;
+	--foreground: #eceff4;
+	--card: #3b4252;
+	--card-foreground: #eceff4;
+	--popover: #3b4252;
+	--popover-foreground: #eceff4;
+	--primary: #88c0d0;
+	--primary-foreground: #2e3440;
+	--secondary: #434c5e;
+	--secondary-foreground: #eceff4;
+	--muted: #434c5e;
+	--muted-foreground: #d8dee9;
+	--accent: #434c5e;
+	--accent-foreground: #eceff4;
+	--destructive: #e58a93;
+	--destructive-foreground: #2e3440;
+	--border: #4c566a;
+	--input: #4c566a;
+	--ring: #88c0d0;
+	--grain-opacity: 0.08;
+}
+
+[data-theme='solarized-light'] {
+	--background: #fdf6e3;
+	--foreground: #073642;
+	--card: #f5eedb;
+	--card-foreground: #073642;
+	--popover: #f5eedb;
+	--popover-foreground: #073642;
+	--primary: #1a65a3;
+	--primary-foreground: #fdf6e3;
+	--secondary: #eee8d5;
+	--secondary-foreground: #073642;
+	--muted: #eee8d5;
+	--muted-foreground: #4d646c;
+	--accent: #e3ebe9;
+	--accent-foreground: #073642;
+	--destructive: #b3201d;
+	--destructive-foreground: #fdf6e3;
+	--border: #d9d2bd;
+	--input: #d9d2bd;
+	--ring: #1a65a3;
+	--grain-opacity: 0.05;
+}
+
+[data-theme='solarized-dark'] {
+	--background: #002b36;
+	--foreground: #eee8d5;
+	--card: #073642;
+	--card-foreground: #eee8d5;
+	--popover: #073642;
+	--popover-foreground: #eee8d5;
+	--primary: #4aa3e0;
+	--primary-foreground: #002b36;
+	--secondary: #0e4452;
+	--secondary-foreground: #eee8d5;
+	--muted: #0e4452;
+	--muted-foreground: #a3b1b1;
+	--accent: #0e4452;
+	--accent-foreground: #eee8d5;
+	--destructive: #f0807b;
+	--destructive-foreground: #002b36;
+	--border: #1d5563;
+	--input: #1d5563;
+	--ring: #4aa3e0;
 	--grain-opacity: 0.08;
 }
 

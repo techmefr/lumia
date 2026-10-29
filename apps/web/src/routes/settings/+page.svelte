@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import type { OrbitPosition } from '@lumia/core';
 	import { Button, Card, CardContent, Label, toast, Icon } from '@lumia/ui';
-	import { Moon02Icon, Orbit01Icon, Settings01Icon, Sun03Icon, Tick02Icon } from '@hugeicons/core-free-icons';
+	import { Orbit01Icon, Settings01Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import AiSettings from '$domain/settings/ai-settings.svelte';
 	import TtsSettings from '$domain/settings/tts-settings.svelte';
@@ -20,6 +20,8 @@
 	import {
 		getTheme,
 		setTheme,
+		findThemePreset,
+		THEME_PRESETS,
 		getAccentHue,
 		setAccent,
 		ACCENT_PRESETS,
@@ -39,6 +41,7 @@
 	} from '$technical/keyboard/shortcuts-store.svelte.js';
 	import { getLocale, setLocale, t } from '$technical/i18n/i18n.svelte.js';
 	import { LOCALES } from '$technical/i18n/locales';
+	import type { MessageKey } from '$technical/i18n/messages/fr';
 
 	let locale = $state(getLocale());
 
@@ -94,6 +97,7 @@
 
 	let theme = $state<Theme>('light');
 	let accentHue = $state(0);
+	const accentLocked = $derived(findThemePreset(theme)?.named ?? false);
 	let fontScale = $state(1);
 	let fontPair = $state(FONT_PAIR_PRESETS[0].id);
 	let comfort = $state(false);
@@ -194,43 +198,33 @@
 				<legend class="mb-3 text-sm font-semibold text-muted-foreground">
 					{t('settings.theme')}
 				</legend>
-				<div class="flex gap-3">
-					<label
-						class="flex flex-1 cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-border p-4 transition-colors hover:border-muted-foreground has-[:checked]:border-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2"
-					>
-						<input
-							type="radio"
-							name="theme"
-							value="light"
-							checked={theme === 'light'}
-							onchange={() => pickTheme('light')}
-							class="sr-only"
-						/>
-						<span
-							class="flex size-10 items-center justify-center rounded-full bg-white text-zinc-900 shadow"
+				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+					{#each THEME_PRESETS as preset (preset.id)}
+						<label
+							class="flex cursor-pointer flex-col gap-2 rounded-xl border-2 border-border p-3 transition-colors hover:border-muted-foreground has-[:checked]:border-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2"
 						>
-							<Icon icon={Sun03Icon} class="size-5" />
-						</span>
-						<span class="text-sm font-medium">{t('settings.themeLight')}</span>
-					</label>
-					<label
-						class="flex flex-1 cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-border p-4 transition-colors hover:border-muted-foreground has-[:checked]:border-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2"
-					>
-						<input
-							type="radio"
-							name="theme"
-							value="dark"
-							checked={theme === 'dark'}
-							onchange={() => pickTheme('dark')}
-							class="sr-only"
-						/>
-						<span
-							class="flex size-10 items-center justify-center rounded-full bg-zinc-900 text-white shadow"
-						>
-							<Icon icon={Moon02Icon} class="size-5" />
-						</span>
-						<span class="text-sm font-medium">{t('settings.themeDark')}</span>
-					</label>
+							<input
+								type="radio"
+								name="theme"
+								value={preset.id}
+								checked={theme === preset.id}
+								onchange={() => pickTheme(preset.id)}
+								class="sr-only"
+							/>
+							<span
+								aria-hidden="true"
+								data-theme={preset.id}
+								data-test-theme-preview={preset.id}
+								class="flex h-14 items-center gap-2 rounded-lg border border-border bg-background px-3 text-foreground"
+							>
+								<span class="font-serif text-lg font-semibold">Aa</span>
+								<span class="size-3 rounded-full bg-primary"></span>
+								<span class="size-3 rounded-full border border-border bg-accent"></span>
+								<span class="size-3 rounded-full bg-muted-foreground"></span>
+							</span>
+							<span class="text-sm font-medium">{t(preset.nameKey as MessageKey)}</span>
+						</label>
+					{/each}
 				</div>
 			</fieldset>
 		</CardContent>
@@ -278,11 +272,16 @@
 
 	<Card>
 		<CardContent class="pt-6">
-			<fieldset class="flex flex-col gap-3">
-				<legend class="mb-3 text-sm font-semibold text-muted-foreground">
+			<fieldset class="flex flex-col gap-3" disabled={accentLocked}>
+				<legend class="text-sm font-semibold text-muted-foreground">
 					{t('settings.accent')}
 				</legend>
-				<div class="flex flex-wrap gap-3">
+				{#if accentLocked}
+					<p class="text-xs text-muted-foreground" data-test-accent-locked>
+						{t('settings.accentLockedHint')}
+					</p>
+				{/if}
+				<div class="flex flex-wrap gap-3 {accentLocked ? 'pointer-events-none opacity-50' : ''}">
 					{#each ACCENT_PRESETS as preset (preset.id)}
 						<label
 							class="flex size-11 cursor-pointer items-center justify-center rounded-full ring-offset-2 ring-offset-background transition-transform hover:scale-110 has-[:checked]:ring-2 has-[:checked]:ring-foreground has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"

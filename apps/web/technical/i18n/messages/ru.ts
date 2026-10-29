@@ -578,6 +578,12 @@ export const ru: Catalogue = {
 	'settings.theme': 'Тема',
 	'settings.themeLight': 'Светлая',
 	'settings.themeDark': 'Тёмная',
+	'settings.themeDracula': 'Dracula',
+	'settings.themeAlucard': 'Alucard',
+	'settings.themeNord': 'Nord',
+	'settings.themeSolarizedLight': "Solarized светлая",
+	'settings.themeSolarizedDark': "Solarized тёмная",
+	'settings.accentLockedHint': "У этой темы собственный основной цвет: выбор ниже действует для светлой и тёмной тем.",
 	'settings.accent': 'Основной цвет',
 	'settings.language': 'Язык интерфейса',
 	'settings.languageHint':

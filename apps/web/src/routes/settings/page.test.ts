@@ -9,6 +9,7 @@ import {
 } from '$technical/keyboard/shortcuts-store.svelte.js';
 import {
 	ACCENT_PRESETS,
+	THEME_PRESETS,
 	FONT_PAIR_PRESETS,
 	FONT_SCALE_PRESETS,
 	getAccentHue,
@@ -135,6 +136,48 @@ describe('choosing how the app looks', () => {
 
 		expect(getTheme()).toBe('dark');
 		await waitFor(() => expect(view.themeInput('dark').checked).toBe(true));
+	});
+
+	it('lists every theme as a radio the keyboard can reach', async () => {
+		const view = settingsPage();
+		await waitFor(() => expect(view.themeInput('dracula')).not.toBeNull());
+
+		const values = [...view.container.querySelectorAll<HTMLInputElement>('input[name="theme"]')].map(
+			(input) => input.value
+		);
+		expect(values).toEqual(THEME_PRESETS.map((preset) => preset.id));
+		expect(view.container.querySelector('[data-test-theme-preview="alucard"]')).not.toBeNull();
+	});
+
+	it('stores a named theme the reader picked', async () => {
+		const view = settingsPage();
+		await waitFor(() => expect(view.themeInput('dracula')).not.toBeNull());
+
+		await fireEvent.change(view.themeInput('dracula'));
+
+		expect(getTheme()).toBe('dracula');
+		expect(document.documentElement.dataset.theme).toBe('dracula');
+		await waitFor(() => expect(view.themeInput('dracula').checked).toBe(true));
+	});
+
+	it('locks the accent picker on a named theme and says why', async () => {
+		const view = settingsPage();
+		await waitFor(() => expect(view.themeInput('nord')).not.toBeNull());
+
+		await fireEvent.change(view.themeInput('nord'));
+
+		await waitFor(() => expect(view.container.querySelector('[data-test-accent-locked]')).not.toBeNull());
+		expect(view.accentInput(ACCENT_PRESETS[0].id).closest('fieldset')!.disabled).toBe(true);
+	});
+
+	it('gives the accent picker back on light and dark', async () => {
+		const view = settingsPage();
+		await waitFor(() => expect(view.themeInput('nord')).not.toBeNull());
+		await fireEvent.change(view.themeInput('nord'));
+		await fireEvent.change(view.themeInput('light'));
+
+		await waitFor(() => expect(view.container.querySelector('[data-test-accent-locked]')).toBeNull());
+		expect(view.accentInput(ACCENT_PRESETS[0].id).closest('fieldset')!.disabled).toBe(false);
 	});
 
 	it('stores the accent the reader picked', async () => {

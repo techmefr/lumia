@@ -570,6 +570,12 @@ export const en: Catalogue = {
 	'settings.theme': 'Theme',
 	'settings.themeLight': 'Light',
 	'settings.themeDark': 'Dark',
+	'settings.themeDracula': 'Dracula',
+	'settings.themeAlucard': 'Alucard',
+	'settings.themeNord': 'Nord',
+	'settings.themeSolarizedLight': "Solarized light",
+	'settings.themeSolarizedDark': "Solarized dark",
+	'settings.accentLockedHint': "This theme has its own primary colour: the choice below applies with Light or Dark.",
 	'settings.accent': 'Primary colour',
 	'settings.language': 'Interface language',
 	'settings.languageHint':

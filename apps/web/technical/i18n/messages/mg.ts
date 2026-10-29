@@ -582,6 +582,12 @@ export const mg: Catalogue = {
 	'settings.theme': 'Endrika',
 	'settings.themeLight': 'Mazava',
 	'settings.themeDark': 'Maizina',
+	'settings.themeDracula': 'Dracula',
+	'settings.themeAlucard': 'Alucard',
+	'settings.themeNord': 'Nord',
+	'settings.themeSolarizedLight': "Solarized mazava",
+	'settings.themeSolarizedDark': "Solarized maizina",
+	'settings.accentLockedHint': "Manana loko lehibe manokana ity lohahevitra ity: ampiasaina miaraka amin'ny Mazava na Maizina ny safidy etsy ambany.",
 	'settings.accent': 'Loko fototra',
 	'settings.language': 'Fitenin’ny fanolotra',
 	'settings.languageHint':

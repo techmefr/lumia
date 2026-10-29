@@ -580,6 +580,12 @@ export const de: Catalogue = {
 	'settings.theme': 'Erscheinungsbild',
 	'settings.themeLight': 'Hell',
 	'settings.themeDark': 'Dunkel',
+	'settings.themeDracula': 'Dracula',
+	'settings.themeAlucard': 'Alucard',
+	'settings.themeNord': 'Nord',
+	'settings.themeSolarizedLight': "Solarized hell",
+	'settings.themeSolarizedDark': "Solarized dunkel",
+	'settings.accentLockedHint': "Dieses Thema hat eine eigene Hauptfarbe: Die Auswahl unten gilt für Hell oder Dunkel.",
 	'settings.accent': 'Hauptfarbe',
 	'settings.language': 'Sprache der Oberfläche',
 	'settings.languageHint':
