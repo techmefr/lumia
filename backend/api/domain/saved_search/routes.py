@@ -115,7 +115,7 @@ async def remove_saved_search(
 @router.get("/notifications", response_model=NotificationListResponse)
 async def get_notifications(
     limit: int = Query(default=30, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
+    offset: int = Query(default=0, ge=0, le=10_000),
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> NotificationListResponse:

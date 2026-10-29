@@ -22,6 +22,7 @@ from api.domain.recommendation.models import (
     UserFilterRule,
     UserKeywordScore,
 )
+from api.technical.batching import chunked
 
 #: A boosted term is worth slightly less than a like, so an explicit rule tilts the ranking
 #: without flattening what the votes have learned.
@@ -114,27 +115,31 @@ def _average_score(
 async def _load_keyword_scores(
     session: AsyncSession, user_id: UUID, articles: list[Article]
 ) -> tuple[dict[UUID, list[UUID]], dict[UUID, float]]:
-    rows = await session.execute(
-        select(ArticleKeyword.article_id, ArticleKeyword.keyword_id).where(
-            ArticleKeyword.article_id.in_([article.id for article in articles])
-        )
-    )
     keywords_by_article: dict[UUID, list[UUID]] = defaultdict(list)
     all_keyword_ids: set[UUID] = set()
-    for article_id, keyword_id in rows:
-        keywords_by_article[article_id].append(keyword_id)
-        all_keyword_ids.add(keyword_id)
+    for batch in chunked([article.id for article in articles]):
+        rows = await session.execute(
+            select(ArticleKeyword.article_id, ArticleKeyword.keyword_id).where(
+                ArticleKeyword.article_id.in_(batch)
+            )
+        )
+        for article_id, keyword_id in rows:
+            keywords_by_article[article_id].append(keyword_id)
+            all_keyword_ids.add(keyword_id)
 
     if not all_keyword_ids:
         return keywords_by_article, {}
 
-    scores = await session.scalars(
-        select(UserKeywordScore).where(
-            UserKeywordScore.user_id == user_id,
-            UserKeywordScore.keyword_id.in_(all_keyword_ids),
+    keyword_scores: dict[UUID, float] = {}
+    for batch in chunked(list(all_keyword_ids)):
+        scores = await session.scalars(
+            select(UserKeywordScore).where(
+                UserKeywordScore.user_id == user_id,
+                UserKeywordScore.keyword_id.in_(batch),
+            )
         )
-    )
-    return keywords_by_article, {score.keyword_id: score.score for score in scores}
+        keyword_scores.update({score.keyword_id: score.score for score in scores})
+    return keywords_by_article, keyword_scores
 
 
 async def _load_feed_scores(
