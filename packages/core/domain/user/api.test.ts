@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ApiError } from '../../technical/http-client';
 import { recordingHttpClient } from '../../test-support/recording-http-client';
 import type { TokenStore } from '../../technical/token-store';
 import { createUserApi } from './api';
@@ -251,5 +252,60 @@ describe('the fever key', () => {
 		const { user, last } = api([undefined]);
 		await user.revokeFeverKey();
 		expect(last()).toMatchObject({ path: '/me/fever', method: 'DELETE' });
+	});
+});
+
+describe('logout hook', () => {
+	it('runs after the local session is cleared, even when the revoke call fails', async () => {
+		const recorder = recordingHttpClient();
+		const store = memoryStore({ access: 'a', refresh: 'r' });
+		recorder.http.request = async () => {
+			throw new Error('network down');
+		};
+		let seenRefresh: string | null = 'unset';
+		const user = createUserApi(recorder.http, store, {
+			onSignedOut: () => {
+				seenRefresh = store.getRefreshToken();
+			}
+		});
+
+		await expect(user.logout()).rejects.toThrow('network down');
+		expect(seenRefresh).toBeNull();
+	});
+});
+
+describe('logout after a rotation mid-request', () => {
+	it('revokes the refresh token that is current when the first attempt is refused', async () => {
+		const recorder = recordingHttpClient();
+		const store = memoryStore({ access: 'a', refresh: 'r1' });
+		const bodies: unknown[] = [];
+		recorder.http.request = async (_path: string, options?: { body?: unknown }) => {
+			bodies.push(options?.body);
+			if (bodies.length === 1) {
+				store.setTokens({ accessToken: 'a2', refreshToken: 'r2' });
+				throw new ApiError(401, {});
+			}
+			return undefined as never;
+		};
+		const user = createUserApi(recorder.http, store);
+
+		await user.logout();
+
+		expect(bodies).toEqual([{ refresh_token: 'r1' }, { refresh_token: 'r2' }]);
+		expect(store.getRefreshToken()).toBeNull();
+	});
+
+	it('does not retry when the token did not change', async () => {
+		const recorder = recordingHttpClient();
+		const store = memoryStore({ access: 'a', refresh: 'r1' });
+		let calls = 0;
+		recorder.http.request = async () => {
+			calls += 1;
+			throw new ApiError(401, {});
+		};
+		const user = createUserApi(recorder.http, store);
+
+		await expect(user.logout()).rejects.toBeInstanceOf(ApiError);
+		expect(calls).toBe(1);
 	});
 });

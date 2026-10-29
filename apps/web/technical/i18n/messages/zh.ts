@@ -910,5 +910,6 @@ export const zh: Catalogue = {
 	'offline.limitLabel': "下载文章的最大数量",
 	'offline.limitOff': "已停用",
 	'offline.limitOption': "{count} 篇文章",
-	'offline.limitSaved': "离线设置已保存。"
+	'offline.limitSaved': "离线设置已保存。",
+	'offline.feedbackDropped': "部分离线所做的更改无法发送，已被丢弃。",
 };

@@ -6,6 +6,7 @@
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import { locale, t } from '$technical/i18n/i18n';
 	import { isSessionLost } from './reader-session';
+	import { isWebUrl } from './web-url';
 
 	let {
 		client,
@@ -66,15 +67,17 @@
 		<div data-test-article-content class="reader-content">
 			{@html sanitizeArticleHtml(article.content)}
 		</div>
-		<Button
-			data-test-open-original
-			variant="outline"
-			href={article.url}
-			target="_blank"
-			rel="noopener noreferrer"
-		>
-			<ExternalLink aria-hidden="true" />
-			{t('reader.openOriginal')}
-		</Button>
+		{#if isWebUrl(article.url)}
+			<Button
+				data-test-open-original
+				variant="outline"
+				href={article.url}
+				target="_blank"
+				rel="noopener noreferrer"
+			>
+				<ExternalLink aria-hidden="true" />
+				{t('reader.openOriginal')}
+			</Button>
+		{/if}
 	{/if}
 </article>

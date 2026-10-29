@@ -29,6 +29,13 @@ export async function readInstanceUrl(area: StorageArea): Promise<string | null>
 	return typeof value === 'string' && value !== '' ? value : null;
 }
 
-export async function writeInstanceUrl(area: StorageArea, instanceUrl: string): Promise<void> {
+export async function writeInstanceUrl(
+	area: StorageArea,
+	instanceUrl: string
+): Promise<string | null> {
+	const previous = await readInstanceUrl(area);
+	const moved = previous !== null && new URL(previous).origin !== new URL(instanceUrl).origin;
+	if (moved) await area.remove(['lumia.access_token', 'lumia.refresh_token']);
 	await area.set({ [INSTANCE_KEY]: instanceUrl });
+	return moved ? previous : null;
 }

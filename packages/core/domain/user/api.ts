@@ -33,7 +33,15 @@ export interface OnboardAdminPayload {
 	disk_quota_mb?: number;
 }
 
-export function createUserApi(http: HttpClient, tokenStore: TokenStore) {
+export interface UserApiOptions {
+	onSignedOut?: () => void | Promise<void>;
+}
+
+export function createUserApi(
+	http: HttpClient,
+	tokenStore: TokenStore,
+	options: UserApiOptions = {}
+) {
 	function storeTokens(tokens: TokenPair): void {
 		tokenStore.setTokens({ accessToken: tokens.access_token, refreshToken: tokens.refresh_token });
 	}
@@ -64,19 +72,31 @@ export function createUserApi(http: HttpClient, tokenStore: TokenStore) {
 	}
 
 	async function logout(): Promise<void> {
-		const refreshToken = tokenStore.getRefreshToken();
+		async function revoke(refreshToken: string): Promise<void> {
+			await http.request('/auth/logout', {
+				method: 'POST',
+				body: { refresh_token: refreshToken }
+			});
+		}
+		const first = tokenStore.getRefreshToken();
 		try {
-			if (refreshToken) {
-				await http.request('/auth/logout', {
-					method: 'POST',
-					body: { refresh_token: refreshToken }
-				});
+			if (first) {
+				try {
+					await revoke(first);
+				} catch (error) {
+					const current = tokenStore.getRefreshToken();
+					if (!(error instanceof ApiError) || error.status !== 401 || !current || current === first) {
+						throw error;
+					}
+					await revoke(current);
+				}
 			}
 		} finally {
 			// Whatever the server answered, the session on this device goes. A logout that fails to
 			// log out because the network was down leaves someone signed in on a shared machine,
 			// which is the one outcome worse than an orphaned refresh token server-side.
 			tokenStore.clear();
+			await options.onSignedOut?.();
 		}
 	}
 
