@@ -57,3 +57,34 @@ describe('instance address storage', () => {
 		expect(await readInstanceUrl(extension.storage.local)).toBeNull();
 	});
 });
+
+describe('changing the instance origin', () => {
+	const TOKENS = { 'lumia.access_token': 'a', 'lumia.refresh_token': 'r' };
+
+	it('drops both tokens and reports the abandoned address', async () => {
+		const { extension, store } = createFakeExtension({
+			stored: { 'lumia.instance_url': 'https://old.test', ...TOKENS }
+		});
+
+		const abandoned = await writeInstanceUrl(extension.storage.local, 'https://new.test');
+
+		expect(abandoned).toBe('https://old.test');
+		expect(store).toEqual({ 'lumia.instance_url': 'https://new.test' });
+	});
+
+	it('keeps the session when only the path changes', async () => {
+		const { extension, store } = createFakeExtension({
+			stored: { 'lumia.instance_url': 'https://old.test', ...TOKENS }
+		});
+
+		const abandoned = await writeInstanceUrl(extension.storage.local, 'https://old.test/lumia');
+
+		expect(abandoned).toBeNull();
+		expect(store['lumia.access_token']).toBe('a');
+	});
+
+	it('has nothing to drop on the first save', async () => {
+		const { extension } = createFakeExtension();
+		expect(await writeInstanceUrl(extension.storage.local, 'https://new.test')).toBeNull();
+	});
+});

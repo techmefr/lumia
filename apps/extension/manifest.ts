@@ -9,7 +9,12 @@ export function buildManifest(target: ExtensionTarget, version: string) {
 	const readerPanel =
 		target === 'firefox'
 			? {
-					browser_specific_settings: { gecko: { id: 'lumia@techme.fr' } },
+					browser_specific_settings: {
+						gecko: {
+							id: 'lumia@techme.fr',
+							data_collection_permissions: { required: ['none'] }
+						}
+					},
 					sidebar_action: {
 						default_title: '__MSG_extensionName__',
 						default_panel: 'sidepanel/index.html',
@@ -23,6 +28,8 @@ export function buildManifest(target: ExtensionTarget, version: string) {
 		name: '__MSG_extensionName__',
 		description: '__MSG_extensionDescription__',
 		version,
+		...(target === 'chrome' ? { minimum_chrome_version: '114' } : {}),
+		icons: { '48': 'icons/icon-48.png', '96': 'icons/icon-96.png', '192': 'icons/icon-192.png' },
 		default_locale: 'en',
 		permissions:
 			target === 'chrome'
@@ -30,7 +37,11 @@ export function buildManifest(target: ExtensionTarget, version: string) {
 				: ['storage', 'activeTab', 'contextMenus'],
 		optional_host_permissions: ['http://*/*', 'https://*/*'],
 		background,
-		action: { default_title: '__MSG_extensionName__', default_popup: 'popup/index.html' },
+		action: {
+			default_title: '__MSG_extensionName__',
+			default_popup: 'popup/index.html',
+			default_icon: { '48': 'icons/icon-48.png', '96': 'icons/icon-96.png' }
+		},
 		options_ui: { page: 'options/index.html', open_in_tab: true },
 		commands: {
 			'save-page': {

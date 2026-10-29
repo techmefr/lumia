@@ -59,3 +59,41 @@ describe('InstanceForm', () => {
 		expect(onsaved).not.toHaveBeenCalled();
 	});
 });
+
+describe('InstanceForm insecure address', () => {
+	it('warns while the typed address is http, and not for https', async () => {
+		const fake = createFakeExtension();
+		render(InstanceForm, { extension: fake.extension, onsaved: vi.fn() });
+		const field = screen.getByLabelText(en['settings.instanceLabel']);
+
+		await userEvent.type(field, 'http://lumia.lan');
+		expect(screen.getByText(en['settings.instanceInsecure'])).toBeInTheDocument();
+
+		await userEvent.clear(field);
+		await userEvent.type(field, 'https://lumia.example.com');
+		expect(screen.queryByText(en['settings.instanceInsecure'])).toBeNull();
+	});
+});
+
+describe('InstanceForm moving to another instance', () => {
+	it('signs out and releases the host permission of the old one', async () => {
+		const fake = createFakeExtension({
+			stored: {
+				'lumia.instance_url': 'https://old.example.com',
+				'lumia.access_token': 'a',
+				'lumia.refresh_token': 'r'
+			}
+		});
+		render(InstanceForm, {
+			extension: fake.extension,
+			value: 'https://old.example.com',
+			onsaved: vi.fn()
+		});
+
+		await submit('https://new.example.com');
+
+		expect(fake.permissionRemovals).toEqual([['https://old.example.com/*']]);
+		expect(fake.store['lumia.access_token']).toBeUndefined();
+		expect(fake.store['lumia.refresh_token']).toBeUndefined();
+	});
+});

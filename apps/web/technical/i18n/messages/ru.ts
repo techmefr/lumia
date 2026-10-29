@@ -938,5 +938,6 @@ export const ru: Catalogue = {
 	'offline.limitLabel': "Максимальное число загруженных статей",
 	'offline.limitOff': "Отключено",
 	'offline.limitOption': "Статей: {count}",
-	'offline.limitSaved': "Офлайн-настройка сохранена."
+	'offline.limitSaved': "Офлайн-настройка сохранена.",
+	'offline.feedbackDropped': "Некоторые изменения, сделанные офлайн, не удалось отправить, и они были отброшены.",
 };

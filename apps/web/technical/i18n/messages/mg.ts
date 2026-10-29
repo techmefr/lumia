@@ -944,5 +944,6 @@ export const mg: Catalogue = {
 	'offline.limitLabel': "Isa ambony indrindra amin'ny lahatsoratra alaina",
 	'offline.limitOff': "Tsy mandeha",
 	'offline.limitOption': "Lahatsoratra {count}",
-	'offline.limitSaved': "Voatahiry ny fandrindrana tsy misy aterineto."
+	'offline.limitSaved': "Voatahiry ny fandrindrana tsy misy aterineto.",
+	'offline.feedbackDropped': "Tsy tafiditra ny fanovana sasany natao tsy misy aterineto ary nalaina.",
 };

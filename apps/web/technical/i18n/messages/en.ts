@@ -930,5 +930,6 @@ export const en: Catalogue = {
 	'offline.limitLabel': "Maximum number of downloaded articles",
 	'offline.limitOff': "Disabled",
 	'offline.limitOption': "{count} articles",
-	'offline.limitSaved': "Offline setting saved."
+	'offline.limitSaved': "Offline setting saved.",
+	'offline.feedbackDropped': "Some changes made offline could not be sent and were discarded.",
 };

@@ -14,6 +14,7 @@ export function createFakeExtension(options: FakeOptions = {}) {
 	const badge = { text: '', color: '', title: '' };
 	const menus: { id: string; title: string; contexts: string[] }[] = [];
 	const permissionRequests: string[][] = [];
+	const permissionRemovals: string[][] = [];
 	let optionsPageOpened = 0;
 	const panelOpens: string[] = [];
 	let onInstalled: () => void = () => undefined;
@@ -61,6 +62,10 @@ export function createFakeExtension(options: FakeOptions = {}) {
 			request: async ({ origins }) => {
 				permissionRequests.push(origins);
 				return options.permissionGranted ?? true;
+			},
+			remove: async ({ origins }) => {
+				permissionRemovals.push(origins);
+				return true;
 			}
 		},
 		...(options.sidePanel
@@ -89,6 +94,7 @@ export function createFakeExtension(options: FakeOptions = {}) {
 		badge,
 		menus,
 		permissionRequests,
+		permissionRemovals,
 		panelOpens,
 		optionsPageOpened: () => optionsPageOpened,
 		fire: {

@@ -66,6 +66,16 @@ export function updateNotificationSettings(patch: Partial<NotificationSettings>)
 	}
 }
 
+export function resetNotificationState(): void {
+	settings = { ...DEFAULTS };
+	try {
+		localStorage.removeItem(SETTINGS_KEY);
+		localStorage.removeItem(BASELINE_KEY);
+	} catch {
+		return;
+	}
+}
+
 /** 'unsupported' distinguishes a browser without the API from one that refused. */
 export type PermissionState = 'unsupported' | 'default' | 'granted' | 'denied';
 

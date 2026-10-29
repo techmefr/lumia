@@ -941,5 +941,6 @@ export const de: Catalogue = {
 	'offline.limitLabel': "Maximale Anzahl heruntergeladener Artikel",
 	'offline.limitOff': "Deaktiviert",
 	'offline.limitOption': "{count} Artikel",
-	'offline.limitSaved': "Offline-Einstellung gespeichert."
+	'offline.limitSaved': "Offline-Einstellung gespeichert.",
+	'offline.feedbackDropped': "Einige offline vorgenommene Änderungen konnten nicht gesendet werden und wurden verworfen.",
 };

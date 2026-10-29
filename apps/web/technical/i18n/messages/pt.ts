@@ -941,5 +941,6 @@ export const pt: Catalogue = {
 	'offline.limitLabel': "Número máximo de artigos descarregados",
 	'offline.limitOff': "Desativado",
 	'offline.limitOption': "{count} artigos",
-	'offline.limitSaved': "Definição offline guardada."
+	'offline.limitSaved': "Definição offline guardada.",
+	'offline.feedbackDropped': "Algumas alterações feitas offline não puderam ser enviadas e foram descartadas.",
 };
