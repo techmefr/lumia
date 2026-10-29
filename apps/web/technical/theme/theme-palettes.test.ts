@@ -82,7 +82,7 @@ describe('the named palettes', () => {
 	});
 
 	it('keeps the early script in app.html in step with the table', () => {
-		const html = readFileSync(resolve(process.cwd(), 'src/app.html'), 'utf8');
+		const html = readFileSync(resolve(process.cwd(), 'static/theme-boot.js'), 'utf8');
 		for (const preset of named) {
 			const key = preset.id.includes('-') ? `'${preset.id}'` : preset.id;
 			expect(html).toContain(`${key}: { dark: ${preset.dark}, color: '${preset.themeColor}' }`);

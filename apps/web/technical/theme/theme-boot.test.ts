@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 const html = readFileSync(resolve(process.cwd(), 'src/app.html'), 'utf8');
-const script = html.match(/<script>([\s\S]*?)<\/script>/)![1];
+const script = readFileSync(resolve(process.cwd(), 'static/theme-boot.js'), 'utf8');
 const root = () => document.documentElement;
 const metas = () => [...document.querySelectorAll('meta[name="theme-color"]')];
 
@@ -27,6 +27,11 @@ beforeEach(() => {
 });
 
 describe('the early theme script', () => {
+	it('is loaded synchronously from a file, because the CSP blocks inline scripts', () => {
+		expect(html).toContain('<script src="%sveltekit.assets%/theme-boot.js"></script>');
+		expect(html).not.toMatch(/<script(?![^>]*\ssrc=)[^>]*>/);
+	});
+
 	it('paints a dark named theme with the dark class and its data-theme', () => {
 		boot({ 'lumia-theme': 'dracula' });
 		expect(root().dataset.theme).toBe('dracula');
