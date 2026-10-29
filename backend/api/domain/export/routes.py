@@ -9,6 +9,7 @@ from api.domain.export.export_service import (
     ExportNotFoundError,
     ExportNotReadyError,
     ExportQueue,
+    ExportQuotaExceededError,
     PlaylistTooLargeError,
     get_file,
     get_own_job,
@@ -56,10 +57,14 @@ async def export_playlist_epub(
     except PlaylistNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
     try:
-        job = await request_playlist_epub(session, queue, playlist)
+        job = await request_playlist_epub(session, queue, playlist, user.id)
     except EmptyPlaylistError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="empty_playlist"
+        ) from exc
+    except ExportQuotaExceededError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="export_quota_exceeded"
         ) from exc
     except PlaylistTooLargeError as exc:
         raise HTTPException(

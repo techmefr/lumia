@@ -1,6 +1,7 @@
+from datetime import timedelta
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.instance.access_request_service import (
@@ -13,6 +14,7 @@ from api.domain.instance.exceptions import (
     AccessRequestAlreadyDecidedError,
     AccessRequestNotFoundError,
     AccessRequestsClosedError,
+    AccessRequestsFullError,
     EmailAlreadyRegisteredError,
     InstanceNotProvisionedError,
     MaxAccountsBelowCurrentCountError,
@@ -33,6 +35,9 @@ from api.domain.user.exceptions import InstanceFullError
 from api.domain.user.invitation_service import count_accounts
 from api.domain.user.models import Instance, User
 from api.technical.db import get_db_session
+from api.technical.rate_limit.dependencies import client_address, enforce
+from api.technical.rate_limit.limiter import RateLimiter, get_rate_limiter
+from config.rate_limit import get_rate_limit_config
 
 router = APIRouter()
 
@@ -138,8 +143,18 @@ async def read_accounts(
 )
 async def create_access_request(
     payload: AccessRequestCreateRequest,
+    request: Request,
     session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
 ) -> AccessRequestResponse:
+    config = get_rate_limit_config()
+    await enforce(
+        limiter,
+        scope="access-request",
+        identifiers={"ip": client_address(request)},
+        max_attempts=config.access_request_max_attempts,
+        window=timedelta(minutes=config.access_request_window_minutes),
+    )
     await _require_instance(session)
     try:
         access_request = await request_access(session, payload.email, payload.username)
@@ -153,16 +168,23 @@ async def create_access_request(
             status_code=status.HTTP_409_CONFLICT,
             detail="Cette adresse est déjà connue de l'instance",
         ) from exc
+    except AccessRequestsFullError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Trop de demandes d'accès sont en attente",
+        ) from exc
     return _to_access_request_response(access_request)
 
 
 @router.get("/access-requests", response_model=list[AccessRequestResponse])
 async def read_access_requests(
     request_status: AccessRequestStatus | None = None,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0, le=100_000),
     _admin: User = Depends(require_admin),
     session: AsyncSession = Depends(get_db_session),
 ) -> list[AccessRequestResponse]:
-    requests = await list_access_requests(session, request_status)
+    requests = await list_access_requests(session, request_status, limit=limit, offset=offset)
     return [_to_access_request_response(access_request) for access_request in requests]
 
 

@@ -18,6 +18,10 @@ class AccessRequestAlreadyDecidedError(Exception):
     pass
 
 
+class AccessRequestsFullError(Exception):
+    pass
+
+
 class AccessRequestsClosedError(Exception):
     pass
 

@@ -5,7 +5,11 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError
+from api.domain.feed.exceptions import (
+    FeedUnreachableError,
+    FolderNotFoundError,
+    OpmlTooLargeError,
+)
 from api.domain.feed.models import Feed, Folder, SourceType
 from api.domain.feed.opml_parser import OpmlEntry, parse_opml
 from api.domain.feed.social_source import resolve_social_feed
@@ -34,6 +38,8 @@ from worker.technical.connectors.miniflux_client import (
 )
 
 logger = logging.getLogger(__name__)
+
+MAX_OPML_ENTRIES = 500
 
 
 def _comparable(url: str) -> str:
@@ -71,6 +77,8 @@ async def import_opml(
     resolve: Resolver = resolve_with_system,
 ) -> list[Feed]:
     entries = parse_opml(xml_bytes)
+    if len(entries) > MAX_OPML_ENTRIES:
+        raise OpmlTooLargeError
 
     folder_cache: dict[str, Folder] = {}
     category_id_by_folder_name = {
@@ -115,6 +123,9 @@ async def import_opml(
             )
             continue
 
+        if await _find_subscription(session, user, external_feed_id) is not None:
+            continue
+
         feed = Feed(
             user_id=user.id,
             folder_id=folder.id if folder else None,
@@ -124,6 +135,7 @@ async def import_opml(
             url=entry.url,
         )
         session.add(feed)
+        await session.flush()
         created_feeds.append(feed)
 
     await session.commit()
@@ -185,6 +197,10 @@ async def add_feed(
     except (MinifluxApiError, httpx.HTTPError) as exc:
         raise FeedUnreachableError from exc
 
+    subscribed = await _find_subscription(session, user, str(detail.feed_id))
+    if subscribed is not None:
+        return subscribed
+
     feed = Feed(
         user_id=user.id,
         folder_id=folder.id if folder else None,
@@ -196,6 +212,18 @@ async def add_feed(
     session.add(feed)
     await session.commit()
     return feed
+
+
+async def _find_subscription(
+    session: AsyncSession, user: User, external_feed_id: str
+) -> Feed | None:
+    return await session.scalar(
+        select(Feed).where(
+            Feed.user_id == user.id,
+            Feed.source_type == SourceType.MINIFLUX,
+            Feed.external_feed_id == external_feed_id,
+        )
+    )
 
 
 async def get_or_create_folder(

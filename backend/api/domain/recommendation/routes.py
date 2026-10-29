@@ -1,12 +1,14 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article
 from api.domain.article.routes import to_summaries
 from api.domain.article.schemas import ArticleSummaryResponse
 from api.domain.article.scope import resolve_scope_article_ids
+from api.domain.feed.models import Feed
 from api.domain.recommendation.bulk_feedback_service import FeedbackAxis, set_feedback_axis
 from api.domain.recommendation.etincelle_service import list_etincelle
 from api.domain.recommendation.exceptions import BulkFeedbackFailedError
@@ -49,7 +51,7 @@ _AXIS_EVENTS = {
 @router.get("/articles/saved", response_model=list[ArticleSummaryResponse])
 async def get_saved_articles(
     limit: int = Query(default=20, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
+    offset: int = Query(default=0, ge=0, le=10_000),
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> list[ArticleSummaryResponse]:
@@ -60,7 +62,7 @@ async def get_saved_articles(
 @router.get("/articles/favorites", response_model=list[ArticleSummaryResponse])
 async def get_favorite_articles(
     limit: int = Query(default=20, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
+    offset: int = Query(default=0, ge=0, le=10_000),
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> list[ArticleSummaryResponse]:
@@ -71,7 +73,7 @@ async def get_favorite_articles(
 @router.get("/articles/etincelle", response_model=list[ArticleSummaryResponse])
 async def get_etincelle(
     limit: int = Query(default=20, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
+    offset: int = Query(default=0, ge=0, le=10_000),
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> list[ArticleSummaryResponse]:
@@ -132,8 +134,12 @@ async def send_feedback(
     session: AsyncSession = Depends(get_db_session),
     publisher: EventPublisher = Depends(get_event_publisher),
 ) -> None:
-    article = await session.get(Article, article_id)
-    if article is None:
+    owned_article = await session.scalar(
+        select(Article.id)
+        .join(Feed, Feed.id == Article.feed_id)
+        .where(Article.id == article_id, Feed.user_id == user.id)
+    )
+    if owned_article is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     updates = payload.model_dump(exclude_unset=True)

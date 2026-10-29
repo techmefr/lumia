@@ -37,6 +37,10 @@ class RateLimitConfig(BaseSettings):
     # share cap; the token already makes guessing an address pointless.
     newsletter_inbound_max_attempts: int = 120
     newsletter_inbound_window_minutes: int = 15
+    opml_import_max_attempts: int = 5
+    opml_import_window_minutes: int = 60
+    access_request_max_attempts: int = 5
+    access_request_window_minutes: int = 60
     # The shipped nginx sets X-Forwarded-For; a deployment that exposes the API directly must turn
     # this off, or a caller can pick their own address by sending the header themselves.
     trust_proxy_headers: bool = True

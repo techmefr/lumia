@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article
+from api.domain.feed.models import Feed
 from api.domain.webhook.models import (
     DeliveryStatus,
     OutboundWebhook,
@@ -73,7 +74,10 @@ class EventPublisher:
             return
         articles = list(
             await session.scalars(
-                select(Article).where(Article.id.in_(article_ids)).order_by(Article.id)
+                select(Article)
+                .join(Feed, Feed.id == Article.feed_id)
+                .where(Article.id.in_(article_ids), Feed.user_id == user_id)
+                .order_by(Article.id)
             )
         )
 
