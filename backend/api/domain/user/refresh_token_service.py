@@ -5,7 +5,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.user.exceptions import InvalidRefreshTokenError
-from api.domain.user.models import RefreshToken
+from api.domain.user.models import RefreshToken, User
 from api.technical.affected_rows import affected_rows
 from api.technical.auth.tokens import generate_opaque_token, hash_token
 from config.auth import get_auth_config
@@ -60,6 +60,18 @@ async def rotate_refresh_token(session: AsyncSession, raw_token: str) -> tuple[U
     return stored.user_id, successor
 
 
+async def bump_session_version(session: AsyncSession, user_id: UUID) -> None:
+    await session.execute(
+        update(User).where(User.id == user_id).values(session_version=User.session_version + 1)
+    )
+    await session.commit()
+
+
+async def current_session_version(session: AsyncSession, user_id: UUID) -> int:
+    version = await session.scalar(select(User.session_version).where(User.id == user_id))
+    return version or 0
+
+
 async def revoke_refresh_token(session: AsyncSession, raw_token: str) -> None:
     stored = await session.scalar(
         select(RefreshToken).where(RefreshToken.token == hash_token(raw_token))
@@ -67,6 +79,7 @@ async def revoke_refresh_token(session: AsyncSession, raw_token: str) -> None:
     if stored is None:
         return
     await _revoke_family(session, stored.family_id)
+    await bump_session_version(session, stored.user_id)
 
 
 async def revoke_all_refresh_tokens(session: AsyncSession, user_id: UUID) -> None:
@@ -77,6 +90,7 @@ async def revoke_all_refresh_tokens(session: AsyncSession, user_id: UUID) -> Non
         .values(revoked_at=datetime.now(UTC))
     )
     await session.commit()
+    await bump_session_version(session, user_id)
 
 
 async def _revoke_family(session: AsyncSession, family_id: UUID) -> None:

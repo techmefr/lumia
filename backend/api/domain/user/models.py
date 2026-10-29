@@ -111,6 +111,7 @@ class User(Base, TimestampMixin):
     email: Mapped[str] = mapped_column(unique=True)
     username: Mapped[str]
     password_hash: Mapped[str | None] = mapped_column(default=None)
+    session_version: Mapped[int] = mapped_column(default=0, server_default="0")
     sso_subject: Mapped[str | None] = mapped_column(unique=True, default=None)
     role: Mapped[Role] = mapped_column(default=Role.MEMBER)
     ai_provider: Mapped[AIProvider | None] = mapped_column(default=None)

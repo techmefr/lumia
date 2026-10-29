@@ -22,3 +22,12 @@ def test_decode_access_token_rejects_a_token_signed_with_another_secret() -> Non
     forged = pyjwt.encode({"sub": str(uuid4())}, "another-secret", algorithm="HS256")
     with pytest.raises(InvalidAccessTokenError):
         decode_access_token(forged)
+
+
+def test_decode_access_claims_carries_the_session_version() -> None:
+    from api.technical.auth.jwt import decode_access_claims
+
+    user_id = uuid4()
+    claims = decode_access_claims(create_access_token(user_id, 7))
+    assert claims.user_id == user_id
+    assert claims.session_version == 7

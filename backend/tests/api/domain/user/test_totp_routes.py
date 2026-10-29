@@ -364,10 +364,12 @@ async def test_disabling_with_the_password_turns_it_off(client: httpx.AsyncClien
     )
 
     assert response.status_code == 204
-    me = await client.get("/me", headers=_auth(tokens))
+    assert (await client.get("/me", headers=_auth(tokens))).status_code == 401
+    relogin = await _login(client)
+    assert relogin.status_code == 200
+    me = await client.get("/me", headers=_auth(relogin.json()))
     assert me.json()["totp_enabled"] is False
     assert me.json()["recovery_codes_left"] == 0
-    assert (await _login(client)).status_code == 200
 
 
 async def test_disabling_what_is_not_on_is_refused(client: httpx.AsyncClient) -> None:
