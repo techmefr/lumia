@@ -4,6 +4,7 @@ from typing import Protocol
 
 import httpx
 
+from api.technical.net.pinned_transport import guarded_transport
 from api.technical.net.url_guard import (
     BlockedUrlError,
     Resolver,
@@ -58,7 +59,7 @@ class GuardedImageFetcher:
             await asyncio.to_thread(ensure_public_http_url, current_url, resolve=self._resolve)
             async with (
                 httpx.AsyncClient(
-                    transport=self._transport,
+                    transport=guarded_transport(self._transport, self._resolve),
                     timeout=_TIMEOUT_SECONDS,
                     follow_redirects=False,
                     headers={"User-Agent": _USER_AGENT},

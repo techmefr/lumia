@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Identity
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Identity, Index, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.technical.orm import Base, TimestampMixin
@@ -13,6 +13,10 @@ class SourceType(StrEnum):
     # A page the user saved by URL, not something Miniflux polls: it has no real feed behind it,
     # so every user gets one synthetic MANUAL feed holding all of them.
     MANUAL = "manual"
+
+
+MANUAL_FEED_INDEX = "uq_feeds_one_manual_per_user"
+MANUAL_FEED_PREDICATE = "source_type = 'MANUAL'"
 
 
 class Folder(Base, TimestampMixin):
@@ -27,6 +31,14 @@ class Folder(Base, TimestampMixin):
 
 class Feed(Base, TimestampMixin):
     __tablename__ = "feeds"
+    __table_args__ = (
+        Index(
+            MANUAL_FEED_INDEX,
+            "user_id",
+            unique=True,
+            postgresql_where=text(MANUAL_FEED_PREDICATE),
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     fever_id: Mapped[int] = mapped_column(BigInteger, Identity(), unique=True)

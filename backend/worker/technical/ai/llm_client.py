@@ -3,6 +3,8 @@ import logging
 import httpx
 
 from api.technical.logging.external import log_external_failure
+from api.technical.net.pinned_transport import guarded_transport
+from api.technical.net.url_guard import BlockedUrlError, Resolver, resolve_with_system
 from worker.technical.ai.base import (
     MAX_INPUT_CHARS,
     SUMMARY_PROMPT,
@@ -53,29 +55,41 @@ class OpenAiCompatibleChatClient:
         base_url: str,
         model: str,
         transport: httpx.AsyncBaseTransport | None = None,
+        allow_private_endpoints: bool = False,
+        resolve: Resolver = resolve_with_system,
     ) -> None:
         self._api_key = api_key
         self._base_url = base_url
         self._model = model
         self._transport = transport
+        self._allow_private_endpoints = allow_private_endpoints
+        self._resolve = resolve
+
+    def _guarded(self) -> httpx.AsyncBaseTransport | None:
+        if self._allow_private_endpoints:
+            return self._transport
+        return guarded_transport(self._transport, self._resolve)
 
     async def complete(self, *, system: str, user: str) -> str:
         async with httpx.AsyncClient(
             base_url=self._base_url,
             headers={"Authorization": f"Bearer {self._api_key}"},
-            transport=self._transport,
+            transport=self._guarded(),
             timeout=TIMEOUT_SECONDS,
         ) as client:
-            response = await client.post(
-                "/chat/completions",
-                json={
-                    "model": self._model,
-                    "messages": [
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": user},
-                    ],
-                },
-            )
+            try:
+                response = await client.post(
+                    "/chat/completions",
+                    json={
+                        "model": self._model,
+                        "messages": [
+                            {"role": "system", "content": system},
+                            {"role": "user", "content": user},
+                        ],
+                    },
+                )
+            except BlockedUrlError as exc:
+                raise LlmApiError(f"endpoint blocked: {exc}") from exc
             if response.status_code >= 400:
                 log_external_failure(
                     logger,

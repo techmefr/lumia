@@ -65,11 +65,16 @@ async def _seed() -> dict[str, UUID]:
         await session.flush()
         feed = _feed(user, "own")
         foreign_feed = _feed(stranger, "foreign")
-        session.add_all([feed, foreign_feed])
+        mirror_feed = _feed(user, "mirror")
+        session.add_all([feed, foreign_feed, mirror_feed])
         await session.flush()
         names = ["main", "close", "far", "read", "dupe", "unrelated"]
         articles = {
-            name: _article(feed, name, "https://example.com/main" if name == "dupe" else None)
+            name: (
+                _article(mirror_feed, name, "https://example.com/main")
+                if name == "dupe"
+                else _article(feed, name)
+            )
             for name in names
         }
         articles["foreign"] = _article(foreign_feed, "foreign")

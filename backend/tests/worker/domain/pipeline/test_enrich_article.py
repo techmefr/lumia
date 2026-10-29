@@ -181,6 +181,32 @@ async def test_enrich_article_is_idempotent_for_the_same_entry(session: AsyncSes
     assert len(articles) == 1
 
 
+async def test_enrich_article_survives_a_duplicate_the_lookup_missed(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from worker.domain.pipeline import enrich_article as module
+
+    feed = await _create_feed(session)
+    await enrich_article({}, _raw_article(), content_extractor=_FakeContentExtractor())
+    monkeypatch.setattr(module, "canonical_url", lambda _url: "https://nowhere.invalid/")
+
+    await enrich_article(
+        {}, _raw_article(external_entry_id="456"), content_extractor=_FakeContentExtractor()
+    )
+
+    monkeypatch.undo()
+    await enrich_article(
+        {},
+        _raw_article(external_entry_id="789", url="https://example.com/b"),
+        content_extractor=_FakeContentExtractor(),
+    )
+    articles = list(await session.scalars(select(Article).where(Article.feed_id == feed.id)))
+    assert sorted(article.url for article in articles) == [
+        "https://example.com/a",
+        "https://example.com/b",
+    ]
+
+
 ENGLISH_CONTENT = (
     "<p>The cat is in the garden with the mouse and it was eating some biscuits. "
     "The garden is big and the cat likes to play with the mouse in the garden. "
