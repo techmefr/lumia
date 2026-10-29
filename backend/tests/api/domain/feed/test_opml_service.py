@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from itertools import count
 from uuid import uuid4
 
 import httpx
@@ -26,6 +27,8 @@ FEEDLY_OPML = b"""<?xml version="1.0" encoding="UTF-8"?>
 
 MINIFLUX_CATEGORIES = [{"id": 1, "title": "All"}]
 
+_FEED_IDS = count(7)
+
 
 def _miniflux_handler(request: httpx.Request) -> httpx.Response:
     if request.method == "GET" and request.url.path == "/v1/feeds":
@@ -35,7 +38,7 @@ def _miniflux_handler(request: httpx.Request) -> httpx.Response:
     if request.method == "POST" and request.url.path == "/v1/categories":
         return httpx.Response(201, json={"id": 2, "title": "Tech"})
     if request.method == "POST" and request.url.path == "/v1/feeds":
-        return httpx.Response(201, json={"feed_id": 7})
+        return httpx.Response(201, json={"feed_id": next(_FEED_IDS)})
     raise AssertionError(f"unexpected request {request.method} {request.url}")
 
 

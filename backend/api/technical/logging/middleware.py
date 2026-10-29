@@ -12,6 +12,7 @@ from api.technical.logging.correlation import (
     sanitize_correlation_id,
     set_correlation_id,
 )
+from api.technical.logging.redaction import redact_path
 
 REQUEST_ID_HEADER = "X-Request-ID"
 HTTP_REQUEST_EVENT = "http_request"
@@ -35,7 +36,7 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
             "event": HTTP_REQUEST_EVENT,
             CORRELATION_ID_FIELD: correlation_id,
             "method": request.method,
-            "path": request.url.path,
+            "path": redact_path(request.url.path),
         }
         try:
             response = await call_next(request)

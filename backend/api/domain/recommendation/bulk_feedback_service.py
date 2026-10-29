@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.recommendation.exceptions import BulkFeedbackFailedError
 from api.domain.recommendation.models import UserArticleFeedback
+from api.technical.batching import chunked
 
 
 class FeedbackAxis(StrEnum):
@@ -43,15 +44,15 @@ async def set_feedback_axis(
         return []
 
     try:
-        existing = {
-            row.article_id: row
-            for row in await session.scalars(
+        existing: dict[UUID, UserArticleFeedback] = {}
+        for batch in chunked(list(article_ids)):
+            for stored in await session.scalars(
                 select(UserArticleFeedback).where(
                     UserArticleFeedback.user_id == user_id,
-                    UserArticleFeedback.article_id.in_(article_ids),
+                    UserArticleFeedback.article_id.in_(batch),
                 )
-            )
-        }
+            ):
+                existing[stored.article_id] = stored
 
         changed: list[UUID] = []
         for article_id in article_ids:

@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 from zoneinfo import available_timezones
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from api.domain.chat.models import ChatRole
 from api.domain.feed.models import SourceType
@@ -18,6 +18,7 @@ from api.domain.user.models import (
     TranslationProvider,
     TtsProvider,
 )
+from api.technical.email.address import NormalizedEmail
 
 # Every path that writes a password holds to the same floor: onboarding, an accepted invitation,
 # a change from the settings and a reset from a magic link. A route that asked for less would be
@@ -26,7 +27,7 @@ MIN_PASSWORD_LENGTH = 8
 
 
 class OnboardingAdminRequest(BaseModel):
-    email: EmailStr
+    email: NormalizedEmail
     username: str
     # The account created here has full instance-admin rights, so a short password is the one
     # place in the app that can't be left to the reader's own judgement.
@@ -50,7 +51,7 @@ class SecondFactorFields(BaseModel):
 
 
 class LoginRequest(SecondFactorFields):
-    email: EmailStr
+    email: NormalizedEmail
     password: str
 
 
@@ -63,7 +64,7 @@ class LogoutRequest(BaseModel):
 
 
 class MagicLinkRequest(BaseModel):
-    email: EmailStr
+    email: NormalizedEmail
     purpose: MagicLinkPurpose = MagicLinkPurpose.SIGN_IN
 
 
@@ -124,7 +125,7 @@ class TokenPairResponse(BaseModel):
 
 
 class InvitationRequest(BaseModel):
-    email: EmailStr
+    email: NormalizedEmail
     role: Role = Role.MEMBER
 
 
@@ -151,7 +152,7 @@ class DeleteAccountRequest(BaseModel):
     link has no password to give, and the address is then all there is to ask for.
     """
 
-    confirm_email: EmailStr
+    confirm_email: NormalizedEmail
     password: str | None = None
 
 

@@ -33,7 +33,11 @@ from api.domain.user.invitation_service import (
     list_pending_invitations,
     revoke_invitation,
 )
-from api.domain.user.magic_link_service import request_magic_link, verify_magic_link_token
+from api.domain.user.magic_link_service import (
+    find_magic_link_owner,
+    request_magic_link,
+    verify_magic_link_token,
+)
 from api.domain.user.models import Instance, Invitation, Role, User
 from api.domain.user.oidc_login_service import consume_login_attempt, start_login_attempt
 from api.domain.user.password_service import change_password, reset_password
@@ -82,11 +86,12 @@ from api.domain.user.totp_service import (
     regenerate_recovery_codes,
     verify_second_factor,
 )
-from api.technical.auth.hashing import hash_password, verify_password
+from api.technical.auth.hashing import hash_password, spend_verification_time, verify_password
 from api.technical.auth.jwt import create_access_token
 from api.technical.auth.oidc_client import (
     InsecureIssuerError,
     InvalidIdTokenError,
+    IssuerMismatchError,
     OidcDiscoveryDocument,
     build_authorize_url,
     discover,
@@ -94,10 +99,12 @@ from api.technical.auth.oidc_client import (
     fetch_jwks,
     fetch_userinfo,
     get_oidc_transport,
+    is_email_verified,
     verify_id_token,
 )
 from api.technical.crypto.secret_box import decrypt_secret, encrypt_secret
 from api.technical.db import get_db_session
+from api.technical.email.address import normalise_email
 from api.technical.net.url_guard import (
     BlockedUrlError,
     Resolver,
@@ -154,6 +161,14 @@ async def _enforce_totp_limit(
         max_attempts=config.totp_max_attempts,
         window=timedelta(minutes=config.totp_window_minutes),
     )
+
+
+async def _enforce_totp_limit_for_token_owner(
+    session: AsyncSession, limiter: RateLimiter, request: Request, raw_token: str
+) -> None:
+    owner = await find_magic_link_owner(session, raw_token)
+    if owner is not None and is_totp_enabled(owner):
+        await _enforce_totp_limit(limiter, request, account=str(owner.id))
 
 
 def _second_factor(payload: SecondFactorFields) -> SecondFactor:
@@ -309,11 +324,10 @@ async def login(
         window=timedelta(minutes=config.login_window_minutes),
     )
     user = await session.scalar(select(User).where(User.email == payload.email))
-    if (
-        user is None
-        or user.password_hash is None
-        or not verify_password(payload.password, user.password_hash)
-    ):
+    if user is None or user.password_hash is None:
+        spend_verification_time(payload.password)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    if not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     if is_totp_enabled(user):
@@ -386,6 +400,7 @@ async def verify_magic_link(
     limiter: RateLimiter = Depends(get_rate_limiter),
 ) -> TokenPairResponse:
     await _enforce_token_guessing_limit(limiter, request, scope="magic-link-verify")
+    await _enforce_totp_limit_for_token_owner(session, limiter, request, payload.token)
     try:
         user_id = await verify_magic_link_token(
             session, payload.token, second_factor=_second_factor(payload)
@@ -406,6 +421,7 @@ async def reset_forgotten_password(
 ) -> TokenPairResponse:
     """Unauthenticated on purpose: the magic-link token is the credential of a reader locked out."""
     await _enforce_token_guessing_limit(limiter, request, scope="password-reset")
+    await _enforce_totp_limit_for_token_owner(session, limiter, request, payload.token)
     try:
         user_id = await reset_password(
             session,
@@ -440,13 +456,21 @@ async def _discover_or_400(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="the configured OIDC issuer is not an https URL",
         ) from exc
+    except IssuerMismatchError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="the provider publishes a different issuer than the configured one",
+        ) from exc
 
 
 @router.get("/auth/sso/login")
 async def sso_login(
+    request: Request,
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_oidc_transport),
+    limiter: RateLimiter = Depends(get_rate_limiter),
 ) -> RedirectResponse:
+    await _enforce_token_guessing_limit(limiter, request, scope="sso-login")
     _, sso = await _read_sso_instance(session)
     document = await _discover_or_400(sso.issuer, transport)
     state, nonce = await start_login_attempt(session)
@@ -463,9 +487,12 @@ async def sso_login(
 @router.post("/auth/sso/callback", response_model=TokenPairResponse)
 async def sso_callback(
     payload: SsoCallbackRequest,
+    request: Request,
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_oidc_transport),
+    limiter: RateLimiter = Depends(get_rate_limiter),
 ) -> TokenPairResponse:
+    await _enforce_token_guessing_limit(limiter, request, scope="sso-callback")
     instance, sso = await _read_sso_instance(session)
     try:
         nonce = await consume_login_attempt(session, payload.state)
@@ -499,22 +526,34 @@ async def sso_callback(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
 
     email = claims.get("email")
+    verified = is_email_verified(claims)
     if not email:
         # Some providers keep the address out of the id_token; the subject still comes from the
         # signed claims, so /userinfo only ever fills in the label, never the identity.
         userinfo = await fetch_userinfo(
             document, access_token=tokens["access_token"], transport=transport
         )
+        if userinfo.get("sub") != claims["sub"]:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="the userinfo answer is about another subject",
+            )
         email = userinfo.get("email")
+        verified = is_email_verified(userinfo)
     if not email:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="the provider returned no email address",
         )
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="the provider has not verified this email address",
+        )
 
     try:
         user = await get_or_create_sso_user(
-            session, instance, sub=str(claims["sub"]), email=str(email)
+            session, instance, sub=str(claims["sub"]), email=normalise_email(str(email))
         )
     except InstanceFullError as exc:
         raise HTTPException(

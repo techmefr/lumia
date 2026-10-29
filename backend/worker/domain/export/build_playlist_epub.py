@@ -10,6 +10,7 @@ from api.domain.article.export_filename import file_stem
 from api.domain.article.models import Article
 from api.domain.export.models import ExportJob, ExportStatus
 from api.domain.playlist.models import Playlist
+from api.domain.playlist.playlist_service import role_on
 from api.technical.net.image_fetcher import GuardedImageFetcher, ImageFetcher
 from worker.technical.db import worker_session
 
@@ -31,12 +32,8 @@ async def build_playlist_epub(
         if job is None or job.status is not ExportStatus.PENDING:
             return
         try:
-            playlist = await session.scalar(
-                select(Playlist).where(
-                    Playlist.id == job.subject_id, Playlist.user_id == job.user_id
-                )
-            )
-            if playlist is None or not playlist.items:
+            playlist = await session.scalar(select(Playlist).where(Playlist.id == job.subject_id))
+            if playlist is None or role_on(playlist, job.user_id) is None or not playlist.items:
                 raise LookupError("playlist is gone or empty")
             articles = [item.article for item in playlist.items]
             job.data = await build_epub(

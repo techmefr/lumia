@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.recommendation.bulk_feedback_service import FeedbackAxis, set_feedback_axis
 from api.domain.recommendation.models import UserArticleFeedback
+from api.technical.batching import chunked
 
 
 @dataclass(frozen=True)
@@ -21,20 +22,21 @@ async def fetch_read_state(
     """Per-article read flag and reading position. A missing row means unread, position zero."""
     if not article_ids:
         return {}
-    rows = await session.execute(
-        select(
-            UserArticleFeedback.article_id,
-            UserArticleFeedback.read,
-            UserArticleFeedback.scroll_progress,
-        ).where(
-            UserArticleFeedback.user_id == user_id,
-            UserArticleFeedback.article_id.in_(article_ids),
+    states: dict[UUID, ReadState] = {}
+    for batch in chunked(list(article_ids)):
+        rows = await session.execute(
+            select(
+                UserArticleFeedback.article_id,
+                UserArticleFeedback.read,
+                UserArticleFeedback.scroll_progress,
+            ).where(
+                UserArticleFeedback.user_id == user_id,
+                UserArticleFeedback.article_id.in_(batch),
+            )
         )
-    )
-    return {
-        article_id: ReadState(read=read, scroll_progress=scroll_progress)
-        for article_id, read, scroll_progress in rows
-    }
+        for article_id, read, scroll_progress in rows:
+            states[article_id] = ReadState(read=read, scroll_progress=scroll_progress)
+    return states
 
 
 async def mark_articles_read(

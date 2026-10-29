@@ -74,7 +74,7 @@ async def send_digest(session: AsyncSession, user: User, *, now: datetime) -> bo
         logger.info("digest skipped, nothing unread worth reporting")
         return False
 
-    frontend_url = get_email_config().frontend_url.rstrip("/")
+    frontend_url = get_email_config().frontend_base_url
     content = render_digest_email(
         language=user.preferred_language,
         frequency=user.digest_frequency,

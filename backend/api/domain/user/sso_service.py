@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.domain.user.exceptions import SsoNotConfiguredError, SsoSubjectMismatchError
 from api.domain.user.invitation_service import ensure_room_for_one_more_account
 from api.domain.user.models import Instance, Role, User
+from api.technical.email.address import normalise_email
 
 
 @dataclass(frozen=True)
@@ -50,6 +51,7 @@ async def get_or_create_sso_user(
     left as it was — it is unique in this schema, and the new one may already belong to somebody
     else.
     """
+    email = normalise_email(email)
     existing = await session.scalar(select(User).where(User.sso_subject == sub))
     if existing is not None:
         return existing

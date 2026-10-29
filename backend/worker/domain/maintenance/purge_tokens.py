@@ -4,7 +4,7 @@ from typing import Any, cast
 
 from sqlalchemy import CursorResult, delete
 
-from api.domain.user.models import MagicLinkToken, RefreshToken
+from api.domain.user.models import MagicLinkToken, OidcLoginAttempt, RefreshToken
 from config.maintenance import get_maintenance_config
 from worker.technical.db import worker_session
 
@@ -23,7 +23,7 @@ async def purge_expired_tokens(ctx: dict[Any, Any], *_args: Any, **_kwargs: Any)
 
     async with worker_session() as session:
         purged = 0
-        for model in (RefreshToken, MagicLinkToken):
+        for model in (RefreshToken, MagicLinkToken, OidcLoginAttempt):
             result = await session.execute(delete(model).where(model.expires_at < cutoff))
             purged += cast(CursorResult[Any], result).rowcount
         await session.commit()

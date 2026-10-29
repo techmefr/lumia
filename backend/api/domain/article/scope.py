@@ -9,12 +9,15 @@ accident the first one was shaped to prevent.
 from collections.abc import Sequence
 from uuid import UUID
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article
 from api.domain.feed.models import Feed
+from api.technical.batching import chunked
+
+MAX_SCOPE_ARTICLE_IDS = 5000
 
 
 class ArticleScopeRequest(BaseModel):
@@ -22,7 +25,7 @@ class ArticleScopeRequest(BaseModel):
     inferred from every other field being empty, so a client that simply forgot to set a scope is
     rejected instead of reaching every feed."""
 
-    article_ids: list[UUID] | None = None
+    article_ids: list[UUID] | None = Field(default=None, max_length=MAX_SCOPE_ARTICLE_IDS)
     feed_id: UUID | None = None
     folder_id: UUID | None = None
     all: bool = False
@@ -50,10 +53,13 @@ async def resolve_scope_article_ids(
 ) -> list[UUID]:
     """Expands a scope into article ids, always restricted to this user's own feeds."""
     query = select(Article.id).join(Feed, Feed.id == Article.feed_id).where(Feed.user_id == user_id)
-    if article_ids is not None:
-        query = query.where(Article.id.in_(article_ids))
     if feed_id is not None:
         query = query.where(Article.feed_id == feed_id)
     if folder_id is not None:
         query = query.where(Feed.folder_id == folder_id)
-    return list(await session.scalars(query))
+    if article_ids is None:
+        return list(await session.scalars(query))
+    resolved: list[UUID] = []
+    for batch in chunked(list(article_ids)):
+        resolved.extend(await session.scalars(query.where(Article.id.in_(batch))))
+    return resolved

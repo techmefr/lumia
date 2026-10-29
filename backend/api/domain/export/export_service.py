@@ -2,13 +2,14 @@ from datetime import UTC, datetime, timedelta
 from typing import Protocol
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.export.models import ExportJob, ExportKind, ExportStatus
 from api.domain.playlist.models import Playlist
 
 MAX_PLAYLIST_ARTICLES = 200
+MAX_LIVE_EXPORTS_PER_USER = 5
 EXPORT_LIFETIME = timedelta(hours=24)
 
 
@@ -17,6 +18,10 @@ class EmptyPlaylistError(Exception):
 
 
 class PlaylistTooLargeError(Exception):
+    pass
+
+
+class ExportQuotaExceededError(Exception):
     pass
 
 
@@ -33,7 +38,7 @@ class ExportQueue(Protocol):
 
 
 async def request_playlist_epub(
-    session: AsyncSession, queue: ExportQueue, playlist: Playlist
+    session: AsyncSession, queue: ExportQueue, playlist: Playlist, user_id: UUID
 ) -> ExportJob:
     """Starts the build of a playlist's book, or hands back the one already under way.
 
@@ -47,7 +52,7 @@ async def request_playlist_epub(
 
     pending = await session.scalar(
         select(ExportJob).where(
-            ExportJob.user_id == playlist.user_id,
+            ExportJob.user_id == user_id,
             ExportJob.kind == ExportKind.PLAYLIST_EPUB,
             ExportJob.subject_id == playlist.id,
             ExportJob.status == ExportStatus.PENDING,
@@ -57,8 +62,16 @@ async def request_playlist_epub(
     if pending is not None:
         return pending
 
+    live_exports = await session.scalar(
+        select(func.count())
+        .select_from(ExportJob)
+        .where(ExportJob.user_id == user_id, ExportJob.expires_at > datetime.now(UTC))
+    )
+    if (live_exports or 0) >= MAX_LIVE_EXPORTS_PER_USER:
+        raise ExportQuotaExceededError
+
     job = ExportJob(
-        user_id=playlist.user_id,
+        user_id=user_id,
         kind=ExportKind.PLAYLIST_EPUB,
         subject_id=playlist.id,
         expires_at=datetime.now(UTC) + EXPORT_LIFETIME,

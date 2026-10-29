@@ -45,4 +45,4 @@ class NotificationListResponse(BaseModel):
 class NotificationsMarkReadRequest(BaseModel):
     """Ids to mark read; leaving it out marks every unread notification."""
 
-    ids: list[UUID] | None = None
+    ids: list[UUID] | None = Field(default=None, max_length=1000)

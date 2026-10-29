@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.user.exceptions import InvalidCurrentPasswordError, InvalidMagicLinkTokenError
 from api.domain.user.magic_link_service import verify_magic_link_token
-from api.domain.user.models import User
+from api.domain.user.models import MagicLinkPurpose, User
 from api.domain.user.refresh_token_service import revoke_all_refresh_tokens
 from api.domain.user.totp_service import SecondFactor
 from api.technical.auth.hashing import hash_password, verify_password
@@ -43,7 +43,12 @@ async def reset_password(
     not the whole proof once a second factor is on, though: a reset hands back a signed-in session,
     so a mailbox on its own must not be enough to walk past the authenticator.
     """
-    user_id = await verify_magic_link_token(session, raw_token, second_factor=second_factor)
+    user_id = await verify_magic_link_token(
+        session,
+        raw_token,
+        purpose=MagicLinkPurpose.PASSWORD_RESET,
+        second_factor=second_factor,
+    )
     user = await session.get(User, user_id)
     if user is None:  # pragma: no cover - a token cannot outlive the account it belongs to
         raise InvalidMagicLinkTokenError

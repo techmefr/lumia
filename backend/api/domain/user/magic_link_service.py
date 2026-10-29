@@ -7,7 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.domain.user.exceptions import InvalidMagicLinkTokenError
 from api.domain.user.models import MagicLinkPurpose, MagicLinkToken, User
 from api.domain.user.totp_service import SecondFactor, verify_second_factor
+from api.technical.affected_rows import affected_rows
 from api.technical.auth.tokens import generate_opaque_token, hash_token
+from api.technical.email.address import normalise_email
 from api.technical.email.messages import render_magic_link_email
 from api.technical.email.smtp import send_email
 from config.auth import get_auth_config
@@ -24,7 +26,7 @@ async def request_magic_link(
     email: str,
     purpose: MagicLinkPurpose = MagicLinkPurpose.SIGN_IN,
 ) -> None:
-    user = await session.scalar(select(User).where(User.email == email))
+    user = await session.scalar(select(User).where(User.email == normalise_email(email)))
     if user is None:
         return
 
@@ -42,12 +44,13 @@ async def request_magic_link(
         MagicLinkToken(
             user_id=user.id,
             token=hash_token(raw_token),
+            purpose=purpose,
             expires_at=datetime.now(UTC) + timedelta(minutes=config.magic_link_ttl_minutes),
         )
     )
     await session.commit()
 
-    frontend_url = get_email_config().frontend_url.rstrip("/")
+    frontend_url = get_email_config().frontend_base_url
     magic_link_url = f"{frontend_url}{_LANDING_PATHS[purpose]}?magic_token={raw_token}"
     content = render_magic_link_email(
         language=user.preferred_language,
@@ -62,8 +65,20 @@ async def request_magic_link(
     )
 
 
+async def find_magic_link_owner(session: AsyncSession, raw_token: str) -> User | None:
+    return await session.scalar(
+        select(User)
+        .join(MagicLinkToken, MagicLinkToken.user_id == User.id)
+        .where(MagicLinkToken.token == hash_token(raw_token))
+    )
+
+
 async def verify_magic_link_token(
-    session: AsyncSession, raw_token: str, *, second_factor: SecondFactor | None = None
+    session: AsyncSession,
+    raw_token: str,
+    *,
+    purpose: MagicLinkPurpose = MagicLinkPurpose.SIGN_IN,
+    second_factor: SecondFactor | None = None,
 ) -> UUID:
     """Spends a magic-link token, and the second factor with it when the account has one.
 
@@ -73,7 +88,12 @@ async def verify_magic_link_token(
     stored = await session.scalar(
         select(MagicLinkToken).where(MagicLinkToken.token == hash_token(raw_token))
     )
-    if stored is None or stored.used_at is not None or stored.expires_at < datetime.now(UTC):
+    if (
+        stored is None
+        or stored.used_at is not None
+        or stored.expires_at < datetime.now(UTC)
+        or stored.purpose is not purpose
+    ):
         raise InvalidMagicLinkTokenError
 
     user = await session.get(User, stored.user_id)
@@ -81,6 +101,12 @@ async def verify_magic_link_token(
         raise InvalidMagicLinkTokenError
     await verify_second_factor(session, user, second_factor)
 
-    stored.used_at = datetime.now(UTC)
+    spent = await session.execute(
+        update(MagicLinkToken)
+        .where(MagicLinkToken.id == stored.id, MagicLinkToken.used_at.is_(None))
+        .values(used_at=datetime.now(UTC))
+    )
     await session.commit()
+    if affected_rows(spent) != 1:
+        raise InvalidMagicLinkTokenError
     return stored.user_id

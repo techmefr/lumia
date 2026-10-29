@@ -16,8 +16,6 @@ class FolderResponse(BaseModel):
 
 
 class FeedCreateRequest(BaseModel):
-    source_type: SourceType
-    external_feed_id: str
     title: str
     url: str
     folder_id: UUID | None = None
@@ -78,7 +76,7 @@ class InstanceFeedResponse(BaseModel):
 
 
 class InstanceFeedAttachRequest(BaseModel):
-    external_feed_ids: list[str]
+    external_feed_ids: list[str] = Field(max_length=500)
 
 
 class FeedResponse(BaseModel):

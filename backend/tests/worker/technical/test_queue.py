@@ -22,6 +22,7 @@ def test_the_worker_schedules_every_pass_it_defines() -> None:
         "cron:refresh_due_feeds",
         "cron:send_reader_digests",
         "cron:purge_expired_exports",
+        "cron:purge_old_webhook_deliveries",
     }
 
 

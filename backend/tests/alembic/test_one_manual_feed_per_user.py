@@ -86,6 +86,7 @@ async def test_duplicates_are_merged_into_the_oldest_without_losing_articles(
     user = await _user(session, "a@example.com")
     other = await _user(session, "b@example.com")
     await session.execute(text(f"DROP INDEX {MANUAL_FEED_INDEX}"))
+    await session.execute(text("ALTER TABLE feeds DROP CONSTRAINT uq_feeds_user_source_external"))
     oldest = _feed(user, SourceType.MANUAL, "manual", 0)
     newer = _feed(user, SourceType.MANUAL, "manual", 5)
     miniflux = _feed(user, SourceType.MINIFLUX, "1", 6)

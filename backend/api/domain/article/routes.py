@@ -136,7 +136,7 @@ async def list_articles(
     unread_only: bool = Query(default=False),
     sort: Literal["recent", "relevance"] = Query(default="recent"),
     limit: int = Query(default=20, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
+    offset: int = Query(default=0, ge=0, le=10_000),
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> list[ArticleSummaryResponse]:

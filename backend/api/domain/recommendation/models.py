@@ -32,7 +32,7 @@ class UserFilterRule(Base, TimestampMixin):
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
     term: Mapped[str]
     mode: Mapped[FilterMode]
 
@@ -41,7 +41,9 @@ class UserArticleFeedback(Base, TimestampMixin):
     __tablename__ = "user_article_feedback"
 
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
-    article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"), primary_key=True)
+    article_id: Mapped[UUID] = mapped_column(
+        ForeignKey("articles.id"), primary_key=True, index=True
+    )
     sentiment: Mapped[Vote | None] = mapped_column(default=None)
     saved: Mapped[bool] = mapped_column(default=False)
     favorite: Mapped[bool] = mapped_column(default=False)

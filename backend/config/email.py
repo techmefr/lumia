@@ -15,6 +15,11 @@ class EmailConfig(BaseSettings):
     # reachable under its own domain or a LAN address should override it.
     frontend_url: str = "http://localhost:8080"
 
+    @property
+    def frontend_base_url(self) -> str:
+        origins = [origin.strip() for origin in self.frontend_url.split(",") if origin.strip()]
+        return (origins[0] if origins else "http://localhost:8080").rstrip("/")
+
 
 @lru_cache
 def get_email_config() -> EmailConfig:

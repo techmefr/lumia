@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.user.exceptions import InvalidRefreshTokenError
 from api.domain.user.models import RefreshToken
+from api.technical.affected_rows import affected_rows
 from api.technical.auth.tokens import generate_opaque_token, hash_token
 from config.auth import get_auth_config
 
@@ -47,7 +48,14 @@ async def rotate_refresh_token(session: AsyncSession, raw_token: str) -> tuple[U
     if stored.expires_at < datetime.now(UTC):
         raise InvalidRefreshTokenError
 
-    stored.revoked_at = datetime.now(UTC)
+    consumed = await session.execute(
+        update(RefreshToken)
+        .where(RefreshToken.id == stored.id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )
+    if affected_rows(consumed) != 1:
+        await _revoke_family(session, stored.family_id)
+        raise InvalidRefreshTokenError
     successor = await issue_refresh_token(session, stored.user_id, family_id=stored.family_id)
     return stored.user_id, successor
 

@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Identity, Index, text
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Identity, Index, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.technical.orm import Base, TimestampMixin
@@ -23,7 +23,7 @@ class Folder(Base, TimestampMixin):
     __tablename__ = "folders"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
     name: Mapped[str]
     # Fever clients address everything by integer; see Article.fever_id.
     fever_id: Mapped[int] = mapped_column(BigInteger, Identity(), unique=True)
@@ -38,14 +38,19 @@ class Feed(Base, TimestampMixin):
             unique=True,
             postgresql_where=text(MANUAL_FEED_PREDICATE),
         ),
+        UniqueConstraint(
+            "user_id", "source_type", "external_feed_id", name="uq_feeds_user_source_external"
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     fever_id: Mapped[int] = mapped_column(BigInteger, Identity(), unique=True)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
-    folder_id: Mapped[UUID | None] = mapped_column(ForeignKey("folders.id"), default=None)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    folder_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("folders.id"), default=None, index=True
+    )
     source_type: Mapped[SourceType]
-    external_feed_id: Mapped[str]
+    external_feed_id: Mapped[str] = mapped_column(index=True)
     title: Mapped[str]
     url: Mapped[str]
 

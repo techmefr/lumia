@@ -6,7 +6,13 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from api.domain.user.models import Instance, MagicLinkToken, RefreshToken, User
+from api.domain.user.models import (
+    Instance,
+    MagicLinkToken,
+    OidcLoginAttempt,
+    RefreshToken,
+    User,
+)
 from config.database import get_engine
 from config.maintenance import get_maintenance_config
 from worker.domain.maintenance.purge_tokens import purge_expired_tokens
@@ -82,3 +88,16 @@ async def test_the_purge_leaves_the_live_tokens_of_the_same_reader(session: Asyn
 
 async def test_purging_an_empty_database_is_a_no_op(session: AsyncSession) -> None:
     assert await purge_expired_tokens({}) == 0
+
+
+async def test_sso_login_attempts_that_lapsed_long_ago_are_deleted(session: AsyncSession) -> None:
+    stale = datetime.now(UTC) - GRACE - timedelta(days=1)
+    live = datetime.now(UTC) + timedelta(minutes=5)
+    session.add(OidcLoginAttempt(state=f"stale-{uuid4()}", nonce="n", expires_at=stale))
+    session.add(OidcLoginAttempt(state=f"live-{uuid4()}", nonce="n", expires_at=live))
+    await session.commit()
+
+    assert await purge_expired_tokens({}) == 1
+
+    remaining = await session.scalar(select(func.count()).select_from(OidcLoginAttempt))
+    assert remaining == 1

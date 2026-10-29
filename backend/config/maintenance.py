@@ -12,6 +12,7 @@ class MaintenanceConfig(BaseSettings):
     reconciliation_max_entries: int = 500
     # Long enough that an expired token is still recognised as expired rather than as unknown.
     token_purge_grace_days: int = 7
+    webhook_delivery_retention_days: int = 30
 
 
 @lru_cache

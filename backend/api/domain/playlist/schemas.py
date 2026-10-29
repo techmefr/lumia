@@ -42,7 +42,7 @@ class PlaylistReorderRequest(BaseModel):
     """The full ordered list of article ids. Sending the whole order avoids the ambiguity of
     index-based moves when the client's copy is stale."""
 
-    article_ids: list[UUID]
+    article_ids: list[UUID] = Field(max_length=5000)
 
 
 class PlaylistShareRequest(BaseModel):

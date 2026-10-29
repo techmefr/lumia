@@ -1,10 +1,11 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 from api.domain.instance.models import AccessMode, AccessRequestStatus
 from api.domain.user.models import Role
+from api.technical.email.address import NormalizedEmail
 
 
 class InstanceSettingsResponse(BaseModel):
@@ -38,7 +39,7 @@ class AccountUsageResponse(BaseModel):
 
 
 class AccessRequestCreateRequest(BaseModel):
-    email: EmailStr
+    email: NormalizedEmail
     username: str = Field(min_length=1, max_length=80)
 
 

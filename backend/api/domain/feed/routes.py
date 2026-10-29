@@ -1,5 +1,5 @@
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFile, status
@@ -7,7 +7,12 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.feed.discover_service import list_suggestions
-from api.domain.feed.exceptions import FeedUnreachableError, FolderNotFoundError, InvalidOpmlError
+from api.domain.feed.exceptions import (
+    FeedUnreachableError,
+    FolderNotFoundError,
+    InvalidOpmlError,
+    OpmlTooLargeError,
+)
 from api.domain.feed.feed_status_service import refresh_all_feeds_now, refresh_feed_now
 from api.domain.feed.instance_feed_service import attach_instance_feeds, list_instance_feeds
 from api.domain.feed.models import Feed, Folder, SourceType
@@ -212,11 +217,17 @@ async def create_feed(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> FeedResponse:
+    if payload.folder_id is not None:
+        owned_folder = await session.scalar(
+            select(Folder.id).where(Folder.id == payload.folder_id, Folder.user_id == user.id)
+        )
+        if owned_folder is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     feed = Feed(
         user_id=user.id,
         folder_id=payload.folder_id,
-        source_type=payload.source_type,
-        external_feed_id=payload.external_feed_id,
+        source_type=SourceType.MINIFLUX,
+        external_feed_id=f"-{uuid4().int % 10**15}",
         title=payload.title,
         url=payload.url,
     )
@@ -271,7 +282,16 @@ async def import_opml_feeds(
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
     resolve: Resolver = Depends(get_url_resolver),
+    limiter: RateLimiter = Depends(get_rate_limiter),
 ) -> list[FeedResponse]:
+    config = get_rate_limit_config()
+    await enforce(
+        limiter,
+        scope="opml-import",
+        identifiers={"user": str(user.id)},
+        max_attempts=config.opml_import_max_attempts,
+        window=timedelta(minutes=config.opml_import_window_minutes),
+    )
     xml_bytes = await _read_capped(file)
     try:
         feeds = await import_opml(
@@ -279,6 +299,8 @@ async def import_opml_feeds(
         )
     except InvalidOpmlError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
+    except OpmlTooLargeError as exc:
+        raise HTTPException(status_code=status.HTTP_413_CONTENT_TOO_LARGE) from exc
     return [_to_feed_response(feed) for feed in feeds]
 
 

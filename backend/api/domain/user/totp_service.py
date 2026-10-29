@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.user.exceptions import (
@@ -11,6 +11,7 @@ from api.domain.user.exceptions import (
     TotpRequiredError,
 )
 from api.domain.user.models import RecoveryCode, User
+from api.technical.affected_rows import affected_rows
 from api.technical.auth.tokens import hash_token
 from api.technical.auth.totp import (
     TotpEnrolment,
@@ -126,8 +127,18 @@ async def verify_second_factor(
     if step is None:
         raise InvalidTotpCodeError
 
-    user.totp_last_used_step = step
+    claimed = await session.execute(
+        update(User)
+        .where(
+            User.id == user.id,
+            or_(User.totp_last_used_step.is_(None), User.totp_last_used_step < step),
+        )
+        .values(totp_last_used_step=step)
+    )
     await session.commit()
+    if affected_rows(claimed) != 1:
+        raise InvalidTotpCodeError
+    user.totp_last_used_step = step
 
 
 async def count_unused_recovery_codes(session: AsyncSession, user: User) -> int:
@@ -154,14 +165,15 @@ async def _spend_recovery_code(session: AsyncSession, user: User, raw_code: str)
     Single use: a code that has been spent is kept in place and refused, rather than deleted, so a
     second attempt with the same one cannot be mistaken for a code that was never issued.
     """
-    stored = await session.scalar(
-        select(RecoveryCode).where(
+    spent = await session.execute(
+        update(RecoveryCode)
+        .where(
             RecoveryCode.user_id == user.id,
             RecoveryCode.code_hash == hash_token(normalise_recovery_code(raw_code)),
+            RecoveryCode.used_at.is_(None),
         )
+        .values(used_at=datetime.now(UTC))
     )
-    if stored is None or stored.used_at is not None:
-        raise InvalidTotpCodeError
-
-    stored.used_at = datetime.now(UTC)
     await session.commit()
+    if affected_rows(spent) != 1:
+        raise InvalidTotpCodeError

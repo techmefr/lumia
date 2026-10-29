@@ -1,19 +1,23 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.instance.exceptions import (
     AccessRequestAlreadyDecidedError,
     AccessRequestNotFoundError,
     AccessRequestsClosedError,
+    AccessRequestsFullError,
     EmailAlreadyRegisteredError,
 )
 from api.domain.instance.models import AccessMode, AccessRequest, AccessRequestStatus
 from api.domain.instance.settings_service import get_instance
 from api.domain.user.invitation_service import ensure_room_for_one_more_account
 from api.domain.user.models import Role, User
+from api.technical.email.address import normalise_email
+
+MAX_PENDING_ACCESS_REQUESTS = 500
 
 
 async def request_access(session: AsyncSession, email: str, username: str) -> AccessRequest:
@@ -21,8 +25,16 @@ async def request_access(session: AsyncSession, email: str, username: str) -> Ac
     if instance.access_mode != AccessMode.ON_APPROVAL:
         raise AccessRequestsClosedError
 
+    email = normalise_email(email)
     if await _is_email_taken(session, email):
         raise EmailAlreadyRegisteredError
+    pending = await session.scalar(
+        select(func.count())
+        .select_from(AccessRequest)
+        .where(AccessRequest.status == AccessRequestStatus.PENDING)
+    )
+    if (pending or 0) >= MAX_PENDING_ACCESS_REQUESTS:
+        raise AccessRequestsFullError
 
     access_request = AccessRequest(email=email, username=username)
     session.add(access_request)
@@ -31,9 +43,18 @@ async def request_access(session: AsyncSession, email: str, username: str) -> Ac
 
 
 async def list_access_requests(
-    session: AsyncSession, status: AccessRequestStatus | None = None
+    session: AsyncSession,
+    status: AccessRequestStatus | None = None,
+    *,
+    limit: int = 50,
+    offset: int = 0,
 ) -> list[AccessRequest]:
-    query = select(AccessRequest).order_by(AccessRequest.created_at.desc())
+    query = (
+        select(AccessRequest)
+        .order_by(AccessRequest.created_at.desc(), AccessRequest.id)
+        .limit(limit)
+        .offset(offset)
+    )
     if status is not None:
         query = query.where(AccessRequest.status == status)
     return list(await session.scalars(query))

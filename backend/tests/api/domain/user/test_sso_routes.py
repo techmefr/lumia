@@ -15,6 +15,7 @@ from api.main import app
 from api.technical.auth.oidc_client import get_oidc_transport
 from api.technical.crypto.secret_box import encrypt_secret
 from config.database import get_engine
+from config.rate_limit import get_rate_limit_config
 
 ADMIN_PAYLOAD = {
     "email": "admin@example.com",
@@ -63,6 +64,7 @@ def _id_token(
     }
     if email is not None:
         claims["email"] = email
+        claims["email_verified"] = True
     return jwt.encode(claims, key, algorithm=algorithm, headers={"kid": "key-1"})
 
 
@@ -425,7 +427,7 @@ async def test_userinfo_fills_in_an_email_the_id_token_left_out(
         client,
         state=state,
         id_token=_id_token(nonce=nonce, email=None),
-        userinfo={"sub": "ignored", "email": "from-userinfo@example.com"},
+        userinfo={"sub": "user-1", "email": "from-userinfo@example.com", "email_verified": True},
     )
 
     assert response.status_code == 200
@@ -447,3 +449,152 @@ async def test_sso_callback_refuses_a_login_with_no_email_anywhere(
     )
 
     assert response.status_code == 401
+
+
+def _unverified_id_token(*, nonce: str, verified: Any) -> str:
+    now = datetime.now(UTC)
+    claims: dict[str, Any] = {
+        "iss": ISSUER,
+        "aud": CLIENT_ID,
+        "sub": "user-1",
+        "nonce": nonce,
+        "iat": now,
+        "exp": now + timedelta(minutes=5),
+        "email": "sso-user@example.com",
+    }
+    if verified is not None:
+        claims["email_verified"] = verified
+    return jwt.encode(claims, _SIGNING_KEY, algorithm="RS256", headers={"kid": "key-1"})
+
+
+@pytest.mark.parametrize("verified", [False, "false", None])
+async def test_an_email_the_provider_has_not_verified_is_refused(
+    client: httpx.AsyncClient, verified: Any
+) -> None:
+    await _onboard(client)
+    await _configure_sso()
+    state, nonce = await _start_login(client)
+
+    response = await _callback(
+        client, state=state, id_token=_unverified_id_token(nonce=nonce, verified=verified)
+    )
+
+    assert response.status_code == 401
+    assert await _sso_users() == []
+
+
+async def test_a_string_true_from_the_provider_counts_as_verified(
+    client: httpx.AsyncClient,
+) -> None:
+    await _onboard(client)
+    await _configure_sso()
+    state, nonce = await _start_login(client)
+
+    response = await _callback(
+        client, state=state, id_token=_unverified_id_token(nonce=nonce, verified="true")
+    )
+
+    assert response.status_code == 200
+
+
+async def test_userinfo_about_another_subject_is_refused(client: httpx.AsyncClient) -> None:
+    await _onboard(client)
+    await _configure_sso()
+    state, nonce = await _start_login(client)
+
+    response = await _callback(
+        client,
+        state=state,
+        id_token=_id_token(nonce=nonce, email=None),
+        userinfo={"sub": "someone-else", "email": "victim@example.com", "email_verified": True},
+    )
+
+    assert response.status_code == 401
+    assert await _sso_users() == []
+
+
+async def test_an_unverified_userinfo_email_is_refused(client: httpx.AsyncClient) -> None:
+    await _onboard(client)
+    await _configure_sso()
+    state, nonce = await _start_login(client)
+
+    response = await _callback(
+        client,
+        state=state,
+        id_token=_id_token(nonce=nonce, email=None),
+        userinfo={"sub": "user-1", "email": "from-userinfo@example.com"},
+    )
+
+    assert response.status_code == 401
+    assert await _sso_users() == []
+
+
+async def test_the_provider_email_is_lowercased_before_it_is_stored(
+    client: httpx.AsyncClient,
+) -> None:
+    await _onboard(client)
+    await _configure_sso()
+    state, nonce = await _start_login(client)
+
+    response = await _callback(
+        client, state=state, id_token=_id_token(nonce=nonce, email="Mixed.Case@Example.COM")
+    )
+
+    assert response.status_code == 200
+    assert [user.email for user in await _sso_users()] == ["mixed.case@example.com"]
+
+
+async def test_the_provider_email_links_an_existing_account_whatever_its_case(
+    client: httpx.AsyncClient,
+) -> None:
+    await _onboard(client)
+    await _configure_sso()
+    state, nonce = await _start_login(client)
+
+    response = await _callback(
+        client, state=state, id_token=_id_token(nonce=nonce, email="ADMIN@example.com")
+    )
+
+    assert response.status_code == 200
+    assert [user.email for user in await _sso_users()] == ["admin@example.com"]
+
+
+async def test_discovery_publishing_another_issuer_is_refused(client: httpx.AsyncClient) -> None:
+    await _onboard(client)
+    await _configure_sso()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={**DISCOVERY_PAYLOAD, "issuer": "https://evil.example.com"})
+
+    _use(httpx.MockTransport(handler))
+
+    response = await client.get("/auth/sso/login")
+
+    assert response.status_code == 400
+
+
+async def test_the_sso_entry_points_are_rate_limited(client: httpx.AsyncClient) -> None:
+    await _onboard(client)
+    await _configure_sso()
+    _use(_provider())
+    allowance = get_rate_limit_config().token_max_attempts
+
+    statuses = [(await client.get("/auth/sso/login")).status_code for _ in range(allowance + 1)]
+
+    assert statuses[:allowance] == [307] * allowance
+    assert statuses[-1] == 429
+
+
+async def test_the_sso_callback_is_rate_limited(client: httpx.AsyncClient) -> None:
+    await _onboard(client)
+    await _configure_sso()
+    _use(_provider())
+    allowance = get_rate_limit_config().token_max_attempts
+
+    statuses = [
+        (await client.post("/auth/sso/callback", json={"code": "c", "state": "s"})).status_code
+        for _ in range(allowance + 1)
+    ]
+
+    assert statuses[:allowance] == [401] * allowance
+    assert statuses[-1] == 429

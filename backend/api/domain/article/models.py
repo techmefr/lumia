@@ -61,15 +61,22 @@ ARTICLE_FEED_CANONICAL_INDEX = "uq_articles_feed_canonical_url"
 
 class Article(Base, TimestampMixin):
     __tablename__ = "articles"
-    __table_args__ = (Index(ARTICLE_FEED_CANONICAL_INDEX, "feed_id", "canonical_url", unique=True),)
+    __table_args__ = (
+        Index("ix_articles_search_vector", "search_vector", postgresql_using="gin"),
+        Index(ARTICLE_FEED_CANONICAL_INDEX, "feed_id", "canonical_url", unique=True),
+    )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     # The Fever protocol identifies items by an integer and pages with since_id / max_id, which a
     # random uuid cannot answer. The identity grows with insertion, so it is also the cursor.
     fever_id: Mapped[int] = mapped_column(BigInteger, Identity(), unique=True)
-    feed_id: Mapped[UUID] = mapped_column(ForeignKey("feeds.id"))
-    author_id: Mapped[UUID | None] = mapped_column(ForeignKey("authors.id"), default=None)
-    category_id: Mapped[UUID | None] = mapped_column(ForeignKey("categories.id"), default=None)
+    feed_id: Mapped[UUID] = mapped_column(ForeignKey("feeds.id"), index=True)
+    author_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("authors.id"), default=None, index=True
+    )
+    category_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("categories.id"), default=None, index=True
+    )
     external_entry_id: Mapped[str]
     title: Mapped[str]
     url: Mapped[str]
@@ -83,7 +90,7 @@ class Article(Base, TimestampMixin):
     enclosure_url: Mapped[str | None] = mapped_column(default=None)
     enclosure_type: Mapped[str | None] = mapped_column(default=None)
     original_lang: Mapped[Lang] = mapped_column(default=Lang.FR)
-    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     # Computed by postgres itself, never written from python: a generated column rejects any
     # explicit value on insert or update. The expression is shared with the query side so the two
     # cannot drift apart.
@@ -107,7 +114,9 @@ class ArticleKeyword(Base):
     __tablename__ = "article_keywords"
 
     article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"), primary_key=True)
-    keyword_id: Mapped[UUID] = mapped_column(ForeignKey("keywords.id"), primary_key=True)
+    keyword_id: Mapped[UUID] = mapped_column(
+        ForeignKey("keywords.id"), primary_key=True, index=True
+    )
     weight: Mapped[float]
 
     keyword: Mapped[Keyword] = relationship(lazy="selectin")
