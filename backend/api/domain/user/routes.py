@@ -42,6 +42,7 @@ from api.domain.user.models import Instance, Invitation, Role, User
 from api.domain.user.oidc_login_service import consume_login_attempt, start_login_attempt
 from api.domain.user.password_service import change_password, reset_password
 from api.domain.user.refresh_token_service import (
+    current_session_version,
     issue_refresh_token,
     revoke_all_refresh_tokens,
     revoke_refresh_token,
@@ -181,7 +182,7 @@ def _totp_failure(exc: Exception) -> HTTPException:
 
 
 async def _issue_token_pair(session: AsyncSession, user_id: UUID) -> TokenPairResponse:
-    access_token = create_access_token(user_id)
+    access_token = create_access_token(user_id, await current_session_version(session, user_id))
     refresh_token = await issue_refresh_token(session, user_id)
     return TokenPairResponse(access_token=access_token, refresh_token=refresh_token)
 
@@ -352,7 +353,8 @@ async def refresh(
         user_id, refresh_token = await rotate_refresh_token(session, payload.refresh_token)
     except InvalidRefreshTokenError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from exc
-    return TokenPairResponse(access_token=create_access_token(user_id), refresh_token=refresh_token)
+    access_token = create_access_token(user_id, await current_session_version(session, user_id))
+    return TokenPairResponse(access_token=access_token, refresh_token=refresh_token)
 
 
 @router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
