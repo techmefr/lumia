@@ -4,7 +4,47 @@ const FONT_SCALE_KEY = 'lumia-font-scale';
 const FONT_PAIR_KEY = 'lumia-font-pair';
 const COMFORT_KEY = 'lumia-reading-comfort';
 
-export type Theme = 'light' | 'dark';
+export interface ThemePreset {
+	id: string;
+	dark: boolean;
+	named: boolean;
+	themeColor: string;
+	nameKey: string;
+}
+
+/**
+ * The palettes themselves live in app.css under [data-theme]. Light and dark stay the neutral
+ * pair driven by the accent; the named ones carry their own accent, so the accent picker is
+ * inert for them. themeColor mirrors each palette's --background for the browser chrome, and the
+ * early script in app.html keeps its own copy of the same table.
+ */
+export const THEME_PRESETS: ThemePreset[] = [
+	{ id: 'light', dark: false, named: false, themeColor: '#ffffff', nameKey: 'settings.themeLight' },
+	{ id: 'dark', dark: true, named: false, themeColor: '#0b0b0f', nameKey: 'settings.themeDark' },
+	{ id: 'dracula', dark: true, named: true, themeColor: '#282a36', nameKey: 'settings.themeDracula' },
+	{ id: 'alucard', dark: false, named: true, themeColor: '#fffbeb', nameKey: 'settings.themeAlucard' },
+	{ id: 'nord', dark: true, named: true, themeColor: '#2e3440', nameKey: 'settings.themeNord' },
+	{
+		id: 'solarized-light',
+		dark: false,
+		named: true,
+		themeColor: '#fdf6e3',
+		nameKey: 'settings.themeSolarizedLight'
+	},
+	{
+		id: 'solarized-dark',
+		dark: true,
+		named: true,
+		themeColor: '#002b36',
+		nameKey: 'settings.themeSolarizedDark'
+	}
+];
+
+export type Theme = string;
+
+export function findThemePreset(id: string | null | undefined): ThemePreset | undefined {
+	return THEME_PRESETS.find((preset) => preset.id === id);
+}
 
 export interface AccentPreset {
 	id: string;
@@ -65,6 +105,8 @@ export const FONT_PAIR_PRESETS: FontPairPreset[] = [
 
 function readInitialTheme(): Theme {
 	if (typeof document === 'undefined') return 'light';
+	const named = findThemePreset(document.documentElement.dataset.theme);
+	if (named?.named) return named.id;
 	return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
 }
 
@@ -101,6 +143,12 @@ let readingComfort = $state<boolean>(readInitialComfort());
 
 function applyAccent(hue: number, currentTheme: Theme) {
 	const root = document.documentElement.style;
+	if (findThemePreset(currentTheme)?.named) {
+		root.removeProperty('--primary');
+		root.removeProperty('--ring');
+		root.removeProperty('--accent');
+		return;
+	}
 	const lightness = currentTheme === 'dark' ? 0.65 : 0.55;
 	const accentLightness = currentTheme === 'dark' ? 0.3 : 0.94;
 	const accentChroma = currentTheme === 'dark' ? 0.05 : 0.03;
@@ -119,15 +167,36 @@ export function getTheme(): Theme {
 	return theme;
 }
 
+function applyThemeColor(color: string) {
+	for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+		meta.setAttribute('content', color);
+		meta.removeAttribute('media');
+	}
+}
+
+function applyTheme(preset: ThemePreset) {
+	const root = document.documentElement;
+	root.classList.toggle('dark', preset.dark);
+	if (preset.named) root.dataset.theme = preset.id;
+	else delete root.dataset.theme;
+	applyThemeColor(preset.themeColor);
+	applyAccent(accentHue, preset.id);
+}
+
+export function getThemePreset(): ThemePreset {
+	return findThemePreset(theme) ?? THEME_PRESETS[0];
+}
+
 export function setTheme(next: Theme): void {
-	theme = next;
-	document.documentElement.classList.toggle('dark', next === 'dark');
-	localStorage.setItem(THEME_KEY, next);
-	applyAccent(accentHue, next);
+	const preset = findThemePreset(next);
+	if (!preset) return;
+	theme = preset.id;
+	localStorage.setItem(THEME_KEY, preset.id);
+	applyTheme(preset);
 }
 
 export function toggleTheme(): void {
-	setTheme(theme === 'dark' ? 'light' : 'dark');
+	setTheme(getThemePreset().dark ? 'light' : 'dark');
 }
 
 export function getAccentHue(): number {

@@ -581,6 +581,12 @@ export const pt: Catalogue = {
 	'settings.theme': 'Tema',
 	'settings.themeLight': 'Claro',
 	'settings.themeDark': 'Escuro',
+	'settings.themeDracula': 'Dracula',
+	'settings.themeAlucard': 'Alucard',
+	'settings.themeNord': 'Nord',
+	'settings.themeSolarizedLight': "Solarized claro",
+	'settings.themeSolarizedDark': "Solarized escuro",
+	'settings.accentLockedHint': "Este tema tem a sua própria cor principal: a escolha abaixo aplica-se com Claro ou Escuro.",
 	'settings.accent': 'Cor principal',
 	'settings.language': 'Idioma da interface',
 	'settings.languageHint':

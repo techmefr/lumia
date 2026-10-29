@@ -568,6 +568,12 @@ export const ar: Catalogue = {
 	'settings.theme': 'المظهر',
 	'settings.themeLight': 'فاتح',
 	'settings.themeDark': 'داكن',
+	'settings.themeDracula': 'Dracula',
+	'settings.themeAlucard': 'Alucard',
+	'settings.themeNord': 'Nord',
+	'settings.themeSolarizedLight': "Solarized فاتح",
+	'settings.themeSolarizedDark': "Solarized داكن",
+	'settings.accentLockedHint': "لهذا السمة لون رئيسي خاص بها: الاختيار أدناه ينطبق على السمة الفاتحة أو الداكنة.",
 	'settings.accent': 'اللون الأساسي',
 	'settings.language': 'لغة الواجهة',
 	'settings.languageHint':

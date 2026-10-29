@@ -22,7 +22,25 @@
 					var theme =
 						storedTheme ??
 						(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-					if (theme === 'dark') document.documentElement.classList.add('dark');
+					var named = {
+						dracula: { dark: true, color: '#282a36' },
+						alucard: { dark: false, color: '#fffbeb' },
+						nord: { dark: true, color: '#2e3440' },
+						'solarized-light': { dark: false, color: '#fdf6e3' },
+						'solarized-dark': { dark: true, color: '#002b36' }
+					};
+					var preset = named.hasOwnProperty(theme) ? named[theme] : null;
+					if (preset) {
+						document.documentElement.dataset.theme = theme;
+						if (preset.dark) document.documentElement.classList.add('dark');
+						var metas = document.querySelectorAll('meta[name="theme-color"]');
+						for (var i = 0; i < metas.length; i++) {
+							metas[i].setAttribute('content', preset.color);
+							metas[i].removeAttribute('media');
+						}
+					} else if (theme === 'dark') {
+						document.documentElement.classList.add('dark');
+					}
 
 					var accents = {
 						violet: 265,
@@ -40,12 +58,14 @@
 					var accentLightness = theme === 'dark' ? 0.3 : 0.94;
 					var accentChroma = theme === 'dark' ? 0.05 : 0.03;
 					var root = document.documentElement.style;
-					root.setProperty('--primary', 'oklch(' + lightness + ' 0.2 ' + hue + ')');
-					root.setProperty('--ring', 'oklch(' + lightness + ' 0.2 ' + hue + ')');
-					root.setProperty(
-						'--accent',
-						'oklch(' + accentLightness + ' ' + accentChroma + ' ' + hue + ')'
-					);
+					if (!preset) {
+						root.setProperty('--primary', 'oklch(' + lightness + ' 0.2 ' + hue + ')');
+						root.setProperty('--ring', 'oklch(' + lightness + ' 0.2 ' + hue + ')');
+						root.setProperty(
+							'--accent',
+							'oklch(' + accentLightness + ' ' + accentChroma + ' ' + hue + ')'
+						);
+					}
 
 					var scales = { sm: 0.9, md: 1, lg: 1.15, xl: 1.3, xxl: 1.5 };
 					var scale = scales[localStorage.getItem('lumia-font-scale')] ?? 1;

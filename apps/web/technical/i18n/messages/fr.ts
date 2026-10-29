@@ -583,6 +583,12 @@ export const fr = {
 	'settings.theme': 'Thème',
 	'settings.themeLight': 'Clair',
 	'settings.themeDark': 'Sombre',
+	'settings.themeDracula': 'Dracula',
+	'settings.themeAlucard': 'Alucard',
+	'settings.themeNord': 'Nord',
+	'settings.themeSolarizedLight': "Solarized clair",
+	'settings.themeSolarizedDark': "Solarized sombre",
+	'settings.accentLockedHint': "Ce thème a sa propre couleur principale : le choix ci-dessous s'applique avec Clair ou Sombre.",
 	'settings.accent': 'Couleur principale',
 	'settings.language': 'Langue de l’interface',
 	'settings.languageHint':

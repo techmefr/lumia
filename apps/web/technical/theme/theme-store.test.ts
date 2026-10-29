@@ -217,3 +217,68 @@ describe('initPreferences', () => {
 		expect(root().dataset.readingComfort).toBe('on');
 	});
 });
+
+describe('the named themes', () => {
+	it('sets data-theme and the dark class of a dark palette', () => {
+		setTheme('dracula');
+		expect(root().dataset.theme).toBe('dracula');
+		expect(root().classList.contains('dark')).toBe(true);
+		expect(getTheme()).toBe('dracula');
+		expect(localStorage.getItem('lumia-theme')).toBe('dracula');
+	});
+
+	it('leaves the dark class off for a light palette', () => {
+		setTheme('dracula');
+		setTheme('alucard');
+		expect(root().dataset.theme).toBe('alucard');
+		expect(root().classList.contains('dark')).toBe(false);
+	});
+
+	it('hands the accent over to the palette', () => {
+		setAccent('vert');
+		setTheme('nord');
+		expect(root().style.getPropertyValue('--primary')).toBe('');
+		expect(root().style.getPropertyValue('--ring')).toBe('');
+		expect(root().style.getPropertyValue('--accent')).toBe('');
+	});
+
+	it('still remembers the accent chosen while a named theme is active', () => {
+		setTheme('nord');
+		setAccent('rose');
+		expect(root().style.getPropertyValue('--primary')).toBe('');
+		setTheme('light');
+		expect(root().style.getPropertyValue('--primary')).toContain('340');
+	});
+
+	it('returns to the neutral pair without leaving a data-theme behind', () => {
+		setTheme('solarized-dark');
+		setTheme('dark');
+		expect(root().dataset.theme).toBeUndefined();
+		expect(root().classList.contains('dark')).toBe(true);
+	});
+
+	it('ignores an unknown theme', () => {
+		setTheme('nord');
+		setTheme('vaporwave');
+		expect(getTheme()).toBe('nord');
+		expect(localStorage.getItem('lumia-theme')).toBe('nord');
+	});
+
+	it('toggles between light and dark from a named theme by its darkness', () => {
+		setTheme('dracula');
+		toggleTheme();
+		expect(getTheme()).toBe('light');
+		setTheme('alucard');
+		toggleTheme();
+		expect(getTheme()).toBe('dark');
+	});
+
+	it('paints the browser chrome with the palette background', () => {
+		document.head.innerHTML =
+			'<meta name="theme-color" content="#fff" media="(prefers-color-scheme: light)" />';
+		setTheme('dracula');
+		const meta = document.querySelector('meta[name="theme-color"]')!;
+		expect(meta.getAttribute('content')).toBe('#282a36');
+		expect(meta.hasAttribute('media')).toBe(false);
+	});
+});
