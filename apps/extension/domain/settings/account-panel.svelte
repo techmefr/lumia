@@ -49,6 +49,7 @@
 			step = flow.step;
 			error = failureMessage(outcome);
 			if (outcome === 'signed_in') {
+				await client?.tokenStore.settled?.();
 				signedIn = true;
 				password = '';
 				code = '';
@@ -59,8 +60,12 @@
 	}
 
 	async function signOut() {
-		await client?.user.logout();
-		signedIn = false;
+		try {
+			await client?.user.logout();
+		} finally {
+			await client?.tokenStore.settled?.();
+			signedIn = false;
+		}
 	}
 </script>
 

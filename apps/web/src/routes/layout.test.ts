@@ -258,3 +258,23 @@ describe('the shortcut help', () => {
 		expect(goto).not.toHaveBeenCalled();
 	});
 });
+
+describe('signing out when the server cannot be reached', () => {
+	it('still returns to the sign-in screen and wipes the per account notification state', async () => {
+		api.user.logout.mockRejectedValue(new Error('network down'));
+		localStorage.setItem('lumia-notifications-baseline', '7');
+		const view = layout();
+		const toggle = view.container.querySelector<HTMLButtonElement>('[data-test-menu-toggle]');
+
+		await fireEvent.click(toggle!);
+		const logout = view.container.querySelector<HTMLButtonElement>(
+			'[data-test-menu-entry="Sign out"]'
+		);
+		await fireEvent.click(logout!);
+
+		await waitFor(() =>
+			expect(String(vi.mocked(goto).mock.calls.at(-1)?.[0])).toContain('/login')
+		);
+		expect(localStorage.getItem('lumia-notifications-baseline')).toBeNull();
+	});
+});

@@ -2,6 +2,7 @@ export interface StorageArea {
 	get(keys: string[]): Promise<Record<string, unknown>>;
 	set(items: Record<string, unknown>): Promise<void>;
 	remove(keys: string[]): Promise<void>;
+	onChanged?: ExtensionEvent<(changes: Record<string, { newValue?: unknown }>) => void>;
 }
 
 export interface ExtensionEvent<Listener> {
@@ -35,7 +36,10 @@ export interface ExtensionApi {
 		openOptionsPage(): Promise<void>;
 	};
 	tabs: { query(query: { active: boolean; currentWindow: boolean }): Promise<ExtensionTab[]> };
-	permissions: { request(permissions: { origins: string[] }): Promise<boolean> };
+	permissions: {
+		request(permissions: { origins: string[] }): Promise<boolean>;
+		remove(permissions: { origins: string[] }): Promise<boolean>;
+	};
 	sidePanel?: { open(options: { windowId: number }): Promise<void> };
 	sidebarAction?: { open(): Promise<void> };
 }

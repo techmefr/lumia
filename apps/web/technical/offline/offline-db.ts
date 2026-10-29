@@ -1,4 +1,4 @@
-const DATABASE_NAME = 'lumia-offline';
+export const DATABASE_NAME = 'lumia-offline';
 const DATABASE_VERSION = 1;
 
 export const ARTICLES_STORE = 'articles';
@@ -26,6 +26,17 @@ export function openOfflineDatabase(): Promise<IDBDatabase> {
 		};
 	});
 	return opening;
+}
+
+export async function closeOfflineDatabase(): Promise<void> {
+	const pending = opening;
+	opening = null;
+	if (!pending) return;
+	try {
+		(await pending).close();
+	} catch {
+		return;
+	}
 }
 
 export function resetOfflineDatabaseHandle(): void {

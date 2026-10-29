@@ -13,6 +13,7 @@ export const fr = {
 	'settings.instanceLabel': "Adresse de l'instance",
 	'settings.instanceHint': "L'adresse à laquelle vous ouvrez Lumia, par exemple https://lumia.exemple.fr",
 	'settings.instanceInvalid': 'Saisissez une adresse complète en http ou https',
+	'settings.instanceInsecure': "Cette adresse n'est pas chiffrée (http) : votre mot de passe et votre session circuleraient en clair. Utilisez https, sauf pour une instance sur un réseau local de confiance.",
 	'settings.permissionDenied': "Le navigateur a refusé l'accès à cette adresse",
 	'settings.instanceSave': "Enregistrer l'adresse",
 	'settings.instanceSaved': 'Adresse enregistrée',

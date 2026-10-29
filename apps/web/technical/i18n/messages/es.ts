@@ -940,5 +940,6 @@ export const es: Catalogue = {
 	'offline.limitLabel': "Número máximo de artículos descargados",
 	'offline.limitOff': "Desactivado",
 	'offline.limitOption': "{count} artículos",
-	'offline.limitSaved': "Ajuste sin conexión guardado."
+	'offline.limitSaved': "Ajuste sin conexión guardado.",
+	'offline.feedbackDropped': "Algunos cambios hechos sin conexión no se pudieron enviar y se descartaron.",
 };

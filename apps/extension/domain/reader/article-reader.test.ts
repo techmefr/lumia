@@ -131,3 +131,19 @@ describe('ArticleReader', () => {
 		expect(onsessionlost).toHaveBeenCalled();
 	});
 });
+
+describe('ArticleReader original link', () => {
+	it('is not offered when the article address is not http or https', async () => {
+		stubRoutes({
+			'GET /articles/a1': {
+				status: 200,
+				body: { ...articleSummary({ url: 'javascript:alert(1)' }), content: '<p>x</p>', keywords: [] }
+			},
+			[MARK_READ]: { status: 200, body: { updated: 1 } }
+		});
+		await mountReader();
+
+		await screen.findByText('x');
+		expect(screen.queryByRole('link', { name: en['reader.openOriginal'] })).toBeNull();
+	});
+});

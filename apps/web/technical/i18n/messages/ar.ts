@@ -924,5 +924,6 @@ export const ar: Catalogue = {
 	'offline.limitLabel': "الحد الأقصى لعدد المقالات المنزّلة",
 	'offline.limitOff': "معطّل",
 	'offline.limitOption': "{count} مقالات",
-	'offline.limitSaved': "تم حفظ إعداد القراءة دون اتصال."
+	'offline.limitSaved': "تم حفظ إعداد القراءة دون اتصال.",
+	'offline.feedbackDropped': "تعذّر إرسال بعض التغييرات التي أُجريت دون اتصال وتم تجاهلها.",
 };

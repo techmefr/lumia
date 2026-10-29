@@ -120,8 +120,9 @@ répondent, sinon `503` en disant lequel est tombé). Chaque service du compose 
 dessus, et l'API, le worker et le conteneur web attendent que leurs dépendances soient *saines* et
 plus seulement démarrées — branchez votre supervision sur `/health`.
 
-L'app répond sur `http://localhost:8080`, l'API sur `http://localhost:8000`. Seuls ces deux-là sont
-exposés ; Miniflux, le worker, PostgreSQL et Redis restent sur le réseau interne. Le conteneur web
+L'app répond sur `http://localhost:8080`, l'API sur `http://localhost:8000`. L'API et Miniflux (8090)
+ne sont publiés que sur l'interface locale ; mets `LUMIA_API_BIND=0.0.0.0` dans `.env` pour joindre l'API
+depuis une autre machine. Le worker, PostgreSQL et Redis restent sur le réseau interne. Le conteneur web
 sert le build statique derrière nginx et relaie `/api` vers l'API, donc l'app fonctionne depuis
 n'importe quelle adresse sans configuration ni CORS. Au premier lancement, l'app déroule l'onboarding admin : compte administrateur,
 limites de l'instance (nombre de comptes, quota disque par utilisateur), puis tu peux importer un

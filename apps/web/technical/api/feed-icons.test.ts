@@ -178,3 +178,18 @@ describe('when there is no icon to be had', () => {
 		expect(feedIcons.get('feed-offline')).toBeNull();
 	});
 });
+
+describe('reset', () => {
+	it('forgets every icon and releases the object urls', async () => {
+		respond([{ ok: true }, { ok: true }]);
+		const revoke = vi.fn();
+		Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, writable: true, value: revoke });
+		await iconOf('feed-reset');
+
+		feedIcons.reset();
+
+		expect(revoke).toHaveBeenCalledWith('blob:icon-1');
+		expect(feedIcons.get('feed-reset')).toBeNull();
+		Reflect.deleteProperty(URL, 'revokeObjectURL');
+	});
+});

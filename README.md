@@ -118,8 +118,9 @@ answer, `503` and which one is down otherwise). Every service in the compose fil
 built on them, and the API, the worker and the web container wait for what they depend on to be
 healthy rather than merely started — point your own supervision at `/health`.
 
-The app answers on `http://localhost:8080` and the API on `http://localhost:8000`. Only those two are
-exposed; Miniflux, the worker, PostgreSQL and Redis stay on the internal network. The web container
+The app answers on `http://localhost:8080` and the API on `http://localhost:8000`. The API and Miniflux (8090)
+are published on the loopback interface only; set `LUMIA_API_BIND=0.0.0.0` in `.env` to reach the API from
+another machine. The worker, PostgreSQL and Redis stay on the internal network. The web container
 serves the static build behind nginx and proxies `/api` to the API, so the app works from any address
 with no configuration and no CORS. On first launch the app walks you through admin onboarding: admin account, instance
 limits (max accounts, per-user disk quota), then you're ready to import an OPML file or add feeds.

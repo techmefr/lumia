@@ -1,6 +1,7 @@
 package app.lumia.auto
 
 import android.app.Activity
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.text.InputType
 import android.view.ViewGroup
@@ -65,9 +66,15 @@ class SettingsActivity : Activity() {
 
     private fun onAction() {
         if (store.isSignedIn()) {
-            store.clear()
-            password.text.clear()
-            render()
+            action.isEnabled = false
+            worker.execute {
+                api.signOut()
+                runOnUiThread {
+                    action.isEnabled = true
+                    password.text.clear()
+                    render()
+                }
+            }
             return
         }
         val baseUrl = LumiaParsers.normalizeBaseUrl(instance.text.toString())
@@ -75,11 +82,17 @@ class SettingsActivity : Activity() {
             status.setText(R.string.settings_invalid_instance)
             return
         }
+        val debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        if (!LumiaParsers.isAcceptedInstance(baseUrl, debuggable)) {
+            status.setText(R.string.settings_https_required)
+            return
+        }
+        val apiUrl = LumiaParsers.withApiPath(baseUrl)
         val emailValue = email.text.toString().trim()
         val passwordValue = password.text.toString()
         action.isEnabled = false
         worker.execute {
-            val result = api.signIn(baseUrl, emailValue, passwordValue)
+            val result = api.signIn(apiUrl, emailValue, passwordValue)
             runOnUiThread {
                 action.isEnabled = true
                 when (result) {

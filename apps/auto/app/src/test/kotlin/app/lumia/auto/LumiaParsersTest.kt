@@ -66,4 +66,29 @@ class LumiaParsersTest {
         assertNull(MediaIds.articleOf(MediaIds.playlist("p1")))
         assertNull(MediaIds.playlistOf(MediaIds.ROOT))
     }
+
+    @Test
+    fun appendsTheApiPathOnlyWhenTheInstanceHasNone() {
+        assertEquals("https://lumia.example.com/api", LumiaParsers.withApiPath("https://lumia.example.com"))
+        assertEquals("https://x/custom", LumiaParsers.withApiPath("https://x/custom"))
+        assertEquals("http://10.0.2.2:8000/api", LumiaParsers.withApiPath("http://10.0.2.2:8000"))
+    }
+
+    @Test
+    fun refusesCleartextExceptForLocalDevelopmentOnDebugBuilds() {
+        assertTrue(LumiaParsers.isAcceptedInstance("https://lumia.example.com/api", false))
+        assertFalse(LumiaParsers.isAcceptedInstance("http://lumia.example.com/api", false))
+        assertFalse(LumiaParsers.isAcceptedInstance("http://192.168.1.10:8000", true))
+        assertFalse(LumiaParsers.isAcceptedInstance("http://10.0.2.2:8000", false))
+        assertTrue(LumiaParsers.isAcceptedInstance("http://10.0.2.2:8000", true))
+        assertTrue(LumiaParsers.isAcceptedInstance("http://localhost:8000", true))
+    }
+
+    @Test
+    fun onlyKnownControllersMayConnect() {
+        assertTrue(ControllerPolicy.isAllowed("app.lumia.auto", "app.lumia.auto", false))
+        assertTrue(ControllerPolicy.isAllowed("com.google.android.projection.gearhead", "app.lumia.auto", false))
+        assertTrue(ControllerPolicy.isAllowed("com.example.unknown", "app.lumia.auto", true))
+        assertFalse(ControllerPolicy.isAllowed("com.example.unknown", "app.lumia.auto", false))
+    }
 }

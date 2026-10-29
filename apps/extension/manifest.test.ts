@@ -60,3 +60,22 @@ describe('buildManifest', () => {
 		expect(commands['open-reader'].suggested_key.default).toBe('Alt+Shift+K');
 	});
 });
+
+describe('buildManifest store requirements', () => {
+	it('declares icons for the toolbar and the extension page', () => {
+		const manifest = buildManifest('chrome', '1');
+		expect(manifest.icons['48']).toBe('icons/icon-48.png');
+		expect(manifest.action.default_icon['96']).toBe('icons/icon-96.png');
+	});
+
+	it('requires chrome 114 for the side panel api, and only on chrome', () => {
+		expect(buildManifest('chrome', '1')).toMatchObject({ minimum_chrome_version: '114' });
+		expect('minimum_chrome_version' in buildManifest('firefox', '1')).toBe(false);
+	});
+
+	it('declares that the firefox add-on collects no data', () => {
+		expect(buildManifest('firefox', '1').browser_specific_settings?.gecko).toMatchObject({
+			data_collection_permissions: { required: ['none'] }
+		});
+	});
+});

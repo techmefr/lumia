@@ -943,7 +943,8 @@ export const fr = {
 	'offline.limitLabel': "Nombre maximal d'articles téléchargés",
 	'offline.limitOff': "Désactivé",
 	'offline.limitOption': "{count} articles",
-	'offline.limitSaved': "Réglage hors ligne enregistré."
+	'offline.limitSaved': "Réglage hors ligne enregistré.",
+	'offline.feedbackDropped': "Certaines modifications faites hors ligne n’ont pas pu être envoyées et ont été abandonnées.",
 } as const;
 
 export type MessageKey = keyof typeof fr;
