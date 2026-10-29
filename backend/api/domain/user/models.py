@@ -152,6 +152,7 @@ class User(Base, TimestampMixin):
     #: The last time step accepted for this account. A code stays valid for its whole window, so
     #: without this an overheard code can be replayed until the window turns.
     totp_last_used_step: Mapped[int | None] = mapped_column(BigInteger, default=None)
+    stored_bytes: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
 
 
 Index("uq_users_email_lower", func.lower(User.email), unique=True)

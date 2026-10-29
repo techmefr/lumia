@@ -129,3 +129,23 @@ async def test_saving_a_url_is_refused_once_the_account_quota_is_full(
 
     assert refused.status_code == 413
     assert "Mo" in refused.json()["detail"]
+
+
+async def test_the_counter_follows_every_change_to_an_article(
+    session: AsyncSession, admin_headers: dict[str, str]
+) -> None:
+    admin = await _current_admin(session)
+    await _store_article(session, admin, "abc")
+    article = (await session.scalars(select(Article))).one()
+
+    article.summary = "de"
+    await session.commit()
+    assert await get_account_used_bytes(session, admin.id) == 5
+
+    article.content = "abcdef"
+    await session.commit()
+    assert await get_account_used_bytes(session, admin.id) == 8
+
+    await session.delete(article)
+    await session.commit()
+    assert await get_account_used_bytes(session, admin.id) == 0
