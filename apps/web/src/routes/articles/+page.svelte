@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -186,10 +186,10 @@
 	// Kept in the address bar rather than only in memory: a search result has to be shareable by
 	// link and survive the back button, per the reader-search request (#70).
 	function syncSearchToUrl(query: string) {
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		if (query) url.searchParams.set('q', query);
 		else url.searchParams.delete('q');
-		void goto(url, { replaceState: true, keepFocus: true, noScroll: true });
+		void goto(url, { replace: true, reset: false });
 	}
 
 	function submitSearch(event: SubmitEvent) {

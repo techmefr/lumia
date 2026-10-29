@@ -20,7 +20,7 @@ vi.mock('$technical/api/client', () => ({
 const api = vi.mocked(lumia.playlist);
 
 function playlist(id: string, name: string, itemCount = 3): PlaylistSummary {
-	return { id, name, item_count: itemCount, total_minutes: itemCount * 4 } as PlaylistSummary;
+	return { id, name, item_count: itemCount, total_minutes: itemCount * 4 } as unknown as PlaylistSummary;
 }
 
 const PLAYLISTS = [playlist('p1', 'Matin'), playlist('p2', 'Trajet', 7)];

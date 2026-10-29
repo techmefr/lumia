@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import { onMount } from 'svelte';
 	import type { AlertNotification, SavedSearch } from '@lumia/core';
 	import { ApiError } from '@lumia/core';

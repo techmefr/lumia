@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import type { NewsletterInboxStatus } from '@lumia/core';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle, toast } from '@lumia/ui';
 	import { lumia } from '$technical/api/client';

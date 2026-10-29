@@ -25,6 +25,9 @@ function article(id: string, overrides: Partial<ArticleSummary> = {}): ArticleSu
 		read: false,
 		scroll_progress: 0,
 		relevance_score: 50,
+		enclosure_url: null,
+		enclosure_type: null,
+		tags: [],
 		...overrides
 	};
 }

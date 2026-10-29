@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import type { Feed, Folder, UnreadCounts } from '@lumia/core';
 	import Newspaper from '@lucide/svelte/icons/newspaper';
 	import FolderIcon from '@lucide/svelte/icons/folder';
