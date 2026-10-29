@@ -13,6 +13,8 @@ data class Article(val id: String, val title: String, val sourceLabel: String)
 data class PlaylistDetail(val id: String, val name: String, val articles: List<Article>)
 
 object LumiaParsers {
+    private val LOCAL_DEVELOPMENT_HOSTS = setOf("localhost", "127.0.0.1", "10.0.2.2")
+
     fun normalizeBaseUrl(raw: String): String? {
         val trimmed = raw.trim()
         if (trimmed.isEmpty()) return null
@@ -28,6 +30,25 @@ object LumiaParsers {
         val path = (uri.path ?: "").trimEnd('/')
         return "$scheme://$host$port$path"
     }
+
+    fun withApiPath(baseUrl: String): String {
+        val path = URI(baseUrl).path ?: ""
+        return if (path.isEmpty()) "$baseUrl/api" else baseUrl
+    }
+
+    fun isCleartext(baseUrl: String): Boolean = baseUrl.startsWith("http://", ignoreCase = true)
+
+    fun isLocalDevelopmentHost(baseUrl: String): Boolean {
+        val host = try {
+            URI(baseUrl).host
+        } catch (error: Exception) {
+            null
+        }
+        return host in LOCAL_DEVELOPMENT_HOSTS
+    }
+
+    fun isAcceptedInstance(baseUrl: String, debuggable: Boolean): Boolean =
+        !isCleartext(baseUrl) || (debuggable && isLocalDevelopmentHost(baseUrl))
 
     fun audioUrl(baseUrl: String, articleId: String): String = "$baseUrl/articles/$articleId/audio"
 
