@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from api.technical.logging.correlation import CORRELATION_ID_FIELD, get_correlation_id
+from api.technical.logging.redaction import AccessLogRedactionFilter
 from config.logging import LogFormat, get_logging_config
 
 CONSOLE_FORMAT = "%(asctime)s %(levelname)-8s %(name)s [%(correlation_id)s] %(message)s"
@@ -92,3 +93,6 @@ def configure_logging() -> None:
         library_logger = logging.getLogger(library_logger_name)
         library_logger.handlers.clear()
         library_logger.propagate = True
+    access_logger = logging.getLogger("uvicorn.access")
+    if not any(isinstance(item, AccessLogRedactionFilter) for item in access_logger.filters):
+        access_logger.addFilter(AccessLogRedactionFilter())
