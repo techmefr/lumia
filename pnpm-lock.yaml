@@ -19,8 +19,8 @@ importers:
   apps/extension:
     dependencies:
       '@lucide/svelte':
-        specifier: ^1.45.0
-        version: 1.45.0(svelte@5.57.2)
+        specifier: ^1.61.0
+        version: 1.61.0(svelte@5.57.2)
       '@lumia/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -28,8 +28,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       bits-ui:
-        specifier: ^2.19.2
-        version: 2.19.2(@internationalized/date@3.12.3)(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)
+        specifier: ^2.20.2
+        version: 2.20.2(@internationalized/date@3.12.3)(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -114,8 +114,8 @@ importers:
         specifier: ^8.3.1
         version: 8.3.1(@capacitor/core@8.6.0)
       '@lucide/svelte':
-        specifier: ^1.45.0
-        version: 1.45.0(svelte@5.57.2)
+        specifier: ^1.61.0
+        version: 1.61.0(svelte@5.57.2)
       '@lumia/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -123,8 +123,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       bits-ui:
-        specifier: ^2.19.2
-        version: 2.19.2(@internationalized/date@3.12.3)(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)
+        specifier: ^2.20.2
+        version: 2.20.2(@internationalized/date@3.12.3)(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -141,8 +141,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1(tailwind-merge@3.7.0)(tailwindcss@4.3.3)
       temporal-polyfill:
-        specifier: ^1.0.5
-        version: 1.0.5
+        specifier: ^1.0.6
+        version: 1.0.6
     devDependencies:
       '@axe-core/playwright':
         specifier: ^4.14.0
@@ -224,8 +224,8 @@ importers:
   packages/create-lumia:
     dependencies:
       citty:
-        specifier: ^0.1.6
-        version: 0.1.6
+        specifier: ^0.2.2
+        version: 0.2.2
       consola:
         specifier: ^3.4.2
         version: 3.4.2
@@ -249,11 +249,11 @@ importers:
   packages/ui:
     dependencies:
       '@lucide/svelte':
-        specifier: ^1.45.0
-        version: 1.45.0(svelte@5.57.2)
+        specifier: ^1.61.0
+        version: 1.61.0(svelte@5.57.2)
       bits-ui:
-        specifier: ^2.19.2
-        version: 2.19.2(@internationalized/date@3.12.3)(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)
+        specifier: ^2.20.2
+        version: 2.20.2(@internationalized/date@3.12.3)(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -264,8 +264,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1(tailwind-merge@3.7.0)(tailwindcss@4.3.3)
       temporal-polyfill:
-        specifier: ^1.0.5
-        version: 1.0.5
+        specifier: ^1.0.6
+        version: 1.0.6
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.3.1
@@ -656,8 +656,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@lucide/svelte@1.45.0':
-    resolution: {integrity: sha512-SBqLvcYGEDz82Lwz7meR4qM+SGeDKRU/RBo8BhAhARNUzIXTrykbFLabW9X1Fokp01Yw2kOFx/AsLUUIxj0NLA==}
+  '@lucide/svelte@1.61.0':
+    resolution: {integrity: sha512-Vwj4ADoKgVogLFpEbXv2PS2hh2fj+aAqPuiNydI88Zkyb1l7veL4fXgRrOX3tgpESHhIGneNkSSYhHupvCBshg==}
     peerDependencies:
       svelte: ^5
 
@@ -1320,8 +1320,8 @@ packages:
     resolution: {integrity: sha512-QxD8cf2eVqJOOz63z6JIN9BzvVs/dlySa5HGSBH5xtR8dPteIRQnBxxKqkNTiT6jbDTF6jAfrd4oMcND9RGbQg==}
     engines: {node: '>=0.6'}
 
-  bits-ui@2.19.2:
-    resolution: {integrity: sha512-W9upilTmLTIWjuVAD6Ta7XoS6gxRflmCQnXamj+WN1eYxZecghqGENpuSMAKQmVENMLXhh85BZb04LCrBd2+Ng==}
+  bits-ui@2.20.2:
+    resolution: {integrity: sha512-cb1eQD1wZEhJWb1dTLiAdYWqeUI5v7f+7EAHmetxBuELI9lo4cpAIfGEjald/PR4wTR80Fu5DFH+IaY1OKn+tg==}
     engines: {node: '>=20'}
     peerDependencies:
       '@internationalized/date': ^3.8.1
@@ -1375,8 +1375,8 @@ packages:
     resolution: {integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==}
     engines: {node: '>=18'}
 
-  citty@0.1.6:
-    resolution: {integrity: sha512-tskPPKEs8D2KPafUypv2gxwJP8h/OaJmC82QQGGDQcHvXX43xF2VDACcJVmZ0EuSxkpO9Kc4MlrA3q0+FG58AQ==}
+  citty@0.2.2:
+    resolution: {integrity: sha512-+6vJA3L98yv+IdfKGZHBNiGW5KHn22e/JwID0Strsz8h4S/csAu/OuICwxrg44k5MRiZHWIo8XXuJgQTriRP4w==}
 
   cliui@6.0.0:
     resolution: {integrity: sha512-t6wbgtoCXvAzst7QgXxJYqPt0usEfbgQdftEPbLL/cvv6HPE5VgvqCuAIDR0NgU52ds6rFwqrgakNLrHEjCbrQ==}
@@ -2402,8 +2402,8 @@ packages:
     resolution: {integrity: sha512-1YiPCAXT0Ct6g1vOMmSLa0Nsc3QRMvtDF32ihgglGVrugIuIK38RyDiFNXVDhtQ81TJjSO57NdMw6DyYLqSGDQ==}
     engines: {node: '>=18'}
 
-  tabbable@6.5.0:
-    resolution: {integrity: sha512-wieBHXygIm7OyQOu5hQlkk62/WyCFYGlWg7L6/ZCUZwx0o398Zkn4pVmMyfYhfMG8kGrj/Krt8eIk6UKC6VzwA==}
+  tabbable@6.5.1:
+    resolution: {integrity: sha512-dMCuwDUY6Noz3zVKLefBC4wq+aJV20yc7vWmM7uTNGwtQSFF5kX7OUIUsxuVajz/bdt5Xqdah3/0NLjth+cM5A==}
 
   tailwind-merge@3.7.0:
     resolution: {integrity: sha512-XPPUyAc+cvspz3lHTcR/QgPfW2A0lv/xQNIjX3HGhLR+Nq2lHaLq5MtTesHn8GUr3W3DguT2KT5x3NVgRtYwmA==}
@@ -2431,8 +2431,8 @@ packages:
     resolution: {integrity: sha512-MFO/QzvtAOmJbkhOaCTvbGcFN9L9b+JunIsDwaKljSOdcLMea3NJ1k9Usz/rjdfSXTq4dfzfeS7W4p4YOAAHeA==}
     engines: {node: '>=18'}
 
-  temporal-polyfill@1.0.5:
-    resolution: {integrity: sha512-+H/mmY74i6wXCMcjIhGuSnODcyZnc4eois2myhOyX0UqRAKNXQY5m9iB1en5jQ/n4SXtjLXo1ElBI5bmn8tZwQ==}
+  temporal-polyfill@1.0.6:
+    resolution: {integrity: sha512-tYyEry1HLGUDbm2356W3iYD0OZdo7rlP7h98Zr/EnjqLZQwTAfcBDUvJnJbfA15v/vQad57hJZScG5O0W2oKEA==}
 
   temporal-spec@1.0.1:
     resolution: {integrity: sha512-wxVoanmDeavXie1vu2JaQ3WIc3JZnWAOYFBsJyATaVsXsycKYUflGsyBmrRSnoCpZJpwPyr38VpgSUlQ8CbFxg==}
@@ -3068,7 +3068,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@lucide/svelte@1.45.0(svelte@5.57.2)':
+  '@lucide/svelte@1.61.0(svelte@5.57.2)':
     dependencies:
       svelte: 5.57.2
 
@@ -3614,7 +3614,7 @@ snapshots:
 
   big-integer@1.6.52: {}
 
-  bits-ui@2.19.2(@internationalized/date@3.12.3)(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2):
+  bits-ui@2.20.2(@internationalized/date@3.12.3)(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2):
     dependencies:
       '@floating-ui/core': 1.8.0
       '@floating-ui/dom': 1.8.0
@@ -3623,7 +3623,7 @@ snapshots:
       runed: 0.35.1(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)
       svelte: 5.57.2
       svelte-toolbelt: 0.10.6(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.27.7)(jiti@2.7.0)))(svelte@5.57.2)
-      tabbable: 6.5.0
+      tabbable: 6.5.1
     transitivePeerDependencies:
       - '@sveltejs/kit'
 
@@ -3670,9 +3670,7 @@ snapshots:
 
   chownr@3.0.0: {}
 
-  citty@0.1.6:
-    dependencies:
-      consola: 3.4.2
+  citty@0.2.2: {}
 
   cliui@6.0.0:
     dependencies:
@@ -4708,7 +4706,7 @@ snapshots:
     transitivePeerDependencies:
       - '@typescript-eslint/types'
 
-  tabbable@6.5.0: {}
+  tabbable@6.5.1: {}
 
   tailwind-merge@3.7.0: {}
 
@@ -4729,7 +4727,7 @@ snapshots:
       minizlib: 3.1.0
       yallist: 5.0.0
 
-  temporal-polyfill@1.0.5:
+  temporal-polyfill@1.0.6:
     dependencies:
       temporal-spec: 1.0.1
       temporal-utils: 1.0.3
