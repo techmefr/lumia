@@ -1,7 +1,7 @@
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from api.domain.article.models import Article
@@ -51,9 +51,6 @@ class PlaylistMember(Base, TimestampMixin):
 
 class PlaylistItem(Base):
     __tablename__ = "playlist_items"
-    __table_args__ = (
-        UniqueConstraint("playlist_id", "article_id", name="uq_playlist_items_playlist_article"),
-    )
 
     playlist_id: Mapped[UUID] = mapped_column(ForeignKey("playlists.id"), primary_key=True)
     article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"), primary_key=True)

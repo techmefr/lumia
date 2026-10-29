@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.domain.instance.models import AccessMode
@@ -55,8 +55,8 @@ class ReadingLang(StrEnum):
 class MagicLinkPurpose(StrEnum):
     """What the reader asked the link for, which decides where in the app it lands them.
 
-    The token itself is the same either way: both purposes prove the same thing, control of the
-    mailbox, and a reader who can sign in can already set a new password from the settings.
+    A token is bound to the purpose it was issued for: a sign-in link cannot reset a password, and
+    a reset link cannot open a session.
     """
 
     SIGN_IN = "sign_in"
@@ -154,6 +154,9 @@ class User(Base, TimestampMixin):
     totp_last_used_step: Mapped[int | None] = mapped_column(BigInteger, default=None)
 
 
+Index("uq_users_email_lower", func.lower(User.email), unique=True)
+
+
 class RecoveryCode(Base, TimestampMixin):
     """One of the codes handed out at enrolment, the way back in when the authenticator is gone.
 
@@ -173,9 +176,9 @@ class RefreshToken(Base, TimestampMixin):
     __tablename__ = "refresh_tokens"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
     token: Mapped[str] = mapped_column(unique=True)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     #: Every rotation of one login shares a family, so a replayed token can revoke its siblings
     #: without touching the sessions the reader has on other devices.
     family_id: Mapped[UUID] = mapped_column(default=uuid4, index=True)
@@ -194,7 +197,7 @@ class Invitation(Base, TimestampMixin):
     __tablename__ = "invitations"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    instance_id: Mapped[UUID] = mapped_column(ForeignKey("instances.id"))
+    instance_id: Mapped[UUID] = mapped_column(ForeignKey("instances.id"), index=True)
     email: Mapped[str]
     role: Mapped[Role] = mapped_column(default=Role.MEMBER)
     token: Mapped[str] = mapped_column(unique=True)
@@ -221,7 +224,8 @@ class MagicLinkToken(Base, TimestampMixin):
     __tablename__ = "magic_link_tokens"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
     token: Mapped[str] = mapped_column(unique=True)
+    purpose: Mapped[MagicLinkPurpose] = mapped_column(default=MagicLinkPurpose.SIGN_IN)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
