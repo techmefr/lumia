@@ -24,6 +24,10 @@ def ensure_public_http_url(url: str, *, resolve: Resolver = resolve_with_system)
     none of them are the web. The host is resolved here rather than pattern-matched: a name under
     the attacker's control can point anywhere, and `127.0.0.1` is only the most obvious spelling.
     """
+    resolve_public_addresses(url, resolve=resolve)
+
+
+def resolve_public_addresses(url: str, *, resolve: Resolver = resolve_with_system) -> list[str]:
     parts = urlsplit(url)
     if parts.scheme not in _ALLOWED_SCHEMES:
         raise BlockedUrlError(f"unsupported scheme: {parts.scheme or 'none'}")
@@ -42,19 +46,13 @@ def ensure_public_http_url(url: str, *, resolve: Resolver = resolve_with_system)
     for address in addresses:
         if not _is_public(ipaddress.ip_address(address)):
             raise BlockedUrlError(f"{host} resolves to the non-public address {address}")
+    return list(addresses)
 
 
 def _is_public(address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
     if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped is not None:
         return _is_public(address.ipv4_mapped)
-    return not (
-        address.is_private
-        or address.is_loopback
-        or address.is_link_local
-        or address.is_multicast
-        or address.is_reserved
-        or address.is_unspecified
-    )
+    return address.is_global and not address.is_multicast
 
 
 def get_url_resolver() -> Resolver:

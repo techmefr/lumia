@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Identity,
+    Index,
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import TSVECTOR
@@ -55,8 +56,12 @@ class Keyword(Base):
     lang: Mapped[Lang]
 
 
+ARTICLE_FEED_CANONICAL_INDEX = "uq_articles_feed_canonical_url"
+
+
 class Article(Base, TimestampMixin):
     __tablename__ = "articles"
+    __table_args__ = (Index(ARTICLE_FEED_CANONICAL_INDEX, "feed_id", "canonical_url", unique=True),)
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     # The Fever protocol identifies items by an integer and pages with since_id / max_id, which a

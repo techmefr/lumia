@@ -1,3 +1,6 @@
+import contextlib
+import threading
+
 import httpx
 import pytest
 
@@ -100,3 +103,23 @@ async def test_the_re_crawl_falls_back_to_the_feed_content_when_the_url_is_block
 
     assert result == "<p>fallback</p>"
     assert requested == []
+
+
+async def test_the_url_check_runs_off_the_event_loop(monkeypatch: pytest.MonkeyPatch) -> None:
+    loop_thread = threading.get_ident()
+    seen: list[int] = []
+
+    def check(url: str, *, resolve: object) -> None:
+        seen.append(threading.get_ident())
+
+    monkeypatch.setattr("worker.technical.content_extraction.ensure_public_http_url", check)
+    transport, _requested = _serving()
+    extractor = TrafilaturaPageExtractor(
+        transport=transport, resolve=_resolving_to_the_public_internet
+    )
+
+    with contextlib.suppress(PageFetchError):
+        await extractor.fetch("https://example.com/a")
+
+    assert seen
+    assert loop_thread not in seen

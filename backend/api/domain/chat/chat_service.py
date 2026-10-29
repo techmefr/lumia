@@ -121,12 +121,18 @@ def _question(action: ChatAction | None, message: str | None, passage: str | Non
     return ACTION_PROMPTS[action]
 
 
+def _neutralise_markers(text: str) -> str:
+    return text.replace("<<<", "<< <").replace(">>>", "> >>")
+
+
 def _prompt(
     article: Article, history: list[ChatMessage], question: str, passage: str | None
 ) -> str:
-    text = f"{article.title}\n\n{strip_html(article.content)}"
-    turns = "\n".join(f"{turn.role.value}: {turn.content}" for turn in history)
-    quoted = f"<<<PASSAGE\n{passage}\nPASSAGE>>>\n" if passage is not None else ""
+    text = _neutralise_markers(f"{article.title}\n\n{strip_html(article.content)}")
+    turns = _neutralise_markers("\n".join(f"{turn.role.value}: {turn.content}" for turn in history))
+    quoted = (
+        f"<<<PASSAGE\n{_neutralise_markers(passage)}\nPASSAGE>>>\n" if passage is not None else ""
+    )
     return (
         f"{quoted}<<<ARTICLE\n{text[: get_chat_config().chat_max_article_chars]}\nARTICLE>>>\n"
         f"<<<EARLIER_TURNS\n{turns}\nEARLIER_TURNS>>>\n"

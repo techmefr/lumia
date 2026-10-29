@@ -14,6 +14,7 @@ from arq.worker import Function, func
 
 from api.domain.webhook.models import DeliveryStatus, OutboundWebhook, WebhookDelivery
 from api.technical.crypto.secret_box import decrypt_secret
+from api.technical.net.pinned_transport import guarded_transport
 from api.technical.net.url_guard import (
     BlockedUrlError,
     Resolver,
@@ -109,7 +110,9 @@ async def _attempt(
     }
     try:
         async with httpx.AsyncClient(
-            transport=transport, timeout=TIMEOUT_SECONDS, follow_redirects=False
+            transport=guarded_transport(transport, resolve),
+            timeout=TIMEOUT_SECONDS,
+            follow_redirects=False,
         ) as client:
             response = await client.post(webhook.url, content=body, headers=headers)
     except httpx.HTTPError as exc:
