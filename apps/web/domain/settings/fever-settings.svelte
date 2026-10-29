@@ -4,8 +4,8 @@
 	import { getLocale } from '$technical/i18n/i18n.svelte';
 	import { onMount } from 'svelte';
 	import type { FeverKeyCreated, FeverKeyStatus } from '@lumia/core';
-	import { Button, Card, CardContent, Input, Label, toast } from '@lumia/ui';
-	import Rss from '@lucide/svelte/icons/rss';
+	import { Button, Card, CardContent, Input, Label, toast, Icon } from '@lumia/ui';
+	import { RssIcon } from '@hugeicons/core-free-icons';
 	import { isDemo, lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte.js';
 
@@ -83,7 +83,7 @@
 		<CardContent class="flex flex-col gap-6 pt-6">
 			<div>
 				<h2 class="flex items-center gap-2 text-lg font-semibold">
-					<Rss class="size-5 text-primary" aria-hidden="true" />
+					<Icon icon={RssIcon} class="size-5 text-primary" />
 					{t('fever.title')}
 				</h2>
 				<p class="mt-1 text-sm text-muted-foreground">{t('fever.intro')}</p>

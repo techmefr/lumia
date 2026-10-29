@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { base } from '$technical/paths/base';
 	import { page } from '$app/state';
-	import { Button } from '@lumia/ui';
-	import Compass from '@lucide/svelte/icons/compass';
+	import { Button, Icon } from '@lumia/ui';
+	import { Compass01Icon } from '@hugeicons/core-free-icons';
 	import { t } from '$technical/i18n/i18n.svelte';
 
 	// A wrong url used to land on the router with nothing to show. Which of the two messages
@@ -14,7 +14,7 @@
 	class="mx-auto flex min-h-[60dvh] max-w-md flex-col items-center justify-center gap-4 text-center"
 >
 	<span class="flex size-14 items-center justify-center rounded-2xl bg-secondary text-primary">
-		<Compass class="size-7" />
+		<Icon icon={Compass01Icon} class="size-7" />
 	</span>
 	<h1 class="text-2xl font-bold">
 		{notFound ? t('error.notFoundTitle') : t('error.genericTitle')}

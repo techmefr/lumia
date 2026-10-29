@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Card, CardContent, Label, toast } from '@lumia/ui';
-	import WifiOff from '@lucide/svelte/icons/wifi-off';
+	import { Card, CardContent, Label, toast, Icon } from '@lumia/ui';
+	import { WifiDisconnected01Icon } from '@hugeicons/core-free-icons';
 	import { t } from '$technical/i18n/i18n.svelte';
 	import {
 		OFFLINE_LIMIT_OPTIONS,
@@ -22,7 +22,7 @@
 	<CardContent class="flex flex-col gap-4 pt-6">
 		<div>
 			<h2 class="flex items-center gap-2 text-lg font-semibold">
-				<WifiOff class="size-5 text-primary" />
+				<Icon icon={WifiDisconnected01Icon} class="size-5 text-primary" />
 				{t('offline.settingsTitle')}
 			</h2>
 			<p class="mt-1 text-sm text-muted-foreground">{t('offline.settingsDescription')}</p>

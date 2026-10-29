@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { InstanceFeed } from '@lumia/core';
-	import { Button, Card, CardContent, Skeleton, toast } from '@lumia/ui';
-	import Library from '@lucide/svelte/icons/library';
+	import { Button, Card, CardContent, Skeleton, toast, Icon } from '@lumia/ui';
+	import { LibraryIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte';
 
@@ -72,7 +72,7 @@
 	<CardContent class="flex flex-col gap-4 pt-6">
 		<div>
 			<h2 class="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-				<Library class="size-4" />
+				<Icon icon={LibraryIcon} class="size-4" />
 				{t('instanceFeeds.title')}
 			</h2>
 			<p class="mt-1 text-xs text-muted-foreground">{t('instanceFeeds.intro')}</p>

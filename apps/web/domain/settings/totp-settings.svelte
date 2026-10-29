@@ -3,8 +3,8 @@
 	import { onMount } from 'svelte';
 	import QRCode from 'qrcode';
 	import { ApiError, secondFactorFailure, type Me, type TotpEnrolment } from '@lumia/core';
-	import { Button, Card, CardContent, Input, Label, toast } from '@lumia/ui';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import { Button, Card, CardContent, Input, Label, toast, Icon } from '@lumia/ui';
+	import { SecurityCheckIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte.js';
 
@@ -136,7 +136,7 @@
 	<CardContent class="flex flex-col gap-6 pt-6">
 		<div>
 			<h2 class="flex items-center gap-2 text-lg font-semibold">
-				<ShieldCheck class="size-5 text-primary" />
+				<Icon icon={SecurityCheckIcon} class="size-5 text-primary" />
 				{t('totp.title')}
 			</h2>
 			<p class="mt-1 text-sm text-muted-foreground">{t('totp.intro')}</p>

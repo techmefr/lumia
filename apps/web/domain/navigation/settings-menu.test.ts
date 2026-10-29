@@ -1,4 +1,4 @@
-import Settings from '@lucide/svelte/icons/settings';
+import { Settings01Icon } from '@hugeicons/core-free-icons';
 import { fireEvent, render } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SettingsMenu from './settings-menu.svelte';
@@ -16,7 +16,7 @@ function menu(overrides: Partial<Props> = {}) {
 		],
 		href: '/settings',
 		label: 'Réglages',
-		icon: Settings,
+		icon: Settings01Icon,
 		...overrides
 	} as Props);
 

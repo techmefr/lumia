@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Icon, type IconSvgElement } from '@lumia/ui';
 	import { t } from '$technical/i18n/i18n.svelte';
 
 	interface MenuEntry {
@@ -12,10 +13,10 @@
 		/** Where a short press goes. A long press (or the arrow) opens the menu instead. */
 		href: string;
 		label: string;
-		icon: import('svelte').Component<{ class?: string }>;
+		icon: IconSvgElement;
 	}
 
-	let { entries, href, label, icon: Icon }: Props = $props();
+	let { entries, href, label, icon }: Props = $props();
 
 	const moreLabel = $derived(t('nav.moreOptions', { label }));
 
@@ -77,7 +78,7 @@
 		onclick={onLinkClick}
 		class="flex min-h-9 min-w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 	>
-		<Icon class="size-5" />
+		<Icon {icon} class="size-5" />
 	</a>
 	<!-- An explicit toggle next to the link: a long press is undiscoverable on its own and
 		 unreachable by keyboard. -->

@@ -4,14 +4,8 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import type { PlaylistDetail } from '@lumia/core';
-	import { Badge, Button, Card, CardContent, Skeleton, toast } from '@lumia/ui';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import Play from '@lucide/svelte/icons/play';
-	import ChevronUp from '@lucide/svelte/icons/chevron-up';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Clock from '@lucide/svelte/icons/clock';
-	import Printer from '@lucide/svelte/icons/printer';
+	import { Badge, Button, Card, CardContent, Skeleton, toast, Icon } from '@lumia/ui';
+	import { ArrowDown01Icon, ArrowLeft02Icon, ArrowUp01Icon, Clock01Icon, Delete02Icon, PlayIcon, PrinterIcon } from '@hugeicons/core-free-icons';
 	import ExportPlaylistButton from '$domain/playlist/export-playlist-button.svelte';
 	import PlaylistSharing from '../../../../domain/playlist/playlist-sharing.svelte';
 	import { lumia } from '$technical/api/client';
@@ -88,7 +82,7 @@
 		href="{base}/playlists"
 		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline print:hidden"
 	>
-		<ArrowLeft class="size-4" />
+		<Icon icon={ArrowLeft02Icon} class="size-4" />
 		{t('playlists.all')}
 	</a>
 
@@ -119,12 +113,12 @@
 					onclick={() => window.print()}
 					class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 				>
-					<Printer class="size-4" aria-hidden="true" />
+					<Icon icon={PrinterIcon} class="size-4" />
 					{t('print.button')}
 				</button>
 			</div>
 			<span class="flex items-center gap-1.5 text-sm text-muted-foreground">
-				<Clock class="size-4" />
+				<Icon icon={Clock01Icon} class="size-4" />
 				{playlist.articles.length > 1
 					? t('playlists.countMany', { count: playlist.articles.length })
 					: t('playlists.countOne', { count: playlist.articles.length })} · {t('common.minutes', {
@@ -136,7 +130,7 @@
 		{#if player.supported && playlist.articles.length > 0}
 			<div class="print:hidden">
 				<Button data-test-listen-all onclick={() => playFrom(0)}>
-					<Play class="size-4" />
+					<Icon icon={PlayIcon} class="size-4" />
 					{t('playlists.listenAll')}
 				</Button>
 			</div>
@@ -178,7 +172,7 @@
 								</a>
 								<div class="flex items-center gap-0.5 print:hidden">
 									<Button size="sm" variant="ghost" onclick={() => playFrom(index)}>
-										<Play class="size-4" />
+										<Icon icon={PlayIcon} class="size-4" />
 										<span class="sr-only">{t('playlists.listen', { title: article.title })}</span>
 									</Button>
 									{#if canEdit}
@@ -188,7 +182,7 @@
 										disabled={index === 0}
 										onclick={() => move(index, -1)}
 									>
-										<ChevronUp class="size-4" />
+										<Icon icon={ArrowUp01Icon} class="size-4" />
 										<span class="sr-only">{t('playlists.moveUp', { title: article.title })}</span>
 									</Button>
 									<Button
@@ -197,11 +191,11 @@
 										disabled={index === playlist.articles.length - 1}
 										onclick={() => move(index, 1)}
 									>
-										<ChevronDown class="size-4" />
+										<Icon icon={ArrowDown01Icon} class="size-4" />
 										<span class="sr-only">{t('playlists.moveDown', { title: article.title })}</span>
 									</Button>
 									<Button size="sm" variant="ghost" onclick={() => remove(article.id)}>
-										<Trash2 class="size-4" />
+										<Icon icon={Delete02Icon} class="size-4" />
 										<span class="sr-only">
 											{t('playlists.removeArticle', { title: article.title })}
 										</span>

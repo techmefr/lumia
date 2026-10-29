@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Button, Card, CardContent, Input, Label, toast } from '@lumia/ui';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import Languages from '@lucide/svelte/icons/languages';
+	import { Button, Card, CardContent, Input, Label, toast, Icon } from '@lumia/ui';
+	import { Key01Icon, LanguageSquareIcon } from '@hugeicons/core-free-icons';
 	import type {
 		AIProvider,
 		Me,
@@ -109,7 +108,7 @@
 	<CardContent class="flex flex-col gap-6 pt-6">
 		<div>
 			<h2 class="flex items-center gap-2 text-lg font-semibold">
-				<KeyRound class="size-5 text-primary" />
+				<Icon icon={Key01Icon} class="size-5 text-primary" />
 				{t('ai.title')}
 			</h2>
 			<p class="mt-1 text-sm text-muted-foreground">
@@ -128,7 +127,7 @@
 		{:else}
 			<fieldset class="flex flex-col gap-2">
 				<legend class="mb-1 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-					<Languages class="size-4" />
+					<Icon icon={LanguageSquareIcon} class="size-4" />
 					{t('ai.readingLanguage')}
 				</legend>
 				<p class="text-xs text-muted-foreground">

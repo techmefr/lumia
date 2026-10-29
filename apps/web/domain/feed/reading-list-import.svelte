@@ -2,8 +2,8 @@
 	import { onDestroy } from 'svelte';
 	import type { ReadingListImportProgress, ReadingListSource } from '@lumia/core';
 	import { ApiError } from '@lumia/core';
-	import { Card, CardContent, CardDescription, CardHeader, CardTitle, Label } from '@lumia/ui';
-	import Upload from '@lucide/svelte/icons/upload';
+	import { Card, CardContent, CardDescription, CardHeader, CardTitle, Label, Icon } from '@lumia/ui';
+	import { Upload01Icon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 
@@ -89,7 +89,7 @@
 		<label
 			class="flex w-fit cursor-pointer items-center gap-2 rounded-md border border-dashed border-input px-4 py-2 text-sm hover:bg-accent"
 		>
-			<Upload class="size-4" />
+			<Icon icon={Upload01Icon} class="size-4" />
 			{t('feeds.readingImportChoose')}
 			<input
 				data-test-reading-import-input

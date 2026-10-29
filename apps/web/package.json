@@ -20,7 +20,7 @@
 	"dependencies": {
 		"@capacitor/core": "^8.5.3",
 		"@capacitor/local-notifications": "^8.3.1",
-		"@lucide/svelte": "^1.64.0",
+		"@hugeicons/core-free-icons": "^4.4.0",
 		"@lumia/core": "workspace:*",
 		"@lumia/ui": "workspace:*",
 		"bits-ui": "^2.20.2",

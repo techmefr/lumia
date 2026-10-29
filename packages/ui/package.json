@@ -11,7 +11,8 @@
 		"test:coverage": "vitest run --coverage"
 	},
 	"dependencies": {
-		"@lucide/svelte": "^1.64.0",
+		"@hugeicons/core-free-icons": "^4.4.0",
+		"@hugeicons/svelte": "^1.1.5",
 		"bits-ui": "^2.20.2",
 		"clsx": "^2.1.1",
 		"tailwind-merge": "^3.7.0",

@@ -1,5 +1,5 @@
 import { fireEvent, render } from '@testing-library/svelte';
-import Star from '@lucide/svelte/icons/star';
+import { StarIcon } from '@hugeicons/core-free-icons';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import OrbitButton, { type OrbitAction } from './orbit-button.svelte';
 
@@ -9,9 +9,9 @@ const listen = vi.fn();
 
 function actions(overrides: Partial<OrbitAction>[] = []): OrbitAction[] {
 	const base: OrbitAction[] = [
-		{ id: 'favorite', label: 'Favoris', icon: Star, active: false, run: favorite },
-		{ id: 'listen', label: 'Écouter', icon: Star, active: false, run: listen },
-		{ id: 'share', label: 'Partager', icon: Star, run: share }
+		{ id: 'favorite', label: 'Favoris', icon: StarIcon, active: false, run: favorite },
+		{ id: 'listen', label: 'Écouter', icon: StarIcon, active: false, run: listen },
+		{ id: 'share', label: 'Partager', icon: StarIcon, run: share }
 	];
 	return base.map((action, index) => ({ ...action, ...overrides[index] }));
 }
@@ -253,7 +253,7 @@ describe('running an action', () => {
 
 	it('shows only the actions it was given', async () => {
 		const view = await opened('right', [
-			{ id: 'share', label: 'Partager', icon: Star, run: share }
+			{ id: 'share', label: 'Partager', icon: StarIcon, run: share }
 		]);
 
 		expect(view.items()).toHaveLength(1);

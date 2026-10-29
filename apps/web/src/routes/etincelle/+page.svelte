@@ -3,10 +3,8 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { ArticleSummary } from '@lumia/core';
-	import { Button, Skeleton, toast } from '@lumia/ui';
-	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import PartyPopper from '@lucide/svelte/icons/party-popper';
+	import { Button, Skeleton, toast, Icon } from '@lumia/ui';
+	import { InboxIcon, PartyIcon, SparklesIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
@@ -49,7 +47,7 @@
 <div class="flex flex-col gap-4">
 	<div>
 		<h1 data-test-page="etincelle" class="flex items-center gap-2 text-2xl font-semibold">
-			<Sparkles class="size-6 text-primary" />
+			<Icon icon={SparklesIcon} class="size-6 text-primary" />
 			{t('etincelle.title')}
 		</h1>
 		<p class="sr-only text-sm text-muted-foreground sm:not-sr-only">{t('etincelle.help')}</p>
@@ -68,14 +66,14 @@
 	{:else if articles.length === 0}
 		<div class="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-6">
 			<p class="flex items-center gap-2 text-sm text-muted-foreground">
-				<Inbox class="size-4" />
+				<Icon icon={InboxIcon} class="size-4" />
 				{t('etincelle.notEnough')}
 			</p>
 			<Button size="sm" href="{base}/articles">{t('common.browseArticles')}</Button>
 		</div>
 	{:else if remaining.length === 0}
 		<div class="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
-			<PartyPopper class="size-8 text-primary" />
+			<Icon icon={PartyIcon} class="size-8 text-primary" />
 			<p class="font-medium">{t('etincelle.allSeen')}</p>
 			<p class="text-sm">{t('etincelle.comeBack')}</p>
 		</div>

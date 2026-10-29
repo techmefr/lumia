@@ -2,8 +2,8 @@
 	import { base } from '$technical/paths/base';
 	import { onMount } from 'svelte';
 	import type { ArticleSummary } from '@lumia/core';
-	import { Button } from '@lumia/ui';
-	import Star from '@lucide/svelte/icons/star';
+	import { Button, Icon } from '@lumia/ui';
+	import { StarIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
@@ -54,7 +54,7 @@
 <div class="flex flex-col gap-6">
 	<div>
 		<h1 class="flex items-center gap-2 text-2xl font-semibold">
-			<Star class="size-6 text-primary" />
+			<Icon icon={StarIcon} class="size-6 text-primary" />
 			{t('favorites.title')}
 		</h1>
 		<p class="text-sm text-muted-foreground">{t('favorites.intro')}</p>

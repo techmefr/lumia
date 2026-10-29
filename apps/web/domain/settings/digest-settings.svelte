@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Button, Card, CardContent, Label, toast } from '@lumia/ui';
-	import Mail from '@lucide/svelte/icons/mail';
+	import { Button, Card, CardContent, Label, toast, Icon } from '@lumia/ui';
+	import { Mail01Icon } from '@hugeicons/core-free-icons';
 	import type { DigestFrequency, Me } from '@lumia/core';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte.js';
@@ -73,7 +73,7 @@
 	<CardContent class="flex flex-col gap-5 pt-6">
 		<div>
 			<h2 id="digest" class="flex items-center gap-2 text-lg font-semibold">
-				<Mail class="size-5 text-primary" />
+				<Icon icon={Mail01Icon} class="size-5 text-primary" />
 				{t('digest.title')}
 			</h2>
 			<p class="mt-1 text-sm text-muted-foreground">{t('digest.intro')}</p>
