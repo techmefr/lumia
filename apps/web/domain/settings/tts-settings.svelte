@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Button, Card, CardContent, Input, Label, toast } from '@lumia/ui';
-	import AudioLines from '@lucide/svelte/icons/audio-lines';
+	import { Button, Card, CardContent, Input, Label, toast, Icon } from '@lumia/ui';
+	import { AudioWave01Icon } from '@hugeicons/core-free-icons';
 	import type { Me, MeUpdate, TtsProvider } from '@lumia/core';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte.js';
@@ -81,7 +81,7 @@
 	<CardContent class="flex flex-col gap-6 pt-6">
 		<div>
 			<h2 class="flex items-center gap-2 text-lg font-semibold">
-				<AudioLines class="size-5 text-primary" />
+				<Icon icon={AudioWave01Icon} class="size-5 text-primary" />
 				{t('tts.title')}
 			</h2>
 			<p class="mt-1 text-sm text-muted-foreground">{t('tts.intro')}</p>

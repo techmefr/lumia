@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { base } from '$technical/paths/base';
 	import { onMount } from 'svelte';
-	import Bell from '@lucide/svelte/icons/bell';
+	import { Notification01Icon } from '@hugeicons/core-free-icons';
+	import { Icon } from '@lumia/ui';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte';
 
@@ -30,7 +31,7 @@
 	aria-label={t('alerts.bell', { count: unread })}
 	class="relative mr-1 flex min-h-9 min-w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 >
-	<Bell class="size-5" />
+	<Icon icon={Notification01Icon} class="size-5" />
 	{#if unread > 0}
 		<span
 			data-test-alert-badge

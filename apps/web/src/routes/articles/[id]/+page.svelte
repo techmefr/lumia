@@ -10,22 +10,8 @@
 		type TagRef,
 		type OrbitPosition
 	} from '@lumia/core';
-	import { Button, Card, CardContent, Badge, GlareHover, ReadingProgress, Skeleton, toast } from '@lumia/ui';
-	import ThumbsUp from '@lucide/svelte/icons/thumbs-up';
-	import ThumbsDown from '@lucide/svelte/icons/thumbs-down';
-	import Bookmark from '@lucide/svelte/icons/bookmark';
-	import Star from '@lucide/svelte/icons/star';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import ExternalLink from '@lucide/svelte/icons/external-link';
-	import Tag from '@lucide/svelte/icons/tag';
-	import Share2 from '@lucide/svelte/icons/share-2';
-	import Check from '@lucide/svelte/icons/check';
-	import Clock from '@lucide/svelte/icons/clock';
-	import Printer from '@lucide/svelte/icons/printer';
-	import Highlighter from '@lucide/svelte/icons/highlighter';
-	import Gauge from '@lucide/svelte/icons/gauge';
-	import Volume2 from '@lucide/svelte/icons/volume-2';
-	import Square from '@lucide/svelte/icons/square';
+	import { Button, Card, CardContent, Badge, GlareHover, ReadingProgress, Skeleton, toast, Icon } from '@lumia/ui';
+	import { ArrowLeft02Icon, Bookmark01Icon, Clock01Icon, DashboardSpeed01Icon, HighlighterIcon, LinkSquare02Icon, PlayIcon, PrinterIcon, Share01Icon, StarIcon, StopIcon, Tag01Icon, ThumbsDownIcon, ThumbsUpIcon, Tick02Icon, VolumeHighIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { feedbackGateway } from '$technical/offline/feedback-gateway';
 	import { readArticle } from '$technical/offline/offline-reads';
@@ -36,7 +22,6 @@
 	import { readableText } from '$technical/speech/readable-text';
 	import { articleAudio } from '$technical/speech/server-voice';
 	import { player } from '$domain/audio/audio-player.svelte';
-	import PlayIcon from '@lucide/svelte/icons/play';
 	import { clearKaraoke, highlightChunk } from '$technical/speech/karaoke';
 	import AddToPlaylist from '$domain/playlist/add-to-playlist.svelte';
 	import ExportEpubButton from '$domain/article/export-epub-button.svelte';
@@ -160,14 +145,14 @@
 		{
 			id: 'favorite',
 			label: t('article.favorite'),
-			icon: Star,
+			icon: StarIcon,
 			active: favorite,
 			run: () => void toggleFavorite()
 		},
 		{
 			id: 'save',
 			label: t('article.save'),
-			icon: Bookmark,
+			icon: Bookmark01Icon,
 			active: saved,
 			run: () => void toggleSaved()
 		},
@@ -176,7 +161,7 @@
 					{
 						id: 'listen',
 						label: speechLabel(),
-						icon: speech.speaking && !speech.paused ? Square : Volume2,
+						icon: speech.speaking && !speech.paused ? StopIcon : VolumeHighIcon,
 						active: speech.speaking && !speech.paused,
 						run: toggleSpeech
 					}
@@ -185,7 +170,7 @@
 		{
 			id: 'share',
 			label: linkCopied ? t('article.linkCopied') : t('article.share'),
-			icon: linkCopied ? Check : Share2,
+			icon: linkCopied ? Tick02Icon : Share01Icon,
 			run: () => void share()
 		}
 	]);
@@ -369,7 +354,7 @@
 		href="{base}/articles"
 		class="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-transform hover:-translate-x-0.5 hover:text-foreground hover:underline print:hidden"
 	>
-		<ArrowLeft class="size-4" />
+		<Icon icon={ArrowLeft02Icon} class="size-4" />
 		{t('article.back')}
 	</a>
 
@@ -416,7 +401,7 @@
 			{#if article.enclosure_url}
 				<div class="px-6 pt-6 print:hidden">
 					<Button data-test-play-episode onclick={() => article && player.play([article])}>
-						<PlayIcon class="size-4" />
+						<Icon icon={PlayIcon} class="size-4" />
 						{t('player.listenEpisode')}
 					</Button>
 				</div>
@@ -448,12 +433,12 @@
 								rel="noopener noreferrer"
 								class="flex w-fit items-center gap-1 text-sm text-primary hover:underline"
 							>
-								<ExternalLink class="size-3.5" />
+								<Icon icon={LinkSquare02Icon} class="size-3.5" />
 								{t('article.readSource')}
 							</a>
 						{/if}
 						<span class="flex items-center gap-1 text-sm text-muted-foreground">
-							<Clock class="size-3.5" />
+							<Icon icon={Clock01Icon} class="size-3.5" />
 							{t('article.readingTime', { count: article.reading_minutes })}
 						</span>
 						{#if article.relevance_score !== 50}
@@ -461,7 +446,7 @@
 								class="flex items-center gap-1 text-sm text-muted-foreground"
 								title={t('article.relevanceTitle')}
 							>
-								<Gauge class="size-3.5" />
+								<Icon icon={DashboardSpeed01Icon} class="size-3.5" />
 								{t('article.relevance', { score: article.relevance_score })}
 							</span>
 						{/if}
@@ -479,7 +464,7 @@
 						onclick={() => window.print()}
 						class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 					>
-						<Printer class="size-4" aria-hidden="true" />
+						<Icon icon={PrinterIcon} class="size-4" />
 						{t('print.button')}
 					</button>
 					<!-- Also in the orbit menu, deliberately. The orbit button is a thumb-zone
@@ -493,9 +478,9 @@
 							class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 						>
 							{#if speech.speaking && !speech.paused}
-								<Square class="size-3.5" />
+								<Icon icon={StopIcon} class="size-3.5" />
 							{:else}
-								<Volume2 class="size-3.5" />
+								<Icon icon={VolumeHighIcon} class="size-3.5" />
 							{/if}
 							{speechLabel()}
 						</button>
@@ -540,7 +525,7 @@
 								variant="outline"
 								class="flex items-center gap-1 transition-transform hover:-translate-y-0.5"
 							>
-								<Tag class="size-3" />
+								<Icon icon={Tag01Icon} class="size-3" />
 								{keyword.term}
 							</Badge>
 						</a>
@@ -614,7 +599,7 @@
 					onclick={addHighlight}
 					class="gap-1.5 shadow-lg"
 				>
-					<Highlighter class="size-4" />
+					<Icon icon={HighlighterIcon} class="size-4" />
 					{t('highlights.add')}
 				</Button>
 			</div>
@@ -633,7 +618,7 @@
 					aria-pressed={sentiment === 'like'}
 					onclick={() => toggleSentiment('like')}
 				>
-					<ThumbsUp class="size-4 shrink-0" />
+					<Icon icon={ThumbsUpIcon} class="size-4 shrink-0" />
 					<span class="hidden sm:inline">{t('article.like')}</span>
 				</Button>
 				<Button
@@ -644,7 +629,7 @@
 					aria-pressed={sentiment === 'dislike'}
 					onclick={() => toggleSentiment('dislike')}
 				>
-					<ThumbsDown class="size-4 shrink-0" />
+					<Icon icon={ThumbsDownIcon} class="size-4 shrink-0" />
 					<span class="hidden sm:inline">{t('article.dislike')}</span>
 				</Button>
 				<AddToPlaylist articleId={article.id} />

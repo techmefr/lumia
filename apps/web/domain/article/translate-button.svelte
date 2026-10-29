@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { ApiError, type ArticleTranslation } from '@lumia/core';
-	import { toast } from '@lumia/ui';
-	import Languages from '@lucide/svelte/icons/languages';
-	import Loader2 from '@lucide/svelte/icons/loader-2';
-	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import { toast, Icon } from '@lumia/ui';
+	import { LanguageSquareIcon, Loading03Icon, RotateLeft01Icon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { getLocale, t } from '$technical/i18n/i18n.svelte';
 
@@ -54,13 +52,13 @@
 	class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
 >
 	{#if pending}
-		<Loader2 class="size-4 animate-spin" aria-hidden="true" />
+		<Icon icon={Loading03Icon} class="size-4 animate-spin" />
 		{t('article.translating')}
 	{:else if translation}
-		<RotateCcw class="size-4 text-primary" aria-hidden="true" />
+		<Icon icon={RotateLeft01Icon} class="size-4 text-primary" />
 		{t('article.showOriginal')}
 	{:else}
-		<Languages class="size-4" aria-hidden="true" />
+		<Icon icon={LanguageSquareIcon} class="size-4" />
 		{t('article.translate')}
 	{/if}
 </button>

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { ApiError, type Me } from '@lumia/core';
-	import { Button, Card, CardContent, Input, Label, toast } from '@lumia/ui';
-	import Lock from '@lucide/svelte/icons/lock';
+	import { Button, Card, CardContent, Input, Label, toast, Icon } from '@lumia/ui';
+	import { SquareLock01Icon } from '@hugeicons/core-free-icons';
 	import { MIN_PASSWORD_LENGTH } from '$technical/auth/password';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte.js';
@@ -67,7 +67,7 @@
 	<CardContent class="flex flex-col gap-6 pt-6">
 		<div>
 			<h2 class="flex items-center gap-2 text-lg font-semibold">
-				<Lock class="size-5 text-primary" />
+				<Icon icon={SquareLock01Icon} class="size-5 text-primary" />
 				{t('password.title')}
 			</h2>
 			<p class="mt-1 text-sm text-muted-foreground">

@@ -1,13 +1,7 @@
 <script lang="ts">
 	import { base } from '$technical/paths/base';
-	import { Badge, Button, toast } from '@lumia/ui';
-	import Play from '@lucide/svelte/icons/play';
-	import Pause from '@lucide/svelte/icons/pause';
-	import SkipBack from '@lucide/svelte/icons/skip-back';
-	import SkipForward from '@lucide/svelte/icons/skip-forward';
-	import ChevronUp from '@lucide/svelte/icons/chevron-up';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import X from '@lucide/svelte/icons/x';
+	import { Badge, Button, toast, Icon } from '@lumia/ui';
+	import { ArrowDown01Icon, ArrowUp01Icon, Cancel01Icon, NextIcon, PauseIcon, PlayIcon, PreviousIcon } from '@hugeicons/core-free-icons';
 	import { t } from '$technical/i18n/i18n.svelte';
 	import { SPEECH_FAILURE_MESSAGES } from '$technical/speech/speech.svelte';
 	import { PLAYBACK_RATES, player } from './audio-player.svelte';
@@ -70,14 +64,14 @@
 					onclick={() => (expanded = !expanded)}
 				>
 					{#if expanded}
-						<ChevronDown class="size-4" />
+						<Icon icon={ArrowDown01Icon} class="size-4" />
 					{:else}
-						<ChevronUp class="size-4" />
+						<Icon icon={ArrowUp01Icon} class="size-4" />
 					{/if}
 					<span class="sr-only">{expanded ? t('player.collapse') : t('player.expand')}</span>
 				</Button>
 				<Button data-test-player-close variant="ghost" size="sm" onclick={() => player.close()}>
-					<X class="size-4" />
+					<Icon icon={Cancel01Icon} class="size-4" />
 					<span class="sr-only">{t('player.close')}</span>
 				</Button>
 			</div>
@@ -103,15 +97,15 @@
 					disabled={!player.hasPrevious}
 					onclick={() => player.previous()}
 				>
-					<SkipBack class="size-4" />
+					<Icon icon={PreviousIcon} class="size-4" />
 					<span class="sr-only">{t('playlists.previous')}</span>
 				</Button>
 				<Button data-test-player-toggle onclick={() => player.toggle()}>
 					{#if player.playing}
-						<Pause class="size-4" />
+						<Icon icon={PauseIcon} class="size-4" />
 						{t('playlists.pause')}
 					{:else}
-						<Play class="size-4" />
+						<Icon icon={PlayIcon} class="size-4" />
 						{t('playlists.resume')}
 					{/if}
 				</Button>
@@ -122,7 +116,7 @@
 					disabled={!player.hasNext}
 					onclick={() => player.next()}
 				>
-					<SkipForward class="size-4" />
+					<Icon icon={NextIcon} class="size-4" />
 					<span class="sr-only">{t('playlists.next')}</span>
 				</Button>
 			</div>

@@ -3,8 +3,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { PlaylistSummary } from '@lumia/core';
-	import {
-		Button,
+	import { Button,
 		Card,
 		CardContent,
 		CardHeader,
@@ -12,13 +11,8 @@
 		Input,
 		Label,
 		Skeleton,
-		toast
-	} from '@lumia/ui';
-	import ListMusic from '@lucide/svelte/icons/list-music';
-	import Plus from '@lucide/svelte/icons/plus';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Pencil from '@lucide/svelte/icons/pencil';
-	import Clock from '@lucide/svelte/icons/clock';
+		toast, Icon } from '@lumia/ui';
+	import { Add01Icon, Clock01Icon, Delete02Icon, PencilEdit02Icon, PlayListIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
@@ -123,7 +117,7 @@
 
 <div class="flex flex-col gap-6">
 	<h1 data-test-page="playlists" class="flex items-center gap-2 text-2xl font-semibold">
-		<ListMusic class="size-6 text-primary" />
+		<Icon icon={PlayListIcon} class="size-6 text-primary" />
 		{t('playlists.title')}
 	</h1>
 
@@ -147,7 +141,7 @@
 						onclick={() => fillForDuration(minutes)}
 						disabled={filling !== null}
 					>
-						<Clock class="size-4" />
+						<Icon icon={Clock01Icon} class="size-4" />
 						{filling === minutes
 							? t('playlists.composing')
 							: t('common.minutes', { count: minutes })}
@@ -173,7 +167,7 @@
 					/>
 				</div>
 				<Button type="submit">
-					<Plus class="size-4" />
+					<Icon icon={Add01Icon} class="size-4" />
 					{t('feeds.create')}
 				</Button>
 			</form>
@@ -229,7 +223,7 @@
 											: t('playlists.countOne', { count: playlist.item_count })}
 										{#if playlist.total_reading_minutes > 0}
 											<span class="flex items-center gap-1">
-												<Clock class="size-3" />
+												<Icon icon={Clock01Icon} class="size-3" />
 												{t('common.minutes', { count: playlist.total_reading_minutes })}
 											</span>
 										{/if}
@@ -243,7 +237,7 @@
 										variant="ghost"
 										onclick={() => startRename(playlist)}
 									>
-										<Pencil class="size-4" />
+										<Icon icon={PencilEdit02Icon} class="size-4" />
 										<span class="sr-only">{t('playlists.renameOne', { name: playlist.name })}</span>
 									</Button>
 									<Button
@@ -252,7 +246,7 @@
 										variant="ghost"
 										onclick={() => remove(playlist)}
 									>
-										<Trash2 class="size-4" />
+										<Icon icon={Delete02Icon} class="size-4" />
 										<span class="sr-only">{t('playlists.deleteOne', { name: playlist.name })}</span>
 									</Button>
 								</div>

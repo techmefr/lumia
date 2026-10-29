@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { toast } from '@lumia/ui';
-	import BookDown from '@lucide/svelte/icons/book-down';
-	import Loader2 from '@lucide/svelte/icons/loader-2';
+	import { toast, Icon } from '@lumia/ui';
+	import { BookDownloadIcon, Loading03Icon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t } from '$technical/i18n/i18n.svelte';
 
@@ -49,10 +48,10 @@
 	class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
 >
 	{#if pending}
-		<Loader2 class="size-4 animate-spin" aria-hidden="true" />
+		<Icon icon={Loading03Icon} class="size-4 animate-spin" />
 		{t('article.exportingEpub')}
 	{:else}
-		<BookDown class="size-4" aria-hidden="true" />
+		<Icon icon={BookDownloadIcon} class="size-4" />
 		{t('article.exportEpub')}
 	{/if}
 </button>

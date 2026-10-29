@@ -4,11 +4,8 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { createSignInFlow, type MagicLinkPurpose, type SignInOutcome, type SignInStep } from '@lumia/core';
-	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '@lumia/ui';
-	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import LogIn from '@lucide/svelte/icons/log-in';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Mail from '@lucide/svelte/icons/mail';
+	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, Icon } from '@lumia/ui';
+	import { Login01Icon, Mail01Icon, SecurityCheckIcon, SparklesIcon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import InstanceUrlForm from '$domain/instance/instance-url-form.svelte';
 	import { isNativePlatform } from '$technical/platform/native-platform';
@@ -115,7 +112,7 @@
 	<Card class="w-full max-w-sm animate-in fade-in zoom-in-95 duration-300">
 		<CardHeader>
 			<div class="mb-1 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-				<Sparkles class="size-5" />
+				<Icon icon={SparklesIcon} class="size-5" />
 			</div>
 			<CardTitle class="font-serif text-xl">Lumia</CardTitle>
 			<CardDescription>{t('login.tagline')}</CardDescription>
@@ -124,7 +121,7 @@
 			{#if challenge !== 'credentials'}
 				<form data-test-totp-form class="flex flex-col gap-4" onsubmit={submit}>
 					<div class="flex items-center gap-2 text-sm font-medium">
-						<ShieldCheck class="size-4 text-primary" />
+						<Icon icon={SecurityCheckIcon} class="size-4 text-primary" />
 						{t('login.totpTitle')}
 					</div>
 					{#if challenge === 'code'}
@@ -158,7 +155,7 @@
 						<p role="alert" class="text-sm text-destructive">{error}</p>
 					{/if}
 					<Button type="submit" disabled={loading} class="mt-1">
-						<LogIn class="size-4" />
+						<Icon icon={Login01Icon} class="size-4" />
 						{loading ? t('login.submitting') : t('login.totpSubmit')}
 					</Button>
 				</form>
@@ -204,7 +201,7 @@
 							<p role="alert" class="text-sm text-destructive">{error}</p>
 						{/if}
 						<Button type="submit" disabled={magicLoading} class="mt-1">
-							<Mail class="size-4" />
+							<Icon icon={Mail01Icon} class="size-4" />
 							{magicLoading ? t('login.magicLinkSending') : t('login.magicLinkSubmit')}
 						</Button>
 					</form>
@@ -240,7 +237,7 @@
 						<p role="alert" class="text-sm text-destructive">{error}</p>
 					{/if}
 					<Button type="submit" disabled={loading} class="mt-1">
-						<LogIn class="size-4" />
+						<Icon icon={Login01Icon} class="size-4" />
 						{loading ? t('login.submitting') : t('login.submit')}
 					</Button>
 				</form>

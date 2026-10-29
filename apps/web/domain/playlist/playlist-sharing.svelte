@@ -6,9 +6,8 @@
 		type PlaylistMembers,
 		type PlaylistRole
 	} from '@lumia/core';
-	import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, toast } from '@lumia/ui';
-	import UserMinus from '@lucide/svelte/icons/user-minus';
-	import UserPlus from '@lucide/svelte/icons/user-plus';
+	import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, toast, Icon } from '@lumia/ui';
+	import { UserAdd01Icon, UserRemove01Icon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 
@@ -109,7 +108,7 @@
 									variant="ghost"
 									onclick={() => remove(member.user_id, member.username)}
 								>
-									<UserMinus class="size-4" />
+									<Icon icon={UserRemove01Icon} class="size-4" />
 									<span class="sr-only">
 										{t('playlists.sharingRemove', { name: member.username })}
 									</span>
@@ -140,7 +139,7 @@
 					</select>
 				</div>
 				<Button type="submit">
-					<UserPlus class="size-4" />
+					<Icon icon={UserAdd01Icon} class="size-4" />
 					{t('playlists.sharingSubmit')}
 				</Button>
 			</form>
@@ -152,7 +151,7 @@
 				class="w-fit"
 				onclick={() => remove(myId!, '')}
 			>
-				<UserMinus class="size-4" />
+				<Icon icon={UserRemove01Icon} class="size-4" />
 				{t('playlists.leave')}
 			</Button>
 		{/if}

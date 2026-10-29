@@ -1,14 +1,8 @@
 <script lang="ts">
 	import { base } from '$technical/paths/base';
 	import type { Feed, Folder, UnreadCounts } from '@lumia/core';
-	import Newspaper from '@lucide/svelte/icons/newspaper';
-	import FolderIcon from '@lucide/svelte/icons/folder';
-	import Rss from '@lucide/svelte/icons/rss';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import CheckCheck from '@lucide/svelte/icons/check-check';
-	import Star from '@lucide/svelte/icons/star';
-	import ListMusic from '@lucide/svelte/icons/list-music';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import { Alert02Icon, ArrowDown01Icon, Folder01Icon, NewspaperIcon, PlayListIcon, RssIcon, StarIcon, TickDouble01Icon } from '@hugeicons/core-free-icons';
+	import { Icon } from '@lumia/ui';
 	import { AnimatedList } from '@lumia/ui';
 	import { t, getLocale, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { formatDateInUserTimezone } from '$technical/time/format-date';
@@ -72,7 +66,7 @@
 	class="flex min-h-11 items-center justify-between gap-2 rounded-xl border bg-card px-3 py-2 text-sm font-medium shadow-sm sm:hidden"
 >
 	<span class="flex items-center gap-2">
-		<FolderIcon class="size-4 text-primary" />
+		<Icon icon={Folder01Icon} class="size-4 text-primary" />
 		{t('feeds.sidebarLabel')}
 		{#if unread.total > 0}
 			<span class="rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
@@ -80,7 +74,7 @@
 			</span>
 		{/if}
 	</span>
-	<ChevronDown class="size-4 transition-transform {mobileOpen ? '' : '-rotate-90'}" />
+	<Icon icon={ArrowDown01Icon} class="size-4 transition-transform {mobileOpen ? '' : '-rotate-90'}" />
 </button>
 
 <aside
@@ -97,7 +91,7 @@
 			? 'bg-primary text-primary-foreground'
 			: 'hover:bg-secondary hover:text-foreground'}"
 	>
-		<Newspaper class="size-4" />
+		<Icon icon={NewspaperIcon} class="size-4" />
 		<span class="flex-1 text-left">{t('feeds.allArticles')}</span>
 		{#if unread.total > 0}
 			<span class="text-xs font-semibold">{unread.total}</span>
@@ -118,7 +112,7 @@
 							? 'bg-primary text-primary-foreground'
 							: 'hover:bg-secondary hover:text-foreground'}"
 					>
-						<FolderIcon class="size-4" />
+						<Icon icon={Folder01Icon} class="size-4" />
 						<span class="flex-1 truncate text-left">{folder.name}</span>
 						{#if folderUnread > 0}
 							<span class="text-xs font-semibold">{folderUnread}</span>
@@ -132,7 +126,7 @@
 							title={t('feeds.markAllRead')}
 							class="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/folder:opacity-100"
 						>
-							<CheckCheck class="size-3.5" />
+							<Icon icon={TickDouble01Icon} class="size-3.5" />
 						</button>
 					{/if}
 					<button
@@ -144,7 +138,7 @@
 							: t('feeds.collapse', { name: folder.name })}
 						class="rounded-md p-1 text-muted-foreground hover:text-foreground"
 					>
-						<ChevronDown
+						<Icon icon={ArrowDown01Icon}
 							class="size-3.5 transition-transform {collapsed[folder.id] ? '-rotate-90' : ''}"
 						/>
 					</button>
@@ -167,7 +161,7 @@
 										? 'font-medium text-primary'
 										: 'text-muted-foreground hover:text-foreground'}"
 								>
-									<Rss class="size-3.5 shrink-0" />
+									<Icon icon={RssIcon} class="size-3.5 shrink-0" />
 									<span class="flex-1 truncate">{feed.title}</span>
 									{#if feed.error_since}
 										<span
@@ -177,7 +171,7 @@
 											title={errorTooltip(feed)}
 											class="text-destructive"
 										>
-											<TriangleAlert class="size-3.5 shrink-0" />
+											<Icon icon={Alert02Icon} class="size-3.5 shrink-0" />
 										</span>
 									{/if}
 									{#if feedUnread > 0}
@@ -192,7 +186,7 @@
 										title={t('feeds.markAllRead')}
 										class="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/feed:opacity-100"
 									>
-										<CheckCheck class="size-3.5" />
+										<Icon icon={TickDouble01Icon} class="size-3.5" />
 									</button>
 								{/if}
 							</div>
@@ -218,7 +212,7 @@
 							? 'font-medium text-primary'
 							: 'text-muted-foreground hover:text-foreground'}"
 					>
-						<Rss class="size-3.5 shrink-0" />
+						<Icon icon={RssIcon} class="size-3.5 shrink-0" />
 						<span class="flex-1 truncate">{feed.title}</span>
 						{#if feed.error_since}
 							<span
@@ -228,7 +222,7 @@
 								title={errorTooltip(feed)}
 								class="text-destructive"
 							>
-								<TriangleAlert class="size-3.5 shrink-0" />
+								<Icon icon={Alert02Icon} class="size-3.5 shrink-0" />
 							</span>
 						{/if}
 						{#if feedUnread > 0}
@@ -245,7 +239,7 @@
 		href="{base}/playlists"
 		class="mt-auto flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 	>
-		<ListMusic class="size-4" />
+		<Icon icon={PlayListIcon} class="size-4" />
 		{t('nav.playlists')}
 	</a>
 	<a
@@ -253,7 +247,7 @@
 		href="{base}/favoris"
 		class="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 	>
-		<Star class="size-4" />
+		<Icon icon={StarIcon} class="size-4" />
 		{t('nav.favorites')}
 	</a>
 </aside>

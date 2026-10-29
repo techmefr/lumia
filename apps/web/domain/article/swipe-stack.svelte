@@ -1,11 +1,7 @@
 <script lang="ts">
 	import type { ArticleSummary } from '@lumia/core';
-	import ThumbsUp from '@lucide/svelte/icons/thumbs-up';
-	import ThumbsDown from '@lucide/svelte/icons/thumbs-down';
-	import Bookmark from '@lucide/svelte/icons/bookmark';
-	import Star from '@lucide/svelte/icons/star';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import ChevronUp from '@lucide/svelte/icons/chevron-up';
+	import { ArrowDown01Icon, ArrowUp01Icon, Bookmark01Icon, StarIcon, ThumbsDownIcon, ThumbsUpIcon } from '@hugeicons/core-free-icons';
+	import { Icon } from '@lumia/ui';
 	import { accentHueForFeed } from './accent-hue.js';
 	import { t } from '$technical/i18n/i18n.svelte';
 	import { bindShortcuts } from '$technical/keyboard/shortcuts';
@@ -255,10 +251,10 @@
 								class="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 							>
 								{#if expanded}
-									<ChevronUp class="size-4" />
+									<Icon icon={ArrowUp01Icon} class="size-4" />
 									{t('swipe.collapse')}
 								{:else}
-									<ChevronDown class="size-4" />
+									<Icon icon={ArrowDown01Icon} class="size-4" />
 									{t('swipe.expand')}
 								{/if}
 							</button>
@@ -320,7 +316,7 @@
 				aria-label={t('article.dislike')}
 				class="flex size-14 items-center justify-center rounded-full border-2 border-rose-500 text-rose-500 shadow-sm transition-transform hover:scale-110 active:scale-95"
 			>
-				<ThumbsDown class="size-6" />
+				<Icon icon={ThumbsDownIcon} class="size-6" />
 			</button>
 			<button
 				data-test-swipe-save
@@ -328,7 +324,7 @@
 				aria-label={t('article.save')}
 				class="flex size-11 items-center justify-center rounded-full border-2 border-primary text-primary shadow-sm transition-transform hover:scale-110 active:scale-95"
 			>
-				<Bookmark class="size-5" />
+				<Icon icon={Bookmark01Icon} class="size-5" />
 			</button>
 			<button
 				data-test-swipe-favorite
@@ -336,7 +332,7 @@
 				aria-label={t('swipe.favoriteAction')}
 				class="flex size-11 items-center justify-center rounded-full border-2 border-amber-500 text-amber-500 shadow-sm transition-transform hover:scale-110 active:scale-95"
 			>
-				<Star class="size-5" />
+				<Icon icon={StarIcon} class="size-5" />
 			</button>
 			<button
 				data-test-swipe-like
@@ -344,7 +340,7 @@
 				aria-label={t('article.like')}
 				class="flex size-14 items-center justify-center rounded-full border-2 border-emerald-500 text-emerald-500 shadow-sm transition-transform hover:scale-110 active:scale-95"
 			>
-				<ThumbsUp class="size-6" />
+				<Icon icon={ThumbsUpIcon} class="size-6" />
 			</button>
 		</div>
 	</div>

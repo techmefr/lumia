@@ -2,9 +2,8 @@
 	import { base } from '$technical/paths/base';
 	import { goto } from '$app/navigation';
 	import { ApiError } from '@lumia/core';
-	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '@lumia/ui';
-	import PartyPopper from '@lucide/svelte/icons/party-popper';
-	import UserPlus from '@lucide/svelte/icons/user-plus';
+	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, Icon } from '@lumia/ui';
+	import { PartyIcon, UserAdd01Icon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 
@@ -37,7 +36,7 @@
 	<Card class="w-full max-w-sm animate-in fade-in zoom-in-95 duration-300">
 		<CardHeader>
 			<div class="mb-1 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-				<PartyPopper class="size-5" />
+				<Icon icon={PartyIcon} class="size-5" />
 			</div>
 			<CardTitle class="font-serif text-xl">{t('onboarding.title')}</CardTitle>
 			<CardDescription>{t('onboarding.description')}</CardDescription>
@@ -68,7 +67,7 @@
 					<p role="alert" class="text-sm text-destructive">{t(error)}</p>
 				{/if}
 				<Button type="submit" disabled={loading} class="mt-1">
-					<UserPlus class="size-4" />
+					<Icon icon={UserAdd01Icon} class="size-4" />
 					{loading ? t('onboarding.submitting') : t('onboarding.submit')}
 				</Button>
 			</form>

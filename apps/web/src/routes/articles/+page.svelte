@@ -11,17 +11,8 @@
 		PlaylistSummary,
 		UnreadCounts
 	} from '@lumia/core';
-	import { Button, Input, toast } from '@lumia/ui';
-	import Newspaper from '@lucide/svelte/icons/newspaper';
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import X from '@lucide/svelte/icons/x';
-	import Search from '@lucide/svelte/icons/search';
-	import CheckCheck from '@lucide/svelte/icons/check-check';
-	import BellPlus from '@lucide/svelte/icons/bell-plus';
-	import Plus from '@lucide/svelte/icons/plus';
-	import BookOpen from '@lucide/svelte/icons/book-open';
-	import LayoutTemplate from '@lucide/svelte/icons/layout-template';
-	import ListChecks from '@lucide/svelte/icons/list-checks';
+	import { Button, Input, toast, Icon } from '@lumia/ui';
+	import { Add01Icon, BellPlusIcon, BookOpen01Icon, Cancel01Icon, CheckListIcon, InboxIcon, Layout01Icon, NewspaperIcon, Search01Icon, TickDouble01Icon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
@@ -479,7 +470,7 @@
 	<div class="flex min-w-0 flex-1 flex-col gap-6">
 		<div class="flex flex-wrap items-center justify-between gap-3">
 			<h1 data-test-page="articles" class="flex items-center gap-2 text-2xl font-semibold">
-				<Newspaper class="size-6 text-primary" />
+				<Icon icon={NewspaperIcon} class="size-6 text-primary" />
 				{t('articles.title')}
 				{#if unread.total > 0}
 					<span class="rounded-full bg-primary/10 px-2 py-0.5 text-sm font-medium text-primary">
@@ -514,7 +505,7 @@
 								? 'bg-primary text-primary-foreground'
 								: 'hover:bg-secondary'}"
 						>
-							<LayoutTemplate class="size-4" />
+							<Icon icon={Layout01Icon} class="size-4" />
 							{t('articles.sortKiosk')}
 						</button>
 					</div>
@@ -526,7 +517,7 @@
 					onclick={() => (flipping = true)}
 					disabled={articles.length === 0}
 				>
-					<BookOpen class="size-4" />
+					<Icon icon={BookOpen01Icon} class="size-4" />
 					{t('articles.flip')}
 				</Button>
 				<Button
@@ -536,7 +527,7 @@
 					aria-pressed={selection.isActive}
 					onclick={() => (selection.isActive ? selection.close() : selection.open())}
 				>
-					<ListChecks class="size-4" />
+					<Icon icon={CheckListIcon} class="size-4" />
 					{t('selection.mode')}
 				</Button>
 				<Button
@@ -553,7 +544,7 @@
 					size="sm"
 					onclick={() => markScopeRead(currentScope)}
 				>
-					<CheckCheck class="size-4" />
+					<Icon icon={TickDouble01Icon} class="size-4" />
 					{t('feeds.markAllRead')}
 				</Button>
 			</div>
@@ -579,7 +570,7 @@
 				class="max-w-sm"
 			/>
 			<Button type="submit" variant="secondary" size="sm" data-test-search-submit>
-				<Search class="size-4" />
+				<Icon icon={Search01Icon} class="size-4" />
 				{t('articles.search')}
 			</Button>
 			{#if appliedQuery}
@@ -590,7 +581,7 @@
 					onclick={saveSearch}
 					data-test-search-save
 				>
-					<BellPlus class="size-4" />
+					<Icon icon={BellPlusIcon} class="size-4" />
 					{t('alerts.saveThis')}
 				</Button>
 				<Button
@@ -600,7 +591,7 @@
 					onclick={clearSearch}
 					data-test-search-clear
 				>
-					<X class="size-4" />
+					<Icon icon={Cancel01Icon} class="size-4" />
 					{t('articles.clear')}
 				</Button>
 			{/if}
@@ -627,7 +618,7 @@
 				class="flex w-fit items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm text-secondary-foreground transition-colors hover:bg-secondary/70"
 			>
 				{filterLabel}
-				<X class="size-3.5" />
+				<Icon icon={Cancel01Icon} class="size-3.5" />
 			</button>
 		{/if}
 
@@ -668,7 +659,7 @@
 			{#snippet empty()}
 				<div class="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-6">
 					<p class="flex items-center gap-2 text-sm text-muted-foreground">
-						<Inbox class="size-4" />
+						<Icon icon={InboxIcon} class="size-4" />
 						{#if appliedQuery}
 							{t('articles.emptySearch', { query: appliedQuery })}
 						{:else if unreadOnly}
@@ -689,7 +680,7 @@
 							</Button>
 						{/if}
 						<Button size="sm" href="{base}/feeds">
-							<Plus class="size-4" />
+							<Icon icon={Add01Icon} class="size-4" />
 							{t('articles.addFeeds')}
 						</Button>
 					</div>

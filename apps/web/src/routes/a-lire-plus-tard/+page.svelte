@@ -2,9 +2,8 @@
 	import { base } from '$technical/paths/base';
 	import { onMount } from 'svelte';
 	import type { ArticleSummary } from '@lumia/core';
-	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, toast } from '@lumia/ui';
-	import Bookmark from '@lucide/svelte/icons/bookmark';
-	import Plus from '@lucide/svelte/icons/plus';
+	import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, toast, Icon } from '@lumia/ui';
+	import { Add01Icon, Bookmark01Icon } from '@hugeicons/core-free-icons';
 	import { lumia } from '$technical/api/client';
 	import { t, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
@@ -80,7 +79,7 @@
 <div class="flex flex-col gap-6">
 	<div>
 		<h1 data-test-page="read-later" class="flex items-center gap-2 text-2xl font-semibold">
-			<Bookmark class="size-6 text-primary" />
+			<Icon icon={Bookmark01Icon} class="size-6 text-primary" />
 			{t('readLater.title')}
 		</h1>
 		<p class="text-sm text-muted-foreground">{t('readLater.intro')}</p>
@@ -108,7 +107,7 @@
 					/>
 				</div>
 				<Button type="submit" disabled={savingUrl}>
-					<Plus class="size-4" />
+					<Icon icon={Add01Icon} class="size-4" />
 					{savingUrl ? t('readLater.extracting') : t('common.save')}
 				</Button>
 			</form>
