@@ -14,6 +14,14 @@ class InvalidIdTokenError(Exception):
     pass
 
 
+class IssuerMismatchError(Exception):
+    pass
+
+
+class UserinfoSubjectMismatchError(Exception):
+    pass
+
+
 def get_oidc_transport() -> httpx.AsyncBaseTransport | None:
     return None
 
@@ -38,8 +46,11 @@ async def discover(
         response = await client.get(f"{issuer}/.well-known/openid-configuration")
         response.raise_for_status()
         payload = response.json()
+    published_issuer = payload.get("issuer", issuer)
+    if str(published_issuer).rstrip("/") != issuer.rstrip("/"):
+        raise IssuerMismatchError(f"the provider publishes issuer {published_issuer!r}")
     return OidcDiscoveryDocument(
-        issuer=payload.get("issuer", issuer),
+        issuer=published_issuer,
         authorization_endpoint=payload["authorization_endpoint"],
         token_endpoint=payload["token_endpoint"],
         userinfo_endpoint=payload["userinfo_endpoint"],
@@ -114,6 +125,10 @@ async def fetch_userinfo(
         )
         response.raise_for_status()
         return dict(response.json())
+
+
+def is_email_verified(claims: dict[str, Any]) -> bool:
+    return claims.get("email_verified") in (True, "true")
 
 
 def verify_id_token(

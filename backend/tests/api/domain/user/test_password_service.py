@@ -6,7 +6,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from api.domain.user.exceptions import InvalidCurrentPasswordError
-from api.domain.user.models import Instance, MagicLinkToken, RefreshToken, User
+from api.domain.user.models import (
+    Instance,
+    MagicLinkPurpose,
+    MagicLinkToken,
+    RefreshToken,
+    User,
+)
 from api.domain.user.password_service import change_password, reset_password
 from api.domain.user.refresh_token_service import issue_refresh_token
 from api.technical.auth.hashing import hash_password, verify_password
@@ -118,6 +124,7 @@ async def _add_magic_link(session: AsyncSession, user: User, raw_token: str) -> 
         MagicLinkToken(
             user_id=user.id,
             token=hash_token(raw_token),
+            purpose=MagicLinkPurpose.PASSWORD_RESET,
             expires_at=datetime.now(UTC) + timedelta(minutes=15),
         )
     )

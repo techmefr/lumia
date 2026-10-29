@@ -20,6 +20,7 @@ from worker.domain.export.build_playlist_epub import build_playlist_epub
 from worker.domain.imports.import_reading_list import import_reading_list
 from worker.domain.maintenance.purge_exports import purge_expired_exports
 from worker.domain.maintenance.purge_tokens import purge_expired_tokens
+from worker.domain.maintenance.purge_webhook_deliveries import purge_old_webhook_deliveries
 from worker.domain.maintenance.reconcile_articles import reconcile_recent_articles
 from worker.domain.maintenance.refresh_due_feeds import refresh_due_feeds
 from worker.domain.maintenance.sync_feed_status import sync_feed_error_status
@@ -71,6 +72,7 @@ class WorkerSettings:
         cron(refresh_due_feeds, minute=set(range(0, 60, 5))),
         cron(send_reader_digests, minute=5),
         cron(purge_expired_exports, hour=4, minute=0),
+        cron(purge_old_webhook_deliveries, hour=4, minute=30),
     ]
     redis_settings = RedisSettings.from_dsn(get_redis_config().redis_url)
     max_tries: ClassVar[int] = 3

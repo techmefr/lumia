@@ -13,6 +13,7 @@ from api.domain.user.exceptions import (
 from api.domain.user.models import Instance, Invitation, Role, User
 from api.technical.auth.hashing import hash_password
 from api.technical.auth.tokens import generate_opaque_token, hash_token
+from api.technical.email.address import normalise_email
 from api.technical.email.smtp import send_email
 from config.auth import get_auth_config
 from config.email import get_email_config
@@ -41,6 +42,7 @@ async def invite_member(
     Pending invitations count against `max_accounts`: an admin who has already promised the last
     two seats should not be told there is room for a third.
     """
+    email = normalise_email(email)
     if await session.scalar(select(User).where(User.email == email)) is not None:
         raise EmailAlreadyTakenError
     taken = await count_accounts(session, instance.id) + await _count_pending(session, instance.id)
@@ -59,7 +61,7 @@ async def invite_member(
     session.add(invitation)
     await session.commit()
 
-    frontend_url = get_email_config().frontend_url.rstrip("/")
+    frontend_url = get_email_config().frontend_base_url
     await send_email(
         to=email,
         subject="Vous êtes invité sur Lumia",

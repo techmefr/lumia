@@ -67,7 +67,7 @@ async def _login(client: httpx.AsyncClient, **extra: str) -> httpx.Response:
     )
 
 
-async def _magic_link(client: httpx.AsyncClient, raw_token: str) -> None:
+async def _magic_link(client: httpx.AsyncClient, raw_token: str, purpose: str = "sign_in") -> None:
     with (
         patch("api.domain.user.magic_link_service.send_email", new_callable=AsyncMock),
         patch(
@@ -75,7 +75,9 @@ async def _magic_link(client: httpx.AsyncClient, raw_token: str) -> None:
             return_value=raw_token,
         ),
     ):
-        response = await client.post("/auth/magic-link", json={"email": ADMIN_PAYLOAD["email"]})
+        response = await client.post(
+            "/auth/magic-link", json={"email": ADMIN_PAYLOAD["email"], "purpose": purpose}
+        )
     assert response.status_code == 202
 
 
@@ -304,7 +306,7 @@ async def test_a_password_reset_does_not_walk_past_the_second_factor(
     """The reset hands back a session, so a mailbox alone must not be enough to get one."""
     tokens = await _onboard(client)
     await _enable_totp(client, tokens)
-    await _magic_link(client, "the-raw-token")
+    await _magic_link(client, "the-raw-token", "password_reset")
 
     response = await client.post(
         "/auth/password-reset",
@@ -318,7 +320,7 @@ async def test_a_password_reset_does_not_walk_past_the_second_factor(
 async def test_a_password_reset_with_a_live_code_goes_through(client: httpx.AsyncClient) -> None:
     tokens = await _onboard(client)
     secret, _ = await _enable_totp(client, tokens)
-    await _magic_link(client, "the-raw-token")
+    await _magic_link(client, "the-raw-token", "password_reset")
 
     response = await client.post(
         "/auth/password-reset",
