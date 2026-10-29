@@ -7,3 +7,9 @@ node_modules
 .svelte-kit
 apps/web/build
 .git
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example

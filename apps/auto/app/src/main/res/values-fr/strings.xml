@@ -3,7 +3,7 @@
     <string name="app_name">Lumia</string>
     <string name="library_root">Playlists Lumia</string>
     <string name="settings_instance">Adresse de l\'API de l\'instance</string>
-    <string name="settings_instance_hint">https://lumia.exemple.fr/api</string>
+    <string name="settings_instance_hint">https://lumia.exemple.fr</string>
     <string name="settings_email">E-mail</string>
     <string name="settings_password">Mot de passe</string>
     <string name="settings_sign_in">Se connecter</string>
@@ -14,4 +14,7 @@
     <string name="settings_bad_credentials">E-mail ou mot de passe incorrect.</string>
     <string name="settings_second_factor">Ce compte utilise un second facteur, pas encore pris en charge ici.</string>
     <string name="settings_failed">Impossible de joindre l\'instance. Réessaie plus tard.</string>
+    <string name="settings_https_required">L\'instance doit utiliser https.</string>
+    <string name="playback_unavailable">Le serveur ne peut pas lire cet article à voix haute.</string>
+    <string name="playback_too_large">Cet article est trop long pour être lu à voix haute.</string>
 </resources>

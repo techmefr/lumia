@@ -1,11 +1,16 @@
 package app.lumia.auto
 
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.HttpDataSource
 import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -17,6 +22,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.ListeningExecutorService
 import com.google.common.util.concurrent.MoreExecutors
+import org.json.JSONException
 import java.io.IOException
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -31,7 +37,10 @@ class LumiaLibraryService : MediaLibraryService() {
         val store = SessionStore(this)
         val api = LumiaApi(store)
 
-        val dataSourceFactory = ResolvingDataSource.Factory(DefaultHttpDataSource.Factory()) { spec ->
+        val httpFactory = DefaultHttpDataSource.Factory()
+            .setConnectTimeoutMs(CONNECT_TIMEOUT_MS)
+            .setReadTimeoutMs(READ_TIMEOUT_MS)
+        val dataSourceFactory = ResolvingDataSource.Factory(httpFactory) { spec ->
             val token = api.validAccessToken()
             if (token == null) spec else spec.withAdditionalHeaders(mapOf("Authorization" to "Bearer $token"))
         }
@@ -46,6 +55,7 @@ class LumiaLibraryService : MediaLibraryService() {
             )
             .setHandleAudioBecomingNoisy(true)
             .build()
+        player.addListener(PlaybackErrorListener(player))
 
         librarySession = MediaLibrarySession.Builder(this, player, LibraryCallback(store, api)).build()
     }
@@ -63,10 +73,46 @@ class LumiaLibraryService : MediaLibraryService() {
         super.onDestroy()
     }
 
+    private inner class PlaybackErrorListener(private val player: ExoPlayer) : Player.Listener {
+        override fun onPlayerError(error: PlaybackException) {
+            val status = (error.cause as? HttpDataSource.InvalidResponseCodeException)?.responseCode
+            val message = when (status) {
+                HTTP_UNAVAILABLE -> R.string.playback_unavailable
+                HTTP_TOO_LARGE -> R.string.playback_too_large
+                else -> null
+            }
+            Log.w(TAG, "playback error status=$status code=${error.errorCodeName}", error)
+            if (message != null) Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+            if (player.hasNextMediaItem()) {
+                player.seekToNextMediaItem()
+                player.prepare()
+                player.play()
+            }
+        }
+    }
+
+    private companion object {
+        const val TAG = "LumiaAuto"
+        const val CONNECT_TIMEOUT_MS = 15_000
+        const val READ_TIMEOUT_MS = 90_000
+        const val HTTP_UNAVAILABLE = 503
+        const val HTTP_TOO_LARGE = 413
+    }
+
     private inner class LibraryCallback(
         private val store: SessionStore,
         private val api: LumiaApi,
     ) : MediaLibrarySession.Callback {
+
+        override fun onConnect(
+            session: MediaSession,
+            controller: MediaSession.ControllerInfo,
+        ): MediaSession.ConnectionResult =
+            if (ControllerPolicy.isAllowed(controller.packageName, packageName, controller.isTrusted)) {
+                super.onConnect(session, controller)
+            } else {
+                MediaSession.ConnectionResult.reject()
+            }
 
         override fun onGetLibraryRoot(
             session: MediaLibrarySession,
@@ -110,6 +156,8 @@ class LumiaLibraryService : MediaLibraryService() {
                     authExpired()
                 } catch (error: IOException) {
                     LibraryResult.ofError(LibraryResult.RESULT_ERROR_IO)
+                } catch (error: JSONException) {
+                    LibraryResult.ofError(LibraryResult.RESULT_ERROR_UNKNOWN)
                 }
             },
         )
@@ -135,8 +183,12 @@ class LumiaLibraryService : MediaLibraryService() {
                     } else {
                         LibraryResult.ofItem(articleItem(store, detail.id, article), null)
                     }
+                } catch (error: UnauthorizedException) {
+                    LibraryResult.ofError<MediaItem>(LibraryResult.RESULT_ERROR_SESSION_AUTHENTICATION_EXPIRED)
                 } catch (error: IOException) {
                     LibraryResult.ofError<MediaItem>(LibraryResult.RESULT_ERROR_IO)
+                } catch (error: JSONException) {
+                    LibraryResult.ofError<MediaItem>(LibraryResult.RESULT_ERROR_UNKNOWN)
                 }
             },
         )
@@ -155,10 +207,18 @@ class LumiaLibraryService : MediaLibraryService() {
                 if (mediaItems.size != 1 || playlistId == null || articleId == null) {
                     return@Callable MediaSession.MediaItemsWithStartPosition(mediaItems, startIndex, startPositionMs)
                 }
-                val detail = api.playlist(playlistId)
-                val queue = detail.articles.map { articleItem(store, detail.id, it) }
-                val start = detail.articles.indexOfFirst { it.id == articleId }.coerceAtLeast(0)
-                MediaSession.MediaItemsWithStartPosition(queue, start, C.TIME_UNSET)
+                try {
+                    val detail = api.playlist(playlistId)
+                    val queue = detail.articles.map { articleItem(store, detail.id, it) }
+                    val start = detail.articles.indexOfFirst { it.id == articleId }.coerceAtLeast(0)
+                    MediaSession.MediaItemsWithStartPosition(queue, start, C.TIME_UNSET)
+                } catch (error: UnauthorizedException) {
+                    throw IllegalStateException("session expired", error)
+                } catch (error: IOException) {
+                    throw IllegalStateException("playlist unavailable", error)
+                } catch (error: JSONException) {
+                    throw IllegalStateException("malformed playlist", error)
+                }
             },
         )
 

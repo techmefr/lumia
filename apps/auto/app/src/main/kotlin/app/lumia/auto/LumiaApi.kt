@@ -1,5 +1,6 @@
 package app.lumia.auto
 
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import java.net.HttpURLConnection
@@ -26,8 +27,13 @@ class LumiaApi(private val store: SessionStore) {
         }
         return when {
             response.status == 200 -> {
+                val tokens = try {
+                    LumiaParsers.parseTokenPair(response.body)
+                } catch (error: JSONException) {
+                    return SignInResult.Failed
+                }
                 store.baseUrl = baseUrl
-                store.save(LumiaParsers.parseTokenPair(response.body))
+                store.save(tokens)
                 SignInResult.Success
             }
             response.status == 401 && LumiaParsers.isSecondFactorRequired(response.body) ->
@@ -43,6 +49,21 @@ class LumiaApi(private val store: SessionStore) {
     fun playlist(id: String): PlaylistDetail =
         LumiaParsers.parsePlaylist(authorizedGet("/playlists/$id"))
 
+    fun signOut() {
+        val baseUrl = store.baseUrl
+        val refreshToken = store.refreshToken
+        if (baseUrl != null && refreshToken != null) {
+            val payload = JSONObject().put("refresh_token", refreshToken).toString()
+            try {
+                send("POST", "$baseUrl/auth/logout", payload, null)
+            } catch (error: IOException) {
+                Unit
+            }
+        }
+        store.clear()
+    }
+
+    @Synchronized
     fun validAccessToken(): String? {
         val current = store.accessToken
         val expiry = current?.let { LumiaParsers.tokenExpiryEpochSeconds(it) }
@@ -51,17 +72,21 @@ class LumiaApi(private val store: SessionStore) {
         return refresh()
     }
 
-    @Synchronized
     private fun refresh(): String? {
         val baseUrl = store.baseUrl ?: return null
         val refreshToken = store.refreshToken ?: return null
         val payload = JSONObject().put("refresh_token", refreshToken).toString()
         val response = send("POST", "$baseUrl/auth/refresh", payload, null)
-        if (response.status != 200) {
-            if (response.status == 401) store.clear()
+        if (response.status == 401) {
+            store.clear()
             return null
         }
-        val tokens = LumiaParsers.parseTokenPair(response.body)
+        if (response.status != 200) throw IOException("refresh status ${response.status}")
+        val tokens = try {
+            LumiaParsers.parseTokenPair(response.body)
+        } catch (error: JSONException) {
+            throw IOException("malformed refresh response", error)
+        }
         store.save(tokens)
         return tokens.accessToken
     }
