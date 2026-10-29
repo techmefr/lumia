@@ -20,6 +20,10 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  ci:
+    name: CI must pass first
+    uses: ./.github/workflows/ci.yml
+
   # One job per image *and* per architecture, each on a runner of that architecture. Building
   # arm64 under QEMU on an amd64 runner works for the backend but not for the web image: the
   # emulated Vite build ran for over an hour without finishing, while the same build takes
@@ -27,6 +31,7 @@ jobs:
   # one multi-arch tag.
   build:
     name: Build ${{ matrix.image }} (${{ matrix.platform }})
+    needs: ci
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
