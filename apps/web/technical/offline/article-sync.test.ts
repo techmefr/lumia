@@ -145,7 +145,7 @@ describe('syncOfflineArticles', () => {
 			's2',
 			articleDetail('s2', { content: '<img src="/relative.png"><img src="https://img.test/b.png">' })
 		);
-		const syncImages = vi.fn(async () => {});
+		const syncImages = vi.fn(async (_urls: string[]) => {});
 
 		await syncOfflineArticles(apiFor(data).api, 10, syncImages);
 

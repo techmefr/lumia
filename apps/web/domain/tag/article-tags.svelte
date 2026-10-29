@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import { ApiError, type Tag, type TagRef, type TagSuggestion } from '@lumia/core';
 	import { Button, Input, toast } from '@lumia/ui';
 	import Plus from '@lucide/svelte/icons/plus';

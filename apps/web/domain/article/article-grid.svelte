@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import type { ArticleSummary } from '@lumia/core';
 	import { ArticleCard, ArticleCardSkeleton, ArticleHero, GradualBlur } from '@lumia/ui';
 	import Inbox from '@lucide/svelte/icons/inbox';

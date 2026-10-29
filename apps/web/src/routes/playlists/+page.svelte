@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { PlaylistSummary } from '@lumia/core';

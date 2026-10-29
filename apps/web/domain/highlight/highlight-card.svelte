@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import type { Highlight } from '@lumia/core';
 	import { Button } from '@lumia/ui';
 	import { t } from '$technical/i18n/i18n.svelte';

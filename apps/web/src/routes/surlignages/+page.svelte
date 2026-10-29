@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import { onMount } from 'svelte';
 	import type { Highlight } from '@lumia/core';
 	import { Skeleton, toast } from '@lumia/ui';

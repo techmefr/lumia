@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import FlaskConical from '@lucide/svelte/icons/flask-conical';
 	import { resetDemo } from '$technical/api/demo/demo-client';
 	import { t } from '$technical/i18n/i18n.svelte';

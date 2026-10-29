@@ -1,4 +1,4 @@
-import { base } from '$app/paths';
+import { base } from '$technical/paths/base';
 import { goto } from '$app/navigation';
 import { lumia } from '../api/client';
 

@@ -5,3 +5,7 @@ interface ImportMetaEnv {
 	/** "true" in the static demo build: the api client is replaced by an in-memory one. */
 	readonly VITE_DEMO?: string;
 }
+
+interface ImportMetaEnv {
+	readonly PUBLIC_BASE_PATH: '' | `/${string}`
+}

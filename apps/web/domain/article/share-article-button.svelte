@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import { ApiError, type ArticleShareStatus } from '@lumia/core';
 	import { toast } from '@lumia/ui';
 	import Link2 from '@lucide/svelte/icons/link-2';

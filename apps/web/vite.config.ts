@@ -16,6 +16,7 @@ const basePath = (process.env.BASE_PATH ?? '') as '' | `/${string}`;
 const testResolve = process.env.VITEST ? { conditions: ['browser'] } : undefined;
 
 export default defineConfig(({ mode }) => ({
+	define: { 'import.meta.env.PUBLIC_BASE_PATH': JSON.stringify(basePath) },
 	plugins: [
 		tailwindcss(),
 		sveltekit({
@@ -55,6 +56,8 @@ export default defineConfig(({ mode }) => ({
 			},
 
 			alias: {
+				$lib: 'src/lib',
+				'$lib/*': 'src/lib/*',
 				$technical: 'technical',
 				'$technical/*': 'technical/*',
 				$domain: 'domain',

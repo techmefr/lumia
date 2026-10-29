@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import { onMount } from 'svelte';
 	import Bell from '@lucide/svelte/icons/bell';
 	import { lumia } from '$technical/api/client';

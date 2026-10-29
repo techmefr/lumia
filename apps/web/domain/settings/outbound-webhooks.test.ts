@@ -169,7 +169,7 @@ describe('the outgoing webhooks card', () => {
 		await fireEvent.click(page.history());
 
 		await waitFor(() => expect(page.deliveries()).toHaveLength(1));
-		expect(page.deliveries()[0].dataset.testDelivery).toBe('failed');
+		expect((page.deliveries()[0] as HTMLElement).dataset.testDelivery).toBe('failed');
 		expect(page.deliveries()[0].textContent).toContain('HTTP 503');
 		expect(page.history().getAttribute('aria-expanded')).toBe('true');
 

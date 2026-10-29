@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import { page } from '$app/state';
 	import { Button } from '@lumia/ui';
 	import Compass from '@lucide/svelte/icons/compass';

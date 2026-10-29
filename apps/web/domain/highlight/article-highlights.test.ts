@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Highlight, HighlightApi } from '@lumia/core';
+import type { Highlight, HighlightApi, HighlightDraft } from '@lumia/core';
 import { ArticleHighlights } from './article-highlights.svelte';
 
 function stored(id: string, quote: string, start: number, note: string | null = null): Highlight {
@@ -21,7 +21,7 @@ function fakeApi(initial: Highlight[] = []) {
 	let rows = [...initial];
 	const api = {
 		listArticleHighlights: vi.fn(async () => [...rows]),
-		createHighlight: vi.fn(async (_articleId: string, draft: Omit<Highlight, 'id'>) => {
+		createHighlight: vi.fn(async (_articleId: string, draft: HighlightDraft) => {
 			const created = { ...stored(`new-${rows.length}`, draft.quote, draft.start_offset), ...draft };
 			rows = [...rows, created as Highlight];
 			return created as Highlight;

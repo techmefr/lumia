@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import { goto } from '$app/navigation';
 	import { lumia } from '$technical/api/client';
 

@@ -16,7 +16,7 @@ vi.mock('$technical/api/client', () => ({
 
 const api = vi.mocked(lumia.user);
 
-const OFF = { enabled: false, created_at: null };
+const OFF = { enabled: false, created_at: null as string | null };
 const ON = { enabled: true, created_at: '2026-10-21T10:00:00Z' };
 const CREATED = {
 	email: 'lecteur@example.test',

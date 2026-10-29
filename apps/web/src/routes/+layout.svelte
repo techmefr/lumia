@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from '$technical/paths/base';
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount, tick } from 'svelte';

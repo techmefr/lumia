@@ -45,7 +45,7 @@ async function loaded(account: Me = me()) {
 
 async function fill(
 	view: ReturnType<typeof panel>,
-	{ current = 'correct-horse', next = 'battery-staple', confirmation = next } = {}
+	{ current = 'correct-horse', next = 'battery-staple', confirmation = next }: { current?: string; next?: string; confirmation?: string } = {}
 ) {
 	if (view.current()) await fireEvent.input(view.current()!, { target: { value: current } });
 	await fireEvent.input(view.newPassword(), { target: { value: next } });
