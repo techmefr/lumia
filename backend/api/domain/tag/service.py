@@ -61,7 +61,11 @@ async def rename_tag(session: AsyncSession, user_id: UUID, tag_id: UUID, name: s
         raise TagNameTakenError
     tag.name = name
     tag.slug = slugify(name)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError as exc:
+        await session.rollback()
+        raise TagNameTakenError from exc
     return tag
 
 
@@ -104,13 +108,27 @@ async def attach_by_name(
     """Tags an article, creating the tag on first use; idempotent for a tag it already carries."""
     tag = await _find_by_name(session, user_id, name)
     if tag is None:
-        tag = Tag(user_id=user_id, name=name, slug=slugify(name))
-        session.add(tag)
-        await session.flush()
+        tag = await _create_or_find(session, user_id, name)
     if await session.get(ArticleTag, (article_id, tag.id)) is None:
         session.add(ArticleTag(article_id=article_id, tag_id=tag.id))
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
     return (await tags_for_articles(session, user_id, [article_id])).get(article_id, [])
+
+
+async def _create_or_find(session: AsyncSession, user_id: UUID, name: str) -> Tag:
+    tag = Tag(user_id=user_id, name=name, slug=slugify(name))
+    try:
+        async with session.begin_nested():
+            session.add(tag)
+    except IntegrityError:
+        existing = await _find_by_name(session, user_id, name)
+        if existing is None:
+            raise
+        return existing
+    return tag
 
 
 async def detach(session: AsyncSession, user_id: UUID, article_id: UUID, tag_id: UUID) -> list[Tag]:

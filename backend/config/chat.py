@@ -17,6 +17,9 @@ class ChatConfig(BaseSettings):
     chat_max_stored_messages: int = 100
     chat_rate_limit_max_attempts: int = 30
     chat_rate_limit_window_minutes: int = 60
+    # A self-hosted model server (Ollama, vLLM) lives on a private address, which the outbound
+    # guard refuses by default. An operator who runs one opts in here, for the whole instance.
+    ai_allow_private_endpoints: bool = False
 
 
 @lru_cache

@@ -2,9 +2,10 @@ import asyncio
 from collections.abc import Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.domain.user.models import User
 from api.domain.webhook.exceptions import WebhookLimitReachedError, WebhookNotFoundError
 from api.domain.webhook.models import OutboundWebhook, WebhookDelivery, WebhookEvent
 from api.technical.auth.tokens import generate_opaque_token
@@ -49,6 +50,7 @@ async def create_webhook(
     again at every delivery, because a name can be repointed at an internal address later.
     """
     await asyncio.to_thread(ensure_public_http_url, url, resolve=resolve)
+    await session.execute(select(User.id).where(User.id == user_id).with_for_update())
     if len(await list_webhooks(session, user_id)) >= MAX_WEBHOOKS_PER_USER:
         raise WebhookLimitReachedError
     secret = generate_opaque_token()
@@ -87,10 +89,7 @@ async def update_webhook(
 
 async def delete_webhook(session: AsyncSession, user_id: UUID, webhook_id: UUID) -> None:
     webhook = await get_webhook(session, user_id, webhook_id)
-    for delivery in await session.scalars(
-        select(WebhookDelivery).where(WebhookDelivery.webhook_id == webhook.id)
-    ):
-        await session.delete(delivery)
+    await session.execute(delete(WebhookDelivery).where(WebhookDelivery.webhook_id == webhook.id))
     await session.delete(webhook)
     await session.commit()
 

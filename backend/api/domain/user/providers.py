@@ -9,6 +9,7 @@ from fastapi import Depends
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import AIProvider, TranslationProvider, TtsProvider, User
 from api.technical.crypto.secret_box import decrypt_secret
+from config.chat import get_chat_config
 from config.deepl import get_deepl_config
 from worker.technical.ai.anthropic_client import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
 from worker.technical.ai.anthropic_client import AnthropicChatClient
@@ -49,7 +50,10 @@ def chat_client_for(user: User | None) -> ChatClient | None:
     if base_url is None or model is None:
         return None
     return OpenAiCompatibleChatClient(
-        api_key=decrypt_secret(user.ai_api_key_encrypted), base_url=base_url, model=model
+        api_key=decrypt_secret(user.ai_api_key_encrypted),
+        base_url=base_url,
+        model=model,
+        allow_private_endpoints=get_chat_config().ai_allow_private_endpoints,
     )
 
 

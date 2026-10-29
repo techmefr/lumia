@@ -4,6 +4,7 @@ from collections.abc import Iterator
 import pytest
 
 from api.main import app
+from api.technical.net.url_guard import get_url_resolver
 from api.technical.rate_limit.limiter import RateLimit, RateLimitExceededError, get_rate_limiter
 
 
@@ -26,3 +27,10 @@ def rate_limiter() -> Iterator[InMemoryRateLimiter]:
     app.dependency_overrides[get_rate_limiter] = lambda: limiter
     yield limiter
     app.dependency_overrides.pop(get_rate_limiter, None)
+
+
+@pytest.fixture(autouse=True)
+def public_internet_resolver() -> Iterator[None]:
+    app.dependency_overrides[get_url_resolver] = lambda: lambda _host: ["93.184.216.34"]
+    yield
+    app.dependency_overrides.pop(get_url_resolver, None)

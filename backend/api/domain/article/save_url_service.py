@@ -1,11 +1,12 @@
 from datetime import UTC, datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import select, text
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.domain.article.models import Article, Author
-from api.domain.feed.models import Feed, SourceType
+from api.domain.feed.models import MANUAL_FEED_PREDICATE, Feed, SourceType
 from api.domain.recommendation.models import UserArticleFeedback
 from api.domain.user.models import User
 from api.technical.net.canonical_url import canonical_url
@@ -47,6 +48,12 @@ async def save_url(
     extractor = page_extractor or TrafilaturaPageExtractor()
     page = await extractor.fetch(url)
 
+    await session.execute(select(Feed.id).where(Feed.id == feed.id).with_for_update())
+    existing = await find_saved_article(session, user, url)
+    if existing is not None:
+        await _mark_saved(session, user, existing)
+        return await _reload(session, existing)
+
     author_id: UUID | None = None
     if page.author:
         author_id = await _get_or_create_author(session, page.author)
@@ -75,32 +82,40 @@ async def _reload(session: AsyncSession, article: Article) -> Article:
 
 
 async def _get_or_create_manual_feed(session: AsyncSession, user: User) -> Feed:
-    feed = await session.scalar(
-        select(Feed).where(
-            Feed.user_id == user.id,
-            Feed.source_type == SourceType.MANUAL,
-            Feed.external_feed_id == _MANUAL_EXTERNAL_ID,
-        )
-    )
-    if feed is None:
-        feed = Feed(
+    await session.execute(
+        pg_insert(Feed)
+        .values(
+            id=uuid4(),
+            created_at=datetime.now(UTC),
             user_id=user.id,
             source_type=SourceType.MANUAL,
             external_feed_id=_MANUAL_EXTERNAL_ID,
             title=MANUAL_FEED_TITLE,
             url="",
         )
-        session.add(feed)
-        await session.flush()
+        .on_conflict_do_nothing(
+            index_elements=[Feed.user_id], index_where=text(MANUAL_FEED_PREDICATE)
+        )
+    )
+    feed = await session.scalar(
+        select(Feed)
+        .where(Feed.user_id == user.id, Feed.source_type == SourceType.MANUAL)
+        .execution_options(populate_existing=True)
+    )
+    if feed is None:
+        raise RuntimeError("manual feed missing right after its insert")
     return feed
 
 
 async def _get_or_create_author(session: AsyncSession, name: str) -> UUID:
+    await session.execute(
+        pg_insert(Author)
+        .values(id=uuid4(), name=name)
+        .on_conflict_do_nothing(index_elements=[Author.name])
+    )
     author = await session.scalar(select(Author).where(Author.name == name))
     if author is None:
-        author = Author(name=name)
-        session.add(author)
-        await session.flush()
+        raise RuntimeError("author missing right after its insert")
     return author.id
 
 

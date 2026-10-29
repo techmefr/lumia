@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,9 @@ from api.domain.fever.sync_service import MarkState, MarkTarget
 from api.domain.user.dependencies import get_current_user
 from api.domain.user.models import User
 from api.technical.db import get_db_session
+from api.technical.rate_limit.dependencies import client_address, enforce
+from api.technical.rate_limit.limiter import RateLimiter, get_rate_limiter
+from config.rate_limit import get_rate_limit_config
 
 router = APIRouter()
 
@@ -17,8 +21,12 @@ API_VERSION = 3
 JsonObject = dict[str, object]
 
 
+def _is_digits(value: str) -> bool:
+    return value.isascii() and value.isdigit()
+
+
 def _ids(csv: str | None) -> list[int]:
-    return [int(part) for part in (csv or "").split(",") if part.strip().isdigit()]
+    return [int(part) for part in (csv or "").split(",") if _is_digits(part.strip())]
 
 
 def _joined(ids: list[int]) -> str:
@@ -26,7 +34,10 @@ def _joined(ids: list[int]) -> str:
 
 
 def _int(value: str | None) -> int | None:
-    return int(value) if value is not None and value.lstrip("-").isdigit() else None
+    if value is None:
+        return None
+    digits = value.removeprefix("-")
+    return int(value) if _is_digits(digits) else None
 
 
 async def _parameters(request: Request) -> Mapping[str, str]:
@@ -59,12 +70,24 @@ async def _apply_mark(session: AsyncSession, user: User, params: Mapping[str, st
 
 @router.api_route("/fever/", methods=["GET", "POST"], name="fever")
 @router.api_route("/fever", methods=["GET", "POST"], include_in_schema=False)
-async def fever(request: Request, session: AsyncSession = Depends(get_db_session)) -> JsonObject:
+async def fever(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
+) -> JsonObject:
     """The Fever sync endpoint third-party reader apps talk to.
 
     Failed authentication is a 200 with `auth: 0`, not a 401: that is what the protocol's clients
     look for, and several treat an HTTP error as a dead server rather than a wrong key.
     """
+    config = get_rate_limit_config()
+    await enforce(
+        limiter,
+        scope="fever",
+        identifiers={"ip": client_address(request)},
+        max_attempts=config.fever_max_attempts,
+        window=timedelta(minutes=config.fever_window_minutes),
+    )
     params = await _parameters(request)
     user = await key_service.authenticate(session, params.get("api_key", ""))
     if user is None:
