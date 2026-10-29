@@ -3,6 +3,7 @@ import json
 import httpx
 import pytest
 
+from api.technical.net.url_guard import BlockedUrlError
 from worker.technical.speech.base import SpeechApiError
 from worker.technical.speech.openai_speech import (
     OpenAiSpeechSynthesizer,
@@ -99,3 +100,17 @@ def test_split_for_speech_cuts_after_a_sentence_end() -> None:
 
 def test_split_for_speech_cuts_a_word_less_run_at_the_limit() -> None:
     assert split_for_speech("a" * 25, limit=10) == ["a" * 10, "a" * 10, "a" * 5]
+
+
+async def test_a_pinned_synthesizer_refuses_an_endpoint_resolving_to_a_private_address() -> None:
+    synthesizer = OpenAiSpeechSynthesizer(
+        api_key="sk-secret",
+        base_url="https://speech.example.test/v1",
+        model="tts-1",
+        voice="nova",
+        pin_to_public_addresses=True,
+        resolve=lambda host: ["10.0.0.5"],
+    )
+
+    with pytest.raises(BlockedUrlError):
+        await synthesizer.synthesize("Bonjour.")

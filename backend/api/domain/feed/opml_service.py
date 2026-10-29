@@ -156,7 +156,7 @@ async def add_feed(
     if social is not None:
         url = social.url
     ensure_public_http_url(url, resolve=resolve)
-    url = await resolve_youtube_feed_url(url, transport=youtube_transport)
+    url = await resolve_youtube_feed_url(url, transport=youtube_transport, resolve=resolve)
 
     folder: Folder | None = None
     if folder_id is not None:
