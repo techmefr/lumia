@@ -29,6 +29,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { toast } from '@lumia/ui';
 	import { lumia } from '$technical/api/client';
+	import { safeHttpHref } from '$technical/url/safe-href';
 	import { t, getLocale, type MessageKey } from '$technical/i18n/i18n.svelte';
 	import { requireAuth } from '$technical/auth/require-auth';
 	import { resolveFolderName } from '$domain/feed/resolve-folder-name';
@@ -340,7 +341,7 @@
 						{selectedFeed.title}
 					</CardTitle>
 					<CardDescription>
-						<a href={selectedFeed.url} target="_blank" rel="noopener noreferrer" class="hover:underline">
+						<a href={safeHttpHref(selectedFeed.url)} target="_blank" rel="noopener noreferrer" class="hover:underline">
 							{selectedFeed.url}
 						</a>
 					</CardDescription>
@@ -702,7 +703,7 @@
 											<Rss class="size-4 shrink-0 text-primary" />
 											<div class="flex flex-col gap-1">
 												<span class="font-medium">{feed.title}</span>
-												<a href={feed.url} target="_blank" rel="noopener noreferrer" class="text-xs text-muted-foreground hover:underline">
+												<a href={safeHttpHref(feed.url)} target="_blank" rel="noopener noreferrer" class="text-xs text-muted-foreground hover:underline">
 													{feed.url}
 												</a>
 											</div>

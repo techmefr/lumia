@@ -6,6 +6,7 @@
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import Printer from '@lucide/svelte/icons/printer';
 	import { lumia } from '$technical/api/client';
+	import { safeHttpHref } from '$technical/url/safe-href';
 	import { getLocale, t } from '$technical/i18n/i18n.svelte';
 	import { formatDateInUserTimezone } from '$technical/time/format-date';
 
@@ -74,7 +75,7 @@
 			<p class="mt-2 flex flex-wrap items-center gap-3 text-sm print:hidden">
 				<a
 					data-test-public-source
-					href={article.url}
+					href={safeHttpHref(article.url)}
 					target="_blank"
 					rel="noopener noreferrer nofollow"
 					class="flex w-fit items-center gap-1 text-primary hover:underline"

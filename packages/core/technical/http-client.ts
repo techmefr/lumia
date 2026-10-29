@@ -25,29 +25,54 @@ export interface RequestOptions {
 }
 
 export function createHttpClient({ baseUrl, tokenStore }: HttpClientConfig) {
-	async function refreshAccessToken(): Promise<string | null> {
+	const REJECTED_STATUSES = new Set([400, 401, 403]);
+	let inFlightRefresh: Promise<string | null> | null = null;
+
+	function isTokenPair(value: unknown): value is { access_token: string; refresh_token: string } {
+		if (typeof value !== 'object' || value === null) return false;
+		const candidate = value as Record<string, unknown>;
+		return (
+			typeof candidate.access_token === 'string' &&
+			candidate.access_token !== '' &&
+			typeof candidate.refresh_token === 'string' &&
+			candidate.refresh_token !== ''
+		);
+	}
+
+	async function performRefresh(): Promise<string | null> {
 		const refreshToken = tokenStore.getRefreshToken();
 		if (!refreshToken) return null;
 
-		const response = await fetch(`${baseUrl}/auth/refresh`, {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ refresh_token: refreshToken })
-		});
+		let response: Response;
+		try {
+			response = await fetch(`${baseUrl}/auth/refresh`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ refresh_token: refreshToken })
+			});
+		} catch {
+			return null;
+		}
 		if (!response.ok) {
-			tokenStore.clear();
+			if (REJECTED_STATUSES.has(response.status)) tokenStore.clear();
 			return null;
 		}
 
-		// The server rotates the refresh token on every use, so the answer carries its successor
-		// and the old one is already dead: storing only the access token would log the reader out
-		// at the next refresh.
-		const { access_token, refresh_token } = (await response.json()) as {
-			access_token: string;
-			refresh_token: string;
-		};
-		tokenStore.setTokens({ accessToken: access_token, refreshToken: refresh_token });
-		return access_token;
+		const payload: unknown = await response.json().catch(() => null);
+		if (!isTokenPair(payload)) return null;
+
+		tokenStore.setTokens({
+			accessToken: payload.access_token,
+			refreshToken: payload.refresh_token
+		});
+		return payload.access_token;
+	}
+
+	function refreshAccessToken(): Promise<string | null> {
+		inFlightRefresh ??= performRefresh().finally(() => {
+			inFlightRefresh = null;
+		});
+		return inFlightRefresh;
 	}
 
 	async function send(path: string, options: RequestOptions, accessToken: string | null) {

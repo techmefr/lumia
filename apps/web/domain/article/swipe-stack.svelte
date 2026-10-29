@@ -21,7 +21,7 @@
 
 	let { articles, onLike, onDislike, onSave, onFavorite, onOpen }: Props = $props();
 
-	let currentIndex = $state(0);
+	let handledIds = $state<string[]>([]);
 	let dragX = $state(0);
 	let dragY = $state(0);
 	let dragging = $state(false);
@@ -35,8 +35,9 @@
 	let fromScrollArea = false;
 	let axis: 'undecided' | 'horizontal' | 'vertical' = 'undecided';
 
-	const visible = $derived(articles.slice(currentIndex, currentIndex + 3));
-	const current = $derived(articles[currentIndex]);
+	const pending = $derived(articles.filter((article) => !handledIds.includes(article.id)));
+	const visible = $derived(pending.slice(0, 3));
+	const current = $derived(pending[0]);
 
 	const ACTION_LABEL_KEYS = {
 		like: 'swipe.like',
@@ -143,7 +144,7 @@
 			}
 			// Favorite and save don't record a sentiment, so the backend may serve the article again
 			// later; advancing here is about this session's stack, not about hiding it forever.
-			currentIndex += 1;
+			if (article) handledIds = [...handledIds, article.id];
 			exiting = null;
 			expanded = false;
 			dragX = 0;
@@ -304,7 +305,7 @@
 		</div>
 
 		<p aria-live="polite" class="sr-only">
-			{t('swipe.remaining', { title: current.title, count: articles.length - currentIndex })}
+			{t('swipe.remaining', { title: current.title, count: pending.length })}
 		</p>
 		<p data-test-swipe-announcement aria-live="polite" class="sr-only">{announcement}</p>
 
