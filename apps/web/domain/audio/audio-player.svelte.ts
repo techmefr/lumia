@@ -207,7 +207,7 @@ export class AudioPlayer {
 		this.reader.speak(`${article.title}. ${text}`, {
 			rate: this.rate,
 			startAt,
-			lang: article.language || getLocale(),
+			lang: getLocale(),
 			audio: articleAudio(article.id),
 			onProgress: (progress) => this.persist(progress),
 			onDone: () => {

@@ -144,7 +144,7 @@
 		player.yield();
 		speech.speak(text, {
 			audio: articleAudio(article.id),
-			lang: article.language || getLocale(),
+			lang: getLocale(),
 			onDone: () => toast(t('article.speechDone'))
 		});
 	}

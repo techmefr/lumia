@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { copyToClipboard } from '$technical/browser/copy-to-clipboard';
 	import { onMount } from 'svelte';
 	import QRCode from 'qrcode';
 	import { ApiError, secondFactorFailure, type Me, type TotpEnrolment } from '@lumia/core';
@@ -113,8 +114,8 @@
 	}
 
 	function copyRecoveryCodes() {
-		void navigator.clipboard.writeText(recoveryCodes.join('\n')).then(() => {
-			toast(t('totp.copied'));
+		void copyToClipboard(recoveryCodes.join('\n')).then((copied) => {
+			toast(copied ? t('totp.copied') : t('common.copyFailed'), copied ? undefined : { tone: 'destructive' });
 		});
 	}
 

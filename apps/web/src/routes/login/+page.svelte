@@ -76,6 +76,7 @@
 	async function submitMagicLink(event: SubmitEvent) {
 		event.preventDefault();
 		if (magicMode === null) return;
+		error = null;
 		magicLoading = true;
 		try {
 			// The endpoint never reveals whether the address exists, so the message is the same
@@ -199,6 +200,9 @@
 								autocomplete="email"
 							/>
 						</div>
+						{#if error}
+							<p role="alert" class="text-sm text-destructive">{error}</p>
+						{/if}
 						<Button type="submit" disabled={magicLoading} class="mt-1">
 							<Mail class="size-4" />
 							{magicLoading ? t('login.magicLinkSending') : t('login.magicLinkSubmit')}

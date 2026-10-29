@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { copyToClipboard } from '$technical/browser/copy-to-clipboard';
+	import { formatDateInUserTimezone } from '$technical/time/format-date';
+	import { getLocale } from '$technical/i18n/i18n.svelte';
 	import { onMount } from 'svelte';
 	import type { FeverKeyCreated, FeverKeyStatus } from '@lumia/core';
 	import { Button, Card, CardContent, Input, Label, toast } from '@lumia/ui';
@@ -16,7 +19,7 @@
 		return `${String(base).replace(/\/$/, '')}/fever/`;
 	});
 	const since = $derived(
-		status.created_at ? new Date(status.created_at).toLocaleDateString() : ''
+		status.created_at ? formatDateInUserTimezone(status.created_at, getLocale(), { dateStyle: 'medium' }) : ''
 	);
 
 	const fields = $derived(
@@ -62,8 +65,8 @@
 	}
 
 	function copy(value: string) {
-		void navigator.clipboard.writeText(value).then(() => {
-			toast(t('fever.copied'));
+		void copyToClipboard(value).then((copied) => {
+			toast(copied ? t('fever.copied') : t('common.copyFailed'), copied ? undefined : { tone: 'destructive' });
 		});
 	}
 

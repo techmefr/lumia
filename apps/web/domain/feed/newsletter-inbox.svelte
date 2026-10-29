@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { copyToClipboard } from '$technical/browser/copy-to-clipboard';
 	import { onMount } from 'svelte';
 	import { base } from '$technical/paths/base';
 	import type { NewsletterInboxStatus } from '@lumia/core';
@@ -51,8 +52,8 @@
 
 	async function copy() {
 		if (!address) return;
-		await navigator.clipboard.writeText(address);
-		toast(t('newsletters.copied'));
+		const copied = await copyToClipboard(address);
+		toast(copied ? t('newsletters.copied') : t('common.copyFailed'), copied ? undefined : { tone: 'destructive' });
 	}
 </script>
 
