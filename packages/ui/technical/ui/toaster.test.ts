@@ -159,3 +159,35 @@ describe('the close label', () => {
 		expect(view.close().getAttribute('aria-label')).toBe('Fermer la notification');
 	});
 });
+
+describe('accessibility of a toast', () => {
+	it('marks an error as an alert and leaves a confirmation as a polite status', () => {
+		const view = toaster();
+		toast('Saved');
+		toast('Failed', { tone: 'destructive' });
+
+		return vi.waitFor(() => {
+			const roles = view.items().map((node) => node.getAttribute('role'));
+			expect(roles).toEqual([null, 'alert']);
+		});
+	});
+
+	it('pauses the countdown while hovered and resumes on leave', async () => {
+		vi.useFakeTimers();
+		try {
+			const view = toaster();
+			toast('Saved');
+			await vi.waitFor(() => expect(view.items()).toHaveLength(1));
+
+			await fireEvent.mouseEnter(view.items()[0]);
+			vi.advanceTimersByTime(60000);
+			expect(toasts.toasts).toHaveLength(1);
+
+			await fireEvent.mouseLeave(view.items()[0]);
+			vi.advanceTimersByTime(3000);
+			expect(toasts.toasts).toHaveLength(0);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+});

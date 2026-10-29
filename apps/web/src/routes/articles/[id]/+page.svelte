@@ -120,7 +120,12 @@
 				return;
 			}
 		}
-		await navigator.clipboard.writeText(article.url);
+		try {
+			await navigator.clipboard.writeText(article.url);
+		} catch {
+			toast(t('common.copyFailed'));
+			return;
+		}
 		linkCopied = true;
 		setTimeout(() => (linkCopied = false), 2000);
 	}
@@ -301,6 +306,7 @@
 
 	onMount(() => {
 		if (!requireAuth()) return;
+		let disposed = false;
 		const articleId = page.params.id;
 		if (!articleId) {
 			error = 'article.notFound';
@@ -320,6 +326,7 @@
 
 		readArticle(() => lumia.article.getArticle(articleId), articleId)
 			.then(async (loaded) => {
+				if (disposed) return;
 				article = loaded;
 				saved = false;
 				favorite = false;
@@ -327,10 +334,15 @@
 				void highlights.load(loaded.id).catch(() => {});
 				await restoreScroll(loaded.scroll_progress);
 			})
-			.catch(() => (error = 'article.notFound'))
-			.finally(() => (loading = false));
+			.catch(() => {
+				if (!disposed) error = 'article.notFound';
+			})
+			.finally(() => {
+				if (!disposed) loading = false;
+			});
 
 		return () => {
+			disposed = true;
 			window.removeEventListener('scroll', onScroll);
 			document.removeEventListener('selectionchange', onSelectionChange);
 			if (selectionTimer) clearTimeout(selectionTimer);
@@ -617,6 +629,8 @@
 					data-test-like
 					class="flex-1 gap-1.5 px-2 sm:px-4"
 					variant={sentiment === 'like' ? 'default' : 'outline'}
+					aria-label={t('article.like')}
+					aria-pressed={sentiment === 'like'}
 					onclick={() => toggleSentiment('like')}
 				>
 					<ThumbsUp class="size-4 shrink-0" />
@@ -626,6 +640,8 @@
 					data-test-dislike
 					class="flex-1 gap-1.5 px-2 sm:px-4"
 					variant={sentiment === 'dislike' ? 'default' : 'outline'}
+					aria-label={t('article.dislike')}
+					aria-pressed={sentiment === 'dislike'}
 					onclick={() => toggleSentiment('dislike')}
 				>
 					<ThumbsDown class="size-4 shrink-0" />

@@ -63,8 +63,17 @@
 		function onPointerDown(event: PointerEvent) {
 			if (container && !container.contains(event.target as Node)) open = false;
 		}
+		function onKeydown(event: KeyboardEvent) {
+			if (event.key !== 'Escape') return;
+			open = false;
+			container?.querySelector<HTMLElement>('[data-test-add-to-playlist]')?.focus();
+		}
 		document.addEventListener('pointerdown', onPointerDown);
-		return () => document.removeEventListener('pointerdown', onPointerDown);
+		document.addEventListener('keydown', onKeydown);
+		return () => {
+			document.removeEventListener('pointerdown', onPointerDown);
+			document.removeEventListener('keydown', onKeydown);
+		};
 	});
 </script>
 
