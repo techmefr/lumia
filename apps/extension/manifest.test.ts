@@ -1,3 +1,5 @@
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { buildManifest } from './manifest';
 
@@ -78,4 +80,28 @@ describe('buildManifest store requirements', () => {
 			data_collection_permissions: { required: ['none'] }
 		});
 	});
+});
+
+describe('buildManifest icon files', () => {
+	const sizes = [16, 32, 48, 128];
+
+	for (const target of ['chrome', 'firefox'] as const) {
+		it('references real png files at the declared size on ' + target, () => {
+			const manifest = buildManifest(target, '1');
+			const declared = [
+				...Object.entries(manifest.icons),
+				...Object.entries(manifest.action.default_icon)
+			];
+			for (const size of sizes) {
+				expect(manifest.icons[String(size) as keyof typeof manifest.icons]).toBe('icons/icon-' + size + '.png');
+			}
+			for (const [size, path] of declared) {
+				const file = join(__dirname, 'public', path);
+				expect(existsSync(file)).toBe(true);
+				const png = readFileSync(file);
+				expect(png.readUInt32BE(16)).toBe(Number(size));
+				expect(png.readUInt32BE(20)).toBe(Number(size));
+			}
+		});
+	}
 });
