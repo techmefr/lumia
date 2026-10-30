@@ -29,7 +29,14 @@ export function buildManifest(target: ExtensionTarget, version: string) {
 		description: '__MSG_extensionDescription__',
 		version,
 		...(target === 'chrome' ? { minimum_chrome_version: '114' } : {}),
-		icons: { '48': 'icons/icon-48.png', '96': 'icons/icon-96.png', '192': 'icons/icon-192.png' },
+		icons: {
+			'16': 'icons/icon-16.png',
+			'32': 'icons/icon-32.png',
+			'48': 'icons/icon-48.png',
+			'96': 'icons/icon-96.png',
+			'128': 'icons/icon-128.png',
+			'192': 'icons/icon-192.png'
+		},
 		default_locale: 'en',
 		permissions:
 			target === 'chrome'
@@ -40,7 +47,12 @@ export function buildManifest(target: ExtensionTarget, version: string) {
 		action: {
 			default_title: '__MSG_extensionName__',
 			default_popup: 'popup/index.html',
-			default_icon: { '48': 'icons/icon-48.png', '96': 'icons/icon-96.png' }
+			default_icon: {
+				'16': 'icons/icon-16.png',
+				'32': 'icons/icon-32.png',
+				'48': 'icons/icon-48.png',
+				'96': 'icons/icon-96.png'
+			}
 		},
 		options_ui: { page: 'options/index.html', open_in_tab: true },
 		commands: {
