@@ -3,3 +3,18 @@ packages:
   - "apps/web"
   - "apps/mobile"
   - "apps/extension"
+
+allowBuilds:
+  '@hugeicons/svelte': false
+  esbuild: true
+
+overrides:
+  cookie: "^2.0.1"
+  devalue: "^5.9.3"
+  source-map-js: "^1.2.2"
+  vite: "^8.3.3"
+  dompurify: "^3.4.16"
+  undici: "^8.12.2"
+  glob: "^14.0.2"
+  minimatch: "^11.0.1"
+  esbuild: "^0.28.1"
