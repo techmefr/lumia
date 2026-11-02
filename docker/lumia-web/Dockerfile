@@ -1,4 +1,4 @@
-FROM node:26.12-alpine AS build
+FROM node:26.13-alpine AS build
 # Node 26 ships without corepack, so enabling it straight away exits 127. Installing it is
 # still the way to honour the packageManager field rather than guessing a pnpm version.
 RUN npm install --global corepack@latest && corepack enable
