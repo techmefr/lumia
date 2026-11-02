@@ -1,4 +1,4 @@
-FROM python:3.14.7-slim AS base
+FROM python:3.15.0-slim AS base
 
 RUN pip install --no-cache-dir uv==0.12.20
 
