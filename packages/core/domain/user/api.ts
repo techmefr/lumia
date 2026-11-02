@@ -180,10 +180,12 @@ export function createUserApi(
 
 	/** Re-authentication, not a setting: an access token alone must not undo the second factor. */
 	async function disableTotp(password: string | null, secondFactor: SecondFactor = {}): Promise<void> {
-		await http.request('/me/totp', {
-			method: 'DELETE',
-			body: { password, ...secondFactor }
-		});
+		storeTokens(
+			await http.request<TokenPair>('/me/totp', {
+				method: 'DELETE',
+				body: { password, ...secondFactor }
+			})
+		);
 	}
 
 	async function getFeverKey(): Promise<FeverKeyStatus> {

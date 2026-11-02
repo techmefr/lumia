@@ -172,6 +172,21 @@ describe('changing the password', () => {
 	});
 });
 
+describe('disabling the second factor', () => {
+	it('sends the password and second factor to the totp route', async () => {
+		const { user, last } = api([TOKENS], { access: 'access-0', refresh: 'refresh-0' });
+		await user.disableTotp('correct horse', { totp_code: '123456' });
+		expect(last()).toMatchObject({ path: '/me/totp', method: 'DELETE' });
+	});
+
+	it('replaces the stored pair with the one that comes back', async () => {
+		const { user, store } = api([TOKENS], { access: 'access-0', refresh: 'refresh-0' });
+		await user.disableTotp('correct horse');
+		expect(store.getAccessToken()).toBe('access-1');
+		expect(store.getRefreshToken()).toBe('refresh-1');
+	});
+});
+
 describe('resetting a forgotten password', () => {
 	it('posts the magic-link token unauthenticated, the reader being locked out', async () => {
 		const { user, last } = api([TOKENS]);
