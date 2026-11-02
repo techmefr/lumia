@@ -49,6 +49,25 @@ describe('the variant table', () => {
 	});
 });
 
+describe('the variant table with a caller class', () => {
+	it('drops the variant background a caller class overrides', () => {
+		const classes = buttonVariants({ variant: 'default', class: 'bg-red-500' }).split(' ');
+		expect(classes).toContain('bg-red-500');
+		expect(classes).not.toContain('bg-primary');
+	});
+
+	it('drops the size height a caller class overrides', () => {
+		const classes = buttonVariants({ size: 'lg', class: 'h-20' }).split(' ');
+		expect(classes).toContain('h-20');
+		expect(classes).not.toContain('h-10');
+	});
+
+	it('keeps the classes the caller does not conflict with', () => {
+		const classes = buttonVariants({ variant: 'default', class: 'w-full' }).split(' ');
+		expect(classes).toEqual(expect.arrayContaining(['w-full', 'bg-primary', 'inline-flex']));
+	});
+});
+
 describe('which element it renders', () => {
 	it('renders a button when no href is given', () => {
 		expect(button().element.tagName).toBe('BUTTON');

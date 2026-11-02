@@ -259,6 +259,7 @@ export function setReadingComfort(on: boolean): void {
 }
 
 export function initPreferences(): void {
+	if (localStorage.getItem(THEME_KEY) !== null) applyThemeColor(getThemePreset().themeColor);
 	applyAccent(accentHue, theme);
 	applyFontScale(fontScale);
 	applyFontPair(fontPair);

@@ -63,6 +63,18 @@ describe('the early theme script', () => {
 		expect(root().style.getPropertyValue('--primary')).toContain('145');
 	});
 
+	it.each([
+		['light', true, '#ffffff'],
+		['dark', false, '#0b0b0f']
+	])(
+		'paints the chrome of an explicit %s choice even when the system disagrees',
+		(theme, systemDark, color) => {
+			boot({ 'lumia-theme': theme }, systemDark);
+			expect(metas().map((meta) => meta.getAttribute('content'))).toEqual([color, color]);
+			expect(metas().every((meta) => !meta.hasAttribute('media'))).toBe(true);
+		}
+	);
+
 	it('follows the system when nothing is stored', () => {
 		boot({}, true);
 		expect(root().classList.contains('dark')).toBe(true);

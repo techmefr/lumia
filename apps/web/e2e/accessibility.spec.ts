@@ -16,11 +16,21 @@ const PAGES = [
 	'/settings'
 ] as const;
 
-for (const scheme of ['light', 'dark'] as const) {
+const THEMES = [
+	{ id: 'light', scheme: 'light' },
+	{ id: 'dark', scheme: 'dark' },
+	{ id: 'dracula', scheme: 'dark' },
+	{ id: 'alucard', scheme: 'light' },
+	{ id: 'nord', scheme: 'dark' },
+	{ id: 'solarized-light', scheme: 'light' },
+	{ id: 'solarized-dark', scheme: 'dark' }
+] as const;
+
+for (const { id, scheme } of THEMES) {
 	for (const path of PAGES) {
-		test(`${path} has no WCAG 2.1 AA violation in ${scheme} mode`, async ({ page }) => {
+		test(`${path} has no WCAG 2.1 AA violation with the ${id} theme`, async ({ page }) => {
 			await page.emulateMedia({ colorScheme: scheme });
-			await page.addInitScript((value) => localStorage.setItem('lumia-theme', value), scheme);
+			await page.addInitScript((value) => localStorage.setItem('lumia-theme', value), id);
 			await page.goto(path);
 			await expect(page.locator('[data-test-main]')).toBeVisible();
 			await page.waitForLoadState('networkidle');

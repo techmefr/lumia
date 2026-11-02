@@ -12,16 +12,22 @@
 				'solarized-dark': { dark: true, color: '#002b36' }
 			};
 			var preset = named.hasOwnProperty(theme) ? named[theme] : null;
+			var chromeColor = null;
 			if (preset) {
 				document.documentElement.dataset.theme = theme;
 				if (preset.dark) document.documentElement.classList.add('dark');
-				var metas = document.querySelectorAll('meta[name="theme-color"]');
-				for (var i = 0; i < metas.length; i++) {
-					metas[i].setAttribute('content', preset.color);
-					metas[i].removeAttribute('media');
-				}
+				chromeColor = preset.color;
 			} else if (theme === 'dark') {
 				document.documentElement.classList.add('dark');
+			}
+			if (storedTheme === 'dark') chromeColor = '#0b0b0f';
+			else if (storedTheme === 'light') chromeColor = '#ffffff';
+			if (chromeColor) {
+				var metas = document.querySelectorAll('meta[name="theme-color"]');
+				for (var i = 0; i < metas.length; i++) {
+					metas[i].setAttribute('content', chromeColor);
+					metas[i].removeAttribute('media');
+				}
 			}
 
 			var accents = {
