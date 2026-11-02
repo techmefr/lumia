@@ -74,7 +74,7 @@ async def test_disabling_totp_revokes_the_access_token(client: httpx.AsyncClient
     response = await client.request(
         "DELETE", "/me/totp", headers=headers, json={"password": PASSWORD}
     )
-    assert response.status_code == 204
+    assert response.status_code == 200
     assert (await client.get("/me", headers=headers)).status_code == 401
 
 
