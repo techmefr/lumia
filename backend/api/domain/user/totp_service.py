@@ -11,7 +11,6 @@ from api.domain.user.exceptions import (
     TotpRequiredError,
 )
 from api.domain.user.models import RecoveryCode, User
-from api.domain.user.refresh_token_service import bump_session_version
 from api.technical.affected_rows import affected_rows
 from api.technical.auth.tokens import hash_token
 from api.technical.auth.totp import (
@@ -95,8 +94,10 @@ async def disable_totp(session: AsyncSession, user: User) -> None:
     user.totp_confirmed_at = None
     user.totp_last_used_step = None
     await session.execute(delete(RecoveryCode).where(RecoveryCode.user_id == user.id))
+    await session.execute(
+        update(User).where(User.id == user.id).values(session_version=User.session_version + 1)
+    )
     await session.commit()
-    await bump_session_version(session, user.id)
 
 
 async def verify_second_factor(

@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from api.domain.user.exceptions import InvalidRefreshTokenError
 from api.domain.user.models import Instance, RefreshToken, User
 from api.domain.user.refresh_token_service import (
+    current_session_version,
     issue_refresh_token,
     revoke_all_refresh_tokens,
     revoke_refresh_token,
@@ -164,3 +165,64 @@ async def test_revoking_everything_spares_the_other_accounts(session: AsyncSessi
 
     user_id, _ = await rotate_refresh_token(session, theirs)
     assert user_id == other.id
+
+
+async def test_replaying_a_rotated_token_ends_the_access_tokens_of_the_account(
+    session: AsyncSession,
+) -> None:
+    user = await _create_user(session)
+    raw_token = await issue_refresh_token(session, user.id)
+    await rotate_refresh_token(session, raw_token)
+    before = await current_session_version(session, user.id)
+
+    with pytest.raises(InvalidRefreshTokenError):
+        await rotate_refresh_token(session, raw_token)
+
+    assert await current_session_version(session, user.id) == before + 1
+
+
+async def test_a_replay_revokes_the_family_and_bumps_the_version_together(
+    session: AsyncSession,
+) -> None:
+    user = await _create_user(session)
+    raw_token = await issue_refresh_token(session, user.id)
+    _, successor = await rotate_refresh_token(session, raw_token)
+    before = await current_session_version(session, user.id)
+
+    with pytest.raises(InvalidRefreshTokenError):
+        await rotate_refresh_token(session, raw_token)
+
+    assert (await _stored(session, successor)).revoked_at is not None
+    assert await current_session_version(session, user.id) == before + 1
+
+
+async def test_presenting_an_unknown_token_does_not_touch_the_version(
+    session: AsyncSession,
+) -> None:
+    user = await _create_user(session)
+    before = await current_session_version(session, user.id)
+
+    with pytest.raises(InvalidRefreshTokenError):
+        await rotate_refresh_token(session, "unknown-token")
+
+    assert await current_session_version(session, user.id) == before
+
+
+async def test_revoking_one_token_bumps_the_version_once(session: AsyncSession) -> None:
+    user = await _create_user(session)
+    raw_token = await issue_refresh_token(session, user.id)
+    before = await current_session_version(session, user.id)
+
+    await revoke_refresh_token(session, raw_token)
+
+    assert await current_session_version(session, user.id) == before + 1
+
+
+async def test_revoking_everything_bumps_the_version_once(session: AsyncSession) -> None:
+    user = await _create_user(session)
+    await issue_refresh_token(session, user.id)
+    before = await current_session_version(session, user.id)
+
+    await revoke_all_refresh_tokens(session, user.id)
+
+    assert await current_session_version(session, user.id) == before + 1

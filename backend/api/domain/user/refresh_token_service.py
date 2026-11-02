@@ -43,7 +43,7 @@ async def rotate_refresh_token(session: AsyncSession, raw_token: str) -> tuple[U
     if stored is None:
         raise InvalidRefreshTokenError
     if stored.revoked_at is not None:
-        await _revoke_family(session, stored.family_id)
+        await _revoke_stolen_family(session, stored)
         raise InvalidRefreshTokenError
     if stored.expires_at < datetime.now(UTC):
         raise InvalidRefreshTokenError
@@ -54,16 +54,14 @@ async def rotate_refresh_token(session: AsyncSession, raw_token: str) -> tuple[U
         .values(revoked_at=datetime.now(UTC))
     )
     if affected_rows(consumed) != 1:
-        await _revoke_family(session, stored.family_id)
+        await _revoke_stolen_family(session, stored)
         raise InvalidRefreshTokenError
     successor = await issue_refresh_token(session, stored.user_id, family_id=stored.family_id)
     return stored.user_id, successor
 
 
 async def bump_session_version(session: AsyncSession, user_id: UUID) -> None:
-    await session.execute(
-        update(User).where(User.id == user_id).values(session_version=User.session_version + 1)
-    )
+    await _increment_session_version(session, user_id)
     await session.commit()
 
 
@@ -79,7 +77,8 @@ async def revoke_refresh_token(session: AsyncSession, raw_token: str) -> None:
     if stored is None:
         return
     await _revoke_family(session, stored.family_id)
-    await bump_session_version(session, stored.user_id)
+    await _increment_session_version(session, stored.user_id)
+    await session.commit()
 
 
 async def revoke_all_refresh_tokens(session: AsyncSession, user_id: UUID) -> None:
@@ -89,8 +88,14 @@ async def revoke_all_refresh_tokens(session: AsyncSession, user_id: UUID) -> Non
         .where(RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None))
         .values(revoked_at=datetime.now(UTC))
     )
+    await _increment_session_version(session, user_id)
     await session.commit()
-    await bump_session_version(session, user_id)
+
+
+async def _revoke_stolen_family(session: AsyncSession, stored: RefreshToken) -> None:
+    await _revoke_family(session, stored.family_id)
+    await _increment_session_version(session, stored.user_id)
+    await session.commit()
 
 
 async def _revoke_family(session: AsyncSession, family_id: UUID) -> None:
@@ -99,4 +104,9 @@ async def _revoke_family(session: AsyncSession, family_id: UUID) -> None:
         .where(RefreshToken.family_id == family_id, RefreshToken.revoked_at.is_(None))
         .values(revoked_at=datetime.now(UTC))
     )
-    await session.commit()
+
+
+async def _increment_session_version(session: AsyncSession, user_id: UUID) -> None:
+    await session.execute(
+        update(User).where(User.id == user_id).values(session_version=User.session_version + 1)
+    )

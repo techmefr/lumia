@@ -74,5 +74,41 @@ async def test_disabling_totp_revokes_the_access_token(client: httpx.AsyncClient
     response = await client.request(
         "DELETE", "/me/totp", headers=headers, json={"password": PASSWORD}
     )
-    assert response.status_code == 204
+    assert response.status_code == 200
     assert (await client.get("/me", headers=headers)).status_code == 401
+
+
+async def test_replaying_a_rotated_refresh_token_revokes_the_access_tokens(
+    client: httpx.AsyncClient,
+) -> None:
+    tokens = await _sign_up(client)
+    rotated = await client.post("/auth/refresh", json={"refresh_token": tokens["refresh_token"]})
+    assert (await client.get("/me", headers=_bearer(rotated.json()))).status_code == 200
+
+    replay = await client.post("/auth/refresh", json={"refresh_token": tokens["refresh_token"]})
+
+    assert replay.status_code == 401
+    assert (await client.get("/me", headers=_bearer(rotated.json()))).status_code == 401
+
+
+async def test_disabling_the_second_factor_hands_back_a_working_pair(
+    client: httpx.AsyncClient,
+) -> None:
+    tokens = await _sign_up(client)
+    enrolment = await client.post("/me/totp/enrolment", headers=_bearer(tokens))
+    secret = enrolment.json()["secret"]
+    await client.post("/me/totp", headers=_bearer(tokens), json={"code": pyotp.TOTP(secret).now()})
+
+    response = await client.request(
+        "DELETE", "/me/totp", headers=_bearer(tokens), json={"password": PASSWORD}
+    )
+
+    assert response.status_code == 200
+    assert (await client.get("/me", headers=_bearer(tokens))).status_code == 401
+    fresh = await client.get("/me", headers=_bearer(response.json()))
+    assert fresh.status_code == 200
+    assert fresh.json()["totp_enabled"] is False
+    refreshed = await client.post(
+        "/auth/refresh", json={"refresh_token": response.json()["refresh_token"]}
+    )
+    assert refreshed.status_code == 200

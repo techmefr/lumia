@@ -730,14 +730,14 @@ async def renew_recovery_codes(
     return TotpRecoveryCodesResponse(recovery_codes=codes)
 
 
-@router.delete("/me/totp", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/me/totp", response_model=TokenPairResponse)
 async def disable_my_totp(
     payload: TotpDisableRequest,
     request: Request,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
     limiter: RateLimiter = Depends(get_rate_limiter),
-) -> None:
+) -> TokenPairResponse:
     """Turns the second factor off, and asks the reader to prove themselves again first.
 
     An access token alone must not be enough: it is exactly what someone who walked up to an
@@ -764,6 +764,7 @@ async def disable_my_totp(
             raise _totp_failure(exc) from exc
 
     await disable_totp(session, user)
+    return await _issue_token_pair(session, user.id)
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
