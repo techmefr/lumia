@@ -41,7 +41,12 @@ const TEXT_PAIRS = [
 	['destructive-foreground', 'destructive'],
 	['primary', 'background'],
 	['primary', 'card'],
-	['destructive', 'background']
+	['primary', 'muted'],
+	['primary', 'secondary'],
+	['destructive', 'background'],
+	['destructive', 'card'],
+	['destructive', 'muted'],
+	['destructive', 'secondary']
 ] as const;
 
 const named = THEME_PRESETS.filter((preset) => preset.named);

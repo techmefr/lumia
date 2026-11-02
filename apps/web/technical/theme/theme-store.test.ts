@@ -216,6 +216,28 @@ describe('initPreferences', () => {
 		expect(root().dataset.fontPair).toBe('humaniste');
 		expect(root().dataset.readingComfort).toBe('on');
 	});
+
+	it('repaints the browser chrome of the stored theme over the system-driven meta tags', () => {
+		setTheme('dark');
+		document.head.innerHTML =
+			'<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />';
+
+		initPreferences();
+
+		const meta = document.querySelector('meta[name="theme-color"]')!;
+		expect(meta.getAttribute('content')).toBe('#0b0b0f');
+		expect(meta.hasAttribute('media')).toBe(false);
+	});
+
+	it('leaves the meta tags to the system when no theme was ever stored', () => {
+		localStorage.removeItem('lumia-theme');
+		document.head.innerHTML =
+			'<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />';
+
+		initPreferences();
+
+		expect(document.querySelector('meta[name="theme-color"]')!.hasAttribute('media')).toBe(true);
+	});
 });
 
 describe('the named themes', () => {
