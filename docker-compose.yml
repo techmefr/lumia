@@ -22,7 +22,7 @@ services:
       - internal
 
   redis:
-    image: redis:8.10.1-alpine
+    image: redis:8.10.3-alpine
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
