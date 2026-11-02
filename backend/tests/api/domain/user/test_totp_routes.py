@@ -363,8 +363,9 @@ async def test_disabling_with_the_password_turns_it_off(client: httpx.AsyncClien
         "DELETE", "/me/totp", headers=_auth(tokens), json={"password": ADMIN_PAYLOAD["password"]}
     )
 
-    assert response.status_code == 204
+    assert response.status_code == 200
     assert (await client.get("/me", headers=_auth(tokens))).status_code == 401
+    assert (await client.get("/me", headers=_auth(response.json()))).status_code == 200
     relogin = await _login(client)
     assert relogin.status_code == 200
     me = await client.get("/me", headers=_auth(relogin.json()))

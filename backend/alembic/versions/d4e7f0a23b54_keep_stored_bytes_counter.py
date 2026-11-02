@@ -17,6 +17,8 @@ from api.domain.instance.usage_triggers import (
     CREATE_TRIGGER,
     DROP_FUNCTION,
     DROP_TRIGGER,
+    LOCK_ARTICLES,
+    LOCK_TIMEOUT,
 )
 
 revision: str = "d4e7f0a23b54"
@@ -31,6 +33,8 @@ def upgrade() -> None:
         "users",
         sa.Column("stored_bytes", sa.BigInteger(), server_default="0", nullable=False),
     )
+    op.execute(LOCK_TIMEOUT)
+    op.execute(LOCK_ARTICLES)
     op.execute(BACKFILL)
     op.execute(CREATE_FUNCTION)
     op.execute(CREATE_TRIGGER)
