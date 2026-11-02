@@ -127,6 +127,7 @@ services:
       MINIFLUX_WEBHOOK_SECRET: ${MINIFLUX_WEBHOOK_SECRET:?MINIFLUX_WEBHOOK_SECRET must be set in .env}
       DEEPL_API_KEY: ${DEEPL_API_KEY}
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
+      TRUSTED_PROXY_COUNT: ${TRUSTED_PROXY_COUNT:-1}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://localhost:8080,https://localhost,capacitor://localhost}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       LOG_FORMAT: ${LOG_FORMAT:-json}
