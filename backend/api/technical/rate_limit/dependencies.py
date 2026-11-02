@@ -11,15 +11,18 @@ from config.rate_limit import get_rate_limit_config
 
 
 def client_address(request: Request) -> str:
-    """The caller's address, read through the one proxy the shipped compose puts in front.
+    """The caller's address, read through the trusted proxies the deployment puts in front.
 
-    nginx appends the peer it saw to `X-Forwarded-For`, so the last entry is the only one it
-    vouches for — everything to its left was supplied by the caller and can say anything.
+    Each trusted proxy appends the peer it saw to `X-Forwarded-For`, so the entry that many places
+    from the right is the last one vouched for — everything to its left was supplied by the caller
+    and can say anything.
     """
-    if get_rate_limit_config().trust_proxy_headers:
+    config = get_rate_limit_config()
+    if config.trust_proxy_headers:
         forwarded = request.headers.get("x-forwarded-for")
         if forwarded:
-            return forwarded.split(",")[-1].strip()
+            entries = [entry.strip() for entry in forwarded.split(",")]
+            return entries[max(len(entries) - config.trusted_proxy_count, 0)]
     return request.client.host if request.client else "unknown"
 
 

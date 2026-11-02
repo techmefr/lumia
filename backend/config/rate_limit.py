@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
@@ -48,6 +49,11 @@ class RateLimitConfig(BaseSettings):
     # The shipped nginx sets X-Forwarded-For; a deployment that exposes the API directly must turn
     # this off, or a caller can pick their own address by sending the header themselves.
     trust_proxy_headers: bool = True
+    # How many proxies append to X-Forwarded-For in front of the API: the caller's address is that
+    # many entries from the right, everything further left is supplied by the caller.
+    trusted_proxy_count: int = Field(default=1, ge=1)
+    onboarding_max_attempts: int = 5
+    onboarding_window_minutes: int = 60
 
 
 @lru_cache

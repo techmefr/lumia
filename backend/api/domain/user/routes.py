@@ -194,10 +194,23 @@ async def _issue_token_pair(session: AsyncSession, user_id: UUID) -> TokenPairRe
 )
 async def onboard_admin(
     payload: OnboardingAdminRequest,
+    request: Request,
     session: AsyncSession = Depends(get_db_session),
+    limiter: RateLimiter = Depends(get_rate_limiter),
 ) -> TokenPairResponse:
+    config = get_rate_limit_config()
+    await enforce(
+        limiter,
+        scope="onboarding",
+        identifiers={"ip": client_address(request)},
+        max_attempts=config.onboarding_max_attempts,
+        window=timedelta(minutes=config.onboarding_window_minutes),
+    )
     instance_count = await session.scalar(select(func.count()).select_from(Instance))
-    if instance_count:
+    admin_count = await session.scalar(
+        select(func.count()).select_from(User).where(User.role == Role.ADMIN)
+    )
+    if instance_count or admin_count:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT)
 
     instance_config = get_instance_config()

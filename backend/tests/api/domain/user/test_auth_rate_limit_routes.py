@@ -176,3 +176,23 @@ async def test_the_refresh_allowance_is_counted_per_address(client: httpx.AsyncC
     )
 
     assert response.status_code == 401
+
+
+async def test_onboarding_is_locked_once_an_admin_exists(client: httpx.AsyncClient) -> None:
+    await _onboard(client)
+
+    again = await client.post("/onboarding/admin", json=ADMIN_PAYLOAD)
+
+    assert again.status_code == 409
+
+
+async def test_onboarding_attempts_end_in_429(client: httpx.AsyncClient) -> None:
+    allowance = get_rate_limit_config().onboarding_max_attempts
+    headers = _from("203.0.113.1")
+
+    for _ in range(allowance):
+        response = await client.post("/onboarding/admin", json=ADMIN_PAYLOAD, headers=headers)
+        assert response.status_code in (201, 409)
+    refused = await client.post("/onboarding/admin", json=ADMIN_PAYLOAD, headers=headers)
+
+    assert refused.status_code == 429

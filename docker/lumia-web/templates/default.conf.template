@@ -1,3 +1,6 @@
+log_format lumia_no_query '$remote_addr - [$time_local] "$request_method $uri $server_protocol" '
+	'$status $body_bytes_sent';
+
 server {
 	listen 8080;
 	server_name _;
@@ -8,6 +11,13 @@ server {
 	gzip_types text/css application/javascript application/json image/svg+xml;
 
 	include /etc/nginx/conf.d/security-headers.conf;
+
+	access_log /var/log/nginx/access.log lumia_no_query;
+
+	# Miniflux calls the webhook receiver straight on the backend; it is never public.
+	location ^~ /api/webhooks/ {
+		return 404;
+	}
 
 	# Same-origin API. The app is opened from a phone or a tablet by the machine's LAN
 	# address, so a backend host baked into the bundle would break the moment that address

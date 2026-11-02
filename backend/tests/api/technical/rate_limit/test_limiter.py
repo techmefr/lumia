@@ -67,3 +67,24 @@ async def test_the_counter_expires_with_the_window(limiter: RedisRateLimiter) ->
 
 def test_the_default_limiter_is_wired_to_the_configured_redis() -> None:
     assert isinstance(get_rate_limiter(), RedisRateLimiter)
+
+
+async def test_the_counter_always_carries_an_expiry(limiter: RedisRateLimiter) -> None:
+    await limiter.hit("login:ip:203.0.113.9", LIMIT)
+
+    client: Redis = Redis.from_url(get_redis_config().redis_url)
+    try:
+        ttl = await client.ttl(f"{limiter.namespace}:login:ip:203.0.113.9")
+    finally:
+        await client.aclose()
+    assert 0 < ttl <= int(LIMIT.window.total_seconds())
+
+
+async def test_a_counter_left_without_expiry_is_not_the_only_way_in(
+    limiter: RedisRateLimiter,
+) -> None:
+    for _ in range(LIMIT.max_attempts):
+        await limiter.hit("login:ip:203.0.113.8", LIMIT)
+    with pytest.raises(RateLimitExceededError) as raised:
+        await limiter.hit("login:ip:203.0.113.8", LIMIT)
+    assert 0 < raised.value.retry_after_seconds <= int(LIMIT.window.total_seconds())

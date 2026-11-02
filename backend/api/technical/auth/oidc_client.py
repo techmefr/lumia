@@ -5,6 +5,9 @@ from urllib.parse import urlencode, urlsplit
 import httpx
 import jwt
 
+from api.technical.net.pinned_transport import guarded_transport
+from api.technical.net.url_guard import Resolver, resolve_with_system
+
 
 class InsecureIssuerError(Exception):
     pass
@@ -36,13 +39,16 @@ class OidcDiscoveryDocument:
 
 
 async def discover(
-    issuer: str, *, transport: httpx.AsyncBaseTransport | None = None
+    issuer: str,
+    *,
+    transport: httpx.AsyncBaseTransport | None = None,
+    resolve: Resolver = resolve_with_system,
 ) -> OidcDiscoveryDocument:
     # Discovery hands out the endpoints every later call trusts, and the client secret travels to
     # the token endpoint it names: over plain http anyone on the path rewrites the whole flow.
     if urlsplit(issuer).scheme != "https":
         raise InsecureIssuerError(f"the OIDC issuer must be an https URL, got {issuer!r}")
-    async with httpx.AsyncClient(transport=transport) as client:
+    async with httpx.AsyncClient(transport=guarded_transport(transport, resolve)) as client:
         response = await client.get(f"{issuer}/.well-known/openid-configuration")
         response.raise_for_status()
         payload = response.json()
@@ -87,8 +93,9 @@ async def exchange_code_for_tokens(
     redirect_uri: str,
     code: str,
     transport: httpx.AsyncBaseTransport | None = None,
+    resolve: Resolver = resolve_with_system,
 ) -> dict[str, Any]:
-    async with httpx.AsyncClient(transport=transport) as client:
+    async with httpx.AsyncClient(transport=guarded_transport(transport, resolve)) as client:
         response = await client.post(
             document.token_endpoint,
             data={
@@ -104,9 +111,12 @@ async def exchange_code_for_tokens(
 
 
 async def fetch_jwks(
-    document: OidcDiscoveryDocument, *, transport: httpx.AsyncBaseTransport | None = None
+    document: OidcDiscoveryDocument,
+    *,
+    transport: httpx.AsyncBaseTransport | None = None,
+    resolve: Resolver = resolve_with_system,
 ) -> dict[str, Any]:
-    async with httpx.AsyncClient(transport=transport) as client:
+    async with httpx.AsyncClient(transport=guarded_transport(transport, resolve)) as client:
         response = await client.get(document.jwks_uri)
         response.raise_for_status()
         return dict(response.json())
@@ -117,8 +127,9 @@ async def fetch_userinfo(
     *,
     access_token: str,
     transport: httpx.AsyncBaseTransport | None = None,
+    resolve: Resolver = resolve_with_system,
 ) -> dict[str, Any]:
-    async with httpx.AsyncClient(transport=transport) as client:
+    async with httpx.AsyncClient(transport=guarded_transport(transport, resolve)) as client:
         response = await client.get(
             document.userinfo_endpoint,
             headers={"Authorization": f"Bearer {access_token}"},

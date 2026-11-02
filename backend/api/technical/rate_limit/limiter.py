@@ -43,11 +43,12 @@ class RedisRateLimiter:
         client: Redis = Redis.from_url(self._redis_url)
         try:
             namespaced = f"{self.namespace}:{key}"
-            attempts = await client.incr(namespaced)
-            if attempts == 1:
-                await client.expire(namespaced, seconds)
+            pipeline = client.pipeline(transaction=True)
+            pipeline.set(namespaced, 0, ex=seconds, nx=True)
+            pipeline.incr(namespaced)
+            pipeline.ttl(namespaced)
+            _, attempts, ttl = await pipeline.execute()
             if attempts > limit.max_attempts:
-                ttl = await client.ttl(namespaced)
                 raise RateLimitExceededError(ttl if ttl > 0 else seconds)
         finally:
             await client.aclose()

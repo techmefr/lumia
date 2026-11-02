@@ -104,3 +104,37 @@ async def test_fetch_jwks_reads_the_key_set_the_document_names() -> None:
     jwks = await fetch_jwks(document, transport=httpx.MockTransport(handler))
 
     assert jwks["keys"] == [{"kid": "key-1"}]
+
+
+async def test_discovery_refuses_an_issuer_resolving_to_a_private_address() -> None:
+    from api.technical.net.url_guard import BlockedUrlError
+
+    with pytest.raises(BlockedUrlError):
+        await discover("https://idp.example.com", resolve=lambda _host: ["10.0.0.5"])
+
+
+async def test_userinfo_refuses_an_endpoint_resolving_to_a_private_address() -> None:
+    from api.technical.net.url_guard import BlockedUrlError
+
+    document = OidcDiscoveryDocument(**DISCOVERY_PAYLOAD)
+    with pytest.raises(BlockedUrlError):
+        await fetch_userinfo(
+            document, access_token="token", resolve=lambda _host: ["169.254.169.254"]
+        )
+
+
+async def test_token_exchange_and_jwks_refuse_a_loopback_endpoint() -> None:
+    from api.technical.net.url_guard import BlockedUrlError
+
+    document = OidcDiscoveryDocument(**DISCOVERY_PAYLOAD)
+    with pytest.raises(BlockedUrlError):
+        await exchange_code_for_tokens(
+            document,
+            client_id="c",
+            client_secret="s",
+            redirect_uri="https://x/cb",
+            code="code",
+            resolve=lambda _host: ["127.0.0.1"],
+        )
+    with pytest.raises(BlockedUrlError):
+        await fetch_jwks(document, resolve=lambda _host: ["127.0.0.1"])
