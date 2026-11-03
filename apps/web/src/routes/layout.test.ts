@@ -86,9 +86,9 @@ describe('the app shell', () => {
 		expect(view.mobileNav()).not.toBeNull();
 	});
 
-	// Sign-in, onboarding and a shared article are reachable without a session, so the chrome they would offer leads
-	// nowhere; the whole screen is the form.
-	it.each(['/login', '/onboarding', '/share/a-public-token'])('drops the chrome on %s', (route) => {
+	// Sign-in, onboarding, an invitation and a shared article are reachable without a session, so the chrome they
+	// would offer leads nowhere; the whole screen is the form.
+	it.each(['/login', '/onboarding', '/invitation', '/share/a-public-token'])('drops the chrome on %s', (route) => {
 		pathname = route;
 		const view = layout();
 

@@ -80,6 +80,13 @@ export const pt: Catalogue = {
 	'reset.submit': 'Guardar a palavra-passe',
 	'reset.invalidLink': 'Este link já não é válido, peça um novo.',
 	'reset.missingLink': 'Abra o link recebido por email para redefinir a sua palavra-passe.',
+	'invitation.title': 'Juntar-se ao Lumia',
+	'invitation.intro': 'Foi convidado para esta instância. Escolha um nome de utilizador e uma palavra-passe para criar a sua conta.',
+	'invitation.submit': 'Criar a minha conta',
+	'invitation.invalidLink': 'Este convite já não é válido: expirou, já foi usado ou não existe. Peça um novo ao administrador da instância.',
+	'invitation.missingLink': 'Abra o link recebido por email para aceitar o seu convite.',
+	'invitation.conflict': 'Não é possível criar esta conta: o endereço já tem uma ou a instância está cheia. Contacte o administrador.',
+	'invitation.failed': 'A criação da conta falhou, tente novamente.',
 
 	'login.totpTitle': 'Verificação em duas etapas',
 	'login.totpCode': 'Código de seis dígitos',

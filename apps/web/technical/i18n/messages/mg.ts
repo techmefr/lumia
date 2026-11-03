@@ -80,6 +80,13 @@ export const mg: Catalogue = {
 	'reset.submit': 'Tehirizo ny teny miafina',
 	'reset.invalidLink': 'Tsy manan-kery intsony ity rohy ity, mangataha iray vaovao.',
 	'reset.missingLink': 'Sokafy ny rohy noraisinao tamin’ny mailaka mba hamerenana ny teny miafina.',
+	'invitation.title': 'Hiditra ao amin’ny Lumia',
+	'invitation.intro': 'Nasaina ho ao amin’ity instance ity ianao. Misafidiana anarana mpampiasa sy teny miafina hamoronana ny kaontinao.',
+	'invitation.submit': 'Hamorona ny kaontiko',
+	'invitation.invalidLink': 'Tsy manan-kery intsony ity fanasana ity: lany daty, efa nampiasaina na tsy misy. Mangataha vaovao amin’ny mpitantana ny instance.',
+	'invitation.missingLink': 'Sokafy ny rohy noraisinao tamin’ny mailaka mba hanekena ny fanasana.',
+	'invitation.conflict': 'Tsy azo foronina ity kaonty ity: efa manana kaonty ny adiresy na feno ny instance. Mifandraisa amin’ny mpitantana.',
+	'invitation.failed': 'Tsy nahomby ny famoronana ny kaonty, andramo indray.',
 
 	'login.totpTitle': 'Fanamarinana roa dingana',
 	'login.totpCode': 'Kaody misy isa enina',
