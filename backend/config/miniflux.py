@@ -13,6 +13,11 @@ class MinifluxConfig(BaseSettings):
     # No default: an instance that starts without one would silently accept unsigned webhooks
     # rather than refuse to boot, and that is the failure mode this field exists to rule out.
     miniflux_webhook_secret: str
+    # Miniflux keeps its webhook settings per user in its own database and exposes no API to write
+    # them, so the bundled stack hands the API that database to switch the webhook on at startup.
+    # Left empty for an external Miniflux, whose webhook is set in its Integrations page.
+    miniflux_database_url: str | None = None
+    miniflux_webhook_url: str = "http://lumia-backend-api:8000/webhooks/miniflux"
 
     @field_validator("miniflux_password")
     @classmethod
