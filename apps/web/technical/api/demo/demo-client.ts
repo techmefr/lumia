@@ -646,6 +646,7 @@ export function createDemoClient(): LumiaClient {
 			verifyMagicLink: async () => settle(undefined),
 			changePassword: async () => settle(undefined),
 			resetPassword: async () => settle(undefined),
+			acceptInvitation: async () => settle(undefined),
 			// The demo has no backend to enrol against, so the panel simply reports the account as
 			// unprotected and every action refuses rather than pretending to have turned it on.
 			startTotpEnrolment: async () => settle({ secret: '', otpauth_uri: '' }),
