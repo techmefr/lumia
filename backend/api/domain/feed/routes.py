@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import UUID, uuid4
 
 import httpx
@@ -46,11 +47,20 @@ from worker.technical.connectors.miniflux_client import (
     get_feed_icon,
     get_miniflux_transport,
 )
+from worker.technical.queue import get_arq_pool
 
 router = APIRouter()
 
 _MAX_OPML_BYTES = 2 * 1024 * 1024
 _UPLOAD_CHUNK_BYTES = 64 * 1024
+
+
+async def _pull_entries_miniflux_already_has(pool: Any, feeds: list[Feed]) -> None:
+    # Miniflux only calls its webhook for entries found on a refresh, never for the ones it fetches
+    # when a feed is created, nor for a feed it already carried: without this the reader would
+    # wait for the hourly reconciliation to see anything from a feed just added.
+    if feeds:
+        await pool.enqueue_job("reconcile_recent_articles")
 
 
 def _to_folder_response(folder: Folder) -> FolderResponse:
@@ -201,6 +211,7 @@ async def attach_instance_feeds_route(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
+    pool: Any = Depends(get_arq_pool),
 ) -> list[FeedResponse]:
     try:
         feeds = await attach_instance_feeds(
@@ -208,6 +219,7 @@ async def attach_instance_feeds_route(
         )
     except FeedUnreachableError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY) from exc
+    await _pull_entries_miniflux_already_has(pool, feeds)
     return [_to_feed_response(feed) for feed in feeds]
 
 
@@ -243,6 +255,7 @@ async def add_feed_by_url(
     session: AsyncSession = Depends(get_db_session),
     transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
     resolve: Resolver = Depends(get_url_resolver),
+    pool: Any = Depends(get_arq_pool),
 ) -> FeedResponse:
     try:
         feed = await add_feed(
@@ -257,6 +270,7 @@ async def add_feed_by_url(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from exc
     except (FeedUnreachableError, BlockedUrlError) as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
+    await _pull_entries_miniflux_already_has(pool, [feed])
     return _to_feed_response(feed)
 
 
@@ -283,6 +297,7 @@ async def import_opml_feeds(
     transport: httpx.AsyncBaseTransport | None = Depends(get_miniflux_transport),
     resolve: Resolver = Depends(get_url_resolver),
     limiter: RateLimiter = Depends(get_rate_limiter),
+    pool: Any = Depends(get_arq_pool),
 ) -> list[FeedResponse]:
     config = get_rate_limit_config()
     await enforce(
@@ -301,6 +316,7 @@ async def import_opml_feeds(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from exc
     except OpmlTooLargeError as exc:
         raise HTTPException(status_code=status.HTTP_413_CONTENT_TOO_LARGE) from exc
+    await _pull_entries_miniflux_already_has(pool, feeds)
     return [_to_feed_response(feed) for feed in feeds]
 
 
