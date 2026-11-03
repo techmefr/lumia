@@ -1,19 +1,78 @@
-# Lumia
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/lumia-logo-dark.avif" />
+    <img src="docs/brand/lumia-logo-light.avif" alt="Lumia" width="340" />
+  </picture>
+</p>
 
-> Clarify your feeds. Learn your tastes.
+<h3 align="center">Clarify your feeds. Learn your tastes.</h3>
 
-Lumia is a self-hosted RSS reader that pulls your feeds, strips the articles down to the actual
-article, extracts keywords and a summary, and learns what interests you as you read. Everything runs
-on your own machine.
+<p align="center">
+  A self-hosted RSS reader that keeps only the article, summarises it, reads it aloud<br />
+  and learns what you like, without sending your reading anywhere.
+</p>
 
-**[Landing page](https://techmefr.github.io/lumia/)** ·
-**[Live demo](https://techmefr.github.io/lumia/app/)** ·
-Version française : [README.fr.md](README.fr.md)
+<p align="center">
+  <a href="https://techmefr.github.io/lumia/app/"><strong>Try the live demo</strong></a> ·
+  <a href="https://techmefr.github.io/lumia/">Landing page</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="README.fr.md">Version française</a>
+</p>
 
-The demo is the real front end with the http client swapped for an in-memory one seeded with made-up
-articles. Nothing leaves the browser, there is no account and no backend behind it; the reset button
-in the banner clears the seeded state. It exists to judge the interface, the reading view and the
-text-to-speech on a real device before installing anything.
+<p align="center">
+  <a href="https://github.com/techmefr/lumia/actions/workflows/ci.yml"><img src="https://github.com/techmefr/lumia/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-6d63ee" alt="License AGPL-3.0" /></a>
+  <img src="https://img.shields.io/badge/self--hosted-docker%20compose-4f46e5" alt="Self-hosted with docker compose" />
+  <img src="https://img.shields.io/badge/WCAG-2.2%20AA-8b85f5" alt="WCAG 2.2 AA" />
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/articles-light.avif" />
+    <img src="docs/screenshots/articles-dark.avif" alt="The Lumia article list, with folders, feeds and article cards" width="100%" />
+  </picture>
+</p>
+
+## Why Lumia
+
+- 🧹 **Just the article.** Every page is re-extracted: no banners, no menus, no "you may also like".
+- ✨ **It learns your tastes.** Swipe through The Spark, and keywords, sources and authors you like
+  rise to the top.
+- 🎧 **Listen instead of reading.** Text-to-speech per article or across a whole playlist, sized to
+  the time you have.
+- 📍 **Pick up where you left off.** The reading position follows you from the laptop to the phone.
+- 🔒 **Your reading stays home.** Summaries and keywords are computed locally; an AI key is optional.
+- 📥 **Bring your feeds.** Feedly OPML import, Mastodon, Bluesky, Reddit, Google News, or save any
+  page by URL.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/reader-dark.avif" alt="Reading view with keywords, export, translation and listen actions" /><br /><sub><b>Reader</b>: clean text, keywords, translate, listen, export to EPUB or PDF.</sub></td>
+    <td width="50%"><img src="docs/screenshots/etincelle-dark.avif" alt="The Spark, a swipeable card to like, skip, favourite or keep for later" /><br /><sub><b>The Spark</b>: swipe to teach Lumia what you like.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/playlists-dark.avif" alt="Playlists with generated queues of 12, 25 or 45 minutes" /><br /><sub><b>Playlists</b>: a queue filled for the 12, 25 or 45 minutes you have.</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/mobile-dark.avif" alt="Lumia on a phone, with the bottom navigation bar" width="300" /><br /><sub><b>Mobile</b>: installable PWA with bottom navigation.</sub></td>
+  </tr>
+</table>
+
+The [live demo](https://techmefr.github.io/lumia/app/) is the real front end running on made-up
+articles: no account, no backend, nothing leaves the browser, and the banner's reset button starts it
+over.
+
+## Quick start
+
+```bash
+git clone https://github.com/techmefr/lumia.git
+cd lumia
+cp .env.example .env    # then fill in the secrets
+docker compose up -d
+```
+
+Open `http://localhost:8080`: the app walks you through creating the admin account, then you import
+an OPML file or add your first feeds. The details are under [Self-hosting](#self-hosting).
 
 ## What it does
 
