@@ -155,6 +155,21 @@ export function createUserApi(
 		);
 	}
 
+	/**
+	 * The token is the invitee's only credential, so the call goes out unauthenticated and the pair
+	 * it returns is the new account's first session. A spent, expired, revoked or unknown token is
+	 * one and the same 401: the backend does not say which, so nobody can probe the invitations.
+	 */
+	async function acceptInvitation(token: string, username: string, password: string): Promise<void> {
+		storeTokens(
+			await http.request<TokenPair>('/invitations/accept', {
+				method: 'POST',
+				body: { token, username, password },
+				auth: false
+			})
+		);
+	}
+
 	/** Draws a secret for an authenticator. Nothing is switched on until it is confirmed. */
 	async function startTotpEnrolment(): Promise<TotpEnrolment> {
 		return http.request<TotpEnrolment>('/me/totp/enrolment', { method: 'POST' });
@@ -221,6 +236,7 @@ export function createUserApi(
 		verifyMagicLink,
 		changePassword,
 		resetPassword,
+		acceptInvitation,
 		startTotpEnrolment,
 		confirmTotpEnrolment,
 		renewRecoveryCodes,

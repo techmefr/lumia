@@ -80,6 +80,13 @@ export const en: Catalogue = {
 	'reset.submit': 'Save the password',
 	'reset.invalidLink': 'This link is no longer valid, request a new one.',
 	'reset.missingLink': 'Open the link from your email to reset your password.',
+	'invitation.title': 'Join Lumia',
+	'invitation.intro': 'You have been invited to this instance. Choose a username and a password to create your account.',
+	'invitation.submit': 'Create my account',
+	'invitation.invalidLink': 'This invitation is no longer valid: it has expired, has already been used or does not exist. Ask the instance admin for a new one.',
+	'invitation.missingLink': 'Open the link from your email to accept your invitation.',
+	'invitation.conflict': 'This account cannot be created: the address already has one or the instance is full. Contact the admin.',
+	'invitation.failed': 'Creating the account failed, try again.',
 
 	'login.totpTitle': 'Two-step verification',
 	'login.totpCode': 'Six-digit code',

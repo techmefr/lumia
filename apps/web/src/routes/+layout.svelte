@@ -34,7 +34,7 @@
 	let helpOpen = $state(false);
 	let arrivalAnnouncement = $state('');
 
-	const authRoutes = ['/login', '/onboarding'];
+	const authRoutes = ['/login', '/onboarding', '/invitation'];
 
 	function isAuthRoute(pathname: string): boolean {
 		return authRoutes.some((route) => pathname === base + route);

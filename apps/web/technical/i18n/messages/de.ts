@@ -80,6 +80,13 @@ export const de: Catalogue = {
 	'reset.submit': 'Passwort speichern',
 	'reset.invalidLink': 'Dieser Link ist nicht mehr gültig, fordern Sie einen neuen an.',
 	'reset.missingLink': 'Öffnen Sie den Link aus Ihrer E-Mail, um Ihr Passwort zurückzusetzen.',
+	'invitation.title': 'Lumia beitreten',
+	'invitation.intro': 'Sie wurden zu dieser Instanz eingeladen. Wählen Sie einen Benutzernamen und ein Passwort, um Ihr Konto anzulegen.',
+	'invitation.submit': 'Mein Konto anlegen',
+	'invitation.invalidLink': 'Diese Einladung ist nicht mehr gültig: Sie ist abgelaufen, wurde bereits verwendet oder existiert nicht. Bitten Sie den Administrator der Instanz um eine neue.',
+	'invitation.missingLink': 'Öffnen Sie den Link aus Ihrer E-Mail, um Ihre Einladung anzunehmen.',
+	'invitation.conflict': 'Dieses Konto kann nicht angelegt werden: Die Adresse hat bereits eines oder die Instanz ist voll. Wenden Sie sich an den Administrator.',
+	'invitation.failed': 'Das Anlegen des Kontos ist fehlgeschlagen, versuchen Sie es erneut.',
 
 	'login.totpTitle': 'Bestätigung in zwei Schritten',
 	'login.totpCode': 'Sechsstelliger Code',

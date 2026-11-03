@@ -80,6 +80,13 @@ export const es: Catalogue = {
 	'reset.submit': 'Guardar la contraseña',
 	'reset.invalidLink': 'Este enlace ya no es válido, solicita uno nuevo.',
 	'reset.missingLink': 'Abre el enlace que recibiste por correo para restablecer tu contraseña.',
+	'invitation.title': 'Unirse a Lumia',
+	'invitation.intro': 'Te han invitado a esta instancia. Elige un nombre de usuario y una contraseña para crear tu cuenta.',
+	'invitation.submit': 'Crear mi cuenta',
+	'invitation.invalidLink': 'Esta invitación ya no es válida: ha caducado, ya se ha usado o no existe. Pide una nueva al administrador de la instancia.',
+	'invitation.missingLink': 'Abre el enlace que recibiste por correo para aceptar tu invitación.',
+	'invitation.conflict': 'No se puede crear esta cuenta: la dirección ya tiene una o la instancia está llena. Contacta con el administrador.',
+	'invitation.failed': 'No se pudo crear la cuenta, inténtalo de nuevo.',
 
 	'login.totpTitle': 'Verificación en dos pasos',
 	'login.totpCode': 'Código de seis dígitos',

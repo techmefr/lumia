@@ -84,6 +84,13 @@ export const fr = {
 	'reset.submit': 'Enregistrer le mot de passe',
 	'reset.invalidLink': 'Ce lien n’est plus valide, demandes-en un nouveau.',
 	'reset.missingLink': 'Ouvre le lien reçu par email pour réinitialiser ton mot de passe.',
+	'invitation.title': 'Rejoindre Lumia',
+	'invitation.intro': 'On t’a invité sur cette instance. Choisis un nom d’utilisateur et un mot de passe pour créer ton compte.',
+	'invitation.submit': 'Créer mon compte',
+	'invitation.invalidLink': 'Cette invitation n’est plus valable : elle a expiré, a déjà servi ou n’existe pas. Demandes-en une nouvelle à l’administrateur de l’instance.',
+	'invitation.missingLink': 'Ouvre le lien reçu par email pour accepter ton invitation.',
+	'invitation.conflict': 'Ce compte ne peut pas être créé : l’adresse en a déjà un ou l’instance est complète. Contacte l’administrateur.',
+	'invitation.failed': 'La création du compte a échoué, réessaie.',
 
 	'login.totpTitle': 'Vérification en deux étapes',
 	'login.totpCode': 'Code à six chiffres',

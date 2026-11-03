@@ -80,6 +80,13 @@ export const zh: Catalogue = {
 	'reset.submit': '保存密码',
 	'reset.invalidLink': '该链接已失效，请重新申请。',
 	'reset.missingLink': '请打开邮件中的链接来重置密码。',
+	'invitation.title': '加入 Lumia',
+	'invitation.intro': '你已受邀加入此实例。请选择用户名和密码来创建账户。',
+	'invitation.submit': '创建我的账户',
+	'invitation.invalidLink': '该邀请已失效：已过期、已被使用或不存在。请向实例管理员重新申请。',
+	'invitation.missingLink': '请打开邮件中的链接来接受邀请。',
+	'invitation.conflict': '无法创建此账户：该地址已有账户，或实例已满。请联系管理员。',
+	'invitation.failed': '账户创建失败，请重试。',
 
 	'login.totpTitle': '两步验证',
 	'login.totpCode': '六位数字验证码',

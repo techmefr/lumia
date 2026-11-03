@@ -206,6 +206,39 @@ describe('resetting a forgotten password', () => {
 	});
 });
 
+describe('accepting an invitation', () => {
+	it('posts the emailed token unauthenticated, the invitee having no account yet', async () => {
+		const { user, last } = api([TOKENS]);
+		await user.acceptInvitation('invite-abc', 'lena', 'battery staple');
+		expect(last()).toMatchObject({
+			path: '/invitations/accept',
+			method: 'POST',
+			body: { token: 'invite-abc', username: 'lena', password: 'battery staple' },
+			auth: false
+		});
+	});
+
+	it('signs the new account straight in', async () => {
+		const { user, store } = api([TOKENS]);
+		await user.acceptInvitation('invite-abc', 'lena', 'battery staple');
+		expect(store.getAccessToken()).toBe('access-1');
+		expect(store.getRefreshToken()).toBe('refresh-1');
+	});
+
+	it('leaves no session behind when the token is refused', async () => {
+		const recorder = recordingHttpClient();
+		const store = memoryStore();
+		recorder.http.request = async () => {
+			throw new ApiError(401, undefined);
+		};
+		const user = createUserApi(recorder.http, store);
+		await expect(user.acceptInvitation('spent', 'lena', 'battery staple')).rejects.toBeInstanceOf(
+			ApiError
+		);
+		expect(user.isAuthenticated()).toBe(false);
+	});
+});
+
 describe('onboardAdmin', () => {
 	it('posts the first account unauthenticated and signs it straight in', async () => {
 		const { user, last } = api([TOKENS]);
