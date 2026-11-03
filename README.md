@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/lumia-logo-dark.png" />
+    <img src="docs/brand/lumia-logo-light.png" alt="Lumia" width="340" />
+  </picture>
+</p>
+
 # Lumia
 
 > Clarify your feeds. Learn your tastes.
