@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/lumia-logo-dark.png" />
-    <img src="docs/brand/lumia-logo-light.png" alt="Lumia" width="340" />
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/lumia-logo-dark.avif" />
+    <img src="docs/brand/lumia-logo-light.avif" alt="Lumia" width="340" />
   </picture>
 </p>
 
@@ -28,8 +28,8 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/articles-light.webp" />
-    <img src="docs/screenshots/articles-dark.webp" alt="The Lumia article list, with folders, feeds and article cards" width="100%" />
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/articles-light.avif" />
+    <img src="docs/screenshots/articles-dark.avif" alt="The Lumia article list, with folders, feeds and article cards" width="100%" />
   </picture>
 </p>
 
@@ -49,12 +49,12 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/reader-dark.webp" alt="Reading view with keywords, export, translation and listen actions" /><br /><sub><b>Reader</b>: clean text, keywords, translate, listen, export to EPUB or PDF.</sub></td>
-    <td width="50%"><img src="docs/screenshots/etincelle-dark.webp" alt="The Spark, a swipeable card to like, skip, favourite or keep for later" /><br /><sub><b>The Spark</b>: swipe to teach Lumia what you like.</sub></td>
+    <td width="50%"><img src="docs/screenshots/reader-dark.avif" alt="Reading view with keywords, export, translation and listen actions" /><br /><sub><b>Reader</b>: clean text, keywords, translate, listen, export to EPUB or PDF.</sub></td>
+    <td width="50%"><img src="docs/screenshots/etincelle-dark.avif" alt="The Spark, a swipeable card to like, skip, favourite or keep for later" /><br /><sub><b>The Spark</b>: swipe to teach Lumia what you like.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/screenshots/playlists-dark.webp" alt="Playlists with generated queues of 12, 25 or 45 minutes" /><br /><sub><b>Playlists</b>: a queue filled for the 12, 25 or 45 minutes you have.</sub></td>
-    <td width="50%" align="center"><img src="docs/screenshots/mobile-dark.webp" alt="Lumia on a phone, with the bottom navigation bar" width="300" /><br /><sub><b>Mobile</b>: installable PWA with bottom navigation.</sub></td>
+    <td width="50%"><img src="docs/screenshots/playlists-dark.avif" alt="Playlists with generated queues of 12, 25 or 45 minutes" /><br /><sub><b>Playlists</b>: a queue filled for the 12, 25 or 45 minutes you have.</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/mobile-dark.avif" alt="Lumia on a phone, with the bottom navigation bar" width="300" /><br /><sub><b>Mobile</b>: installable PWA with bottom navigation.</sub></td>
   </tr>
 </table>
 

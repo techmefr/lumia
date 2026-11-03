@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/lumia-logo-dark.png" />
-    <img src="docs/brand/lumia-logo-light.png" alt="Lumia" width="340" />
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/lumia-logo-dark.avif" />
+    <img src="docs/brand/lumia-logo-light.avif" alt="Lumia" width="340" />
   </picture>
 </p>
 
@@ -28,8 +28,8 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/articles-light.webp" />
-    <img src="docs/screenshots/articles-dark.webp" alt="La liste d'articles de Lumia, avec dossiers, flux et cartes d'articles" width="100%" />
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/articles-light.avif" />
+    <img src="docs/screenshots/articles-dark.avif" alt="La liste d'articles de Lumia, avec dossiers, flux et cartes d'articles" width="100%" />
   </picture>
 </p>
 
@@ -51,12 +51,12 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/reader-dark.webp" alt="Vue de lecture avec mots-clés, export, traduction et écoute" /><br /><sub><b>Lecture</b> : texte propre, mots-clés, traduction, écoute, export EPUB ou PDF.</sub></td>
-    <td width="50%"><img src="docs/screenshots/etincelle-dark.webp" alt="L'Étincelle, une carte à faire glisser pour aimer, passer, mettre en favori ou garder pour plus tard" /><br /><sub><b>L'Étincelle</b> : fais glisser pour apprendre à Lumia ce que tu aimes.</sub></td>
+    <td width="50%"><img src="docs/screenshots/reader-dark.avif" alt="Vue de lecture avec mots-clés, export, traduction et écoute" /><br /><sub><b>Lecture</b> : texte propre, mots-clés, traduction, écoute, export EPUB ou PDF.</sub></td>
+    <td width="50%"><img src="docs/screenshots/etincelle-dark.avif" alt="L'Étincelle, une carte à faire glisser pour aimer, passer, mettre en favori ou garder pour plus tard" /><br /><sub><b>L'Étincelle</b> : fais glisser pour apprendre à Lumia ce que tu aimes.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/screenshots/playlists-dark.webp" alt="Playlists avec des files générées de 12, 25 ou 45 minutes" /><br /><sub><b>Playlists</b> : une file remplie pour les 12, 25 ou 45 minutes que tu as.</sub></td>
-    <td width="50%" align="center"><img src="docs/screenshots/mobile-dark.webp" alt="Lumia sur téléphone, avec la barre de navigation en bas" width="300" /><br /><sub><b>Mobile</b> : PWA installable avec navigation en bas d'écran.</sub></td>
+    <td width="50%"><img src="docs/screenshots/playlists-dark.avif" alt="Playlists avec des files générées de 12, 25 ou 45 minutes" /><br /><sub><b>Playlists</b> : une file remplie pour les 12, 25 ou 45 minutes que tu as.</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/mobile-dark.avif" alt="Lumia sur téléphone, avec la barre de navigation en bas" width="300" /><br /><sub><b>Mobile</b> : PWA installable avec navigation en bas d'écran.</sub></td>
   </tr>
 </table>
 
