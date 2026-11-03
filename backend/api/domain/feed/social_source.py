@@ -35,7 +35,7 @@ _SHORT_REDDIT_USER = re.compile(r"^/?u(?:ser)?/([\w-]{3,20})/?$")
 _SHORT_MASTODON_PROFILE = re.compile(r"^@([\w.\-]+)@([\w\-]+(?:\.[\w\-]+)+)$")
 _SHORT_MASTODON_TAG = re.compile(r"^#([^\s@#]+)@([\w\-]+(?:\.[\w\-]+)+)$")
 _SHORT_BLUESKY = re.compile(r"^@([\w\-]+(?:\.[\w\-]+)+)$")
-_SHORT_GOOGLE_NEWS = re.compile(r"^news:\s*(.+)$", re.IGNORECASE)
+_SHORT_GOOGLE_NEWS = re.compile(r"^news:\s*(\S.*)$", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
