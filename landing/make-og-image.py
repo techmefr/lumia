@@ -20,6 +20,7 @@ ACCENT = (139, 133, 245)
 
 FONT_DIR = Path("/usr/share/fonts/truetype/dejavu")
 OUTPUT = Path(__file__).with_name("og.png")
+LOGO = Path(__file__).parents[1] / "docs/brand/lumia-logo-dark.avif"
 
 
 def radial_glow(size: tuple[int, int], center: tuple[float, float], radius: float) -> Image.Image:
@@ -40,25 +41,11 @@ def radial_glow(size: tuple[int, int], center: tuple[float, float], radius: floa
     return mask.resize(size, Image.LANCZOS)
 
 
-def draw_mark(draw: ImageDraw.ImageDraw, cx: int, cy: int, radius: int) -> None:
-    """The Lumia mark: a filled core inside eight rays, same shape as the favicon."""
-    draw.ellipse(
-        (cx - radius * 0.42, cy - radius * 0.42, cx + radius * 0.42, cy + radius * 0.42),
-        fill=ACCENT,
-    )
-    for index in range(8):
-        angle = index * (3.14159265 / 4)
-        dx, dy = __import__("math").cos(angle), __import__("math").sin(angle)
-        draw.line(
-            (
-                cx + dx * radius * 0.62,
-                cy + dy * radius * 0.62,
-                cx + dx * radius,
-                cy + dy * radius,
-            ),
-            fill=ACCENT,
-            width=6,
-        )
+def paste_logo(image: Image.Image, left: int, top: int, height: int) -> None:
+    """The Lumia logo, symbol and wordmark, from the same file the README shows on dark."""
+    logo = Image.open(LOGO).convert("RGBA")
+    logo = logo.resize((round(logo.width * height / logo.height), height), Image.LANCZOS)
+    image.paste(logo, (left, top), logo)
 
 
 def main() -> None:
@@ -70,10 +57,8 @@ def main() -> None:
     bold = ImageFont.truetype(str(FONT_DIR / "DejaVuSans-Bold.ttf"), 86)
     regular = ImageFont.truetype(str(FONT_DIR / "DejaVuSans.ttf"), 34)
     small = ImageFont.truetype(str(FONT_DIR / "DejaVuSans.ttf"), 26)
-    wordmark = ImageFont.truetype(str(FONT_DIR / "DejaVuSans-Bold.ttf"), 40)
 
-    draw_mark(draw, 100, 92, 34)
-    draw.text((150, 68), "Lumia", font=wordmark, fill=FOREGROUND)
+    paste_logo(image, 60, 30, 130)
 
     draw.text((96, 210), "Éclaircis tes flux.", font=bold, fill=FOREGROUND)
     draw.text((96, 330), "Lecteur RSS auto-hébergé. Il nettoie les articles,", font=regular, fill=MUTED)

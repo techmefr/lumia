@@ -27,11 +27,12 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) before adding a new module — figure out
 docker compose up -d
 ```
 
-This starts PostgreSQL, Miniflux, the API, and the worker. Frontend apps (`apps/web`, `apps/mobile`, `apps/extension`) run separately during development — see each app's own README once available.
+This starts PostgreSQL, Redis, Miniflux and its own PostgreSQL, the API, the worker and the built web app. During development the frontend apps (`apps/web`, `apps/mobile`, `apps/extension`) run separately — see each app's own README.
 
 ## Writing tests
 
-Every new behaviour comes with a test. Four suites, one per package, each next to the code it covers
+Every new behaviour comes with a test. Six suites — the backend, `packages/core`, `packages/ui`,
+`packages/create-lumia`, `apps/web` and `apps/extension` — each test next to the code it covers
 (`foo.ts` → `foo.test.ts`).
 
 **Select on `data-test-*`, never on a class.** The classes in this codebase exist for visual reasons
@@ -68,6 +69,9 @@ pnpm --filter web check
 pnpm --filter @lumia/core test:coverage
 pnpm --filter @lumia/ui test:coverage
 pnpm --filter web test:coverage
+pnpm --filter extension test:coverage
+pnpm --filter create-lumia test:coverage
+pnpm --filter web test:e2e
 ```
 
 Backend, from `backend/`, against a throwaway PostgreSQL on `:55432` (see the README for the one
@@ -78,14 +82,13 @@ uv sync --all-groups
 uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run pytest
 ```
 
-Or in the project's own image, which copies the source in rather than mounting it:
+Or in the project's own image, with `backend/` mounted in so the checks run on what you just wrote:
 
 ```bash
-docker compose run --rm --build lumia-backend-tests sh -c 'ruff check . && mypy . && pytest -q'
+docker compose run --rm lumia-backend-tests sh -c 'ruff check . && mypy . && pytest -q'
 ```
 
-`--build` matters: without it the checks run against the previous build, and a green result says
-nothing about what you just wrote.
+Add `--build` after changing the dependencies, so the image carries them.
 
 A migration is not finished until it survives a round trip. Dropping a table does not drop the enum
 type it used, so a downgrade that only drops tables makes the next upgrade fail:
