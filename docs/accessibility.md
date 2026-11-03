@@ -8,7 +8,7 @@ automatically, what is only checked by hand, and what is known not to be conform
 **Partially conformant.** No third-party audit has been done. The statement rests on automated checks
 plus the manual review done while writing this page.
 
-- Automated: axe-core (WCAG 2.0/2.1 A and AA rules) runs on ten screens in light and dark theme
+- Automated: axe-core (WCAG 2.0/2.1 A and AA rules) runs on ten screens in each of the seven themes (light, dark, Dracula, Alucard, Nord, Solarized light and dark)
   (`apps/web/e2e/accessibility.spec.ts`, part of the CI e2e job). It covers what a machine can detect,
   roughly a third of the RGAA criteria; a green run is not a claim of full conformance.
 - Not formally verified: screen-reader behaviour (NVDA, JAWS, VoiceOver), reflow at 200% and 400% zoom

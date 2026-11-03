@@ -8,11 +8,13 @@ Every app and service follows OSDD: a `technical/` folder for cross-cutting conc
 lumia/
 ├── packages/
 │   ├── ui/              Shared Svelte components
-│   │   ├── technical/   Inputs, skeletons, layouts
-│   │   └── domain/      ArticleCard, FlashCard, OrbitButton
-│   └── core/             Shared logic
-│       ├── technical/   Auth, HTTP, storage, config
-│       └── domain/      feed/, article/, user/, recommendation/, audio/
+│   │   ├── technical/   Primitives, effects, design tokens
+│   │   └── domain/      ArticleCard, ArticleCardSkeleton, ArticleHero
+│   ├── core/             Shared logic
+│   │   ├── technical/   Auth, HTTP, storage, config
+│   │   └── domain/      article/, audio/, chat/, feed/, highlight/, instance/, newsletter/,
+│   │                    playlist/, recommendation/, saved-search/, tag/, user/, webhook/
+│   └── create-lumia/     Setup CLI: init, doctor, up
 │
 ├── apps/
 │   ├── web/              Svelte SPA
@@ -26,10 +28,13 @@ lumia/
 └── backend/              Single deployable unit: lumia-backend
     ├── api/              FastAPI
     │   ├── technical/    Auth, sessions, middleware, DB
-    │   └── domain/       feed/, article/, user/, recommendation/, audio/
+    │   └── domain/       article/, audio/, chat/, digest/, export/, feed/, fever/, highlight/,
+    │                     instance/, newsletter/, playlist/, recommendation/, saved_search/,
+    │                     tag/, user/, webhook/
     └── worker/           Ingestion + enrichment pipeline (arq jobs)
-        ├── technical/    Source connectors, webhook, queue, DB client
-        └── domain/       extraction/, scoring/, summarizer/
+        ├── technical/    Source connectors, AI, speech, translation, queue
+        └── domain/       alerts/, digest/, export/, extraction/, imports/, maintenance/,
+                          pipeline/, scoring/, summarizer/, webhook/
 ```
 
 `technical/` never imports from `domain/` in a different bounded context; `domain/` never reaches into another app's `domain/` directly — shared behavior lives in `packages/core`.
@@ -69,7 +74,7 @@ otherwise walk straight past a first-hop-only guard, and the response body is ca
 one cannot take the process down.
 
 A subscription export is parsed with `defusedxml` (`api/domain/feed/opml_parser.py`) and the upload
-is capped before it is read whole (`_read_capped` in `api/domain/feed/routes.py`, 413 over 2 MB):
+is capped before it is read whole (`_MAX_OPML_BYTES` in `api/domain/feed/routes.py`, 413 over 2 MB):
 the stdlib XML parser expands entities, so a few kilobytes of nested ones are otherwise enough to
 exhaust the API process.
 
@@ -86,7 +91,7 @@ Both purposes prove the same thing, control of the mailbox, and a reader who can
 already set a password from the settings. A reader who knows theirs changes it at `POST
 /me/password`, which asks for the current one — except on an account that has never had one, SSO
 or magic link only, where requiring it would leave no way to set a first. Either route revokes
-every refresh token of the account (see ADR-0006): the tokens issued under the old password would
+every refresh token of the account: the tokens issued under the old password would
 otherwise outlive it by a month. Both hold to `MIN_PASSWORD_LENGTH`, the floor onboarding and
 invitations already enforce.
 
@@ -106,14 +111,6 @@ bound to one address and one role, emailed as `{FRONTEND_URL}/invitation?token=.
 only credential the invitee has yet. `Instance.max_accounts` is the ceiling all three creation paths
 respect: invitation, acceptance, and SSO provisioning. Pending invitations count against it, so a
 seat already promised cannot be promised twice.
-
-Beyond the first admin, accounts exist only through an invitation an admin sends
-(): a single-use token, stored hashed like the magic link,
-bound to one address and one role, emailed as  and redeemed at
- — the one write route that is unauthenticated on purpose, the token being
-the only credential the invitee has yet.  is the ceiling all three creation
-paths respect: invitation, acceptance, and SSO provisioning. Pending invitations count against it,
-so seats already promised cannot be promised twice.
 
 Newsletters arrive without any mail server in the stack. A reader opens an inbox (`api/domain/newsletter/`), which yields a secret address of the form `/api/inbound/newsletters/{token}`; only its hash is stored, it is shown once, and creating a new one or closing it retires the old one. Any forwarder that can POST JSON (sender, subject, html or text, optionally message id and date) to that address delivers an issue: the body is read capped at 1 MiB, attachments are never read, the HTML goes through `nh3`, and the result is queued as a `RawArticle` of a per-reader MANUAL feed so it takes the same enrichment path as every other article. The message id makes a retried delivery idempotent, and the route shares the Redis rate limiter with the other unauthenticated routes.
 
@@ -155,6 +152,15 @@ The reader (`sidepanel/`) is `chrome.sidePanel` on Chrome and `sidebar_action` o
 | `audio` | TTS queue, available-time scheduling |
 | `highlight` | Passages a reader marks in an article, with notes; anchored on text, not on the DOM |
 | `fever` | Fever-compatible sync endpoint for third-party reader apps, and the per-reader key it authenticates with |
+| `playlist` | Ordered queues of articles, generated ones sized to the time available |
+| `chat` | Questions about an article answered by the reader's own AI provider |
+| `digest` | Opt-in email digest of the best-ranked unread articles |
+| `export` | JSON and EPUB exports of an article or a playlist |
+| `newsletter` | Secret inbound addresses that turn newsletter issues into articles |
+| `saved_search` | Searches kept with their filters, and the alerts built on them |
+| `tag` | Reader-defined tags on articles |
+| `webhook` | Outbound webhooks signed per endpoint, with their delivery log |
+| `instance` | Admin onboarding, instance quotas, access requests |
 
 ## Pipeline
 
@@ -165,7 +171,7 @@ Engine (Miniflux polls RSS every N minutes, others later)
         │
         ├─ SourceConnector: raw payload → RawArticle
         ├─ TF-IDF keyword extraction (scikit-learn)
-        ├─ FR/EN stemming (NLTK / spaCy)
+        ├─ FR/EN stemming (NLTK)
         ├─ Extractive summary (leading significant sentences)
         │
         └─ INSERT PostgreSQL (articles, keywords — no score yet)
@@ -177,7 +183,7 @@ Recommendation scores aren't written at ingestion time — they're learned per u
 
 ## Deployment
 
-`lumia-backend` is the one mandatory module (API + worker, one image, two containers). Engines (`miniflux`, …) and frontends (`lumia-web`, …) are optional bricks that feed or consume it. Only `lumia-backend`'s API container and `lumia-web` are exposed publicly; engines, the worker container, Redis, and PostgreSQL stay on the internal Docker network. Auth uses a short-lived JWT access token plus a revocable opaque refresh token (see ADR-0006), sent as an `Authorization: Bearer` header — a bearer token, unlike an httpOnly cookie, works uniformly across the web SPA, the Capacitor mobile app, and the browser extension, which don't share a cookie jar with the API's origin.
+`lumia-backend` is the one mandatory module (API + worker, one image, two containers). Engines (`miniflux`, …) and frontends (`lumia-web`, …) are optional bricks that feed or consume it. Only `lumia-web` is published on every interface; the API and Miniflux are published on the loopback only (`LUMIA_API_BIND` opens the API), and the worker, Redis and PostgreSQL stay on the internal Docker network. Auth uses a short-lived JWT access token plus a revocable opaque refresh token, sent as an `Authorization: Bearer` header — a bearer token, unlike an httpOnly cookie, works uniformly across the web SPA, the Capacitor mobile app, and the browser extension, which don't share a cookie jar with the API's origin.
 
 ## Multi-tenancy
 

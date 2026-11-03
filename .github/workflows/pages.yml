@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'landing/**'
+      - 'docs/screenshots/**'
       - 'apps/web/**'
       - 'packages/**'
       - 'package.json'
@@ -50,6 +51,7 @@ jobs:
         run: |
           mkdir -p site/app
           cp -r landing/. site/
+          cp -r docs/screenshots site/screenshots
           cp -r apps/web/build/. site/app/
           # Pages serves a real 404 for unknown paths; the SPA needs its shell there instead
           # so that a deep link such as /lumia/app/articles/article-7 still boots the router.

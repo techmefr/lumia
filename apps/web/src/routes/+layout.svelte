@@ -2,6 +2,7 @@
 	import { base } from '$technical/paths/base';
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
+	import lumiaSymbol from '$lib/assets/lumia-symbol.svg';
 	import { onMount, tick } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { goto, onNavigate } from '$app/navigation';
@@ -187,7 +188,7 @@
 			class="mx-auto flex w-full max-w-app flex-wrap items-center gap-1 px-4 py-3"
 		>
 			<a href="{base}/articles" class="mr-4 flex items-center gap-1.5 font-serif text-lg font-semibold">
-				<Icon icon={SparklesIcon} class="size-5 text-primary transition-transform duration-300 hover:rotate-12" />
+				<img src={lumiaSymbol} alt="" class="size-6" />
 				Lumia
 			</a>
 			<div class="hidden items-center gap-1 sm:flex">

@@ -206,7 +206,7 @@
 				color: var(--fg);
 				text-decoration: none;
 			}
-			.brand svg {
+			.brand img {
 				width: 1.5rem;
 				height: 1.5rem;
 				color: var(--primary);
@@ -520,13 +520,7 @@
 		<div class="topbar">
 			<div class="wrap">
 				<a class="brand" href="#contenu">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-						<path
-							d="M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4 7 17m10-10 1.4-1.4"
-							stroke-linecap="round"
-						/>
-						<circle cx="12" cy="12" r="3.5" />
-					</svg>
+					<img src="lumia-symbol.svg" width="28" height="28" alt="" />
 					Lumia
 				</a>
 				<nav aria-label="Sections">
@@ -567,55 +561,10 @@
 							<span class="dot"></span><span class="dot"></span><span class="dot"></span>
 							<span class="url">lumia.local/articles</span>
 						</div>
-						<svg viewBox="0 0 480 320" role="img" aria-label="Aperçu de l'interface : une grille de cartes d'articles avec temps de lecture, un article ouvert et sa barre de progression">
-							<rect width="480" height="320" fill="var(--card)" />
-							<rect x="0" y="0" width="104" height="320" fill="var(--bg-soft)" />
-							<rect x="14" y="18" width="52" height="7" rx="3.5" fill="var(--primary)" />
-							<g fill="var(--border)">
-								<rect x="14" y="44" width="70" height="6" rx="3" />
-								<rect x="14" y="60" width="58" height="6" rx="3" />
-								<rect x="14" y="76" width="64" height="6" rx="3" />
-								<rect x="14" y="100" width="46" height="6" rx="3" />
-								<rect x="14" y="116" width="60" height="6" rx="3" />
-							</g>
-							<circle cx="90" cy="47" r="6" fill="var(--primary)" opacity="0.85" />
-
-							<g>
-								<rect x="120" y="20" width="160" height="130" rx="10" fill="var(--bg-soft)" stroke="var(--border)" />
-								<rect x="120" y="20" width="160" height="66" rx="10" fill="var(--accent)" />
-								<rect x="238" y="68" width="34" height="12" rx="6" fill="var(--primary)" opacity="0.85" />
-								<circle cx="140" cy="86" r="11" fill="var(--card)" stroke="var(--border)" />
-								<circle cx="140" cy="86" r="6" fill="var(--primary)" />
-								<rect x="132" y="106" width="130" height="7" rx="3.5" fill="var(--border)" />
-								<rect x="132" y="120" width="96" height="7" rx="3.5" fill="var(--border)" />
-								<rect x="120" y="146" width="96" height="4" rx="2" fill="var(--primary)" />
-							</g>
-
-							<g>
-								<rect x="296" y="20" width="160" height="130" rx="10" fill="var(--bg-soft)" stroke="var(--border)" />
-								<rect x="296" y="20" width="160" height="66" rx="10" fill="var(--accent)" />
-								<rect x="414" y="68" width="34" height="12" rx="6" fill="var(--primary)" opacity="0.85" />
-								<circle cx="316" cy="86" r="11" fill="var(--card)" stroke="var(--border)" />
-								<circle cx="316" cy="86" r="6" fill="var(--primary)" />
-								<rect x="308" y="106" width="120" height="7" rx="3.5" fill="var(--border)" />
-								<rect x="308" y="120" width="80" height="7" rx="3.5" fill="var(--border)" />
-							</g>
-
-							<g>
-								<rect x="120" y="168" width="336" height="132" rx="10" fill="var(--bg-soft)" stroke="var(--border)" />
-								<rect x="120" y="168" width="210" height="4" rx="2" fill="var(--primary)" />
-								<rect x="136" y="190" width="180" height="9" rx="4.5" fill="var(--fg)" opacity="0.75" />
-								<g fill="var(--border)">
-									<rect x="136" y="214" width="300" height="6" rx="3" />
-									<rect x="136" y="228" width="286" height="6" rx="3" />
-									<rect x="136" y="242" width="304" height="6" rx="3" />
-									<rect x="136" y="256" width="240" height="6" rx="3" />
-								</g>
-								<rect x="136" y="274" width="48" height="14" rx="7" fill="var(--accent)" stroke="var(--border)" />
-								<rect x="192" y="274" width="56" height="14" rx="7" fill="var(--accent)" stroke="var(--border)" />
-								<rect x="256" y="274" width="40" height="14" rx="7" fill="var(--accent)" stroke="var(--border)" />
-							</g>
-						</svg>
+						<picture>
+							<source media="(prefers-color-scheme: light)" srcset="screenshots/fr/articles-light.avif" />
+							<img src="screenshots/fr/articles-dark.avif" width="1600" height="1000" alt="La liste d&#39;articles de Lumia : dossiers et flux à gauche, cartes d&#39;articles avec temps de lecture et score de pertinence" />
+						</picture>
 					</div>
 				</div>
 			</div>
