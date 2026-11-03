@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$technical/paths/base';
 	import type { Feed, Folder, UnreadCounts } from '@lumia/core';
-	import { Alert02Icon, ArrowDown01Icon, Folder01Icon, NewspaperIcon, PlayListIcon, RssIcon, StarIcon, TickDouble01Icon } from '@hugeicons/core-free-icons';
+	import { Alert02Icon, ArrowDown01Icon, Folder01Icon, NewspaperIcon, RssIcon, StarIcon, TickDouble01Icon } from '@hugeicons/core-free-icons';
 	import { Icon } from '@lumia/ui';
 	import { AnimatedList } from '@lumia/ui';
 	import { t, getLocale, type MessageKey } from '$technical/i18n/i18n.svelte';
@@ -235,17 +235,9 @@
 	</div>
 
 	<a
-		data-test-nav-playlists
-		href="{base}/playlists"
-		class="mt-auto flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-	>
-		<Icon icon={PlayListIcon} class="size-4" />
-		{t('nav.playlists')}
-	</a>
-	<a
 		data-test-nav-favorites
 		href="{base}/favoris"
-		class="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+		class="mt-auto flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 	>
 		<Icon icon={StarIcon} class="size-4" />
 		{t('nav.favorites')}

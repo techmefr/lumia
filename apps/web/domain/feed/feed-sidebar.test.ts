@@ -59,7 +59,7 @@ function sidebar(overrides: Partial<Props> = {}) {
 		feed: (id: string) => q<HTMLButtonElement>(`[data-test-feed="${id}"]`)!,
 		feedMarkRead: (id: string) => q<HTMLButtonElement>(`[data-test-feed-mark-read="${id}"]`),
 		feedError: (id: string) => q<HTMLSpanElement>(`[data-test-feed-error="${id}"]`),
-		playlistsLink: () => q<HTMLAnchorElement>('[data-test-nav-playlists]')!,
+		playlistsLink: () => q<HTMLAnchorElement>('[data-test-nav-playlists]'),
 		favoritesLink: () => q<HTMLAnchorElement>('[data-test-nav-favorites]')!
 	};
 }
@@ -232,9 +232,13 @@ describe('a feed in error', () => {
 });
 
 describe('the shortcuts at the bottom', () => {
-	it('link to the playlists and the favorites', () => {
+	it('link to the favorites', () => {
 		const view = sidebar();
-		expect(view.playlistsLink().getAttribute('href')).toBe('/playlists');
 		expect(view.favoritesLink().getAttribute('href')).toBe('/favoris');
+	});
+
+	it('leave the playlists to the main navigation, which already links them', () => {
+		const view = sidebar();
+		expect(view.playlistsLink()).toBeNull();
 	});
 });
