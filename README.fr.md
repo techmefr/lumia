@@ -268,7 +268,10 @@ renseigner avec l'adresse réelle de l'app si elle est jointe par un domaine ou 
 
 `MINIFLUX_WEBHOOK_SECRET` est obligatoire : Miniflux signe chaque appel de webhook avec
 (`X-Miniflux-Signature`), et l'API rejette tout ce qui ne correspond pas plutôt que de faire
-confiance à ce qui arrive sur `/webhooks/miniflux`. Le compose relie la même valeur aux deux côtés.
+confiance à ce qui arrive sur `/webhooks/miniflux`. Miniflux n'a pas de variable d'environnement pour
+son webhook : avec le Miniflux fourni, l'API l'active au démarrage, directement dans la base de
+Miniflux (`MINIFLUX_DATABASE_URL`, renseignée par le compose). Les nouveaux articles arrivent dans
+Lumia dès que Miniflux les récupère, dès le premier import.
 
 ### Utiliser ton propre Miniflux
 
@@ -279,9 +282,11 @@ docker compose -f docker-compose.yml -f docker-compose.external-miniflux.yml up 
 ```
 
 Renseigne `MINIFLUX_BASE_URL`, `MINIFLUX_USERNAME` et `MINIFLUX_PASSWORD` dans `.env` avec ton
-instance, et dans ses réglages Integrations, pointe le webhook sur
-`http://lumia-backend-api:8000/webhooks/miniflux` avec le même `MINIFLUX_WEBHOOK_SECRET` (utilise
-l'adresse à laquelle Miniflux joint l'API s'il ne partage pas de réseau Docker avec Lumia). Les flux
+instance. Dans ses réglages Integrations, active le webhook, pointe-le sur
+`http://lumia-backend-api:8000/webhooks/miniflux` (ou l'adresse à laquelle Miniflux joint l'API s'il
+ne partage pas de réseau Docker avec Lumia) et enregistre. Miniflux génère alors son propre secret et
+l'affiche sur cette page : copie-le dans `MINIFLUX_WEBHOOK_SECRET` et redémarre l'API. Tant que le
+webhook n'est pas actif, les nouveaux articles n'arrivent qu'avec la réconciliation horaire. Les flux
 déjà présents dans ton Miniflux sont listés dans Lumia, tu coches ceux à rattacher : rien n'est copié
 côté Miniflux. Voir [l'issue #1](https://github.com/techmefr/lumia/issues/1) pour la discussion.
 

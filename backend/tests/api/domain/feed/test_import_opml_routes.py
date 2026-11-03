@@ -5,6 +5,7 @@ import pytest
 
 from api.main import app
 from api.technical.net.url_guard import get_url_resolver
+from tests.fake_arq_pool import FakeArqPool
 from worker.technical.connectors.miniflux_client import get_miniflux_transport
 
 ADMIN_PAYLOAD = {
@@ -91,3 +92,30 @@ async def test_import_opml_without_a_token_returns_401(client: httpx.AsyncClient
         files={"file": ("feeds.opml", FEEDLY_OPML, "text/x-opml")},
     )
     assert response.status_code == 401
+
+
+async def test_import_opml_pulls_the_entries_miniflux_fetched_when_creating_the_feeds(
+    client: httpx.AsyncClient, arq_pool: FakeArqPool
+) -> None:
+    headers = await _headers(client)
+
+    await client.post(
+        "/feeds/import-opml",
+        headers=headers,
+        files={"file": ("feeds.opml", FEEDLY_OPML, "text/x-opml")},
+    )
+
+    assert [name for name, _, _ in arq_pool.enqueued] == ["reconcile_recent_articles"]
+
+
+async def test_import_opml_that_adds_no_feed_queues_nothing(
+    client: httpx.AsyncClient, arq_pool: FakeArqPool
+) -> None:
+    headers = await _headers(client)
+    upload = {"file": ("feeds.opml", FEEDLY_OPML, "text/x-opml")}
+    await client.post("/feeds/import-opml", headers=headers, files=upload)
+    arq_pool.enqueued.clear()
+
+    await client.post("/feeds/import-opml", headers=headers, files=upload)
+
+    assert arq_pool.enqueued == []

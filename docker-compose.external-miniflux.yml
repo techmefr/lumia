@@ -13,7 +13,11 @@ services:
     profiles: ["bundled-miniflux"]
 
   # A service that a profile leaves out cannot be waited on, so the API drops its wait on Miniflux.
+  # Nor can it write the webhook into a database it does not own: set it in the Miniflux
+  # Integrations page instead.
   lumia-backend-api:
+    environment:
+      MINIFLUX_DATABASE_URL: ""
     depends_on: !override
       postgres:
         condition: service_healthy

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -28,6 +29,7 @@ from api.technical.health.routes import router as health_router
 from api.technical.logging.middleware import REQUEST_ID_HEADER, CorrelationIdMiddleware
 from api.technical.logging.setup import configure_logging
 from config.cors import get_cors_config
+from worker.technical.connectors.miniflux_webhook_setup import keep_enabling_miniflux_webhook
 from worker.technical.webhook import router as webhook_router
 
 configure_logging()
@@ -47,7 +49,10 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             "could not provision the admin account from the environment; "
             "apply the migrations, then restart the api"
         )
+    # In the background: Miniflux may still be migrating, and the API must not wait on it to serve.
+    webhook_setup = asyncio.create_task(keep_enabling_miniflux_webhook())
     yield
+    webhook_setup.cancel()
 
 
 app = FastAPI(title="Lumia", lifespan=lifespan)

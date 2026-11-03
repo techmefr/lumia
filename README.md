@@ -255,7 +255,10 @@ to the app's real address if it's reached from a domain or a LAN address.
 
 `MINIFLUX_WEBHOOK_SECRET` is required: Miniflux signs every webhook call with it
 (`X-Miniflux-Signature`), and the API rejects anything that doesn't match rather than trusting
-whatever reaches `/webhooks/miniflux`. The compose file wires the same value to both sides.
+whatever reaches `/webhooks/miniflux`. Miniflux has no environment variable for its webhook, so with
+the bundled one the API turns it on at startup, straight in the Miniflux database
+(`MINIFLUX_DATABASE_URL`, set by the compose file): new entries reach Lumia as soon as Miniflux
+fetches them, from the very first import.
 
 ### Using your own Miniflux
 
@@ -266,9 +269,11 @@ docker compose -f docker-compose.yml -f docker-compose.external-miniflux.yml up 
 ```
 
 Set `MINIFLUX_BASE_URL`, `MINIFLUX_USERNAME` and `MINIFLUX_PASSWORD` in `.env` to your instance, and in
-its Integrations settings point the webhook at `http://lumia-backend-api:8000/webhooks/miniflux` with
-the same `MINIFLUX_WEBHOOK_SECRET` (use the address Miniflux can reach the API on if it does not share
-a Docker network with Lumia). Feeds already in your Miniflux are listed in Lumia, where you tick the
+its Integrations settings enable the webhook, point it at
+`http://lumia-backend-api:8000/webhooks/miniflux` (or the address Miniflux can reach the API on if it
+does not share a Docker network with Lumia) and save. Miniflux then generates its own secret and shows
+it on that page: copy it into `MINIFLUX_WEBHOOK_SECRET` and restart the API. Until the webhook is on,
+new entries only show up with the hourly reconciliation. Feeds already in your Miniflux are listed in Lumia, where you tick the
 ones to attach: nothing is copied on the Miniflux side. See
 [issue #1](https://github.com/techmefr/lumia/issues/1) for the discussion.
 

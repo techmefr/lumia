@@ -60,8 +60,6 @@ services:
       # (categories, feeds, users, ...) collides table-for-table with ours.
       DATABASE_URL: postgres://miniflux:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@miniflux-postgres/miniflux?sslmode=disable
       RUN_MIGRATIONS: 1
-      WEBHOOK_URL: http://lumia-backend-api:8000/webhooks/miniflux
-      WEBHOOK_SECRET: ${MINIFLUX_WEBHOOK_SECRET:?MINIFLUX_WEBHOOK_SECRET must be set in .env}
       # lumia-backend-api resolves to a compose-internal address, and Miniflux refuses to call
       # a private IP from an integration unless told to. Without this every webhook is dropped
       # before it leaves Miniflux and no article ever reaches the reader.
@@ -125,6 +123,9 @@ services:
       MINIFLUX_USERNAME: ${MINIFLUX_USERNAME:?MINIFLUX_USERNAME must be set in .env}
       MINIFLUX_PASSWORD: ${MINIFLUX_PASSWORD:?MINIFLUX_PASSWORD must be set in .env}
       MINIFLUX_WEBHOOK_SECRET: ${MINIFLUX_WEBHOOK_SECRET:?MINIFLUX_WEBHOOK_SECRET must be set in .env}
+      # Miniflux has no setting or API for its webhook, only a per-user row in its own database:
+      # the API writes it there at startup, so new entries reach Lumia from the first import.
+      MINIFLUX_DATABASE_URL: postgresql+asyncpg://miniflux:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@miniflux-postgres/miniflux
       DEEPL_API_KEY: ${DEEPL_API_KEY}
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
       TRUSTED_PROXY_COUNT: ${TRUSTED_PROXY_COUNT:-1}

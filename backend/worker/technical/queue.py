@@ -58,6 +58,7 @@ class WorkerSettings:
         import_reading_list,
         build_playlist_epub,
         deliver_webhook_function,
+        reconcile_recent_articles,
     ]
     # Reconciliation on the hour, because a webhook lost at 14:02 should not wait for the night;
     # the purge in the small hours, where a long-running delete disturbs nobody; the feed status

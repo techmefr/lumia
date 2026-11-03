@@ -65,6 +65,13 @@ manual re-run harmless. An empty selection is not mailed at all.
 The Miniflux webhook is signed (`X-Miniflux-Signature`, HMAC-SHA256 over the raw body, checked with
 `hmac.compare_digest` in `worker/technical/webhook.py`) against `MINIFLUX_WEBHOOK_SECRET`, which has
 no default — the config fails to start without one rather than accepting unsigned calls silently.
+Miniflux reads its webhook from a per-user row in its own database, with no environment variable and
+no API to write it, so the API writes that row at startup when it is given the bundled Miniflux
+database (`worker/technical/connectors/miniflux_webhook_setup.py`), retrying while Miniflux is still
+migrating or creating its admin account. An external Miniflux keeps the webhook set by hand.
+Miniflux only calls the webhook for entries found on a refresh, not for those it fetches when a feed
+is created or that it already held, so adding feeds (OPML import, by URL, from the instance) also
+queues a reconciliation pass that pulls them right away.
 
 Any URL a reader submits — a saved page, a feed added by URL, an OPML entry — is checked by
 `api/technical/net/url_guard.py` before the instance requests it: http(s) only, and the host has to
