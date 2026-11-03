@@ -22,7 +22,7 @@
 <!-- The sidebar is hidden on a phone, so the sections need a reachable form of their own. A single
 	 scrolling row keeps the whole set one thumb-swipe away instead of behind a menu. -->
 <div
-	class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0"
+	class="-mx-4 overflow-x-auto px-4 sm:hidden"
 	role="group"
 	aria-label={t('sections.group')}
 >
