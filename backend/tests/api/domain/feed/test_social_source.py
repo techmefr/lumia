@@ -58,6 +58,7 @@ def test_only_reddit_carries_a_dedicated_user_agent() -> None:
         "https://bsky.app/",
         "",
         "not a feed",
+        "news:" + " " * 50_000 + "\n!\n!",
     ],
 )
 def test_anything_else_is_left_to_the_regular_feed_flow(address: str) -> None:
