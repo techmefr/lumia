@@ -5,22 +5,77 @@
   </picture>
 </p>
 
-# Lumia
+<h3 align="center">Éclaircis tes flux. Apprends tes goûts.</h3>
 
-> Éclaircis tes flux. Apprends tes goûts.
+<p align="center">
+  Un lecteur RSS auto-hébergé qui ne garde que l'article, le résume, te le lit à voix haute<br />
+  et apprend ce que tu aimes, sans envoyer tes lectures nulle part.
+</p>
 
-Lumia est un lecteur RSS auto-hébergé. Il récupère tes flux, nettoie les articles de tout ce qui
-n'est pas l'article, en extrait les mots-clés et un résumé, puis apprend ce qui t'intéresse au fil de
-tes lectures. Tout tourne sur ta propre machine.
+<p align="center">
+  <a href="https://techmefr.github.io/lumia/app/"><strong>Essayer la démo</strong></a> ·
+  <a href="https://techmefr.github.io/lumia/">Page de présentation</a> ·
+  <a href="#démarrage-rapide">Démarrage rapide</a> ·
+  <a href="README.md">English version</a>
+</p>
 
-**[Page de présentation](https://techmefr.github.io/lumia/)** ·
-**[Démo en ligne](https://techmefr.github.io/lumia/app/)** ·
-English version: [README.md](README.md)
+<p align="center">
+  <a href="https://github.com/techmefr/lumia/actions/workflows/ci.yml"><img src="https://github.com/techmefr/lumia/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licence-AGPL--3.0-6d63ee" alt="Licence AGPL-3.0" /></a>
+  <img src="https://img.shields.io/badge/auto--h%C3%A9berg%C3%A9-docker%20compose-4f46e5" alt="Auto-hébergé avec docker compose" />
+  <img src="https://img.shields.io/badge/WCAG-2.2%20AA-8b85f5" alt="WCAG 2.2 AA" />
+</p>
 
-La démo est le vrai front, avec le client http remplacé par un client en mémoire alimenté par des
-articles fictifs. Rien ne sort du navigateur, il n'y a ni compte ni backend derrière ; le bouton
-« Réinitialiser » de la bannière remet l'état seedé à zéro. Elle sert à juger l'interface, la vue de
-lecture et la synthèse vocale sur un vrai appareil avant d'installer quoi que ce soit.
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/articles-light.webp" />
+    <img src="docs/screenshots/articles-dark.webp" alt="La liste d'articles de Lumia, avec dossiers, flux et cartes d'articles" width="100%" />
+  </picture>
+</p>
+
+## Pourquoi Lumia
+
+- 🧹 **Juste l'article.** Chaque page est ré-extraite : ni bandeaux, ni menus, ni « vous aimerez
+  aussi ».
+- ✨ **Il apprend tes goûts.** Tu fais défiler L'Étincelle, et les mots-clés, sources et auteurs que
+  tu aimes remontent en tête.
+- 🎧 **Écoute au lieu de lire.** Synthèse vocale par article ou sur toute une playlist, calibrée sur
+  le temps que tu as.
+- 📍 **Reprends où tu t'es arrêté.** La position de lecture te suit du portable au téléphone.
+- 🔒 **Tes lectures restent chez toi.** Résumés et mots-clés sont calculés en local ; une clé d'IA
+  est facultative.
+- 📥 **Amène tes flux.** Import OPML Feedly, Mastodon, Bluesky, Reddit, Google News, ou n'importe
+  quelle page enregistrée par URL.
+
+## Captures d'écran
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/reader-dark.webp" alt="Vue de lecture avec mots-clés, export, traduction et écoute" /><br /><sub><b>Lecture</b> : texte propre, mots-clés, traduction, écoute, export EPUB ou PDF.</sub></td>
+    <td width="50%"><img src="docs/screenshots/etincelle-dark.webp" alt="L'Étincelle, une carte à faire glisser pour aimer, passer, mettre en favori ou garder pour plus tard" /><br /><sub><b>L'Étincelle</b> : fais glisser pour apprendre à Lumia ce que tu aimes.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/playlists-dark.webp" alt="Playlists avec des files générées de 12, 25 ou 45 minutes" /><br /><sub><b>Playlists</b> : une file remplie pour les 12, 25 ou 45 minutes que tu as.</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/mobile-dark.webp" alt="Lumia sur téléphone, avec la barre de navigation en bas" width="300" /><br /><sub><b>Mobile</b> : PWA installable avec navigation en bas d'écran.</sub></td>
+  </tr>
+</table>
+
+La [démo en ligne](https://techmefr.github.io/lumia/app/) est le vrai front qui tourne sur des
+articles fictifs : pas de compte, pas de backend, rien ne sort du navigateur, et le bouton
+« Réinitialiser » de la bannière la remet à zéro.
+
+## Démarrage rapide
+
+```bash
+git clone https://github.com/techmefr/lumia.git
+cd lumia
+cp .env.example .env    # puis renseigne les secrets
+docker compose up -d
+```
+
+Ouvre `http://localhost:8080` : l'app te guide pour créer le compte admin, puis tu importes un
+fichier OPML ou ajoutes tes premiers flux. Le détail est dans la section
+[Auto-hébergement](#auto-hébergement).
 
 ## Ce que ça fait
 
