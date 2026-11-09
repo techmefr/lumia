@@ -16,10 +16,10 @@
 		"@hugeicons/core-free-icons": "^4.4.0",
 		"@lumia/core": "workspace:*",
 		"@lumia/ui": "workspace:*",
-		"bits-ui": "^2.20.2",
+		"bits-ui": "^2.20.6",
 		"clsx": "^2.1.1",
 		"tailwind-merge": "^3.7.0",
-		"tailwind-variants": "^4.0.0"
+		"tailwind-variants": "^4.0.1"
 	},
 	"devDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",

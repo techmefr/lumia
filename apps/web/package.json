@@ -23,13 +23,13 @@
 		"@hugeicons/core-free-icons": "^4.4.0",
 		"@lumia/core": "workspace:*",
 		"@lumia/ui": "workspace:*",
-		"bits-ui": "^2.20.2",
+		"bits-ui": "^2.20.6",
 		"clsx": "^2.1.1",
-		"mermaid": "^12.2.0",
+		"mermaid": "^12.3.0",
 		"qrcode": "^1.5.4",
 		"tailwind-merge": "^3.7.0",
-		"tailwind-variants": "^4.0.0",
-		"temporal-polyfill": "^1.0.6"
+		"tailwind-variants": "^4.0.1",
+		"temporal-polyfill": "^1.0.8"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.14.0",
