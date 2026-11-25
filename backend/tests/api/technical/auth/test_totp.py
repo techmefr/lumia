@@ -13,7 +13,7 @@ from api.technical.auth.totp import (
     verify_totp_code,
 )
 
-SECRET = "JBSWY3DPEHPK3PXP"
+SECRET = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP"
 STEP_SECONDS = 30
 
 
