@@ -47,7 +47,7 @@ services:
       - internal
 
   miniflux:
-    image: miniflux/miniflux:2.3.4
+    image: miniflux/miniflux:2.3.5
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
